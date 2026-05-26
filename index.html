@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Small Web Tools</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Small Web Tools</h1>
+        <p class="subtitle">Quick utilities for everyday conversions and counts.</p>
+      </header>
+
+      <section class="tool-grid">
+        <article class="tool-card">
+          <h2>\ to / Converter</h2>
+          <label for="slash-input">Input</label>
+          <textarea id="slash-input" rows="3" placeholder="Paste a Windows path..."></textarea>
+          <button id="slash-convert" type="button">Convert</button>
+          <label for="slash-output">Output</label>
+          <textarea id="slash-output" rows="3" readonly></textarea>
+        </article>
+
+        <article class="tool-card">
+          <h2>Word &amp; Character Counter</h2>
+          <label for="wc-input">Text</label>
+          <textarea id="wc-input" rows="4" placeholder="Type or paste text..."></textarea>
+          <div class="row">
+            <div class="result">
+              <span>Words: <strong id="wc-words">0</strong></span>
+            </div>
+            <div class="result">
+              <span>Characters: <strong id="wc-chars">0</strong></span>
+            </div>
+          </div>
+          <p class="small">Characters include spaces and line breaks.</p>
+        </article>
+
+        <article class="tool-card">
+          <h2>Date Counter</h2>
+          <div class="row">
+            <div>
+              <label for="date-start">Start date</label>
+              <input id="date-start" type="date" />
+            </div>
+            <div>
+              <label for="date-end">End date</label>
+              <input id="date-end" type="date" />
+            </div>
+          </div>
+          <div class="result" id="date-output">Select both dates.</div>
+        </article>
+
+        <article class="tool-card">
+          <h2>Currency Counter</h2>
+          <label for="currency-code">Currency</label>
+          <select id="currency-code">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+            <option value="CNY">CNY</option>
+          </select>
+          <label for="currency-input">Amounts (one per line)</label>
+          <textarea id="currency-input" rows="4" placeholder="12.50&#10;8.90&#10;3"></textarea>
+          <div class="row">
+            <div class="result">
+              <span>Total: <strong id="currency-total">—</strong></span>
+            </div>
+            <div class="result">
+              <span>Count: <strong id="currency-count">0</strong></span>
+            </div>
+          </div>
+          <p class="small" id="currency-status"></p>
+        </article>
+
+        <article class="tool-card">
+          <h2>Color Code Converter</h2>
+          <label for="color-input">HEX, RGB, or HSL</label>
+          <input id="color-input" type="text" placeholder="#3366FF or rgb(51, 102, 255)" />
+          <label for="color-hex">HEX</label>
+          <input id="color-hex" type="text" readonly />
+          <label for="color-rgb">RGB</label>
+          <input id="color-rgb" type="text" readonly />
+          <label for="color-hsl">HSL</label>
+          <input id="color-hsl" type="text" readonly />
+          <p class="small" id="color-status"></p>
+        </article>
+
+        <article class="tool-card">
+          <h2>ASCII Converter</h2>
+          <label for="ascii-text">Text to ASCII codes</label>
+          <textarea id="ascii-text" rows="3" placeholder="Hello"></textarea>
+          <label for="ascii-codes">ASCII codes</label>
+          <textarea id="ascii-codes" rows="3" readonly></textarea>
+          <label for="ascii-codes-input">ASCII codes to text</label>
+          <input id="ascii-codes-input" type="text" placeholder="72 101 108 108 111" />
+          <div class="result" id="ascii-text-output">—</div>
+          <p class="small" id="ascii-status"></p>
+        </article>
+
+        <article class="tool-card">
+          <h2>Unicode Converter</h2>
+          <label for="unicode-text">Text to Unicode</label>
+          <textarea id="unicode-text" rows="3" placeholder="你好"></textarea>
+          <label for="unicode-codes">Unicode codes</label>
+          <textarea id="unicode-codes" rows="3" readonly></textarea>
+          <label for="unicode-codes-input">Unicode codes to text</label>
+          <input id="unicode-codes-input" type="text" placeholder="U+4F60 U+597D" />
+          <div class="result" id="unicode-text-output">—</div>
+          <p class="small" id="unicode-status"></p>
+        </article>
+
+        <article class="tool-card">
+          <h2>Base Converter</h2>
+          <label for="base-input">Number</label>
+          <input id="base-input" type="text" placeholder="FF or 255 or 3:25:15" />
+          <label for="base-from">Input base</label>
+          <select id="base-from">
+            <option value="2">Binary (2)</option>
+            <option value="8">Octal (8)</option>
+            <option value="10" selected>Decimal (10)</option>
+            <option value="16">Hexadecimal (16)</option>
+            <option value="60">Sexagesimal (60)</option>
+          </select>
+          <label for="base-bin">Binary</label>
+          <input id="base-bin" type="text" readonly />
+          <label for="base-oct">Octal</label>
+          <input id="base-oct" type="text" readonly />
+          <label for="base-dec">Decimal</label>
+          <input id="base-dec" type="text" readonly />
+          <label for="base-hex">Hexadecimal</label>
+          <input id="base-hex" type="text" readonly />
+          <label for="base-60">Sexagesimal (colon-separated)</label>
+          <input id="base-60" type="text" readonly />
+          <p class="small" id="base-status"></p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

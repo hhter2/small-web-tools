@@ -286,12 +286,16 @@ function setupColorConverter() {
   const rgbOutput = $("color-rgb");
   const hslOutput = $("color-hsl");
   const status = $("color-status");
+  const swatch = $("color-preview-swatch");
 
   const clearOutputs = (message) => {
     hexOutput.value = "";
     rgbOutput.value = "";
     hslOutput.value = "";
     status.textContent = message;
+    if (swatch) {
+      swatch.style.backgroundColor = "transparent";
+    }
   };
 
   const update = () => {
@@ -320,6 +324,9 @@ function setupColorConverter() {
     rgbOutput.value = formatRgb(rgb);
     hslOutput.value = formatHsl(computedHsl);
     status.textContent = "";
+    if (swatch) {
+      swatch.style.backgroundColor = hex;
+    }
   };
 
   input.addEventListener("input", update);
@@ -559,7 +566,171 @@ function setupBaseConverter() {
   update();
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+const toolDetails = {
+  "tool-slash": {
+    title: "Slashes Converter",
+    desc: "Normalize Windows paths to web-friendly forward slashes."
+  },
+  "tool-wc": {
+    title: "Word & Character Counter",
+    desc: "Calculate words, character lengths, and line endings in real time."
+  },
+  "tool-date": {
+    title: "Date Counter",
+    desc: "Calculate the exact number of days between two specified dates."
+  },
+  "tool-currency": {
+    title: "Currency Counter",
+    desc: "Sum multiple currency amounts with clean line-by-line inputs."
+  },
+  "tool-color": {
+    title: "Color Code Converter",
+    desc: "Seamlessly translate colors between HEX, RGB, and HSL formats."
+  },
+  "tool-ascii": {
+    title: "ASCII Converter",
+    desc: "Convert text characters to their ASCII codes and vice versa."
+  },
+  "tool-unicode": {
+    title: "Unicode Converter",
+    desc: "Encode text to Unicode code points or decode raw code points to text."
+  },
+  "tool-base": {
+    title: "Base Converter",
+    desc: "Interconvert numbers between binary, octal, decimal, hexadecimal, and sexagesimal."
+  }
+};
+
+function setupTheme() {
+  const toggleBtn = $("theme-toggle");
+  if (!toggleBtn) return;
+  
+  const getPreferredTheme = () => {
+    try {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) return savedTheme;
+    } catch (e) {
+      // Storage access blocked
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  };
+
+  const setTheme = (theme) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch (e) {
+      // Storage access blocked
+    }
+  };
+
+  const currentTheme = getPreferredTheme();
+  setTheme(currentTheme);
+
+  toggleBtn.addEventListener("click", () => {
+    const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    setTheme(theme);
+  });
+}
+
+function setupSidebar() {
+  const navItems = document.querySelectorAll(".nav-item");
+  const toolCards = document.querySelectorAll(".tool-card");
+  const searchInput = $("tool-search");
+  const activeTitle = $("active-tool-title");
+  const activeDesc = $("active-tool-desc");
+  
+  // Mobile hamburger toggling
+  const sidebar = $("sidebar");
+  const sidebarToggle = $("sidebar-toggle");
+  const sidebarOverlay = $("sidebar-overlay");
+  
+  const toggleMobileSidebar = () => {
+    if (sidebar && sidebarOverlay) {
+      sidebar.classList.toggle("open");
+      sidebarOverlay.classList.toggle("visible");
+    }
+  };
+  
+  if (sidebarToggle && sidebarOverlay) {
+    sidebarToggle.addEventListener("click", toggleMobileSidebar);
+    sidebarOverlay.addEventListener("click", toggleMobileSidebar);
+  }
+
+  const activateTool = (toolId) => {
+    // Hide all tool cards and remove active classes
+    toolCards.forEach(card => card.classList.remove("active"));
+    navItems.forEach(item => item.classList.remove("active"));
+
+    // Find requested card and nav item
+    const targetCard = $(toolId);
+    const targetNav = document.querySelector(`.nav-item[data-tool="${toolId}"]`);
+
+    if (targetCard && targetNav) {
+      targetCard.classList.add("active");
+      targetNav.classList.add("active");
+      
+      // Update header
+      if (toolDetails[toolId]) {
+        if (activeTitle) activeTitle.textContent = toolDetails[toolId].title;
+        if (activeDesc) activeDesc.textContent = toolDetails[toolId].desc;
+      }
+      
+      // Save state
+      try {
+        localStorage.setItem("activeTool", toolId);
+      } catch (e) {
+        // Storage access blocked
+      }
+    }
+  };
+
+  // Nav item click event
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      const toolId = item.getAttribute("data-tool");
+      activateTool(toolId);
+      
+      // Close mobile sidebar if open
+      if (sidebar && sidebar.classList.contains("open")) {
+        toggleMobileSidebar();
+      }
+    });
+  });
+
+  // Load last active tool or default to first
+  let lastTool = null;
+  try {
+    lastTool = localStorage.getItem("activeTool");
+  } catch (e) {
+    // Storage access blocked
+  }
+
+  if (lastTool && toolDetails[lastTool]) {
+    activateTool(lastTool);
+  } else {
+    activateTool("tool-slash");
+  }
+
+  // Live tool filtering/search
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase().trim();
+      navItems.forEach(item => {
+        const labelText = item.querySelector("span").textContent.toLowerCase();
+        if (labelText.includes(query)) {
+          item.style.display = "flex";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    });
+  }
+}
+
+function init() {
+  setupTheme();
+  setupSidebar();
   setupSlashConverter();
   setupWordCounter();
   setupDateCounter();
@@ -568,4 +739,10 @@ window.addEventListener("DOMContentLoaded", () => {
   setupAsciiConverter();
   setupUnicodeConverter();
   setupBaseConverter();
-});
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}

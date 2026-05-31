@@ -1,27 +1,67 @@
-# Small Web Tools
+# Small Web Tools - Premium Dashboard
 
-A simple **single-page** HTML/CSS/JS project that bundles several handy converters and counters.
+A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
 
-No build step, no dependencies — just open the page and use the tools.
+This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast local development server and optimized production builds.
 
-## Included tools
+## Features & Upgrades
 
-1. **`\` → `/` converter** (Windows path to URL/web-friendly path)
-2. **Word & character counter**
-3. **Date counter** (day difference: end − start)
-4. **Currency counter** (sum and count; one amount per line)
-5. **Color code converter** (**HEX**, **RGB**, **HSL**)
-6. **ASCII converter** (text ↔ ASCII codes)
-7. **Unicode converter** (text ↔ code points like `U+4F60`)
-8. **Base converter**: Binary / Octal / Decimal / Hexadecimal / Sexagesimal (base-60, colon-separated)
+- **Sidebar Navigation Layout**: Clean sidebar navigation on the left, displaying only the selected tool card in the main staging area on the right.
+- **Search Filtering**: Instantly search/filter through the list of tools inside the sidebar to find what you need.
+- **Theme Switcher**: Fully functional Light & Dark theme toggle with automatic system preference detection and state persistence (saves choice to `localStorage`).
+- **Interactive UI Swatch**: Live color preview bar inside the Color Code Converter tool.
+- **Responsive Mobile Drawer**: Sidebar collapses into a sliding drawer on smaller mobile screens, toggled by a hamburger menu.
+- **Persistent Selection**: Remembers the last opened tool across page reloads.
 
-## How to run
+## Included Tools
 
-- Open `index.html` in a browser (Chrome / Edge / Firefox).
-- If you don’t see updates while typing, do a hard refresh (`Ctrl+F5`).
+1. **Slashes Converter**: Normalize Windows file paths to web/URL-friendly paths.
+2. **Word & Character Counter**: Real-time counter of text words, characters, and spaces.
+3. **Date Counter**: Calculate the day difference between a start and end date.
+4. **Currency Counter**: Add up a list of decimal currency amounts (one per line) automatically formatted to selected locale currencies.
+5. **Color Code Converter**: Interconvert between HEX, RGB, and HSL colors with interactive swatch previews.
+6. **ASCII Converter**: Encode text to ASCII code points or decode decimal codes back to text.
+7. **Unicode Converter**: Translate characters to Unicode hex code points (e.g., `U+4F60`) and vice versa.
+8. **Base Converter**: Seamlessly convert numbers across Binary (2), Octal (8), Decimal (10), Hexadecimal (16), and Sexagesimal (60).
 
-## Files
+---
 
-- `index.html` — UI and tool layout
-- `styles.css` — styling
-- `app.js` — tool logic (plain JavaScript)
+## Local Development
+
+### 1. Prerequisites
+Ensure you have [Node.js](https://nodejs.org) installed on your system.
+
+### 2. Install Dependencies
+Run the following command to install the required dev tool (`vite`):
+```bash
+npm install
+```
+
+### 3. Start Dev Server
+Spin up the local hot-reloading development server:
+```bash
+npm run dev
+```
+By default, the project will run on [http://localhost:5173/](http://localhost:5173/).
+
+### 4. Build for Production
+To generate a highly optimized and minified production build inside the `dist` folder:
+```bash
+npm run build
+```
+
+### 5. Preview Production Build
+Preview the built assets locally before deployment:
+```bash
+npm run preview
+```
+
+---
+
+## Project Structure
+
+- `index.html` — Layout structure including sidebar and tool containers.
+- `app.js` — Core application logic, event listeners, converters, state management, and navigation.
+- `styles.css` — Custom CSS variables, responsive design, animations, theme schemes, and utility widgets.
+- `package.json` — Tooling configuration and dependencies.
+- `.gitignore` — Standard gitignore configuration for Node/Vite projects.

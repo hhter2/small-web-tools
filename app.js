@@ -27,9 +27,10 @@ function setupSlashConverter() {
 }
 
 function countWords(text) {
-  // Assumption: Words are separated by whitespace; punctuation stays with the word.
-  const trimmed = text.trim();
-  return trimmed ? trimmed.split(/\s+/).length : 0;
+  // Matches individual CJK characters (Han, Hiragana, Katakana) or sequences of other characters (words) while ignoring punctuation and symbols.
+  const regex = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]|[^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\s\p{P}\p{S}]+(?:[-'’][^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\s\p{P}\p{S}]+)*/gu;
+  const matches = text.match(regex);
+  return matches ? matches.length : 0;
 }
 
 function setupWordCounter() {

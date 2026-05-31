@@ -13,6 +13,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 - **Responsive Mobile Drawer**: Sidebar collapses into a sliding drawer on smaller mobile screens, toggled by a hamburger menu.
 - **Multilingual Word Counter**: The Word Counter matches CJK characters individually and groups other spaced words (preserving internal hyphens/apostrophes) for accurate multilingual word counts.
 - **Persistent Selection**: Remembers the last opened tool across page reloads.
+- **DNA/RNA Direction Transfer**: Support DNA & RNA base complementation (supporting full IUPAC degenerate base codes), automatic direction tag detection (`5'-` and `3'-`), and standard reverse complement generation.
 
 ## Included Tools
 
@@ -24,6 +25,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 6. **ASCII Converter**: Encode text to ASCII code points or decode decimal codes back to text.
 7. **Unicode Converter**: Translate characters to Unicode hex code points (e.g., `U+4F60`) and vice versa.
 8. **Base Converter**: Seamlessly convert numbers across Binary (2), Octal (8), Decimal (10), Hexadecimal (16), and Sexagesimal (60).
+9. **DNA/RNA Direction Transfer**: Perform base sequence complementation (supporting IUPAC degenerate base codes), reversing, and 5'/3' strand orientation transfers (e.g., input `5'-CACGT-3'` -> output `3'-GTGCA-5'`).
 
 ---
 

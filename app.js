@@ -567,6 +567,167 @@ function setupBaseConverter() {
   update();
 }
 
+const dnaComplementMap = {
+  'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
+  'a': 't', 't': 'a', 'c': 'g', 'g': 'c',
+  'U': 'A', 'u': 'a',
+  'R': 'Y', 'Y': 'R', 'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K',
+  'B': 'V', 'V': 'B', 'D': 'H', 'H': 'D', 'N': 'N',
+  'r': 'y', 'y': 'r', 's': 's', 'w': 'w', 'k': 'm', 'm': 'k',
+  'b': 'v', 'v': 'b', 'd': 'h', 'h': 'd', 'n': 'n'
+};
+
+const rnaComplementMap = {
+  'A': 'U', 'U': 'A', 'C': 'G', 'G': 'C',
+  'a': 'u', 'u': 'a',
+  'T': 'A', 't': 'a',
+  'R': 'Y', 'Y': 'R', 'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K',
+  'B': 'V', 'V': 'B', 'D': 'H', 'H': 'D', 'N': 'N',
+  'r': 'y', 'y': 'r', 's': 's', 'w': 'w', 'k': 'm', 'm': 'k',
+  'b': 'v', 'v': 'b', 'd': 'h', 'h': 'd', 'n': 'n'
+};
+
+function setupDnaConverter() {
+  const input = $("dna-input");
+  const seqTypeSelect = $("dna-seq-type");
+  const directionSelect = $("dna-direction");
+  
+  const oppositeOutput = $("dna-output-opposite");
+  const revcompOutput = $("dna-output-revcomp");
+  const status = $("dna-status");
+
+  const clearOutputs = (msg) => {
+    oppositeOutput.value = "";
+    revcompOutput.value = "";
+    status.textContent = msg || "";
+  };
+
+  const getComplement = (sequence, isRna) => {
+    const map = isRna ? rnaComplementMap : dnaComplementMap;
+    return sequence.split("").map(char => map[char] || char).join("");
+  };
+
+  const reverseString = (str) => {
+    return str.split("").reverse().join("");
+  };
+
+  // Handle copying and styling transitions
+  document.querySelectorAll(".copy-btn-inline").forEach(button => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetId = button.getAttribute("data-target");
+      const targetInput = $(targetId);
+      if (targetInput && targetInput.value) {
+        navigator.clipboard.writeText(targetInput.value).then(() => {
+          const originalText = button.textContent;
+          button.textContent = "Copied!";
+          button.classList.add("copied");
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove("copied");
+          }, 1500);
+        }).catch(err => {
+          console.error("Clipboard copy failed", err);
+        });
+      }
+    });
+  });
+
+  // Track if direction was programmatically updated to avoid feedback loops
+  let isUpdatingProgrammatically = false;
+
+  const update = () => {
+    const val = input.value;
+    if (!val.trim()) {
+      clearOutputs("Enter a sequence to convert.");
+      return;
+    }
+
+    // 1. Detect and parse direction if marked explicitly in sequence
+    const lowerVal = val.toLowerCase();
+    const has5PrimeStart = /^\s*5['’]/.test(lowerVal);
+    const has3PrimeStart = /^\s*3['’]/.test(lowerVal);
+    const has5PrimeEnd = /5['’]\s*$/.test(lowerVal);
+    const has3PrimeEnd = /3['’]\s*$/.test(lowerVal);
+
+    if (!isUpdatingProgrammatically) {
+      if (has5PrimeStart || has3PrimeEnd) {
+        isUpdatingProgrammatically = true;
+        directionSelect.value = "5-3";
+        isUpdatingProgrammatically = false;
+      } else if (has3PrimeStart || has5PrimeEnd) {
+        isUpdatingProgrammatically = true;
+        directionSelect.value = "3-5";
+        isUpdatingProgrammatically = false;
+      }
+    }
+
+    // 2. Clean the sequence (remove 5', 3', hyphens, whitespace, numbers, etc.)
+    let cleaned = val
+      .replace(/5['’](-)?/gi, '')
+      .replace(/3['’](-)?/gi, '')
+      .replace(/[-'’\s\d]/g, '')
+      .toUpperCase();
+
+    if (!cleaned) {
+      clearOutputs("Please enter a valid sequence.");
+      return;
+    }
+
+    // Validate characters: only A, T, C, G, U are allowed
+    if (/[^ACGUT]/.test(cleaned)) {
+      clearOutputs("Error: Only A, T, C, G, and U characters are allowed.");
+      return;
+    }
+    status.textContent = "";
+
+    // 3. Auto-detect sequence type (DNA vs RNA)
+    let isRna = false;
+    const selectedType = seqTypeSelect.value;
+    if (selectedType === "auto") {
+      const hasU = cleaned.includes("U");
+      const hasT = cleaned.includes("T");
+      if (hasU && hasT) {
+        status.textContent = "Warning: Both T and U detected. Defaulting to DNA.";
+        status.style.color = "#ef4444";
+        isRna = false;
+      } else if (hasU) {
+        isRna = true;
+      } else {
+        isRna = false; // defaults to DNA
+      }
+    } else {
+      isRna = selectedType === "rna";
+    }
+
+    const direction = directionSelect.value;
+
+    // 4. Perform conversions
+    // Get 5' to 3' representation of input sequence to facilitate standard revcomp
+    const seq5to3 = (direction === "5-3") ? cleaned : reverseString(cleaned);
+
+    // Outputs:
+    // A. Opposite Strand (3' ↔ 5' Swap)
+    const oppositeComplement = getComplement(cleaned, isRna);
+    const oppositeStr = (direction === "5-3") 
+      ? `3'-${oppositeComplement}-5'` 
+      : `5'-${oppositeComplement}-3'`;
+
+    // B. Standard Reverse Complement (always written 5' → 3')
+    const revcompSeq = reverseString(getComplement(seq5to3, isRna));
+    const revcompStr = `5'-${revcompSeq}-3'`;
+
+    oppositeOutput.value = oppositeStr;
+    revcompOutput.value = revcompStr;
+  };
+
+  input.addEventListener("input", update);
+  seqTypeSelect.addEventListener("change", update);
+  directionSelect.addEventListener("change", update);
+  update();
+}
+
+
 const toolDetails = {
   "tool-slash": {
     title: "Slashes Converter",
@@ -599,6 +760,10 @@ const toolDetails = {
   "tool-base": {
     title: "Base Converter",
     desc: "Interconvert numbers between binary, octal, decimal, hexadecimal, and sexagesimal."
+  },
+  "tool-dna": {
+    title: "DNA/RNA Direction Transfer",
+    desc: "Perform sequence base complementation, reversing, and swap 5'/3' strand orientations."
   }
 };
 
@@ -740,6 +905,7 @@ function init() {
   setupAsciiConverter();
   setupUnicodeConverter();
   setupBaseConverter();
+  setupDnaConverter();
 }
 
 if (document.readyState === "loading") {

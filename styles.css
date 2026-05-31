@@ -389,6 +389,10 @@ label {
   color: var(--text-main);
 }
 
+textarea {
+  resize: none;
+}
+
 textarea,
 input,
 select {
@@ -616,3 +620,52 @@ html[data-theme="dark"] .status-msg {
     grid-column: span 1;
   }
 }
+
+/* Inline copy button and label row styling for premium feel */
+.label-row-with-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.copy-btn-inline {
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.copy-btn-inline:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.copy-btn-inline.copied {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+html[data-theme="dark"] .copy-btn-inline {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+html[data-theme="dark"] .copy-btn-inline:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .copy-btn-inline.copied {
+  background: #059669;
+  border-color: #059669;
+}
+

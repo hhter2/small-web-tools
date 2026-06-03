@@ -594,11 +594,13 @@ function setupDnaConverter() {
   
   const oppositeOutput = $("dna-output-opposite");
   const revcompOutput = $("dna-output-revcomp");
+  const reverseOutput = $("dna-output-reverse");
   const status = $("dna-status");
 
   const clearOutputs = (msg) => {
     oppositeOutput.value = "";
     revcompOutput.value = "";
+    reverseOutput.value = "";
     status.textContent = msg || "";
   };
 
@@ -717,8 +719,15 @@ function setupDnaConverter() {
     const revcompSeq = reverseString(getComplement(seq5to3, isRna));
     const revcompStr = `5'-${revcompSeq}-3'`;
 
+    // C. Same Strand (Reverse Direction)
+    const reversedSeq = reverseString(cleaned);
+    const reverseStr = (direction === "5-3")
+      ? `3'-${reversedSeq}-5'`
+      : `5'-${reversedSeq}-3'`;
+
     oppositeOutput.value = oppositeStr;
     revcompOutput.value = revcompStr;
+    reverseOutput.value = reverseStr;
   };
 
   input.addEventListener("input", update);

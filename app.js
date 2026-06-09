@@ -613,28 +613,6 @@ function setupDnaConverter() {
     return str.split("").reverse().join("");
   };
 
-  // Handle copying and styling transitions
-  document.querySelectorAll(".copy-btn-inline").forEach(button => {
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      const targetId = button.getAttribute("data-target");
-      const targetInput = $(targetId);
-      if (targetInput && targetInput.value) {
-        navigator.clipboard.writeText(targetInput.value).then(() => {
-          const originalText = button.textContent;
-          button.textContent = "Copied!";
-          button.classList.add("copied");
-          setTimeout(() => {
-            button.textContent = originalText;
-            button.classList.remove("copied");
-          }, 1500);
-        }).catch(err => {
-          console.error("Clipboard copy failed", err);
-        });
-      }
-    });
-  });
-
   // Track if direction was programmatically updated to avoid feedback loops
   let isUpdatingProgrammatically = false;
 
@@ -773,8 +751,176 @@ const toolDetails = {
   "tool-dna": {
     title: "DNA/RNA Direction Transfer",
     desc: "Perform sequence base complementation, reversing, and swap 5'/3' strand orientations."
+  },
+  "tool-iplookup": {
+    title: "IP Address Lookup",
+    desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
   }
 };
+
+async function ipLookup(ip) {
+  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+  if (isDev) {
+    // Dev: let the Vite Node.js middleware handle the external request
+    // This bypasses any browser-level network blocks completely
+    const qs = ip ? `?ip=${encodeURIComponent(ip.trim())}` : '';
+    const res = await fetch(`/api/iplookup${qs}`);
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'Server-side IP lookup failed');
+    return result.data;
+  }
+
+  // Production: try external APIs directly from the browser
+  const tryProvider = async (url, normalize) => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url} returned ${r.status}`);
+    return normalize(await r.json());
+  };
+
+  const providers = [
+    () => tryProvider(
+      ip ? `https://api.ip.sb/geoip/${ip}` : 'https://api.ip.sb/geoip',
+      (d) => ({
+        ip: d.ip, city: d.city || '', region: d.region || '',
+        country_name: d.country || '', country_code: d.country_code || '',
+        postal: '', org: d.isp || d.organization || '',
+        asn: d.asn ? `AS${d.asn}` : '', timezone: d.timezone || '',
+        utc_offset: '', latitude: d.latitude, longitude: d.longitude,
+      })
+    ),
+    () => tryProvider(
+      ip ? `https://ipapi.co/${ip}/json/` : 'https://ipapi.co/json/',
+      (d) => {
+        if (d.error) throw new Error(d.reason || 'ipapi.co error');
+        return {
+          ip: d.ip, city: d.city || '', region: d.region || '',
+          country_name: d.country_name || '', country_code: d.country_code || '',
+          postal: d.postal || '', org: d.org || '', asn: d.asn || '',
+          timezone: d.timezone || '', utc_offset: d.utc_offset || '',
+          latitude: d.latitude, longitude: d.longitude,
+        };
+      }
+    ),
+  ];
+
+  let lastErr = null;
+  for (const p of providers) {
+    try { return await p(); } catch (e) { lastErr = e; }
+  }
+  throw new Error(`IP lookup failed: ${lastErr?.message}`);
+}
+
+function getFlagEmoji(countryCode) {
+  if (!countryCode) return "";
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) =>
+      String.fromCodePoint(char.charCodeAt(0) + 127397)
+    );
+}
+
+function setupCopyButtons() {
+  document.querySelectorAll(".copy-btn-inline").forEach(button => {
+    if (button.dataset.hasCopyListener) return;
+    button.dataset.hasCopyListener = "true";
+    
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetId = button.getAttribute("data-target");
+      const targetInput = $(targetId);
+      if (targetInput && targetInput.value) {
+        navigator.clipboard.writeText(targetInput.value).then(() => {
+          const originalText = button.textContent;
+          button.textContent = "Copied!";
+          button.classList.add("copied");
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove("copied");
+          }, 1500);
+        }).catch(err => {
+          console.error("Clipboard copy failed", err);
+        });
+      }
+    });
+  });
+}
+
+function setupIpLookup() {
+  const input = $("iplookup-input");
+  const lookupBtn = $("iplookup-btn");
+  const myBtn = $("iplookup-my-btn");
+  const loader = $("iplookup-loader");
+  const results = $("iplookup-results");
+  const status = $("iplookup-status");
+
+  const resIp = $("iplookup-res-ip");
+  const resLocation = $("iplookup-res-location");
+  const resRegionCountry = $("iplookup-res-region-country");
+  const resOrg = $("iplookup-res-org");
+  const resTimezone = $("iplookup-res-timezone");
+  const resCoords = $("iplookup-res-coords");
+  const mapIframe = $("iplookup-map");
+
+  const doLookup = async (ipAddress) => {
+    loader.style.display = "flex";
+    results.style.display = "none";
+    status.textContent = "";
+
+    try {
+      const data = await ipLookup(ipAddress.trim());
+      
+      resIp.value = data.ip || "Unknown";
+      
+      const city = data.city || "";
+      const postal = data.postal || "";
+      resLocation.value = city && postal ? `${city} (${postal})` : (city || postal || "Unknown");
+      
+      const countryCode = data.country_code || "";
+      const flag = getFlagEmoji(countryCode);
+      const region = data.region || "";
+      const country = data.country_name || "";
+      resRegionCountry.value = `${region}${region && country ? ", " : ""}${country} ${flag}`.trim() || "Unknown";
+      
+      resOrg.value = data.org || "Unknown";
+      resTimezone.value = data.timezone ? `${data.timezone} (UTC ${data.utc_offset || ""})` : "Unknown";
+      
+      if (data.latitude !== undefined && data.latitude !== null && data.longitude !== undefined && data.longitude !== null) {
+        resCoords.value = `${data.latitude}, ${data.longitude}`;
+        const lat = data.latitude;
+        const lon = data.longitude;
+        mapIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.02}%2C${lat - 0.02}%2C${lon + 0.02}%2C${lat + 0.02}&layer=mapnik&marker=${lat}%2C${lon}`;
+        mapIframe.parentElement.style.display = "block";
+      } else {
+        resCoords.value = "Unknown";
+        mapIframe.src = "";
+        mapIframe.parentElement.style.display = "none";
+      }
+
+      results.style.display = "block";
+    } catch (err) {
+      status.textContent = `Error: ${err.message}`;
+    } finally {
+      loader.style.display = "none";
+    }
+  };
+
+  lookupBtn.addEventListener("click", () => {
+    doLookup(input.value);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      doLookup(input.value);
+    }
+  });
+
+  myBtn.addEventListener("click", () => {
+    input.value = "";
+    doLookup("");
+  });
+}
+
 
 function setupTheme() {
   const toggleBtn = $("theme-toggle");
@@ -906,6 +1052,7 @@ function setupSidebar() {
 function init() {
   setupTheme();
   setupSidebar();
+  setupCopyButtons();
   setupSlashConverter();
   setupWordCounter();
   setupDateCounter();
@@ -915,6 +1062,7 @@ function init() {
   setupUnicodeConverter();
   setupBaseConverter();
   setupDnaConverter();
+  setupIpLookup();
 }
 
 if (document.readyState === "loading") {

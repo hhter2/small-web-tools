@@ -33,3 +33,9 @@ dist/
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary development files
+test-*.js
+sample.cr3
+thumbnail.jpg
+

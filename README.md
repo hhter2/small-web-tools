@@ -15,6 +15,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 - **Persistent Selection**: Remembers the last opened tool across page reloads.
 - **DNA/RNA Direction Transfer**: Support DNA & RNA base complementation (supporting full IUPAC degenerate base codes), automatic direction tag detection (`5'-` and `3'-`), standard reverse complement generation, and same-strand reverse direction generation.
 - **IP Address Lookup**: Retrieve coordinates, timezone, city, region, country, and organization/ISP details for any IP address or automatically detect the current client IP, accompanied by an interactive OpenStreetMap preview.
+- **EXIF Data Analyzer**: Instantly extract metadata (camera settings, lens specifications, exposure settings, GPS details) from image files (including Canon `.CR3` RAW files) locally in the browser with 100% privacy (no files are uploaded), accompanied by live search, categorization tabs, and JSON export.
 
 ## Included Tools
 
@@ -28,6 +29,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 8. **Base Converter**: Seamlessly convert numbers across Binary (2), Octal (8), Decimal (10), Hexadecimal (16), and Sexagesimal (60).
 9. **DNA/RNA Direction Transfer**: Perform base sequence complementation (supporting IUPAC degenerate base codes), reversing, same-strand reverse direction generation (e.g., input `5'-AATTCA-3'` -> output `3'-ACTTAA-5'`), and 5'/3' strand orientation transfers (e.g., input `5'-CACGT-3'` -> output `3'-GTGCA-5'`).
 10. **IP Address Lookup**: Retrieve details of any IPv4/IPv6 address or look up the caller's IP, including geographical details, timezone, coordinates, organization, and a zoomable OpenStreetMap view.
+11. **EXIF Data Analyzer**: Load common images (JPEG, PNG, WebP, HEIC, AVIF) or Canon `.CR3` RAW files to extract EXIF, GPS, and manufacturer metadata client-side. Render embedded RAW thumbnails, filter tags by category tabs or search query, and export all metadata to a formatted JSON file.
 
 ---
 

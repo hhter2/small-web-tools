@@ -755,6 +755,10 @@ const toolDetails = {
   "tool-iplookup": {
     title: "IP Address Lookup",
     desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
+  },
+  "tool-exif": {
+    title: "EXIF Data Analyzer",
+    desc: "Extract and analyze EXIF, GPS, and custom camera metadata from image files (including Canon .CR3 RAW files) locally in the browser."
   }
 };
 
@@ -1049,6 +1053,407 @@ function setupSidebar() {
   }
 }
 
+// ==========================================================
+// EXIF Data Analyzer Tool Implementation
+// ==========================================
+
+function isCR3(arrayBuffer) {
+  if (arrayBuffer.byteLength < 12) return false;
+  const view = new DataView(arrayBuffer);
+  try {
+    const type = view.getUint32(4);
+    const brand = view.getUint32(8);
+    return type === 0x66747970 && brand === 0x63727820; // 'ftyp' and 'crx '
+  } catch (e) {
+    return false;
+  }
+}
+
+function extractCR3Boxes(buffer) {
+  const view = new DataView(buffer);
+  const cmtBoxes = {};
+  let jpegThumbnail = null;
+
+  function readString(offset, length) {
+    let str = "";
+    for (let i = 0; i < length; i++) {
+      str += String.fromCharCode(view.getUint8(offset + i));
+    }
+    return str;
+  }
+
+  function scan(offset, end) {
+    while (offset + 8 <= end) {
+      const size = view.getUint32(offset);
+      const type = readString(offset + 4, 4);
+      let boxSize = size;
+      let headerSize = 8;
+      if (size === 1) {
+        const high = view.getUint32(offset + 8);
+        const low = view.getUint32(offset + 12);
+        boxSize = high * 4294967296 + low;
+        headerSize = 16;
+      } else if (size === 0) {
+        boxSize = end - offset;
+      }
+
+      if (boxSize < headerSize || offset + boxSize > end) {
+        break;
+      }
+
+      const trimmedType = type.trim();
+
+      if (trimmedType === 'moov' || trimmedType === 'uuid') {
+        let subStart = offset + headerSize;
+        const subEnd = offset + boxSize;
+        if (trimmedType === 'uuid') {
+          subStart += 16; // Skip UUID
+        }
+        scan(subStart, subEnd);
+      } else if (['CMT1', 'CMT2', 'CMT3', 'CMT4'].includes(trimmedType)) {
+        const dataStart = offset + headerSize;
+        cmtBoxes[trimmedType] = buffer.slice(dataStart, offset + boxSize);
+      } else if (trimmedType === 'THMB') {
+        const dataStart = offset + headerSize;
+        const dataEnd = offset + boxSize;
+        const thmbBytes = new Uint8Array(buffer, dataStart, dataEnd - dataStart);
+        
+        let jpegOffset = -1;
+        for (let i = 0; i < thmbBytes.length - 1; i++) {
+          if (thmbBytes[i] === 0xFF && thmbBytes[i+1] === 0xD8) {
+            jpegOffset = i;
+            break;
+          }
+        }
+        if (jpegOffset !== -1) {
+          jpegThumbnail = buffer.slice(dataStart + jpegOffset, dataEnd);
+        }
+      }
+
+      offset += boxSize;
+    }
+  }
+
+  scan(0, buffer.byteLength);
+  return { cmtBoxes, jpegThumbnail };
+}
+
+function parseCR3Metadata(arrayBuffer) {
+  const { cmtBoxes, jpegThumbnail } = extractCR3Boxes(arrayBuffer);
+  const combinedTags = {};
+  
+  for (const [name, cmtData] of Object.entries(cmtBoxes)) {
+    try {
+      const tags = ExifReader.load(cmtData);
+      Object.assign(combinedTags, tags);
+    } catch (err) {
+      console.warn(`Failed to parse ${name} tag:`, err);
+    }
+  }
+  
+  if (jpegThumbnail) {
+    const bytes = new Uint8Array(jpegThumbnail);
+    let binary = "";
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+    
+    combinedTags['Thumbnail'] = {
+      image: jpegThumbnail,
+      base64: base64,
+      type: 'image/jpeg'
+    };
+  }
+  
+  combinedTags['FileType'] = {
+    value: 'cr3',
+    description: 'Canon CR3 RAW'
+  };
+  
+  return combinedTags;
+}
+
+function getTagCategory(tagName, tagData) {
+  const name = tagName.toLowerCase();
+  
+  if (name.includes('gps') || tagName === 'Latitude' || tagName === 'Longitude' || tagName === 'Altitude') {
+    return 'gps';
+  }
+  
+  const cameraTags = [
+    'make', 'model', 'software', 'serialnumber', 'bodyserialnumber',
+    'ownername', 'cameraownername', 'firmware', 'device', 'lensmodel', 
+    'lensmake', 'lensspecification', 'lensserialnumber', 'imagewidth', 'imagelength'
+  ];
+  if (cameraTags.some(t => name.includes(t))) {
+    return 'camera';
+  }
+  
+  const exposureTags = [
+    'exposuretime', 'fnumber', 'isospeed', 'exposureprogram', 'shutterspeed', 
+    'aperture', 'exposurebias', 'meteringmode', 'flash', 'focallength', 
+    'whitebalance', 'sensingmethod', 'exposuremode', 'brightness', 'contrast',
+    'saturation', 'sharpness', 'lightsource'
+  ];
+  if (exposureTags.some(t => name.includes(t))) {
+    return 'exposure';
+  }
+  
+  return 'other';
+}
+
+function downloadJson(tags, filename) {
+  const cleanedTags = {};
+  for (const [key, val] of Object.entries(tags)) {
+    if (key === 'Thumbnail') {
+      cleanedTags[key] = {
+        base64: val.base64 ? val.base64.substring(0, 100) + '... [truncated]' : undefined,
+        type: val.type
+      };
+    } else {
+      cleanedTags[key] = val;
+    }
+  }
+  const jsonString = JSON.stringify(cleanedTags, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename.replace(/\.[^/.]+$/, "") + "_metadata.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function setupExifAnalyzer() {
+  const dropzone = $("exif-dropzone");
+  const fileInput = $("exif-file-input");
+  const resultsArea = $("exif-results");
+  const previewImg = $("exif-preview-img");
+  const rawIcon = $("exif-raw-icon");
+  const fileNameEl = $("exif-file-name");
+  const fileTypeEl = $("exif-file-type");
+  const fileSizeEl = $("exif-file-size");
+  const tableBody = $("exif-table-body");
+  const noTagsEl = $("exif-no-tags");
+  const searchInput = $("exif-tag-search");
+  const downloadBtn = $("exif-download-json");
+  const clearBtn = $("exif-clear");
+  const statusEl = $("exif-status");
+
+  let currentTags = null;
+  let currentFileName = "";
+  let activeTab = "all";
+
+  if (!dropzone) return;
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("dragover");
+  });
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processFile(files[0]);
+    }
+  });
+
+  dropzone.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      processFile(fileInput.files[0]);
+    }
+  });
+
+  const resetTool = () => {
+    currentTags = null;
+    currentFileName = "";
+    activeTab = "all";
+    fileInput.value = "";
+    searchInput.value = "";
+    
+    tableBody.innerHTML = "";
+    previewImg.src = "";
+    previewImg.style.display = "none";
+    rawIcon.style.display = "none";
+    
+    resultsArea.style.display = "none";
+    dropzone.style.display = "flex";
+    statusEl.textContent = "";
+
+    document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
+      if (btn.getAttribute("data-tab") === "all") {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  };
+
+  clearBtn.addEventListener("click", resetTool);
+
+  downloadBtn.addEventListener("click", () => {
+    if (currentTags) {
+      downloadJson(currentTags, currentFileName);
+    }
+  });
+
+  document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".exif-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeTab = btn.getAttribute("data-tab");
+      renderTable();
+    });
+  });
+
+  searchInput.addEventListener("input", () => {
+    renderTable();
+  });
+
+  function renderTable() {
+    if (!currentTags) return;
+    
+    tableBody.innerHTML = "";
+    const query = searchInput.value.toLowerCase().trim();
+    let matchCount = 0;
+
+    const tagNames = Object.keys(currentTags).sort();
+
+    tagNames.forEach(tagName => {
+      if (tagName === 'Thumbnail' || tagName === 'thumbnail') return;
+
+      const tagData = currentTags[tagName];
+      const valStr = String(tagData.value !== undefined ? tagData.value : '');
+      const descStr = String(tagData.description !== undefined ? tagData.description : '');
+      
+      if (activeTab !== "all" && getTagCategory(tagName, tagData) !== activeTab) {
+        return;
+      }
+
+      if (query) {
+        const matchName = tagName.toLowerCase().includes(query);
+        const matchVal = valStr.toLowerCase().includes(query);
+        const matchDesc = descStr.toLowerCase().includes(query);
+        if (!matchName && !matchVal && !matchDesc) {
+          return;
+        }
+      }
+
+      const row = document.createElement("tr");
+      
+      const tdName = document.createElement("td");
+      tdName.textContent = tagName;
+      
+      const tdVal = document.createElement("td");
+      tdVal.textContent = valStr;
+      
+      const tdDesc = document.createElement("td");
+      tdDesc.textContent = descStr || "—";
+
+      row.appendChild(tdName);
+      row.appendChild(tdVal);
+      row.appendChild(tdDesc);
+      
+      tableBody.appendChild(row);
+      matchCount++;
+    });
+
+    if (matchCount === 0) {
+      noTagsEl.style.display = "block";
+    } else {
+      noTagsEl.style.display = "none";
+    }
+  }
+
+  function processFile(file) {
+    statusEl.textContent = "";
+    currentFileName = file.name;
+
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = formatBytes(file.size);
+
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+      const arrayBuffer = e.target.result;
+      
+      try {
+        if (isCR3(arrayBuffer)) {
+          fileTypeEl.textContent = "Canon CR3 RAW";
+          currentTags = parseCR3Metadata(arrayBuffer);
+          
+          if (currentTags.Thumbnail && currentTags.Thumbnail.base64) {
+            previewImg.src = 'data:image/jpeg;base64,' + currentTags.Thumbnail.base64;
+            previewImg.style.display = "block";
+            rawIcon.style.display = "none";
+          } else {
+            previewImg.style.display = "none";
+            rawIcon.style.display = "flex";
+          }
+        } else {
+          fileTypeEl.textContent = file.name.split('.').pop().toUpperCase() || "Unknown";
+          
+          try {
+            currentTags = ExifReader.load(arrayBuffer);
+          } catch (exifErr) {
+            console.warn("ExifReader failed to read:", exifErr);
+            currentTags = {
+              'Error': {
+                value: exifErr.message,
+                description: 'No EXIF metadata found or format is unsupported.'
+              }
+            };
+          }
+
+          const imgReader = new FileReader();
+          imgReader.onload = (imgEvent) => {
+            previewImg.src = imgEvent.target.result;
+            previewImg.style.display = "block";
+            rawIcon.style.display = "none";
+          };
+          imgReader.readAsDataURL(file);
+        }
+
+        dropzone.style.display = "none";
+        resultsArea.style.display = "grid";
+        renderTable();
+      } catch (err) {
+        console.error("Processing error:", err);
+        statusEl.textContent = "Error processing file: " + err.message;
+      }
+    };
+
+    reader.onerror = () => {
+      statusEl.textContent = "Failed to read file.";
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+}
+
 function init() {
   setupTheme();
   setupSidebar();
@@ -1063,6 +1468,7 @@ function init() {
   setupBaseConverter();
   setupDnaConverter();
   setupIpLookup();
+  setupExifAnalyzer();
 }
 
 if (document.readyState === "loading") {

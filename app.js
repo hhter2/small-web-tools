@@ -602,6 +602,7 @@ function setupDnaConverter() {
     revcompOutput.value = "";
     reverseOutput.value = "";
     status.textContent = msg || "";
+    status.style.color = "";
   };
 
   const getComplement = (sequence, isRna) => {
@@ -654,12 +655,16 @@ function setupDnaConverter() {
       return;
     }
 
-    // Validate characters: only A, T, C, G, U are allowed
-    if (/[^ACGUT]/.test(cleaned)) {
-      clearOutputs("Error: Only A, T, C, G, and U characters are allowed.");
+    // Validate characters: only A, T, C, G, U, and N are allowed
+    if (/[^ACGUTN]/.test(cleaned)) {
+      clearOutputs("Error: Only A, T, C, G, U, and N characters are allowed.");
       return;
     }
-    status.textContent = "";
+
+    let warningMessage = "";
+    if (cleaned.includes("N")) {
+      warningMessage = "Notification: 'N' detected (can attach to any base: A, T, C, or G).";
+    }
 
     // 3. Auto-detect sequence type (DNA vs RNA)
     let isRna = false;
@@ -668,8 +673,7 @@ function setupDnaConverter() {
       const hasU = cleaned.includes("U");
       const hasT = cleaned.includes("T");
       if (hasU && hasT) {
-        status.textContent = "Warning: Both T and U detected. Defaulting to DNA.";
-        status.style.color = "#ef4444";
+        warningMessage = (warningMessage ? warningMessage + " " : "") + "Warning: Both T and U detected. Defaulting to DNA.";
         isRna = false;
       } else if (hasU) {
         isRna = true;
@@ -678,6 +682,15 @@ function setupDnaConverter() {
       }
     } else {
       isRna = selectedType === "rna";
+    }
+
+    if (warningMessage) {
+      status.textContent = warningMessage;
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      status.style.color = isDark ? "#fbbf24" : "#b45309"; // Amber/yellow color for warnings
+    } else {
+      status.textContent = "";
+      status.style.color = "";
     }
 
     const direction = directionSelect.value;

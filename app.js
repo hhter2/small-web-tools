@@ -2161,9 +2161,7 @@ function setupRandomWheel() {
 
   // 7. Initialize Default Content (1~5)
   textInput.value = "1\n2\n3\n4\n5";
-  parseOptionsFromTextarea();
-  renderListView();
-  drawWheel(0);
+  setEditingMode(false);
 
   // 8. Re-draw when dark/light theme is toggled
   const themeToggle = $("theme-toggle");

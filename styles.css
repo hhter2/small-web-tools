@@ -58,6 +58,7 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Mobile Header (Hidden on Desktop) */
@@ -115,7 +116,8 @@ body {
   top: 0;
   box-shadow: var(--shadow-sidebar);
   z-index: 100;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-brand {
@@ -226,6 +228,10 @@ body {
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .theme-switch-wrapper {
@@ -304,6 +310,117 @@ html[data-theme="dark"] .moon-icon {
   max-width: 760px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Sidebar Collapse Wrapper in Footer */
+.sidebar-collapse-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapse-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.collapse-btn-footer {
+  transition: all 0.2s ease;
+}
+
+.collapse-btn-footer:hover {
+  transform: scale(1.05); /* scale instead of rotate */
+}
+
+/* Collapsed Sidebar Layout Modifications (Desktop only) */
+@media (min-width: 769px) {
+  .collapsed-sidebar .sidebar {
+    width: 78px;
+    overflow: visible;
+  }
+  
+  .collapsed-sidebar .sidebar-nav {
+    overflow: visible;
+  }
+
+  .collapsed-sidebar .brand-text,
+  .collapsed-sidebar .sidebar-search-container,
+  .collapsed-sidebar .nav-item span,
+  .collapsed-sidebar .theme-label,
+  .collapsed-sidebar .collapse-label {
+    display: none !important;
+  }
+
+  .collapsed-sidebar .sidebar-brand {
+    justify-content: center;
+    padding: 24px 0;
+  }
+
+  .collapsed-sidebar .nav-item {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .collapsed-sidebar .sidebar-footer {
+    padding: 16px 0;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .collapsed-sidebar .theme-switch-wrapper,
+  .collapsed-sidebar .sidebar-collapse-wrapper {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Active/Collapsed styling for buttons */
+  .collapsed-sidebar .collapse-btn-footer {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+    transform: rotate(180deg); /* points other way when collapsed */
+  }
+  .collapsed-sidebar .collapse-btn-footer:hover {
+    transform: scale(1.05) rotate(180deg);
+  }
+
+  /* CSS Tooltip on Hover when Collapsed */
+  .collapsed-sidebar .nav-item {
+    position: relative;
+  }
+  
+  .collapsed-sidebar .nav-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 85px;
+    top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    background: var(--bg-card);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 110;
+  }
+  
+  .collapsed-sidebar .nav-item:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-collapse-wrapper {
+    display: none !important;
+  }
 }
 
 .main-header h1 {

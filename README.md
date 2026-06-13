@@ -7,6 +7,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 ## Features & Upgrades
 
 - **Sidebar Navigation Layout**: Clean sidebar navigation on the left, displaying only the selected tool card in the main staging area on the right.
+- **Collapsible Left Sidebar**: Collapse the sidebar to a mini-sidebar layout (78px width) with a single click of the collapse button in the bottom-left sidebar footer. Keeps navigation icons visible and shows text labels as tooltips on hover, remembering your preference via `localStorage`.
 - **Search Filtering**: Instantly search/filter through the list of tools inside the sidebar to find what you need.
 - **Theme Switcher**: Fully functional Light & Dark theme toggle with automatic system preference detection and state persistence (saves choice to `localStorage`).
 - **Interactive UI Swatch**: Live color preview bar inside the Color Code Converter tool.

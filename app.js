@@ -995,6 +995,36 @@ function setupSidebar() {
     sidebarOverlay.addEventListener("click", toggleMobileSidebar);
   }
 
+  // Desktop sidebar toggling
+  const footerSidebarToggle = $("sidebar-collapse-btn");
+  const appLayout = document.querySelector(".app-layout");
+
+  const toggleDesktopSidebar = () => {
+    if (appLayout) {
+      appLayout.classList.toggle("collapsed-sidebar");
+      try {
+        const isCollapsed = appLayout.classList.contains("collapsed-sidebar");
+        localStorage.setItem("sidebarCollapsed", isCollapsed ? "true" : "false");
+      } catch (e) {
+        // Storage access blocked
+      }
+    }
+  };
+
+  if (footerSidebarToggle) {
+    footerSidebarToggle.addEventListener("click", toggleDesktopSidebar);
+  }
+
+  // Load persistent sidebar collapsed state
+  try {
+    const sidebarCollapsed = localStorage.getItem("sidebarCollapsed");
+    if (sidebarCollapsed === "true" && appLayout) {
+      appLayout.classList.add("collapsed-sidebar");
+    }
+  } catch (e) {
+    // Storage access blocked
+  }
+
   const activateTool = (toolId) => {
     // Hide all tool cards and remove active classes
     toolCards.forEach(card => card.classList.remove("active"));

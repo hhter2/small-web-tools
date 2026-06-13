@@ -73,3 +73,10 @@ npm run preview
 - `styles.css` — Custom CSS variables, responsive design, animations, theme schemes, and utility widgets.
 - `package.json` — Tooling configuration and dependencies.
 - `.gitignore` — Standard gitignore configuration for Node/Vite projects.
+
+---
+
+## Recent Bug Fixes
+
+- **EXIF Dropzone Mobile Loop Fix**: Fixed a bug where tapping the "Browse File" label (or the file input element itself) inside the EXIF analyzer's dropzone on mobile devices triggered a recursive click event loop, preventing files from being analyzed. Tapping/clicking now cleanly triggers the file chooser exactly once.
+

@@ -34,8 +34,13 @@ dist/
 *.sln
 *.sw?
 
-# Temporary development files
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Temporary/test development files
 test-*.js
 sample.cr3
 thumbnail.jpg
-
+*.tmp
+temp/

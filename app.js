@@ -1552,7 +1552,12 @@ function setupExifAnalyzer() {
     dropzone.classList.remove("dragover");
     if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
   });
-  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("click", (e) => {
+    if (e.target === fileInput || e.target.closest("label")) {
+      return;
+    }
+    fileInput.click();
+  });
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) processFile(fileInput.files[0]);
   });

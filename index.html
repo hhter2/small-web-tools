@@ -525,7 +525,7 @@
                     <div class="exif-img-container">
                       <img id="exif-preview-img" alt="Preview" style="display: none;" />
                       <div id="exif-raw-icon" class="exif-raw-icon" style="display: none;">
-                        <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                           <circle cx="12" cy="13" r="4"></circle>
                         </svg>
@@ -555,18 +555,26 @@
                 <div class="exif-data-col">
                   <div class="exif-header-actions">
                     <div class="exif-tabs">
-                      <button class="tab-btn active" data-tab="all">All</button>
-                      <button class="tab-btn" data-tab="camera">Camera</button>
+                      <button class="tab-btn active" data-tab="camera">Camera</button>
                       <button class="tab-btn" data-tab="exposure">Exposure</button>
-                      <button class="tab-btn" data-tab="gps">GPS</button>
-                      <button class="tab-btn" data-tab="other">Other</button>
+                      <button class="tab-btn" data-tab="colors">Colors</button>
+                      <button class="tab-btn" data-tab="optics">Optics</button>
+                      <button class="tab-btn" data-tab="others">Others</button>
+                      <button class="tab-btn" data-tab="all">All</button>
+                      <button class="tab-btn" data-tab="advanced">Advanced</button>
                     </div>
                     <div class="exif-search-wrapper">
                       <input type="text" id="exif-tag-search" placeholder="Search tags..." autocomplete="off" />
                     </div>
                   </div>
 
-                  <div class="exif-table-container scrollable">
+                  <!-- Camera-param grouped view (used by Camera/Exposure/Colors/Optics/Others/All tabs) -->
+                  <div id="exif-cam-view" class="exif-cam-view" style="display: none;">
+                    <!-- Populated by JS -->
+                  </div>
+
+                  <!-- Advanced raw table (used by Advanced tab) -->
+                  <div id="exif-table-wrapper" class="exif-table-container scrollable" style="display: none;">
                     <table class="exif-table">
                       <thead>
                         <tr>

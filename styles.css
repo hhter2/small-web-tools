@@ -448,6 +448,11 @@ html[data-theme="dark"] .moon-icon {
   flex: 1;
 }
 
+/* Some tools (e.g. EXIF Analyzer) need full-width layout */
+.tool-stage.wide-tool {
+  max-width: none;
+}
+
 /* Tool Card Styles */
 .tool-card {
   display: none; /* Hidden by default */
@@ -933,13 +938,13 @@ html[data-theme="dark"] .copy-btn-inline.copied {
 /* Results grid layout */
 .exif-results-grid {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
+  grid-template-columns: 170px 1fr;
+  gap: 20px;
   width: 100%;
   animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 900px) {
   .exif-results-grid {
     grid-template-columns: 1fr;
   }
@@ -969,6 +974,7 @@ html[data-theme="dark"] .copy-btn-inline.copied {
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
   position: relative;
+  max-height: 140px;
 }
 
 .exif-img-container img {
@@ -1154,11 +1160,128 @@ html[data-theme="dark"] .exif-tabs .tab-btn.active {
 .exif-table td:nth-child(2) {
   color: var(--text-main);
   white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .exif-table td:nth-child(3) {
   color: var(--text-muted);
-  word-break: break-word;
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Camera-param grouped view */
+.exif-cam-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: 520px;
+  padding-right: 4px;
+}
+
+.exif-cam-view::-webkit-scrollbar {
+  width: 6px;
+}
+.exif-cam-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+.exif-cam-view::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.exif-param-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exif-param-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.exif-param-group-header span.group-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.exif-param-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0;
+}
+
+.exif-stat-cell {
+  padding: 12px 16px;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.exif-stat-cell:last-child {
+  border-right: none;
+}
+
+/* remove bottom border from last row */
+.exif-stat-cell.no-bottom {
+  border-bottom: none;
+}
+
+.exif-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exif-stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Outfit', sans-serif;
+}
+
+.exif-stat-value.not-available {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.exif-no-tags-cam {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
 }
 
 .exif-no-tags-msg {

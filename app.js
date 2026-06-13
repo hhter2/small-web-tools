@@ -1025,6 +1025,8 @@ function setupSidebar() {
     // Storage access blocked
   }
 
+  const toolStage = document.querySelector(".tool-stage");
+
   const activateTool = (toolId) => {
     // Hide all tool cards and remove active classes
     toolCards.forEach(card => card.classList.remove("active"));
@@ -1037,6 +1039,11 @@ function setupSidebar() {
     if (targetCard && targetNav) {
       targetCard.classList.add("active");
       targetNav.classList.add("active");
+
+      // EXIF tool needs extra width; remove constraint for it
+      if (toolStage) {
+        toolStage.classList.toggle("wide-tool", toolId === "tool-exif");
+      }
       
       // Update header
       if (toolDetails[toolId]) {
@@ -1218,32 +1225,15 @@ function parseCR3Metadata(arrayBuffer) {
   return combinedTags;
 }
 
-function getTagCategory(tagName, tagData) {
+function getTagCategory(tagName) {
+  // Returns one of: 'exposure', 'colors', 'optics', 'others'
+  // Used for Advanced tab category filter only
   const name = tagName.toLowerCase();
-  
-  if (name.includes('gps') || tagName === 'Latitude' || tagName === 'Longitude' || tagName === 'Altitude') {
-    return 'gps';
-  }
-  
-  const cameraTags = [
-    'make', 'model', 'software', 'serialnumber', 'bodyserialnumber',
-    'ownername', 'cameraownername', 'firmware', 'device', 'lensmodel', 
-    'lensmake', 'lensspecification', 'lensserialnumber', 'imagewidth', 'imagelength'
-  ];
-  if (cameraTags.some(t => name.includes(t))) {
-    return 'camera';
-  }
-  
-  const exposureTags = [
-    'exposuretime', 'fnumber', 'isospeed', 'exposureprogram', 'shutterspeed', 
-    'aperture', 'exposurebias', 'meteringmode', 'flash', 'focallength', 
-    'whitebalance', 'sensingmethod', 'exposuremode', 'brightness', 'contrast',
-    'saturation', 'sharpness', 'lightsource'
-  ];
-  if (exposureTags.some(t => name.includes(t))) {
-    return 'exposure';
-  }
-  
+  if (name.includes('gps') || tagName === 'Latitude' || tagName === 'Longitude' || tagName === 'Altitude') return 'gps';
+  const exposureTags = ['exposuretime','fnumber','isospeed','exposureprogram','shutterspeed','aperture','exposurebias','meteringmode','flash','whitebalance','sensingmethod','exposuremode','brightness','contrast','saturation','sharpness','lightsource'];
+  if (exposureTags.some(t => name.includes(t))) return 'exposure';
+  const cameraTags = ['make','model','software','serialnumber','bodyserialnumber','ownername','cameraownername','firmware','device','lensmodel','lensmake','lensspecification','lensserialnumber','imagewidth','imagelength'];
+  if (cameraTags.some(t => name.includes(t))) return 'camera';
   return 'other';
 }
 
@@ -1271,6 +1261,244 @@ function downloadJson(tags, filename) {
   URL.revokeObjectURL(url);
 }
 
+// ─── EXIF Smart Value Formatters ──────────────────────────────────────────────
+
+function exifGet(tags, ...keys) {
+  for (const k of keys) {
+    if (tags[k] !== undefined) return tags[k];
+  }
+  return null;
+}
+
+function fmtVal(tag) {
+  if (!tag) return null;
+  const d = tag.description;
+  const v = tag.value;
+  if (d !== undefined && d !== null && String(d).trim() !== '') return String(d).trim();
+  if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  return null;
+}
+
+function fmtShutterSpeed(tags) {
+  const tag = exifGet(tags, 'ExposureTime', 'ShutterSpeedValue');
+  if (!tag) return null;
+  if (tag.value !== undefined) {
+    const num = Array.isArray(tag.value) ? tag.value[0] / tag.value[1] : Number(tag.value);
+    if (isNaN(num)) return fmtVal(tag);
+    if (num >= 1) return num % 1 === 0 ? `${num}"` : `${num.toFixed(1)}"`;
+    return `1/${Math.round(1/num)}`;
+  }
+  return fmtVal(tag);
+}
+
+function fmtAperture(tags) {
+  const tag = exifGet(tags, 'FNumber', 'ApertureValue');
+  if (!tag) return null;
+  if (tag.value !== undefined) {
+    let num;
+    if (Array.isArray(tag.value)) num = tag.value[0] / tag.value[1];
+    else if (typeof tag.value === 'number') num = tag.value;
+    // ApertureValue is APEX: f = 2^(apex/2)
+    else if (tag.description) {
+      const d = parseFloat(tag.description);
+      return isNaN(d) ? fmtVal(tag) : `f/${d}`;
+    }
+    if (num !== undefined && !isNaN(num)) {
+      if (String(Object.keys(tags).find(k => tags[k] === tag)).includes('Aperture'))
+        num = Math.pow(2, num / 2);
+      return `f/${parseFloat(num.toFixed(1))}`;
+    }
+  }
+  return fmtVal(tag);
+}
+
+function fmtISO(tags) {
+  const tag = exifGet(tags, 'ISOSpeedRatings', 'PhotographicSensitivity', 'ISO');
+  if (!tag) return null;
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return v !== undefined ? `ISO ${v}` : fmtVal(tag);
+}
+
+function fmtFocalLength(tags) {
+  const tag = exifGet(tags, 'FocalLength');
+  if (!tag) return null;
+  if (Array.isArray(tag.value)) {
+    const mm = tag.value[0] / tag.value[1];
+    return isNaN(mm) ? fmtVal(tag) : `${parseFloat(mm.toFixed(1))} mm`;
+  }
+  return fmtVal(tag);
+}
+
+function fmtFocalLength35(tags) {
+  const tag = exifGet(tags, 'FocalLengthIn35mmFilm', 'FocalLengthIn35mmFormat');
+  if (!tag) return null;
+  const v = Array.isArray(tag.value) ? tag.value[0] : Number(tag.value);
+  return isNaN(v) ? fmtVal(tag) : `${v} mm`;
+}
+
+function fmtCropFactor(tags) {
+  const fl = exifGet(tags, 'FocalLength');
+  const fl35 = exifGet(tags, 'FocalLengthIn35mmFilm', 'FocalLengthIn35mmFormat');
+  if (!fl || !fl35) return null;
+  const flMm = Array.isArray(fl.value) ? fl.value[0] / fl.value[1] : Number(fl.value);
+  const fl35Mm = Array.isArray(fl35.value) ? fl35.value[0] : Number(fl35.value);
+  if (!flMm || !fl35Mm) return null;
+  const crop = fl35Mm / flMm;
+  return `${parseFloat(crop.toFixed(2))}×`;
+}
+
+function fmtAspectRatio(tags) {
+  const wTag = exifGet(tags, 'ImageWidth', 'PixelXDimension', 'ExifImageWidth');
+  const hTag = exifGet(tags, 'ImageLength', 'PixelYDimension', 'ExifImageHeight');
+  if (!wTag || !hTag) return null;
+  const w = Number(Array.isArray(wTag.value) ? wTag.value[0] : wTag.value);
+  const h = Number(Array.isArray(hTag.value) ? hTag.value[0] : hTag.value);
+  if (!w || !h) return null;
+  const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+  const g = gcd(w, h);
+  return `${w/g}:${h/g} (${w}×${h})`;
+}
+
+function fmtResolution(tags) {
+  const wTag = exifGet(tags, 'ImageWidth', 'PixelXDimension', 'ExifImageWidth');
+  const hTag = exifGet(tags, 'ImageLength', 'PixelYDimension', 'ExifImageHeight');
+  if (!wTag || !hTag) return null;
+  const w = Number(Array.isArray(wTag.value) ? wTag.value[0] : wTag.value);
+  const h = Number(Array.isArray(hTag.value) ? hTag.value[0] : hTag.value);
+  if (!w || !h) return null;
+  const mp = ((w * h) / 1_000_000).toFixed(1);
+  return `${w} × ${h} px  (${mp} MP)`;
+}
+
+function fmtMeteringMode(tags) {
+  const tag = exifGet(tags, 'MeteringMode');
+  if (!tag) return null;
+  const map = { 0:'Unknown', 1:'Average', 2:'Center-weighted', 3:'Spot', 4:'Multi-spot', 5:'Multi-zone', 6:'Partial', 255:'Other' };
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return map[v] || fmtVal(tag);
+}
+
+function fmtFlash(tags) {
+  const tag = exifGet(tags, 'Flash');
+  if (!tag) return null;
+  if (tag.description) return tag.description;
+  const v = Array.isArray(tag.value) ? tag.value[0] : Number(tag.value);
+  const fired = (v & 0x01) ? 'Flash fired' : 'No flash';
+  return fired;
+}
+
+function fmtWhiteBalance(tags) {
+  const tag = exifGet(tags, 'WhiteBalance');
+  if (!tag) return null;
+  const map = { 0:'Auto', 1:'Manual' };
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return map[v] || fmtVal(tag);
+}
+
+function fmtColorSpace(tags) {
+  const tag = exifGet(tags, 'ColorSpace');
+  if (!tag) return null;
+  const map = { 1:'sRGB', 65535:'Uncalibrated', 2:'Adobe RGB' };
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return map[v] || fmtVal(tag);
+}
+
+function fmtColorDepth(tags) {
+  const tag = exifGet(tags, 'BitsPerSample');
+  if (!tag) return null;
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return v ? `${v}-bit` : fmtVal(tag);
+}
+
+function fmtGPS(tags) {
+  const lat = exifGet(tags, 'GPSLatitude');
+  const lon = exifGet(tags, 'GPSLongitude');
+  if (!lat || !lon) return null;
+  const latRef = fmtVal(exifGet(tags, 'GPSLatitudeRef')) || 'N';
+  const lonRef = fmtVal(exifGet(tags, 'GPSLongitudeRef')) || 'E';
+  return `${fmtVal(lat)} ${latRef}, ${fmtVal(lon)} ${lonRef}`;
+}
+
+function fmtDateTime(tags) {
+  const tag = exifGet(tags, 'DateTimeOriginal', 'DateTimeDigitized', 'DateTime');
+  if (!tag) return null;
+  const v = fmtVal(tag);
+  if (!v) return null;
+  // EXIF date format: "YYYY:MM:DD HH:MM:SS"
+  return v.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+}
+
+function fmtEditTime(tags) {
+  const tag = exifGet(tags, 'DateTime', 'FileModifyDate');
+  if (!tag) return null;
+  return fmtVal(tag)?.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') || null;
+}
+
+function fmtExposureMode(tags) {
+  const tag = exifGet(tags, 'ExposureProgram');
+  if (!tag) return null;
+  const map = { 0:'Not defined', 1:'Manual', 2:'Program AE', 3:'Aperture priority', 4:'Shutter priority', 5:'Creative', 6:'Action', 7:'Portrait', 8:'Landscape', 9:'Bulb' };
+  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  return map[v] || fmtVal(tag);
+}
+
+// ─── Camera param group definitions ───────────────────────────────────────────
+
+const EXIF_GROUPS = [
+  {
+    id: 'exposure',
+    label: 'Exposure',
+    icon: '📷',
+    tabs: ['exposure', 'camera', 'all'],
+    params: [
+      { label: 'Shutter Speed', fn: fmtShutterSpeed },
+      { label: 'Aperture',      fn: fmtAperture },
+      { label: 'ISO',           fn: fmtISO },
+      { label: 'Exposure Mode', fn: fmtExposureMode },
+      { label: 'Metering Mode', fn: fmtMeteringMode },
+      { label: 'Flash',         fn: fmtFlash },
+      { label: 'Exp. Bias',     fn: (t) => fmtVal(exifGet(t, 'ExposureBiasValue', 'ExposureCompensation')) },
+    ],
+  },
+  {
+    id: 'colors',
+    label: 'Colors',
+    icon: '🎨',
+    tabs: ['colors', 'camera', 'all'],
+    params: [
+      { label: 'White Balance', fn: fmtWhiteBalance },
+      { label: 'Color Space',   fn: fmtColorSpace },
+      { label: 'Color Depth',   fn: fmtColorDepth },
+    ],
+  },
+  {
+    id: 'optics',
+    label: 'Optics',
+    icon: '🔭',
+    tabs: ['optics', 'camera', 'all'],
+    params: [
+      { label: 'Focal Length',   fn: fmtFocalLength },
+      { label: 'Focal (35mm eq.)', fn: fmtFocalLength35 },
+      { label: 'Image Ratio',    fn: fmtAspectRatio },
+      { label: 'Crop Factor',    fn: fmtCropFactor },
+    ],
+  },
+  {
+    id: 'others',
+    label: 'Others',
+    icon: '🗂️',
+    tabs: ['others', 'camera', 'all'],
+    params: [
+      { label: 'Resolution',    fn: fmtResolution },
+      { label: 'Shooting Time', fn: fmtDateTime },
+      { label: 'Last Edit Time',fn: fmtEditTime },
+      { label: 'GPS',           fn: fmtGPS },
+      { label: 'File Type',     fn: (t) => fmtVal(exifGet(t, 'FileType')) },
+      { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },
+    ],
+  },
+];
+
 function setupExifAnalyzer() {
   const dropzone = $("exif-dropzone");
   const fileInput = $("exif-file-input");
@@ -1282,6 +1510,8 @@ function setupExifAnalyzer() {
   const fileSizeEl = $("exif-file-size");
   const tableBody = $("exif-table-body");
   const noTagsEl = $("exif-no-tags");
+  const camView = $("exif-cam-view");
+  const tableWrapper = $("exif-table-wrapper");
   const searchInput = $("exif-tag-search");
   const downloadBtn = $("exif-download-json");
   const clearBtn = $("exif-clear");
@@ -1289,156 +1519,193 @@ function setupExifAnalyzer() {
 
   let currentTags = null;
   let currentFileName = "";
-  let activeTab = "all";
+  let activeTab = "camera";
 
   if (!dropzone) return;
 
+  // ─── Drag & Drop ──────────────────────────────────────────────────────────
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropzone.classList.add("dragover");
   });
-
-  dropzone.addEventListener("dragleave", () => {
-    dropzone.classList.remove("dragover");
-  });
-
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
     dropzone.classList.remove("dragover");
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      processFile(files[0]);
-    }
+    if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
   });
-
-  dropzone.addEventListener("click", () => {
-    fileInput.click();
-  });
-
+  dropzone.addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
-      processFile(fileInput.files[0]);
-    }
+    if (fileInput.files.length > 0) processFile(fileInput.files[0]);
   });
 
+  // ─── Reset ────────────────────────────────────────────────────────────────
   const resetTool = () => {
     currentTags = null;
     currentFileName = "";
-    activeTab = "all";
+    activeTab = "camera";
     fileInput.value = "";
     searchInput.value = "";
-    
     tableBody.innerHTML = "";
+    camView.innerHTML = "";
     previewImg.src = "";
     previewImg.style.display = "none";
     rawIcon.style.display = "none";
-    
     resultsArea.style.display = "none";
     dropzone.style.display = "flex";
     statusEl.textContent = "";
-
     document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
-      if (btn.getAttribute("data-tab") === "all") {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
+      btn.classList.toggle("active", btn.getAttribute("data-tab") === "camera");
     });
   };
-
   clearBtn.addEventListener("click", resetTool);
 
+  // ─── Export JSON ──────────────────────────────────────────────────────────
   downloadBtn.addEventListener("click", () => {
-    if (currentTags) {
-      downloadJson(currentTags, currentFileName);
-    }
+    if (currentTags) downloadJson(currentTags, currentFileName);
   });
 
+  // ─── Tabs ─────────────────────────────────────────────────────────────────
   document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".exif-tabs .tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeTab = btn.getAttribute("data-tab");
-      renderTable();
+      renderView();
     });
   });
 
-  searchInput.addEventListener("input", () => {
-    renderTable();
-  });
+  searchInput.addEventListener("input", () => renderView());
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  function renderView() {
+    if (!currentTags) return;
+    if (activeTab === 'advanced') {
+      camView.style.display = 'none';
+      tableWrapper.style.display = 'block';
+      renderTable();
+    } else {
+      tableWrapper.style.display = 'none';
+      camView.style.display = 'flex';
+      renderCamView();
+    }
+  }
+
+  function renderCamView() {
+    camView.innerHTML = '';
+    const query = searchInput.value.toLowerCase().trim();
+    let anyGroup = false;
+
+    for (const group of EXIF_GROUPS) {
+      if (!group.tabs.includes(activeTab)) continue;
+
+      const params = group.params.map(p => ({
+        label: p.label,
+        value: p.fn(currentTags),
+      })).filter(p => {
+        if (!query) return true;
+        return p.label.toLowerCase().includes(query) || (p.value || '').toLowerCase().includes(query);
+      });
+
+      if (params.length === 0) continue;
+      anyGroup = true;
+
+      const groupEl = document.createElement('div');
+      groupEl.className = 'exif-param-group';
+
+      const header = document.createElement('div');
+      header.className = 'exif-param-group-header';
+      header.innerHTML = `<span class="group-icon">${group.icon}</span>${group.label}`;
+      groupEl.appendChild(header);
+
+      const grid = document.createElement('div');
+      grid.className = 'exif-param-grid';
+
+      params.forEach(p => {
+        const cell = document.createElement('div');
+        cell.className = 'exif-stat-cell';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'exif-stat-label';
+        lbl.textContent = p.label;
+
+        const val = document.createElement('div');
+        val.className = 'exif-stat-value' + (p.value ? '' : ' not-available');
+        val.textContent = p.value || '—';
+        val.title = p.value || '';
+
+        cell.appendChild(lbl);
+        cell.appendChild(val);
+        grid.appendChild(cell);
+      });
+
+      // Remove bottom border from last row of cells
+      const allCells = grid.querySelectorAll('.exif-stat-cell');
+      // Rough: mark all cells in last visual row as no-bottom
+      // We can't know the grid flow easily, so just strip bottom from all
+      // Actually, leave border on all for clean look
+
+      groupEl.appendChild(grid);
+      camView.appendChild(groupEl);
+    }
+
+    if (!anyGroup) {
+      camView.innerHTML = '<div class="exif-no-tags-cam">No matching parameters found.</div>';
+    }
+  }
 
   function renderTable() {
-    if (!currentTags) return;
-    
     tableBody.innerHTML = "";
     const query = searchInput.value.toLowerCase().trim();
     let matchCount = 0;
 
-    const tagNames = Object.keys(currentTags).sort();
-
-    tagNames.forEach(tagName => {
+    Object.keys(currentTags).sort().forEach(tagName => {
       if (tagName === 'Thumbnail' || tagName === 'thumbnail') return;
 
       const tagData = currentTags[tagName];
       const valStr = String(tagData.value !== undefined ? tagData.value : '');
       const descStr = String(tagData.description !== undefined ? tagData.description : '');
-      
-      if (activeTab !== "all" && getTagCategory(tagName, tagData) !== activeTab) {
-        return;
-      }
 
       if (query) {
-        const matchName = tagName.toLowerCase().includes(query);
-        const matchVal = valStr.toLowerCase().includes(query);
-        const matchDesc = descStr.toLowerCase().includes(query);
-        if (!matchName && !matchVal && !matchDesc) {
-          return;
-        }
+        if (!tagName.toLowerCase().includes(query) &&
+            !valStr.toLowerCase().includes(query) &&
+            !descStr.toLowerCase().includes(query)) return;
       }
 
       const row = document.createElement("tr");
-      
       const tdName = document.createElement("td");
       tdName.textContent = tagName;
-      
       const tdVal = document.createElement("td");
       tdVal.textContent = valStr;
-      
+      tdVal.title = valStr;
       const tdDesc = document.createElement("td");
       tdDesc.textContent = descStr || "—";
+      tdDesc.title = descStr;
 
       row.appendChild(tdName);
       row.appendChild(tdVal);
       row.appendChild(tdDesc);
-      
       tableBody.appendChild(row);
       matchCount++;
     });
 
-    if (matchCount === 0) {
-      noTagsEl.style.display = "block";
-    } else {
-      noTagsEl.style.display = "none";
-    }
+    noTagsEl.style.display = matchCount === 0 ? "block" : "none";
   }
 
+  // ─── Process File ─────────────────────────────────────────────────────────
   function processFile(file) {
     statusEl.textContent = "";
     currentFileName = file.name;
-
     fileNameEl.textContent = file.name;
     fileSizeEl.textContent = formatBytes(file.size);
 
     const reader = new FileReader();
-    
     reader.onload = async (e) => {
       const arrayBuffer = e.target.result;
-      
       try {
         if (isCR3(arrayBuffer)) {
           fileTypeEl.textContent = "Canon CR3 RAW";
           currentTags = parseCR3Metadata(arrayBuffer);
-          
           if (currentTags.Thumbnail && currentTags.Thumbnail.base64) {
             previewImg.src = 'data:image/jpeg;base64,' + currentTags.Thumbnail.base64;
             previewImg.style.display = "block";
@@ -1449,22 +1716,15 @@ function setupExifAnalyzer() {
           }
         } else {
           fileTypeEl.textContent = file.name.split('.').pop().toUpperCase() || "Unknown";
-          
           try {
             currentTags = ExifReader.load(arrayBuffer);
           } catch (exifErr) {
-            console.warn("ExifReader failed to read:", exifErr);
-            currentTags = {
-              'Error': {
-                value: exifErr.message,
-                description: 'No EXIF metadata found or format is unsupported.'
-              }
-            };
+            console.warn("ExifReader failed:", exifErr);
+            currentTags = { 'Error': { value: exifErr.message, description: 'No EXIF metadata found or format unsupported.' } };
           }
-
           const imgReader = new FileReader();
-          imgReader.onload = (imgEvent) => {
-            previewImg.src = imgEvent.target.result;
+          imgReader.onload = (ev) => {
+            previewImg.src = ev.target.result;
             previewImg.style.display = "block";
             rawIcon.style.display = "none";
           };
@@ -1473,27 +1733,22 @@ function setupExifAnalyzer() {
 
         dropzone.style.display = "none";
         resultsArea.style.display = "grid";
-        renderTable();
+        renderView();
       } catch (err) {
         console.error("Processing error:", err);
         statusEl.textContent = "Error processing file: " + err.message;
       }
     };
-
-    reader.onerror = () => {
-      statusEl.textContent = "Failed to read file.";
-    };
-
+    reader.onerror = () => { statusEl.textContent = "Failed to read file."; };
     reader.readAsArrayBuffer(file);
   }
 
   function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
   }
 }
 

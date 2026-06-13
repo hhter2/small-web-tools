@@ -772,6 +772,10 @@ const toolDetails = {
   "tool-exif": {
     title: "EXIF Data Analyzer",
     desc: "Extract and analyze EXIF, GPS, and custom camera metadata from image files (including Canon .CR3 RAW files) locally in the browser."
+  },
+  "tool-wheel": {
+    title: "隨機抽籤輪盤",
+    desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
   }
 };
 
@@ -1040,9 +1044,9 @@ function setupSidebar() {
       targetCard.classList.add("active");
       targetNav.classList.add("active");
 
-      // EXIF tool needs extra width; remove constraint for it
+      // EXIF and Wheel tools need extra width; remove constraint for them
       if (toolStage) {
-        toolStage.classList.toggle("wide-tool", toolId === "tool-exif");
+        toolStage.classList.toggle("wide-tool", toolId === "tool-exif" || toolId === "tool-wheel");
       }
       
       // Update header
@@ -1775,6 +1779,420 @@ function setupExifAnalyzer() {
   }
 }
 
+function setupRandomWheel() {
+  const canvas = $("wheel-canvas");
+  const canvasWrapper = $("wheel-canvas-wrapper");
+  const centerSpinBtn = $("wheel-spin-btn-center");
+  const resultBanner = $("wheel-result-banner");
+  const resultText = $("wheel-result-text");
+  const resultClose = $("wheel-result-close");
+  const spinBtn = $("wheel-spin-btn");
+  const resetBtn = $("wheel-reset-btn");
+  const clearBtn = $("wheel-clear-btn");
+  const titleInput = $("wheel-title-input");
+  const titleBtn = $("wheel-title-btn");
+  const titleInputGroup = $("wheel-title-input-group");
+  const editBtn = $("wheel-edit-btn");
+  const textInput = $("wheel-text-input");
+  const listView = $("wheel-list-view");
+  const allowDuplicateCheckbox = $("wheel-allow-duplicate");
+  const displayTitle = $("wheel-display-title");
+  
+  // Custom Confirmation Modal
+  const clearModal = $("wheel-clear-modal");
+  const confirmClearBtn = $("wheel-confirm-clear-btn");
+  const cancelClearBtn = $("wheel-cancel-clear-btn");
+  const modalBackdrop = $("wheel-clear-modal-backdrop");
+
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  
+  // Wheel State
+  let items = [];
+  let isSpinning = false;
+  let currentRotationAngle = 0;
+  let isEditingOptions = false; // start in list/view mode
+  let animationFrameId = null;
+
+  // Aesthetic HSL palettes for premium look
+  const colors = [
+    "hsl(224, 76%, 60%)",  // indigo
+    "hsl(142, 72%, 45%)",  // emerald
+    "hsl(38, 92%, 50%)",   // amber
+    "hsl(330, 81%, 60%)",  // pink/rose
+    "hsl(194, 91%, 48%)",  // cyan
+    "hsl(262, 83%, 62%)",  // purple
+    "hsl(16, 90%, 54%)",   // orange
+    "hsl(209, 89%, 52%)"   // bright blue
+  ];
+
+  // 1. Title Sync
+  function updateTitle() {
+    const titleVal = titleInput.value.trim() || "隨機抽籤輪盤";
+    displayTitle.textContent = titleVal;
+    if (toolDetails["tool-wheel"]) {
+      toolDetails["tool-wheel"].title = titleVal;
+    }
+  }
+  titleInput.addEventListener("input", updateTitle);
+  updateTitle();
+
+  titleBtn.addEventListener("click", () => {
+    if (titleInputGroup.style.display === "none") {
+      titleInputGroup.style.display = "block";
+      titleInput.focus();
+    } else {
+      titleInputGroup.style.display = "none";
+    }
+  });
+
+  // 2. Parse and Sync Options
+  function parseOptionsFromTextarea() {
+    const text = textInput.value;
+    const lines = text.split(/\r?\n/).map(line => line.trim());
+    
+    // Remember disabled status by text value
+    const disabledTexts = new Set(
+      items.filter(item => item.disabled).map(item => item.text)
+    );
+
+    // Filter empty lines but preserve duplicates/indices
+    let parsedCount = 0;
+    items = [];
+    lines.forEach(line => {
+      if (line !== "") {
+        items.push({
+          text: line,
+          id: parsedCount++,
+          disabled: disabledTexts.has(line)
+        });
+      }
+    });
+  }
+
+  function renderListView() {
+    listView.innerHTML = "";
+    if (items.length === 0) {
+      listView.innerHTML = `<div style="color: var(--text-muted); font-style: italic; padding: 12px; font-size: 0.9rem; text-align: center;">No options typed. Press Edit to add options.</div>`;
+      return;
+    }
+    
+    items.forEach((item, idx) => {
+      const div = document.createElement("div");
+      div.className = "wheel-list-item" + (item.disabled ? " eliminated" : "");
+      div.textContent = `${idx + 1}. ${item.text}`;
+      listView.appendChild(div);
+    });
+  }
+
+  // Draw Lucky Wheel
+  function drawWheel(angle = 0) {
+    const dpi = window.devicePixelRatio || 1;
+    const size = 450;
+    const radius = 210;
+    const centerX = size / 2;
+    const centerY = size / 2;
+
+    // Set canvas dimensions
+    canvas.width = size * dpi;
+    canvas.height = size * dpi;
+    ctx.scale(dpi, dpi);
+
+    ctx.clearRect(0, 0, size, size);
+
+    const activeItems = items.filter(item => !item.disabled);
+
+    // If no active items, draw a premium placeholder
+    if (activeItems.length === 0) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = "rgba(148, 163, 184, 0.1)";
+      ctx.fill();
+      ctx.strokeStyle = "var(--border-color)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Placeholder text
+      ctx.fillStyle = "var(--text-muted)";
+      ctx.font = '500 16px "Inter", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("無有效項目 (No options)", centerX, centerY);
+
+      // Draw center pin outline
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 38, 0, 2 * Math.PI);
+      ctx.fillStyle = "var(--bg-card)";
+      ctx.fill();
+      ctx.strokeStyle = "var(--border-color)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      return;
+    }
+
+    const arcSize = (2 * Math.PI) / activeItems.length;
+
+    // Draw sectors
+    for (let i = 0; i < activeItems.length; i++) {
+      const startAngle = angle + i * arcSize;
+      const endAngle = angle + (i + 1) * arcSize;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fill();
+
+      // Border between sectors
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    // Draw option labels text along sector radius
+    for (let i = 0; i < activeItems.length; i++) {
+      const startAngle = angle + i * arcSize;
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(startAngle + arcSize / 2);
+
+      ctx.fillStyle = "#ffffff";
+      
+      // Adapt font size to sector count to avoid clipping
+      let fontSize = 16;
+      if (activeItems.length > 20) fontSize = 10;
+      else if (activeItems.length > 12) fontSize = 12;
+      else if (activeItems.length > 8) fontSize = 14;
+
+      ctx.font = `bold ${fontSize}px "Outfit", "Inter", sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      // Shadow for text readability
+      ctx.shadowColor = "rgba(15, 23, 42, 0.35)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+
+      // Draw label near the outer border
+      const label = activeItems[i].text;
+      
+      // Truncate text if it's too long
+      let displayLabel = label;
+      if (label.length > 16) {
+        displayLabel = label.substring(0, 14) + "...";
+      }
+
+      ctx.fillText(displayLabel, radius - 28, 0);
+      ctx.restore();
+    }
+
+    // Draw center hub wheel circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 38, 0, 2 * Math.PI);
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    ctx.fillStyle = isDark ? "#111827" : "#ffffff";
+    ctx.fill();
+    ctx.strokeStyle = isDark ? "#6366f1" : "#4f46e5";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+
+  // 3. Edit vs View Mode Toggle
+  function setEditingMode(editing) {
+    isEditingOptions = editing;
+    if (isEditingOptions) {
+      listView.style.display = "none";
+      textInput.style.display = "block";
+      editBtn.textContent = "完成 (Done)";
+      editBtn.classList.add("btn-primary-sm"); // highlight complete
+      textInput.focus();
+    } else {
+      textInput.style.display = "none";
+      listView.style.display = "block";
+      editBtn.textContent = "編輯 (Edit)";
+      editBtn.classList.remove("btn-primary-sm");
+      
+      // Re-parse and draw
+      parseOptionsFromTextarea();
+      renderListView();
+      drawWheel(currentRotationAngle);
+    }
+  }
+
+  editBtn.addEventListener("click", () => {
+    setEditingMode(!isEditingOptions);
+  });
+
+  textInput.addEventListener("input", () => {
+    // If they edit the textarea directly, parse and redraw immediately
+    parseOptionsFromTextarea();
+    drawWheel(currentRotationAngle);
+  });
+
+  // 4. Spin Wheel Animation
+  function spin() {
+    if (isSpinning) return;
+    
+    // Auto-save edit mode if open
+    if (isEditingOptions) {
+      setEditingMode(false);
+    }
+
+    const activeItems = items.filter(item => !item.disabled);
+    if (activeItems.length === 0) {
+      alert("Please add at least one active option to spin the wheel!");
+      return;
+    }
+
+    isSpinning = true;
+    resultBanner.style.display = "none";
+
+    // Select winner
+    const winIndex = Math.floor(Math.random() * activeItems.length);
+    const arcSize = (2 * Math.PI) / activeItems.length;
+    
+    // Point on wheel to align with right pointer (0 radians)
+    // Sector center is at: winIndex * arcSize + arcSize / 2
+    // Rotation required to align sector center to 0 is: 2*PI*spins - sector_center
+    const targetSectorCenter = winIndex * arcSize + arcSize / 2;
+    const spinsCount = 6 + Math.floor(Math.random() * 4); // 6 to 9 full spins
+    const targetAngle = 2 * Math.PI * spinsCount - targetSectorCenter;
+
+    const startAngleVal = currentRotationAngle % (2 * Math.PI);
+    const startTime = performance.now();
+    const duration = 4000; // 4 seconds
+
+    function animate(time) {
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // quintic ease-out deceleration curve
+      const ease = 1 - Math.pow(1 - progress, 5);
+      currentRotationAngle = startAngleVal + (targetAngle - startAngleVal) * ease;
+
+      drawWheel(currentRotationAngle);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        isSpinning = false;
+        currentRotationAngle = targetAngle;
+        drawWheel(currentRotationAngle);
+
+        // Announce winner
+        const winner = activeItems[winIndex];
+        announceWinner(winner);
+      }
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function announceWinner(winner) {
+    resultText.textContent = winner.text;
+    resultBanner.style.display = "flex";
+
+    // If duplicate drawing is disabled, eliminate item
+    if (!allowDuplicateCheckbox.checked) {
+      winner.disabled = true;
+      renderListView();
+      // Redraw wheel immediately without the eliminated sector
+      drawWheel(currentRotationAngle);
+    }
+  }
+
+  resultClose.addEventListener("click", () => {
+    resultBanner.style.display = "none";
+  });
+
+  // Bind spin triggers
+  spinBtn.addEventListener("click", spin);
+  centerSpinBtn.addEventListener("click", spin);
+  canvas.addEventListener("click", spin);
+
+  // 5. Reset Items
+  function resetItems() {
+    if (isSpinning) return;
+    items.forEach(item => { item.disabled = false; });
+    renderListView();
+    drawWheel(currentRotationAngle);
+    resultBanner.style.display = "none";
+  }
+  resetBtn.addEventListener("click", resetItems);
+
+  // 6. Clear Content (with double-check custom modal)
+  function showClearModal() {
+    if (isSpinning) return;
+    clearModal.style.display = "flex";
+  }
+
+  function hideClearModal() {
+    clearModal.style.display = "none";
+  }
+
+  clearBtn.addEventListener("click", showClearModal);
+  cancelClearBtn.addEventListener("click", hideClearModal);
+  modalBackdrop.addEventListener("click", hideClearModal);
+
+  confirmClearBtn.addEventListener("click", () => {
+    hideClearModal();
+    textInput.value = "";
+    items = [];
+    setEditingMode(true); // put in edit mode for writing new content
+    renderListView();
+    drawWheel(0);
+    resultBanner.style.display = "none";
+  });
+
+  // 7. Initialize Default Content (1~5)
+  textInput.value = "1\n2\n3\n4\n5";
+  parseOptionsFromTextarea();
+  renderListView();
+  drawWheel(0);
+
+  // 8. Re-draw when dark/light theme is toggled
+  const themeToggle = $("theme-toggle");
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      // Small timeout to let theme class propagate
+      setTimeout(() => drawWheel(currentRotationAngle), 50);
+    });
+  }
+
+  // 9. Global Keyboard Shortcuts (active only when tool is visible)
+  window.addEventListener("keydown", (e) => {
+    // Only intercept when tool-wheel is currently active
+    const card = $("tool-wheel");
+    if (!card || !card.classList.contains("active")) return;
+
+    // Do not intercept if focus is inside input/textarea fields
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
+      // Exception: Escape inside textarea saves & switches back to View Mode
+      if (e.key === "Escape" && activeEl === textInput) {
+        setEditingMode(false);
+      }
+      return;
+    }
+
+    if (e.code === "Space") {
+      e.preventDefault();
+      spin();
+    } else if (e.key.toLowerCase() === "r") {
+      resetItems();
+    } else if (e.key.toLowerCase() === "c") {
+      showClearModal();
+    } else if (e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      setEditingMode(!isEditingOptions);
+    }
+  });
+}
+
 function init() {
   setupTheme();
   setupSidebar();
@@ -1790,6 +2208,7 @@ function init() {
   setupDnaConverter();
   setupIpLookup();
   setupExifAnalyzer();
+  setupRandomWheel();
 }
 
 if (document.readyState === "loading") {

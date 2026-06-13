@@ -134,6 +134,16 @@
             </svg>
             <span>EXIF Analyzer</span>
           </button>
+          <button class="nav-item" data-tool="tool-wheel" data-tooltip="Random Wheel">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="2" x2="12" y2="22"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M16.24 7.76l-8.48 8.48"></path>
+              <path d="M7.76 7.76l8.48 8.48"></path>
+            </svg>
+            <span>Random Wheel</span>
+          </button>
         </nav>
 
         <div class="sidebar-footer">
@@ -594,6 +604,98 @@
               </div>
             </div>
             <p class="small status-msg" id="exif-status"></p>
+          </article>
+
+          <article id="tool-wheel" class="tool-card">
+            <h2 id="wheel-display-title">隨機抽籤輪盤</h2>
+            <div class="wheel-layout">
+              <!-- Left side: Wheel Canvas & Win Banner -->
+              <div class="wheel-canvas-container">
+                <div class="wheel-canvas-wrapper" id="wheel-canvas-wrapper">
+                  <canvas id="wheel-canvas" width="450" height="450"></canvas>
+                  <div class="wheel-pointer">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="red">
+                      <polygon points="24,12 0,4 0,20" />
+                    </svg>
+                  </div>
+                  <div class="wheel-spin-btn-center" id="wheel-spin-btn-center">
+                    <span>SPIN</span>
+                  </div>
+                </div>
+                <!-- Result overlay banner -->
+                <div id="wheel-result-banner" class="wheel-result-banner" style="display: none;">
+                  <span class="result-banner-title">Winning Selection</span>
+                  <strong id="wheel-result-text">—</strong>
+                  <button id="wheel-result-close" class="result-banner-close" aria-label="Close banner">&times;</button>
+                </div>
+              </div>
+
+              <!-- Right side: Controls & Options -->
+              <div class="wheel-controls-panel">
+                <div class="wheel-actions-row">
+                  <button id="wheel-spin-btn" class="btn-primary">開始 (Spin)</button>
+                  <button id="wheel-reset-btn" class="btn-secondary">重設 (Reset)</button>
+                </div>
+
+                <!-- Options Box with View Mode and Edit Mode -->
+                <div class="wheel-options-container">
+                  <div class="wheel-list-container">
+                    <!-- View Mode (List View) -->
+                    <div id="wheel-list-view" class="wheel-list-view scrollable">
+                      <!-- List items populated by JS -->
+                    </div>
+                    <!-- Edit Mode (Textarea Input) -->
+                    <textarea id="wheel-text-input" class="wheel-text-input" rows="12" placeholder="Type options here, one per line..."></textarea>
+                  </div>
+                  
+                  <!-- Options footer buttons -->
+                  <div class="wheel-options-footer">
+                    <button id="wheel-title-btn" class="btn-secondary-sm">標題 (Title)</button>
+                    <button id="wheel-edit-btn" class="btn-secondary-sm">編輯 (Edit)</button>
+                    <button id="wheel-clear-btn" class="btn-secondary-sm">清除 (Clear)</button>
+                  </div>
+                </div>
+
+                <!-- Input for Title (hidden by default or shown in collapsible form-group) -->
+                <div class="form-group" id="wheel-title-input-group" style="display: none; transition: all 0.3s ease;">
+                  <label for="wheel-title-input">Edit Wheel Title</label>
+                  <input type="text" id="wheel-title-input" value="隨機抽籤輪盤" placeholder="Enter wheel title..." />
+                </div>
+
+                <!-- Options: Allow Duplicate -->
+                <div class="form-group checkbox-group">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="wheel-allow-duplicate" checked>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Allow duplicate selection (can draw again)</span>
+                  </label>
+                </div>
+
+                <!-- Keyboard shortcuts reminder -->
+                <div class="keyboard-shortcuts-card">
+                  <h4>Keyboard Shortcuts</h4>
+                  <ul>
+                    <li><kbd>Space</kbd> Spin the wheel</li>
+                    <li><kbd>E</kbd> Toggle Edit/View mode</li>
+                    <li><kbd>R</kbd> Reset wheel items</li>
+                    <li><kbd>C</kbd> Clear all text (requires confirmation)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Confirmation Modal for Clear -->
+            <div id="wheel-clear-modal" class="custom-modal" style="display: none;">
+              <div class="modal-backdrop" id="wheel-clear-modal-backdrop"></div>
+              <div class="modal-content">
+                <h3>Clear All Options?</h3>
+                <p>Are you sure you want to clear all the typed options? This action cannot be undone.</p>
+                <div class="modal-actions">
+                  <button id="wheel-confirm-clear-btn" class="btn-danger-confirm">Yes, Clear All</button>
+                  <button id="wheel-cancel-clear-btn" class="btn-secondary">Cancel</button>
+                </div>
+              </div>
+            </div>
           </article>
         </section>
       </main>

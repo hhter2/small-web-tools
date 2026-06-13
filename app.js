@@ -1414,9 +1414,27 @@ function fmtGPS(tags) {
   const lat = exifGet(tags, 'GPSLatitude');
   const lon = exifGet(tags, 'GPSLongitude');
   if (!lat || !lon) return null;
-  const latRef = fmtVal(exifGet(tags, 'GPSLatitudeRef')) || 'N';
-  const lonRef = fmtVal(exifGet(tags, 'GPSLongitudeRef')) || 'E';
-  return `${fmtVal(lat)} ${latRef}, ${fmtVal(lon)} ${lonRef}`;
+  
+  const getDirAbbr = (ref) => {
+    if (!ref) return '';
+    const s = String(ref).trim().toUpperCase();
+    if (s.startsWith('N')) return 'N';
+    if (s.startsWith('S')) return 'S';
+    if (s.startsWith('E')) return 'E';
+    if (s.startsWith('W')) return 'W';
+    return ref;
+  };
+
+  const roundCoord = (raw) => {
+    const n = parseFloat(raw);
+    return isNaN(n) ? raw : n.toFixed(6);
+  };
+
+  const latRef = getDirAbbr(fmtVal(exifGet(tags, 'GPSLatitudeRef')) || 'N');
+  const lonRef = getDirAbbr(fmtVal(exifGet(tags, 'GPSLongitudeRef')) || 'E');
+  const latStr = roundCoord(fmtVal(lat));
+  const lonStr = roundCoord(fmtVal(lon));
+  return `${latStr} ${latRef}, ${lonStr} ${lonRef}`;
 }
 
 function fmtDateTime(tags) {
@@ -1449,7 +1467,7 @@ const EXIF_GROUPS = [
     id: 'exposure',
     label: 'Exposure',
     icon: '📷',
-    tabs: ['exposure', 'camera', 'all'],
+    tabs: ['exposure', 'all'],
     params: [
       { label: 'Shutter Speed', fn: fmtShutterSpeed },
       { label: 'Aperture',      fn: fmtAperture },
@@ -1464,7 +1482,7 @@ const EXIF_GROUPS = [
     id: 'colors',
     label: 'Colors',
     icon: '🎨',
-    tabs: ['colors', 'camera', 'all'],
+    tabs: ['colors', 'all'],
     params: [
       { label: 'White Balance', fn: fmtWhiteBalance },
       { label: 'Color Space',   fn: fmtColorSpace },
@@ -1475,7 +1493,7 @@ const EXIF_GROUPS = [
     id: 'optics',
     label: 'Optics',
     icon: '🔭',
-    tabs: ['optics', 'camera', 'all'],
+    tabs: ['optics', 'all'],
     params: [
       { label: 'Focal Length',   fn: fmtFocalLength },
       { label: 'Focal (35mm eq.)', fn: fmtFocalLength35 },
@@ -1487,7 +1505,7 @@ const EXIF_GROUPS = [
     id: 'others',
     label: 'Others',
     icon: '🗂️',
-    tabs: ['others', 'camera', 'all'],
+    tabs: ['others', 'all'],
     params: [
       { label: 'Resolution',    fn: fmtResolution },
       { label: 'Shooting Time', fn: fmtDateTime },
@@ -1519,7 +1537,7 @@ function setupExifAnalyzer() {
 
   let currentTags = null;
   let currentFileName = "";
-  let activeTab = "camera";
+  let activeTab = "all";
 
   if (!dropzone) return;
 
@@ -1543,7 +1561,7 @@ function setupExifAnalyzer() {
   const resetTool = () => {
     currentTags = null;
     currentFileName = "";
-    activeTab = "camera";
+    activeTab = "all";
     fileInput.value = "";
     searchInput.value = "";
     tableBody.innerHTML = "";
@@ -1555,7 +1573,7 @@ function setupExifAnalyzer() {
     dropzone.style.display = "flex";
     statusEl.textContent = "";
     document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.getAttribute("data-tab") === "camera");
+      btn.classList.toggle("active", btn.getAttribute("data-tab") === "all");
     });
   };
   clearBtn.addEventListener("click", resetTool);

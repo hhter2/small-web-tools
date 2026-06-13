@@ -1105,6 +1105,35 @@ function setupSidebar() {
       });
     });
   }
+
+  // Floating tooltip logic for collapsed sidebar
+  const tooltip = document.createElement("div");
+  tooltip.className = "sidebar-tooltip";
+  document.body.appendChild(tooltip);
+
+  navItems.forEach(item => {
+    item.addEventListener("mouseenter", () => {
+      if (appLayout && appLayout.classList.contains("collapsed-sidebar")) {
+        const text = item.getAttribute("data-tooltip");
+        if (text) {
+          tooltip.textContent = text;
+          tooltip.classList.add("visible");
+          
+          const rect = item.getBoundingClientRect();
+          tooltip.style.top = `${rect.top + rect.height / 2}px`;
+          tooltip.style.left = `${rect.right + 10}px`;
+        }
+      }
+    });
+
+    item.addEventListener("mouseleave", () => {
+      tooltip.classList.remove("visible");
+    });
+
+    item.addEventListener("click", () => {
+      tooltip.classList.remove("visible");
+    });
+  });
 }
 
 // ==========================================================

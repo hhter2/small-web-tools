@@ -1472,10 +1472,10 @@ const EXIF_GROUPS = [
       { label: 'Shutter Speed', fn: fmtShutterSpeed },
       { label: 'Aperture',      fn: fmtAperture },
       { label: 'ISO',           fn: fmtISO },
+      { label: 'Exp. Bias',     fn: (t) => fmtVal(exifGet(t, 'ExposureBiasValue', 'ExposureCompensation')) },
       { label: 'Exposure Mode', fn: fmtExposureMode },
       { label: 'Metering Mode', fn: fmtMeteringMode },
       { label: 'Flash',         fn: fmtFlash },
-      { label: 'Exp. Bias',     fn: (t) => fmtVal(exifGet(t, 'ExposureBiasValue', 'ExposureCompensation')) },
     ],
   },
   {
@@ -1510,9 +1510,9 @@ const EXIF_GROUPS = [
       { label: 'Resolution',    fn: fmtResolution },
       { label: 'Shooting Time', fn: fmtDateTime },
       { label: 'Last Edit Time',fn: fmtEditTime },
-      { label: 'GPS',           fn: fmtGPS },
-      { label: 'File Type',     fn: (t) => fmtVal(exifGet(t, 'FileType')) },
       { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },
+      { label: 'File Type',     fn: (t) => fmtVal(exifGet(t, 'FileType')) },
+      { label: 'GPS',           fn: fmtGPS },
     ],
   },
 ];

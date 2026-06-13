@@ -1125,7 +1125,7 @@ html[data-theme="dark"] .exif-tabs .tab-btn.active {
 
 .exif-table th,
 .exif-table td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1224,19 +1224,21 @@ html[data-theme="dark"] .exif-tabs .tab-btn.active {
 }
 
 .exif-param-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0;
 }
 
 .exif-stat-cell {
-  padding: 14px 20px;
+  flex: 1 1 180px;
+  padding: 10px 16px;
   border-right: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .exif-stat-cell:last-child {
@@ -1263,9 +1265,9 @@ html[data-theme="dark"] .exif-tabs .tab-btn.active {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-main);
-  white-space: normal;       /* allow long values to wrap */
-  word-break: break-word;
-  line-height: 1.35;
+  white-space: nowrap;       /* force single line */
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: 'Outfit', sans-serif;
 }
 

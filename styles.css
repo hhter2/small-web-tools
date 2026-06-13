@@ -17,6 +17,7 @@
   --scrollbar-thumb: #cbd5e1;
   --border-hover: #cbd5e1;
   --focus-ring: rgba(79, 70, 229, 0.15);
+  --bg-footer: rgba(244, 246, 251, 0.85);
 }
 
 html[data-theme="dark"] {
@@ -38,6 +39,7 @@ html[data-theme="dark"] {
   --scrollbar-thumb: #374151;
   --border-hover: #4b5563;
   --focus-ring: rgba(99, 102, 241, 0.25);
+  --bg-footer: rgba(11, 15, 25, 0.85);
 }
 
 * {
@@ -298,7 +300,7 @@ html[data-theme="dark"] .moon-icon {
 .main-content {
   flex: 1;
   min-width: 0;
-  padding: 48px;
+  padding: 48px 48px 0 48px;
   display: flex;
   flex-direction: column;
   gap: 36px;
@@ -693,7 +695,7 @@ html[data-theme="dark"] .status-msg {
 /* Responsive Rules */
 @media (max-width: 900px) {
   .main-content {
-    padding: 32px;
+    padding: 32px 32px 0 32px;
   }
 }
 
@@ -718,7 +720,7 @@ html[data-theme="dark"] .status-msg {
   }
 
   .main-content {
-    padding: 80px 20px 40px; /* Offset for mobile header */
+    padding: 80px 20px 0 20px; /* Offset for mobile header */
   }
 
   .tool-card {
@@ -1828,7 +1830,97 @@ html[data-theme="dark"] .exif-tabs .tab-btn.active {
   background: var(--border-color);
 }
 
+/* Shiny Footer Styles */
+.shiny-footer {
+  position: relative;
+  margin-top: auto;
+  z-index: 90;
+  width: calc(100% + 96px);
+  margin-left: -48px;
+  margin-right: -48px;
+  margin-bottom: 0;
+  padding: 24px 48px;
+  background: var(--bg-footer);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-color);
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
+/* Glowing top border sweep */
+.shiny-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--accent), #f43f5e, var(--accent), transparent);
+  background-size: 200% 100%;
+  animation: shine-sweep 8s linear infinite;
+  opacity: 0.8;
+}
 
+.shiny-footer-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #f43f5e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-copyright {
+  color: var(--text-muted);
+}
+
+/* Interactive hover effects */
+.shiny-footer:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 -6px 24px rgba(99, 102, 241, 0.06);
+}
+
+@keyframes shine-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@media (max-width: 900px) {
+  .shiny-footer {
+    width: calc(100% + 64px);
+    margin-left: -32px;
+    margin-right: -32px;
+    padding: 20px 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .shiny-footer {
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    margin-right: -20px;
+    padding: 20px 20px;
+  }
+}
 
 

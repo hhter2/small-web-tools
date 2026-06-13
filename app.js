@@ -729,6 +729,10 @@ function setupDnaConverter() {
 
 
 const toolDetails = {
+  "tool-home": {
+    title: "Small Web Tools",
+    desc: "A premium dashboard of handy utility tools."
+  },
   "tool-slash": {
     title: "Slashes Converter",
     desc: "Normalize Windows paths to web-friendly forward slashes."
@@ -1030,6 +1034,7 @@ function setupSidebar() {
   }
 
   const toolStage = document.querySelector(".tool-stage");
+  const brandLogoBtn = $("brand-logo-btn");
 
   const activateTool = (toolId) => {
     // Hide all tool cards and remove active classes
@@ -1040,13 +1045,20 @@ function setupSidebar() {
     const targetCard = $(toolId);
     const targetNav = document.querySelector(`.nav-item[data-tool="${toolId}"]`);
 
-    if (targetCard && targetNav) {
+    if (targetCard) {
       targetCard.classList.add("active");
-      targetNav.classList.add("active");
+      if (targetNav) {
+        targetNav.classList.add("active");
+      }
 
-      // EXIF and Wheel tools need extra width; remove constraint for them
+      // EXIF, Wheel, and Home tools need extra width; remove constraint for them
       if (toolStage) {
-        toolStage.classList.toggle("wide-tool", toolId === "tool-exif" || toolId === "tool-wheel");
+        const isWide = toolId === "tool-home" || toolId === "tool-exif" || toolId === "tool-wheel";
+        toolStage.classList.toggle("wide-tool", isWide);
+        const mainHeader = document.querySelector(".main-header");
+        if (mainHeader) {
+          mainHeader.classList.toggle("wide-header", isWide);
+        }
       }
       
       // Update header
@@ -1064,6 +1076,23 @@ function setupSidebar() {
     }
   };
 
+  // Click handler for brand logo button
+  if (brandLogoBtn) {
+    brandLogoBtn.addEventListener("click", () => {
+      activateTool("tool-home");
+    });
+  }
+
+  // Click handler for home grid cards
+  document.querySelectorAll(".home-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const targetTool = card.getAttribute("data-target");
+      if (targetTool) {
+        activateTool(targetTool);
+      }
+    });
+  });
+
   // Nav item click event
   navItems.forEach(item => {
     item.addEventListener("click", () => {
@@ -1077,19 +1106,8 @@ function setupSidebar() {
     });
   });
 
-  // Load last active tool or default to first
-  let lastTool = null;
-  try {
-    lastTool = localStorage.getItem("activeTool");
-  } catch (e) {
-    // Storage access blocked
-  }
-
-  if (lastTool && toolDetails[lastTool]) {
-    activateTool(lastTool);
-  } else {
-    activateTool("tool-slash");
-  }
+  // Default to home page when opening
+  activateTool("tool-home");
 
   // Live tool filtering/search
   if (searchInput) {

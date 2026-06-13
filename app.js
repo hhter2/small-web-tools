@@ -774,7 +774,7 @@ const toolDetails = {
     desc: "Extract and analyze EXIF, GPS, and custom camera metadata from image files (including Canon .CR3 RAW files) locally in the browser."
   },
   "tool-wheel": {
-    title: "隨機抽籤輪盤",
+    title: "Random Wheel",
     desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
   }
 };
@@ -1829,7 +1829,7 @@ function setupRandomWheel() {
 
   // 1. Title Sync
   function updateTitle() {
-    const titleVal = titleInput.value.trim() || "隨機抽籤輪盤";
+    const titleVal = titleInput.value.trim() || "Random Wheel";
     displayTitle.textContent = titleVal;
     if (toolDetails["tool-wheel"]) {
       toolDetails["tool-wheel"].title = titleVal;
@@ -1881,7 +1881,7 @@ function setupRandomWheel() {
     items.forEach((item, idx) => {
       const div = document.createElement("div");
       div.className = "wheel-list-item" + (item.disabled ? " eliminated" : "");
-      div.textContent = `${idx + 1}. ${item.text}`;
+      div.textContent = item.text;
       listView.appendChild(div);
     });
   }
@@ -1918,7 +1918,7 @@ function setupRandomWheel() {
       ctx.font = '500 16px "Inter", sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("無有效項目 (No options)", centerX, centerY);
+      ctx.fillText("No active options", centerX, centerY);
 
       // Draw center pin outline
       ctx.beginPath();
@@ -1954,10 +1954,13 @@ function setupRandomWheel() {
     // Draw option labels text along sector radius
     for (let i = 0; i < activeItems.length; i++) {
       const startAngle = angle + i * arcSize;
+      const midAngle = startAngle + arcSize / 2;
       
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.rotate(startAngle + arcSize / 2);
+
+      // Determine if we need to flip the text to keep it right-side up
+      const isLeftHalf = Math.cos(midAngle) < 0;
 
       ctx.fillStyle = "#ffffff";
       
@@ -1968,7 +1971,6 @@ function setupRandomWheel() {
       else if (activeItems.length > 8) fontSize = 14;
 
       ctx.font = `bold ${fontSize}px "Outfit", "Inter", sans-serif`;
-      ctx.textAlign = "right";
       ctx.textBaseline = "middle";
 
       // Shadow for text readability
@@ -1986,7 +1988,16 @@ function setupRandomWheel() {
         displayLabel = label.substring(0, 14) + "...";
       }
 
-      ctx.fillText(displayLabel, radius - 28, 0);
+      if (isLeftHalf) {
+        ctx.rotate(midAngle + Math.PI);
+        ctx.textAlign = "left";
+        ctx.fillText(displayLabel, -(radius - 28), 0);
+      } else {
+        ctx.rotate(midAngle);
+        ctx.textAlign = "right";
+        ctx.fillText(displayLabel, radius - 28, 0);
+      }
+      
       ctx.restore();
     }
 
@@ -2007,13 +2018,13 @@ function setupRandomWheel() {
     if (isEditingOptions) {
       listView.style.display = "none";
       textInput.style.display = "block";
-      editBtn.textContent = "完成 (Done)";
+      editBtn.textContent = "Done";
       editBtn.classList.add("btn-primary-sm"); // highlight complete
       textInput.focus();
     } else {
       textInput.style.display = "none";
       listView.style.display = "block";
-      editBtn.textContent = "編輯 (Edit)";
+      editBtn.textContent = "Edit";
       editBtn.classList.remove("btn-primary-sm");
       
       // Re-parse and draw

@@ -16,7 +16,14 @@ This project is built using **React** and **Vite** for a fast local development 
 - **Persistent Selection**: Remembers the last opened tool across page reloads.
 - **DNA/RNA Direction Transfer**: Support DNA & RNA base complementation (supporting full IUPAC degenerate base codes), automatic direction tag detection (`5'-` and `3'-`), standard reverse complement generation, and same-strand reverse direction generation.
 - **IP Address Lookup**: Retrieve coordinates, timezone, city, region, country, and organization/ISP details for any IP address or automatically detect the current client IP, accompanied by an interactive OpenStreetMap preview.
-- **ImgMeta**: Instantly extract metadata (camera settings, lens specifications, exposure settings, GPS details) from image files (including Canon `.CR3` RAW files) locally in the browser with 100% privacy (no files are uploaded), accompanied by live search, categorization tabs, and JSON export.
+- **ImgMeta (Upgraded)**: Instantly extract metadata (camera settings, lens specifications, exposure settings, GPS details) from image files (including Canon `.CR3` RAW files) locally in the browser with 100% privacy (no files are uploaded). Supported upgrades include:
+  - **Multi-File Uploads**: Drag & drop or browse multiple images concurrently.
+  - **Side-by-Side Comparison**: Compare key metadata fields side-by-side across all uploaded files.
+  - **Lossless Jpeg Stripper**: Strip APP1 (EXIF, GPS, XMP), APP13 (IPTC), and APP2 (ICC Profile) segments client-side from the JPEG ArrayBuffer without re-compression, retaining 100% image quality.
+  - **Stripping Verification UI**: Displays a visual comparison list of removed vs. retained metadata tags.
+  - **Bulk Export to Folder**: Package all loaded/stripped images into a single ZIP file (.zip) client-side using `jszip`.
+  - **GPS Map Toggle**: Plots coordinates on an embedded OpenStreetMap map only when the "Show Map" button is clicked.
+  - **Grouped Collapsible Advanced Tab**: Groups raw metadata tags into EXIF, GPS, IPTC, XMP, ICC, and File/Other categories with a global "Expand All" toggle.
 - **Random Wheel (Lucky Draw)**: Spin a customizable visual wheel to draw items from a typed options list (defaulting to 1-5). Supports editable wheel titles, light/dark themes, custom-modal confirmation for clears, keyboard shortcuts, and single-draw elimination mode (drawn options are grayed out/struck through in the status list and automatically removed from the wheel).
 - **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
 
@@ -32,7 +39,7 @@ This project is built using **React** and **Vite** for a fast local development 
 8. **Base Converter**: Seamlessly convert numbers across Binary (2), Octal (8), Decimal (10), Hexadecimal (16), and Sexagesimal (60).
 9. **DNA/RNA Direction Transfer**: Perform base sequence complementation (supporting IUPAC degenerate base codes), reversing, same-strand reverse direction generation (e.g., input `5'-AATTCA-3'` -> output `3'-ACTTAA-5'`), and 5'/3' strand orientation transfers (e.g., input `5'-CACGT-3'` -> output `3'-GTGCA-5'`).
 10. **IP Address Lookup**: Retrieve details of any IPv4/IPv6 address or look up the caller's IP, including geographical details, timezone, coordinates, organization, and a zoomable OpenStreetMap view.
-11. **ImgMeta**: Load common images (JPEG, PNG, WebP, HEIC, AVIF) or Canon `.CR3` RAW files to extract EXIF, GPS, and manufacturer metadata client-side. Render embedded RAW thumbnails, filter tags by category tabs or search query, and export all metadata to a formatted JSON file.
+11. **ImgMeta**: Load common images (JPEG, PNG, WebP, HEIC, AVIF) or Canon `.CR3` RAW files to extract EXIF, GPS, and manufacturer metadata client-side. Compare multiple images side-by-side, strip metadata losslessly, view location maps on toggle, sort raw tags in grouped advanced sections, and export images in bulk as a ZIP archive.
 12. **Random Wheel**: Draw items at random from custom typed options. Edit the wheel title dynamically, view active and eliminated options in real-time, reset or clear options (with custom modal confirmation), toggle duplicate selections, and use keyboard shortcuts (`Space` to spin, `E` to edit options, `R` to reset, `C` to clear).
 
 ---

@@ -1,5 +1,101 @@
 import React, { useState, useRef } from 'react';
 import ExifReader from 'exifreader';
+import JSZip from 'jszip';
+
+// Jpeg Metadata Stripping Logic
+function stripJpegMetadata(arrayBuffer, mode) {
+  // mode can be: 'private' (strips APP1, APP13) or 'all' (strips APP1, APP2, APP13)
+  const view = new DataView(arrayBuffer);
+  const length = arrayBuffer.byteLength;
+  
+  if (length < 2 || view.getUint16(0) !== 0xFFD8) {
+    throw new Error("Lossless stripping is only supported for JPEG/JPG images.");
+  }
+  
+  const chunks = [];
+  chunks.push(new Uint8Array(arrayBuffer, 0, 2)); // Add SOI (0xFFD8)
+  
+  let offset = 2;
+  while (offset < length) {
+    if (offset + 2 > length) {
+      chunks.push(new Uint8Array(arrayBuffer, offset));
+      break;
+    }
+    
+    const marker = view.getUint16(offset);
+    if ((marker & 0xFF00) !== 0xFF00) {
+      // Find next 0xFF marker
+      let nextFF = offset + 1;
+      while (nextFF < length && view.getUint8(nextFF) !== 0xFF) {
+        nextFF++;
+      }
+      chunks.push(new Uint8Array(arrayBuffer, offset, nextFF - offset));
+      offset = nextFF;
+      continue;
+    }
+    
+    if (marker === 0xFFD9) { // EOI (End of Image)
+      chunks.push(new Uint8Array(arrayBuffer, offset, 2));
+      break;
+    }
+    
+    if (marker === 0xFFDA) { // SOS (Start of Scan) - copy rest of file
+      chunks.push(new Uint8Array(arrayBuffer, offset));
+      break;
+    }
+    
+    if (marker >= 0xFFD0 && marker <= 0xFFD7) { // RST markers
+      chunks.push(new Uint8Array(arrayBuffer, offset, 2));
+      offset += 2;
+      continue;
+    }
+    
+    if (offset + 4 > length) {
+      chunks.push(new Uint8Array(arrayBuffer, offset));
+      break;
+    }
+    
+    const segLength = view.getUint16(offset + 2);
+    const totalSegSize = 2 + segLength;
+    if (offset + totalSegSize > length) {
+      chunks.push(new Uint8Array(arrayBuffer, offset));
+      break;
+    }
+    
+    // Determine whether to strip this segment
+    let strip = false;
+    if (marker === 0xFFE1) { // APP1 (EXIF, GPS, XMP)
+      strip = true;
+    } else if (marker === 0xFFED) { // APP13 (IPTC)
+      strip = true;
+    } else if (marker === 0xFFE2) { // APP2 (ICC Profile)
+      if (mode === 'all') {
+        strip = true;
+      }
+    }
+    
+    if (!strip) {
+      chunks.push(new Uint8Array(arrayBuffer, offset, totalSegSize));
+    }
+    
+    offset += totalSegSize;
+  }
+  
+  // Combine all chunks into a single Uint8Array
+  let totalBytes = 0;
+  for (const chunk of chunks) {
+    totalBytes += chunk.byteLength;
+  }
+  
+  const result = new Uint8Array(totalBytes);
+  let writeOffset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, writeOffset);
+    writeOffset += chunk.byteLength;
+  }
+  
+  return result.buffer;
+}
 
 function isCR3(arrayBuffer) {
   if (arrayBuffer.byteLength < 12) return false;
@@ -85,11 +181,31 @@ function extractCR3Boxes(buffer) {
 function parseCR3Metadata(arrayBuffer) {
   const { cmtBoxes, jpegThumbnail } = extractCR3Boxes(arrayBuffer);
   const combinedTags = {};
+  const combinedExpanded = {
+    exif: {},
+    gps: {},
+    iptc: {},
+    xmp: {},
+    icc: {},
+    file: {},
+    makerNotes: {},
+    composite: {}
+  };
   
   for (const [name, cmtData] of Object.entries(cmtBoxes)) {
     try {
       const tags = ExifReader.load(cmtData);
       Object.assign(combinedTags, tags);
+      
+      const expTags = ExifReader.load(cmtData, { expanded: true });
+      for (const groupName of Object.keys(expTags)) {
+        if (expTags[groupName]) {
+          combinedExpanded[groupName] = {
+            ...combinedExpanded[groupName],
+            ...expTags[groupName]
+          };
+        }
+      }
     } catch (err) {
       console.warn(`Failed to parse ${name} tag:`, err);
     }
@@ -116,7 +232,7 @@ function parseCR3Metadata(arrayBuffer) {
     description: 'Canon CR3 RAW'
   };
   
-  return combinedTags;
+  return { tags: combinedTags, expandedTags: combinedExpanded };
 }
 
 // EXIF Smart Value Formatters
@@ -424,6 +540,106 @@ const EXIF_GROUPS = [
   },
 ];
 
+const ADVANCED_GROUPS = [
+  { id: 'exif', label: 'EXIF Metadata', icon: '📷' },
+  { id: 'gps', label: 'GPS Metadata', icon: '📍' },
+  { id: 'iptc', label: 'IPTC Metadata', icon: '📰' },
+  { id: 'xmp', label: 'XMP Metadata', icon: '📝' },
+  { id: 'icc', label: 'ICC Color Profile', icon: '🎨' },
+  { id: 'file', label: 'File & Format Info', icon: '💾' },
+  { id: 'makerNotes', label: 'Maker Notes (Camera Specific)', icon: '⚙️' },
+  { id: 'composite', label: 'Composite / Calculated', icon: '🧮' },
+  { id: 'other', label: 'Other Metadata', icon: '🗂️' },
+];
+
+function getTagGroup(tagName, expandedTags) {
+  if (!expandedTags) return 'other';
+  if (expandedTags.gps && tagName in expandedTags.gps) return 'gps';
+  if (expandedTags.exif && tagName in expandedTags.exif) return 'exif';
+  if (expandedTags.iptc && tagName in expandedTags.iptc) return 'iptc';
+  if (expandedTags.xmp && tagName in expandedTags.xmp) return 'xmp';
+  if (expandedTags.icc && tagName in expandedTags.icc) return 'icc';
+  if (expandedTags.makerNotes && tagName in expandedTags.makerNotes) return 'makerNotes';
+  if (expandedTags.composite && tagName in expandedTags.composite) return 'composite';
+  
+  if (
+    (expandedTags.file && tagName in expandedTags.file) ||
+    (expandedTags.jfif && tagName in expandedTags.jfif) ||
+    (expandedTags.png && tagName in expandedTags.png) ||
+    (expandedTags.riff && tagName in expandedTags.riff) ||
+    (expandedTags.gif && tagName in expandedTags.gif)
+  ) {
+    return 'file';
+  }
+  
+  const nameLower = tagName.toLowerCase();
+  if (nameLower.startsWith('gps')) return 'gps';
+  if (nameLower.startsWith('icc')) return 'icc';
+  if (nameLower.startsWith('xmp')) return 'xmp';
+  if (nameLower.startsWith('iptc')) return 'iptc';
+  if (nameLower.includes('maker') || nameLower.includes('canon') || nameLower.includes('nikon') || nameLower.includes('sony')) return 'makerNotes';
+  
+  return 'other';
+}
+
+function getDecimalCoords(tags, expandedTags) {
+  if (expandedTags?.gps?.Latitude !== undefined && expandedTags?.gps?.Longitude !== undefined) {
+    return {
+      lat: expandedTags.gps.Latitude,
+      lon: expandedTags.gps.Longitude
+    };
+  }
+  
+  const formatted = fmtGPS(tags);
+  if (!formatted) return null;
+  const parts = formatted.split(',').map(s => parseFloat(s.trim()));
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return { lat: parts[0], lon: parts[1] };
+  }
+  
+  return null;
+}
+
+const COMPARE_FIELDS = [
+  { label: 'Filename', fn: (img) => img.name },
+  { label: 'Preview', fn: (img) => (
+      <div className="compare-preview-thumb">
+        {img.previewSrc ? (
+          <img src={img.previewSrc} alt={img.name} />
+        ) : (
+          <div className="compare-raw-thumb">RAW</div>
+        )}
+      </div>
+    )
+  },
+  { label: 'Format', fn: (img) => img.type },
+  { label: 'File Size', fn: (img) => img.strippedInfo ? img.strippedInfo.formattedSize : img.formattedSize },
+  { label: 'Resolution', fn: (img) => fmtResolution(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Aspect Ratio', fn: (img) => fmtAspectRatio(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Camera', fn: (img) => {
+      const tags = img.strippedInfo ? img.strippedInfo.tags : img.tags;
+      const make = fmtVal(exifGet(tags, 'Make'));
+      const model = fmtVal(exifGet(tags, 'Model'));
+      if (make && model) return `${make} ${model}`;
+      return make || model || null;
+    }
+  },
+  { label: 'Lens', fn: (img) => fmtVal(exifGet(img.strippedInfo ? img.strippedInfo.tags : img.tags, 'LensModel', 'LensType')) },
+  { label: 'Date Taken', fn: (img) => fmtDateTime(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Shutter Speed', fn: (img) => fmtShutterSpeed(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Aperture', fn: (img) => fmtAperture(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'ISO', fn: (img) => fmtISO(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Exp. Bias', fn: (img) => fmtVal(exifGet(img.strippedInfo ? img.strippedInfo.tags : img.tags, 'ExposureBiasValue', 'ExposureCompensation')) },
+  { label: 'Exposure Mode', fn: (img) => fmtExposureMode(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Metering Mode', fn: (img) => fmtMeteringMode(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Focal Length', fn: (img) => fmtFocalLength(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Color Space', fn: (img) => fmtColorSpace(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Color Depth', fn: (img) => fmtColorDepth(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'DPI', fn: (img) => fmtDPI(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'GPS', fn: (img) => fmtGPS(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
+  { label: 'Software', fn: (img) => fmtVal(exifGet(img.strippedInfo ? img.strippedInfo.tags : img.tags, 'Software')) },
+];
+
 function downloadJson(tags, filename) {
   const cleanedTags = {};
   for (const [key, val] of Object.entries(tags)) {
@@ -458,65 +674,128 @@ function formatBytes(bytes, decimals = 2) {
 
 export default function ImgMeta() {
   const [dragOver, setDragOver] = useState(false);
-  const [fileMeta, setFileMeta] = useState(null); // { name, type, size }
-  const [previewSrc, setPreviewSrc] = useState('');
-  const [isRaw, setIsRaw] = useState(false);
-  
-  const [tags, setTags] = useState(null);
+  const [images, setImages] = useState([]); // Array of parsed image objects
+  const [selectedImageId, setSelectedImageId] = useState(null); // Active single-view image
+  const [compareMode, setCompareMode] = useState(false); // Toggle side-by-side view
+  const [showMap, setShowMap] = useState(false); // GPS Map toggle
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
 
+  const [collapsedGroups, setCollapsedGroups] = useState({
+    exif: false,
+    gps: false,
+    iptc: false,
+    xmp: false,
+    icc: false,
+    file: false,
+    makerNotes: false,
+    composite: false,
+    other: false,
+  });
+
   const fileInputRef = useRef(null);
 
-  const processFile = (file) => {
+  // Reset map view state when selected image changes
+  React.useEffect(() => {
+    setShowMap(false);
+  }, [selectedImageId]);
+
+  const processFiles = async (files) => {
     setStatus('');
-    setFileMeta({
-      name: file.name,
-      type: file.name.split('.').pop().toUpperCase() || 'Unknown',
-      size: formatBytes(file.size),
-    });
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
-      try {
-        if (isCR3(arrayBuffer)) {
-          setFileMeta(prev => ({ ...prev, type: 'Canon CR3 RAW' }));
-          const parsedTags = parseCR3Metadata(arrayBuffer);
-          setTags(parsedTags);
-          
-          if (parsedTags.Thumbnail && parsedTags.Thumbnail.base64) {
-            setPreviewSrc('data:image/jpeg;base64,' + parsedTags.Thumbnail.base64);
-            setIsRaw(false);
-          } else {
-            setPreviewSrc('');
-            setIsRaw(true);
-          }
-        } else {
+    const newImages = [];
+    
+    for (const file of files) {
+      const loadPromise = new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const arrayBuffer = e.target.result;
           let parsedTags = {};
+          let expandedTags = {};
+          let previewSrc = '';
+          let isRaw = false;
+          let type = file.name.split('.').pop().toUpperCase() || 'Unknown';
+          
           try {
-            parsedTags = ExifReader.load(arrayBuffer);
-          } catch (exifErr) {
-            console.warn("ExifReader failed:", exifErr);
-            parsedTags = { 'Error': { value: exifErr.message, description: 'No EXIF metadata found or format unsupported.' } };
+            if (isCR3(arrayBuffer)) {
+              type = 'Canon CR3 RAW';
+              const result = parseCR3Metadata(arrayBuffer);
+              parsedTags = result.tags;
+              expandedTags = result.expandedTags;
+              
+              if (parsedTags.Thumbnail && parsedTags.Thumbnail.base64) {
+                previewSrc = 'data:image/jpeg;base64,' + parsedTags.Thumbnail.base64;
+                isRaw = false;
+              } else {
+                isRaw = true;
+              }
+            } else {
+              try {
+                parsedTags = ExifReader.load(arrayBuffer);
+              } catch (exifErr) {
+                console.warn("ExifReader failed:", exifErr);
+                parsedTags = { 'Error': { value: exifErr.message, description: 'No EXIF metadata found or format unsupported.' } };
+              }
+              
+              try {
+                expandedTags = ExifReader.load(arrayBuffer, { expanded: true });
+              } catch (e) {
+                expandedTags = {};
+              }
+              
+              // Load preview URL
+              previewSrc = await new Promise((resPreview) => {
+                const imgReader = new FileReader();
+                imgReader.onload = (ev) => resPreview(ev.target.result);
+                imgReader.onerror = () => resPreview('');
+                imgReader.readAsDataURL(file);
+              });
+              isRaw = false;
+            }
+            
+            resolve({
+              id: Date.now() + Math.random().toString(36).substr(2, 9),
+              file: file,
+              name: file.name,
+              type: type,
+              size: file.size,
+              formattedSize: formatBytes(file.size),
+              tags: parsedTags,
+              expandedTags: expandedTags,
+              previewSrc: previewSrc,
+              isRaw: isRaw,
+              originalBuffer: arrayBuffer,
+              strippedInfo: null
+            });
+            
+          } catch (err) {
+            console.error("Processing error:", err);
+            setStatus(`Error processing ${file.name}: ${err.message}`);
+            resolve(null);
           }
-          setTags(parsedTags);
-
-          const imgReader = new FileReader();
-          imgReader.onload = (ev) => {
-            setPreviewSrc(ev.target.result);
-            setIsRaw(false);
-          };
-          imgReader.readAsDataURL(file);
-        }
-      } catch (err) {
-        console.error("Processing error:", err);
-        setStatus("Error processing file: " + err.message);
+        };
+        reader.onerror = () => {
+          setStatus(`Failed to read ${file.name}`);
+          resolve(null);
+        };
+        reader.readAsArrayBuffer(file);
+      });
+      
+      const res = await loadPromise;
+      if (res) {
+        newImages.push(res);
       }
-    };
-    reader.onerror = () => { setStatus("Failed to read file."); };
-    reader.readAsArrayBuffer(file);
+    }
+    
+    if (newImages.length > 0) {
+      setImages(prev => {
+        const updated = [...prev, ...newImages];
+        if (!selectedImageId && updated.length > 0) {
+          setSelectedImageId(updated[0].id);
+        }
+        return updated;
+      });
+    }
   };
 
   const handleDragOver = (e) => {
@@ -532,28 +811,47 @@ export default function ImgMeta() {
     e.preventDefault();
     setDragOver(false);
     if (e.dataTransfer.files.length > 0) {
-      processFile(e.dataTransfer.files[0]);
+      processFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
-      processFile(e.target.files[0]);
+      processFiles(e.target.files);
     }
   };
 
   const handleDropzoneClick = (e) => {
-    if (e.target === fileInputRef.current || e.target.closest('label')) {
+    if (e.target === fileInputRef.current || e.target.closest('label') || e.target.closest('button')) {
       return;
     }
     fileInputRef.current.click();
   };
 
+  const handleRemoveImage = (id) => {
+    const imgToRemove = images.find(img => img.id === id);
+    if (imgToRemove?.strippedInfo?.previewSrc?.startsWith('blob:')) {
+      URL.revokeObjectURL(imgToRemove.strippedInfo.previewSrc);
+    }
+    
+    setImages(prev => {
+      const updated = prev.filter(img => img.id !== id);
+      if (selectedImageId === id) {
+        setSelectedImageId(updated.length > 0 ? updated[0].id : null);
+      }
+      return updated;
+    });
+  };
+
   const handleClear = () => {
-    setFileMeta(null);
-    setPreviewSrc('');
-    setIsRaw(false);
-    setTags(null);
+    images.forEach(img => {
+      if (img.strippedInfo?.previewSrc?.startsWith('blob:')) {
+        URL.revokeObjectURL(img.strippedInfo.previewSrc);
+      }
+    });
+    setImages([]);
+    setSelectedImageId(null);
+    setCompareMode(false);
     setActiveTab('all');
     setSearchQuery('');
     setStatus('');
@@ -562,11 +860,151 @@ export default function ImgMeta() {
     }
   };
 
-  // Render helpers
+  const handleStripMetadata = (image, mode) => {
+    try {
+      const isJpeg = image.type === 'JPEG' || image.type === 'JPG' || image.name.toLowerCase().endsWith('.jpg') || image.name.toLowerCase().endsWith('.jpeg');
+      
+      if (!isJpeg) {
+        setStatus("Lossless stripping is only supported for JPEG/JPG images.");
+        return;
+      }
+      
+      const strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
+      
+      let strippedTags = {};
+      let strippedExpanded = {};
+      try {
+        strippedTags = ExifReader.load(strippedBuffer);
+      } catch (e) {
+        console.log("Verified: No EXIF tags found in stripped image.");
+      }
+      try {
+        strippedExpanded = ExifReader.load(strippedBuffer, { expanded: true });
+      } catch (e) {
+        strippedExpanded = {};
+      }
+      
+      const removedTags = [];
+      const retainedTags = [];
+      
+      for (const tagName of Object.keys(image.tags)) {
+        if (tagName === 'Thumbnail' || tagName === 'thumbnail' || tagName === 'FileType') continue;
+        if (tagName in strippedTags) {
+          retainedTags.push(tagName);
+        } else {
+          removedTags.push(tagName);
+        }
+      }
+      
+      const blob = new Blob([strippedBuffer], { type: 'image/jpeg' });
+      const strippedPreviewSrc = URL.createObjectURL(blob);
+      
+      setImages(prev => prev.map(img => {
+        if (img.id === image.id) {
+          return {
+            ...img,
+            strippedInfo: {
+              mode: mode,
+              buffer: strippedBuffer,
+              tags: strippedTags,
+              expandedTags: strippedExpanded,
+              removedTags: removedTags,
+              retainedTags: retainedTags,
+              previewSrc: strippedPreviewSrc,
+              formattedSize: formatBytes(strippedBuffer.byteLength),
+            }
+          };
+        }
+        return img;
+      }));
+      
+      setStatus(`Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'} losslessly!`);
+    } catch (err) {
+      console.error(err);
+      setStatus("Error stripping metadata: " + err.message);
+    }
+  };
+
+  const handleRestoreOriginal = (imageId) => {
+    setImages(prev => prev.map(img => {
+      if (img.id === imageId) {
+        if (img.strippedInfo && img.strippedInfo.previewSrc && img.strippedInfo.previewSrc.startsWith('blob:')) {
+          URL.revokeObjectURL(img.strippedInfo.previewSrc);
+        }
+        return {
+          ...img,
+          strippedInfo: null
+        };
+      }
+      return img;
+    }));
+    setStatus("Restored original metadata.");
+  };
+
+  const downloadStrippedFile = (image) => {
+    if (!image.strippedInfo) return;
+    const blob = new Blob([image.strippedInfo.buffer], { type: 'image/jpeg' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    const ext = image.name.split('.').pop();
+    const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
+    a.download = `${nameWithoutExt}_stripped.${ext}`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportZip = async () => {
+    if (images.length === 0) return;
+    setStatus('Generating ZIP file...');
+    try {
+      const zip = new JSZip();
+      
+      for (const image of images) {
+        const buffer = image.strippedInfo ? image.strippedInfo.buffer : image.originalBuffer;
+        
+        let filename = image.name;
+        if (image.strippedInfo) {
+          const ext = image.name.split('.').pop();
+          const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
+          filename = `${nameWithoutExt}_stripped.${ext}`;
+        }
+        
+        zip.file(filename, buffer);
+      }
+      
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `imgmeta_exported_images_${Date.now()}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setStatus('ZIP file exported successfully!');
+    } catch (err) {
+      console.error(err);
+      setStatus('Error generating ZIP: ' + err.message);
+    }
+  };
+
+  const activeImage = images.find(img => img.id === selectedImageId) || images[0];
+  const displayedTags = activeImage ? (activeImage.strippedInfo ? activeImage.strippedInfo.tags : activeImage.tags) : null;
+  const displayedExpanded = activeImage ? (activeImage.strippedInfo ? activeImage.strippedInfo.expandedTags : activeImage.expandedTags) : null;
+  const displayedPreviewSrc = activeImage ? (activeImage.strippedInfo ? activeImage.strippedInfo.previewSrc : activeImage.previewSrc) : '';
+  const displayedSize = activeImage ? (activeImage.strippedInfo ? activeImage.strippedInfo.formattedSize : activeImage.formattedSize) : '';
+  const isRaw = activeImage ? activeImage.isRaw : false;
+
   const query = searchQuery.toLowerCase().trim();
 
   const renderCamView = () => {
-    if (!tags) return null;
+    if (!displayedTags) return null;
     let anyGroup = false;
     const groupsToRender = [];
 
@@ -575,7 +1013,7 @@ export default function ImgMeta() {
 
       const params = group.params.map(p => ({
         label: p.label,
-        value: p.fn(tags),
+        value: p.fn(displayedTags),
       })).filter(p => {
         if (!query) return true;
         return p.label.toLowerCase().includes(query) || (p.value || '').toLowerCase().includes(query);
@@ -611,47 +1049,276 @@ export default function ImgMeta() {
     return groupsToRender;
   };
 
-  const renderTableRows = () => {
-    if (!tags) return null;
-    const sortedKeys = Object.keys(tags).sort();
-    const rows = [];
+  const getGroupedAdvancedTags = () => {
+    if (!displayedTags) return {};
+    
+    const groups = {
+      exif: [],
+      gps: [],
+      iptc: [],
+      xmp: [],
+      icc: [],
+      file: [],
+      makerNotes: [],
+      composite: [],
+      other: []
+    };
+    
     let matchCount = 0;
-
-    sortedKeys.forEach(tagName => {
+    
+    Object.keys(displayedTags).forEach(tagName => {
       if (tagName === 'Thumbnail' || tagName === 'thumbnail') return;
-
-      const tagData = tags[tagName];
+      
+      const tagData = displayedTags[tagName];
       const valStr = String(tagData.value !== undefined ? tagData.value : '');
       const descStr = String(tagData.description !== undefined ? tagData.description : '');
-
+      
       if (query) {
         if (!tagName.toLowerCase().includes(query) &&
             !valStr.toLowerCase().includes(query) &&
             !descStr.toLowerCase().includes(query)) return;
       }
-
+      
+      const groupKey = getTagGroup(tagName, displayedExpanded);
+      groups[groupKey].push({
+        name: tagName,
+        value: valStr,
+        description: descStr
+      });
       matchCount++;
-      rows.push(
-        <tr key={tagName}>
-          <td>{tagName}</td>
-          <td title={valStr}>{valStr}</td>
-          <td title={descStr}>{descStr || '—'}</td>
-        </tr>
-      );
     });
-
-    return { rows, matchCount };
+    
+    Object.keys(groups).forEach(key => {
+      groups[key].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
+    return { groups, matchCount };
   };
 
-  const tableData = activeTab === 'advanced' ? renderTableRows() : null;
+  const toggleExpandAll = () => {
+    const anyCollapsed = Object.values(collapsedGroups).some(v => v);
+    const target = !anyCollapsed;
+    setCollapsedGroups({
+      exif: target,
+      gps: target,
+      iptc: target,
+      xmp: target,
+      icc: target,
+      file: target,
+      makerNotes: target,
+      composite: target,
+      other: target,
+    });
+  };
+
+  const renderAdvancedGroups = () => {
+    const { groups, matchCount } = getGroupedAdvancedTags();
+    
+    if (matchCount === 0) {
+      return (
+        <div id="imgmeta-no-tags" className="imgmeta-no-tags-msg" style={{ display: 'block' }}>
+          No matching tags found.
+        </div>
+      );
+    }
+    
+    return (
+      <div className="imgmeta-advanced-wrapper">
+        <div className="advanced-toolbar">
+          <span className="match-count">Found {matchCount} metadata tags</span>
+          <button className="btn-secondary btn-sm" onClick={toggleExpandAll}>
+            {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
+          </button>
+        </div>
+        
+        <div className="advanced-groups-list">
+          {ADVANCED_GROUPS.map(g => {
+            const list = groups[g.id] || [];
+            if (list.length === 0) return null;
+            
+            const isCollapsed = collapsedGroups[g.id];
+            
+            return (
+              <div key={g.id} className={`advanced-group-card ${isCollapsed ? 'collapsed' : ''}`}>
+                <div
+                  className="advanced-group-header"
+                  onClick={() => setCollapsedGroups(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
+                >
+                  <div className="header-label">
+                    <span className="group-icon">{g.icon}</span>
+                    <span className="group-name">{g.label}</span>
+                    <span className="group-count">({list.length})</span>
+                  </div>
+                  <span className="collapse-arrow">{isCollapsed ? '▼' : '▲'}</span>
+                </div>
+                
+                {!isCollapsed && (
+                  <div className="advanced-group-body">
+                    <table className="imgmeta-table">
+                      <thead>
+                        <tr>
+                          <th>Tag Name</th>
+                          <th>Value</th>
+                          <th>Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {list.map(tag => (
+                          <tr key={tag.name}>
+                            <td>{tag.name}</td>
+                            <td title={tag.value}>{tag.value}</td>
+                            <td title={tag.description}>{tag.description || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCompareView = () => {
+    return (
+      <div className="imgmeta-compare-container card-glass">
+        <div className="compare-header">
+          <h3>⚖️ Side-by-Side Metadata Comparison</h3>
+          <button className="btn-secondary btn-sm" onClick={() => setCompareMode(false)}>
+            Back to Detail View
+          </button>
+        </div>
+        <div className="imgmeta-table-container compare-table-wrapper">
+          <table className="imgmeta-table compare-table">
+            <thead>
+              <tr>
+                <th>Field / Parameter</th>
+                {images.map(img => (
+                  <th key={img.id} className={img.id === selectedImageId ? 'active-col' : ''}>
+                    <div className="compare-th-content">
+                      <span className="compare-filename" title={img.name}>{img.name}</span>
+                      <button
+                        className="btn-close-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveImage(img.id);
+                        }}
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE_FIELDS.map((field, fIdx) => (
+                <tr key={fIdx}>
+                  <td className="compare-field-label">{field.label}</td>
+                  {images.map(img => {
+                    const val = field.fn(img);
+                    return (
+                      <td
+                        key={img.id}
+                        className={`${img.id === selectedImageId ? 'active-col' : ''} ${!val ? 'not-available' : ''}`}
+                      >
+                        {val || '—'}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderThumbnailsBar = () => {
+    if (images.length === 0) return null;
+    
+    return (
+      <div className="imgmeta-top-bar card-glass">
+        <div className="thumbnails-scroll-container">
+          {images.map(img => (
+            <div
+              key={img.id}
+              className={`thumbnail-card ${img.id === selectedImageId ? 'selected' : ''}`}
+              onClick={() => {
+                setSelectedImageId(img.id);
+              }}
+            >
+              <div className="thumb-img-wrapper">
+                {img.previewSrc ? (
+                  <img src={img.previewSrc} alt={img.name} />
+                ) : (
+                  <div className="thumb-raw-icon">RAW</div>
+                )}
+                <button
+                  className="thumb-remove-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage(img.id);
+                  }}
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="thumb-info">
+                <span className="thumb-name" title={img.name}>{img.name}</span>
+                <span className="thumb-size">{img.strippedInfo ? img.strippedInfo.formattedSize : img.formattedSize}</span>
+              </div>
+            </div>
+          ))}
+          
+          <div className="thumbnail-add-card" onClick={handleDropzoneClick}>
+            <div className="add-icon">+</div>
+            <span>Add More</span>
+          </div>
+        </div>
+        
+        <div className="top-bar-actions">
+          <button
+            className={`btn-secondary ${compareMode ? 'active' : ''}`}
+            onClick={() => setCompareMode(!compareMode)}
+            title="Toggle side-by-side comparison"
+          >
+            ⚖️ Compare {images.length > 1 ? `(${images.length})` : ''}
+          </button>
+          <button
+            className="btn-primary"
+            onClick={handleExportZip}
+            title="Export all images as a ZIP archive"
+          >
+            📦 Export to Folder (.zip)
+          </button>
+          <button className="btn-secondary" onClick={handleClear}>
+            Clear All
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const gpsCoords = displayedTags ? getDecimalCoords(displayedTags, displayedExpanded) : null;
+  const gpsCoord = displayedTags ? fmtGPS(displayedTags) : null;
 
   return (
     <article id="tool-imgmeta" className="tool-card active">
       <h2>ImgMeta</h2>
       <div className="imgmeta-container">
         
+        {/* Thumbnails list bar at the top */}
+        {renderThumbnailsBar()}
+
         {/* Drag and Drop Zone */}
-        {!tags && (
+        {images.length === 0 && (
           <div
             id="imgmeta-dropzone"
             className={`imgmeta-dropzone ${dragOver ? 'dragover' : ''}`}
@@ -666,15 +1333,16 @@ export default function ImgMeta() {
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <p className="dropzone-title">Drag &amp; drop an image here</p>
+              <p className="dropzone-title">Drag &amp; drop images here</p>
               <p className="dropzone-or">or</p>
               <label htmlFor="imgmeta-file-input" className="btn-secondary" onClick={(e) => e.stopPropagation()}>
-                Browse File
+                Browse Files
               </label>
               <input
                 type="file"
                 id="imgmeta-file-input"
                 accept="image/*,.cr3,.CR3"
+                multiple
                 style={{ display: 'none' }}
                 ref={fileInputRef}
                 onChange={handleFileChange}
@@ -685,14 +1353,16 @@ export default function ImgMeta() {
         )}
 
         {/* Results Area */}
-        {tags && (
+        {images.length > 0 && compareMode && renderCompareView()}
+
+        {images.length > 0 && !compareMode && activeImage && (
           <div id="imgmeta-results" className="imgmeta-results-grid" style={{ display: 'grid' }}>
-            {/* Left Column: File Info & Preview */}
+            {/* Left Column: File Info & Preview & Stripper & GPS Map */}
             <div className="imgmeta-preview-col">
               <div className="card-glass imgmeta-preview-card">
                 <div className="imgmeta-img-container">
-                  {previewSrc && (
-                    <img id="imgmeta-preview-img" alt="Preview" src={previewSrc} style={{ display: 'block' }} />
+                  {displayedPreviewSrc && (
+                    <img id="imgmeta-preview-img" alt="Preview" src={displayedPreviewSrc} style={{ display: 'block' }} />
                   )}
                   {isRaw && (
                     <div id="imgmeta-raw-icon" className="imgmeta-raw-icon" style={{ display: 'flex' }}>
@@ -705,16 +1375,141 @@ export default function ImgMeta() {
                   )}
                 </div>
                 <div className="imgmeta-file-meta">
-                  <h3 id="imgmeta-file-name">{fileMeta?.name}</h3>
-                  <p><span className="label">Format:</span> <span>{fileMeta?.type}</span></p>
-                  <p><span className="label">Size:</span> <span>{fileMeta?.size}</span></p>
+                  <h3 id="imgmeta-file-name">{activeImage.name}</h3>
+                  <p><span className="label">Format:</span> <span>{activeImage.type}</span></p>
+                  <p><span className="label">Size:</span> <span>{displayedSize}</span></p>
                 </div>
               </div>
+
+              {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
+              {gpsCoords && (
+                <div className="card-glass imgmeta-gps-card">
+                  <h4>📍 GPS Location</h4>
+                  <div className="gps-info">
+                    <p className="coords-text">{gpsCoord}</p>
+                    <div className="gps-actions">
+                      <button
+                        className="btn-accent-outline btn-sm"
+                        onClick={() => setShowMap(!showMap)}
+                      >
+                        {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
+                      </button>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                      >
+                        Google Maps ↗
+                      </a>
+                    </div>
+                  </div>
+                  {showMap && (
+                    <div className="gps-map-container">
+                      <iframe
+                        title="GPS Location Map"
+                        width="100%"
+                        height="200"
+                        frameBorder="0"
+                        scrolling="no"
+                        marginHeight="0"
+                        marginWidth="0"
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.005}%2C${gpsCoords.lat-0.005}%2C${gpsCoords.lon+0.005}%2C${gpsCoords.lat+0.005}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
+                        style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                      ></iframe>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Metadata Stripping UI below image preview */}
+              <div className="card-glass imgmeta-stripper-card">
+                <h4>Metadata Stripping (Lossless JPEG)</h4>
+                {!activeImage.strippedInfo ? (
+                  <>
+                    <p className="stripper-desc">
+                      Remove metadata blocks from the JPEG binary structure without re-encoding the image.
+                    </p>
+                    <div className="stripper-buttons">
+                      <button
+                        className="btn-accent"
+                        onClick={() => handleStripMetadata(activeImage, 'private')}
+                        disabled={!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg')}
+                      >
+                        🔒 Strip Private Info
+                      </button>
+                      <button
+                        className="btn-accent-outline"
+                        onClick={() => handleStripMetadata(activeImage, 'all')}
+                        disabled={!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg')}
+                      >
+                        🗑️ Strip All Info
+                      </button>
+                    </div>
+                    {!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg') && (
+                      <p className="stripper-warning">
+                        ⚠️ Lossless stripping is only supported for JPEG/JPG formats.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="stripper-result">
+                    <div className="stripper-status-badge">
+                      ✓ {activeImage.strippedInfo.mode === 'private' ? 'Private Info Stripped' : 'All Info Stripped'}
+                    </div>
+                    
+                    <div className="stripper-diff">
+                      <div className="diff-section removed">
+                        <span className="diff-label">Removed ({activeImage.strippedInfo.removedTags.length})</span>
+                        <div className="diff-tags-list">
+                          {activeImage.strippedInfo.removedTags.slice(0, 10).map(t => (
+                            <span key={t} className="tag-pill removed">{t}</span>
+                          ))}
+                          {activeImage.strippedInfo.removedTags.length > 10 && (
+                            <span className="tag-pill more">+{activeImage.strippedInfo.removedTags.length - 10} more</span>
+                          )}
+                          {activeImage.strippedInfo.removedTags.length === 0 && <span className="no-tags">None</span>}
+                        </div>
+                      </div>
+                      <div className="diff-section retained">
+                        <span className="diff-label">Retained ({activeImage.strippedInfo.retainedTags.length})</span>
+                        <div className="diff-tags-list">
+                          {activeImage.strippedInfo.retainedTags.slice(0, 10).map(t => (
+                            <span key={t} className="tag-pill retained">{t}</span>
+                          ))}
+                          {activeImage.strippedInfo.retainedTags.length > 10 && (
+                            <span className="tag-pill more">+{activeImage.strippedInfo.retainedTags.length - 10} more</span>
+                          )}
+                          {activeImage.strippedInfo.retainedTags.length === 0 && <span className="no-tags">None</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="stripper-actions">
+                      <button
+                        className="btn-primary"
+                        onClick={() => downloadStrippedFile(activeImage)}
+                      >
+                        💾 Download Stripped JPEG
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => handleRestoreOriginal(activeImage.id)}
+                      >
+                        🔄 Restore Original
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Standard Actions */}
               <div className="imgmeta-actions">
                 <button
                   id="imgmeta-download-json"
                   className="btn-primary flex-1"
-                  onClick={() => downloadJson(tags, fileMeta?.name)}
+                  onClick={() => downloadJson(displayedTags, activeImage.name)}
                 >
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -723,7 +1518,7 @@ export default function ImgMeta() {
                   </svg>
                   Export JSON
                 </button>
-                <button id="imgmeta-clear" className="btn-secondary" onClick={handleClear}>Clear</button>
+                <button id="imgmeta-clear" className="btn-secondary" onClick={() => handleRemoveImage(activeImage.id)}>Remove</button>
               </div>
             </div>
 
@@ -759,28 +1554,8 @@ export default function ImgMeta() {
                 </div>
               )}
 
-              {/* Advanced Table View */}
-              {activeTab === 'advanced' && tableData && (
-                <div id="imgmeta-table-wrapper" className="imgmeta-table-container scrollable" style={{ display: 'block' }}>
-                  <table className="imgmeta-table">
-                    <thead>
-                      <tr>
-                        <th>Tag Name</th>
-                        <th>Value</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableData.rows}
-                    </tbody>
-                  </table>
-                  {tableData.matchCount === 0 && (
-                    <div id="imgmeta-no-tags" className="imgmeta-no-tags-msg" style={{ display: 'block' }}>
-                      No matching tags found.
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Advanced Table View - Collapsible Groups */}
+              {activeTab === 'advanced' && renderAdvancedGroups()}
             </div>
           </div>
         )}

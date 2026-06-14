@@ -1001,6 +1001,9 @@ export default function ImgMeta() {
   const displayedSize = activeImage ? (activeImage.strippedInfo ? activeImage.strippedInfo.formattedSize : activeImage.formattedSize) : '';
   const isRaw = activeImage ? activeImage.isRaw : false;
 
+  const gpsCoords = displayedTags ? getDecimalCoords(displayedTags, displayedExpanded) : null;
+  const gpsCoord = displayedTags ? fmtGPS(displayedTags) : null;
+
   const query = searchQuery.toLowerCase().trim();
 
   const renderCamView = () => {
@@ -1015,6 +1018,9 @@ export default function ImgMeta() {
         label: p.label,
         value: p.fn(displayedTags),
       })).filter(p => {
+        // If there is an isolated GPS block, do not show GPS in the Other/All tables
+        if (p.label === 'GPS' && gpsCoord) return false;
+        
         if (!query) return true;
         return p.label.toLowerCase().includes(query) || (p.value || '').toLowerCase().includes(query);
       });
@@ -1242,6 +1248,8 @@ export default function ImgMeta() {
   const renderThumbnailsBar = () => {
     if (images.length === 0) return null;
     
+    const isJpeg = activeImage && (activeImage.type === 'JPEG' || activeImage.type === 'JPG' || activeImage.name.toLowerCase().endsWith('.jpg') || activeImage.name.toLowerCase().endsWith('.jpeg'));
+    
     return (
       <div className="imgmeta-top-bar card-glass">
         <div className="thumbnails-scroll-container">
@@ -1284,6 +1292,47 @@ export default function ImgMeta() {
         </div>
         
         <div className="top-bar-actions">
+          {/* Metadata Stripping inline */}
+          {activeImage && isJpeg && (
+            <div className="top-bar-stripper">
+              {!activeImage.strippedInfo ? (
+                <>
+                  <span className="stripper-mini-label">Strip:</span>
+                  <button
+                    className="btn-accent btn-sm"
+                    onClick={() => handleStripMetadata(activeImage, 'private')}
+                  >
+                    🔒 Private
+                  </button>
+                  <button
+                    className="btn-accent-outline btn-sm"
+                    onClick={() => handleStripMetadata(activeImage, 'all')}
+                  >
+                    🗑️ All
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="stripper-mini-status">
+                    ✓ {activeImage.strippedInfo.mode === 'private' ? 'Private' : 'All'}
+                  </span>
+                  <button
+                    className="btn-primary btn-sm"
+                    onClick={() => downloadStrippedFile(activeImage)}
+                  >
+                    💾 Download
+                  </button>
+                  <button
+                    className="btn-secondary btn-sm"
+                    onClick={() => handleRestoreOriginal(activeImage.id)}
+                  >
+                    🔄 Restore
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           <button
             className={`btn-secondary ${compareMode ? 'active' : ''}`}
             onClick={() => setCompareMode(!compareMode)}
@@ -1306,14 +1355,40 @@ export default function ImgMeta() {
     );
   };
 
-  const gpsCoords = displayedTags ? getDecimalCoords(displayedTags, displayedExpanded) : null;
-  const gpsCoord = displayedTags ? fmtGPS(displayedTags) : null;
-
   return (
     <article id="tool-imgmeta" className="tool-card active">
       <h2>ImgMeta</h2>
-      <div className="imgmeta-container">
+      <div 
+        className="imgmeta-container"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Always render the file input so it is accessible via Ref */}
+        <input
+          type="file"
+          id="imgmeta-file-input"
+          accept="image/*,.cr3,.CR3"
+          multiple
+          style={{ display: 'none' }}
+          ref={fileInputRef}
+          onChange={handleFileChange}
+        />
         
+        {/* Full-width drag over overlay when files are already present */}
+        {dragOver && images.length > 0 && (
+          <div className="imgmeta-drag-overlay">
+            <div className="overlay-content">
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <p>Drop files to add to ImgMeta</p>
+            </div>
+          </div>
+        )}
+
         {/* Thumbnails list bar at the top */}
         {renderThumbnailsBar()}
 
@@ -1322,9 +1397,6 @@ export default function ImgMeta() {
           <div
             id="imgmeta-dropzone"
             className={`imgmeta-dropzone ${dragOver ? 'dragover' : ''}`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onClick={handleDropzoneClick}
           >
             <div className="dropzone-content">
@@ -1335,18 +1407,13 @@ export default function ImgMeta() {
               </svg>
               <p className="dropzone-title">Drag &amp; drop images here</p>
               <p className="dropzone-or">or</p>
-              <label htmlFor="imgmeta-file-input" className="btn-secondary" onClick={(e) => e.stopPropagation()}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
+              >
                 Browse Files
-              </label>
-              <input
-                type="file"
-                id="imgmeta-file-input"
-                accept="image/*,.cr3,.CR3"
-                multiple
-                style={{ display: 'none' }}
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
+              </button>
               <p className="dropzone-note">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
             </div>
           </div>
@@ -1357,7 +1424,7 @@ export default function ImgMeta() {
 
         {images.length > 0 && !compareMode && activeImage && (
           <div id="imgmeta-results" className="imgmeta-results-grid" style={{ display: 'grid' }}>
-            {/* Left Column: File Info & Preview & Stripper & GPS Map */}
+            {/* Left Column: File Info & Preview & Stripper Diff */}
             <div className="imgmeta-preview-col">
               <div className="card-glass imgmeta-preview-card">
                 <div className="imgmeta-img-container">
@@ -1381,84 +1448,11 @@ export default function ImgMeta() {
                 </div>
               </div>
 
-              {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
-              {gpsCoords && (
-                <div className="card-glass imgmeta-gps-card">
-                  <h4>📍 GPS Location</h4>
-                  <div className="gps-info">
-                    <p className="coords-text">{gpsCoord}</p>
-                    <div className="gps-actions">
-                      <button
-                        className="btn-accent-outline btn-sm"
-                        onClick={() => setShowMap(!showMap)}
-                      >
-                        {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
-                      </button>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-secondary btn-sm"
-                        style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
-                      >
-                        Google Maps ↗
-                      </a>
-                    </div>
-                  </div>
-                  {showMap && (
-                    <div className="gps-map-container">
-                      <iframe
-                        title="GPS Location Map"
-                        width="100%"
-                        height="200"
-                        frameBorder="0"
-                        scrolling="no"
-                        marginHeight="0"
-                        marginWidth="0"
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.005}%2C${gpsCoords.lat-0.005}%2C${gpsCoords.lon+0.005}%2C${gpsCoords.lat+0.005}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                        style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
-                      ></iframe>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Metadata Stripping UI below image preview */}
-              <div className="card-glass imgmeta-stripper-card">
-                <h4>Metadata Stripping (Lossless JPEG)</h4>
-                {!activeImage.strippedInfo ? (
-                  <>
-                    <p className="stripper-desc">
-                      Remove metadata blocks from the JPEG binary structure without re-encoding the image.
-                    </p>
-                    <div className="stripper-buttons">
-                      <button
-                        className="btn-accent"
-                        onClick={() => handleStripMetadata(activeImage, 'private')}
-                        disabled={!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg')}
-                      >
-                        🔒 Strip Private Info
-                      </button>
-                      <button
-                        className="btn-accent-outline"
-                        onClick={() => handleStripMetadata(activeImage, 'all')}
-                        disabled={!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg')}
-                      >
-                        🗑️ Strip All Info
-                      </button>
-                    </div>
-                    {!activeImage.name.toLowerCase().endsWith('.jpg') && !activeImage.name.toLowerCase().endsWith('.jpeg') && (
-                      <p className="stripper-warning">
-                        ⚠️ Lossless stripping is only supported for JPEG/JPG formats.
-                      </p>
-                    )}
-                  </>
-                ) : (
+              {/* Stripper Diff (Visual list of removed vs retained tags) */}
+              {activeImage.strippedInfo && (
+                <div className="card-glass imgmeta-stripper-card">
+                  <h4>Stripped Tags Verification</h4>
                   <div className="stripper-result">
-                    <div className="stripper-status-badge">
-                      ✓ {activeImage.strippedInfo.mode === 'private' ? 'Private Info Stripped' : 'All Info Stripped'}
-                    </div>
-                    
                     <div className="stripper-diff">
                       <div className="diff-section removed">
                         <span className="diff-label">Removed ({activeImage.strippedInfo.removedTags.length})</span>
@@ -1485,24 +1479,9 @@ export default function ImgMeta() {
                         </div>
                       </div>
                     </div>
-
-                    <div className="stripper-actions">
-                      <button
-                        className="btn-primary"
-                        onClick={() => downloadStrippedFile(activeImage)}
-                      >
-                        💾 Download Stripped JPEG
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => handleRestoreOriginal(activeImage.id)}
-                      >
-                        🔄 Restore Original
-                      </button>
-                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Standard Actions */}
               <div className="imgmeta-actions">
@@ -1522,7 +1501,7 @@ export default function ImgMeta() {
               </div>
             </div>
 
-            {/* Right Column: Metadata Tabs & Table */}
+            {/* Right Column: Metadata Tabs, Table & GPS Map */}
             <div className="imgmeta-data-col">
               <div className="imgmeta-header-actions">
                 <div className="imgmeta-tabs">
@@ -1556,6 +1535,50 @@ export default function ImgMeta() {
 
               {/* Advanced Table View - Collapsible Groups */}
               {activeTab === 'advanced' && renderAdvancedGroups()}
+
+              {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) - Moved to bottom of right column */}
+              {gpsCoords && (
+                <div className="card-glass imgmeta-gps-card green-region-gps">
+                  <div className="green-region-gps-inner">
+                    <div className="gps-header">
+                      <h4>📍 GPS Location</h4>
+                      <p className="coords-text">{gpsCoord}</p>
+                      <div className="gps-actions">
+                        <button
+                          className="btn-accent-outline btn-sm"
+                          onClick={() => setShowMap(!showMap)}
+                        >
+                          {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
+                        </button>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                        >
+                          Google Maps ↗
+                        </a>
+                      </div>
+                    </div>
+                    {showMap && (
+                      <div className="gps-map-container large-map">
+                        <iframe
+                          title="GPS Location Map"
+                          width="100%"
+                          height="380"
+                          frameBorder="0"
+                          scrolling="no"
+                          marginHeight="0"
+                          marginWidth="0"
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
+                          style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                        ></iframe>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

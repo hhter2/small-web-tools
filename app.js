@@ -773,9 +773,9 @@ const toolDetails = {
     title: "IP Address Lookup",
     desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
   },
-  "tool-exif": {
-    title: "EXIF Data Analyzer",
-    desc: "Extract and analyze EXIF, GPS, and custom camera metadata from image files (including Canon .CR3 RAW files) locally in the browser."
+  "tool-imgmeta": {
+    title: "ImgMeta",
+    desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files (including Canon .CR3 RAW files) locally in the browser."
   },
   "tool-wheel": {
     title: "Random Wheel",
@@ -1051,9 +1051,9 @@ function setupSidebar() {
         targetNav.classList.add("active");
       }
 
-      // EXIF, Wheel, and Home tools need extra width; remove constraint for them
+      // ImgMeta, Wheel, and Home tools need extra width; remove constraint for them
       if (toolStage) {
-        const isWide = toolId === "tool-home" || toolId === "tool-exif" || toolId === "tool-wheel";
+        const isWide = toolId === "tool-home" || toolId === "tool-imgmeta" || toolId === "tool-wheel";
         toolStage.classList.toggle("wide-tool", isWide);
         const mainHeader = document.querySelector(".main-header");
         if (mainHeader) {
@@ -1155,7 +1155,7 @@ function setupSidebar() {
 }
 
 // ==========================================================
-// EXIF Data Analyzer Tool Implementation
+// ImgMeta Tool Implementation
 // ==========================================
 
 function isCR3(arrayBuffer) {
@@ -1587,23 +1587,23 @@ const EXIF_GROUPS = [
   },
 ];
 
-function setupExifAnalyzer() {
-  const dropzone = $("exif-dropzone");
-  const fileInput = $("exif-file-input");
-  const resultsArea = $("exif-results");
-  const previewImg = $("exif-preview-img");
-  const rawIcon = $("exif-raw-icon");
-  const fileNameEl = $("exif-file-name");
-  const fileTypeEl = $("exif-file-type");
-  const fileSizeEl = $("exif-file-size");
-  const tableBody = $("exif-table-body");
-  const noTagsEl = $("exif-no-tags");
-  const camView = $("exif-cam-view");
-  const tableWrapper = $("exif-table-wrapper");
-  const searchInput = $("exif-tag-search");
-  const downloadBtn = $("exif-download-json");
-  const clearBtn = $("exif-clear");
-  const statusEl = $("exif-status");
+function setupImgMeta() {
+  const dropzone = $("imgmeta-dropzone");
+  const fileInput = $("imgmeta-file-input");
+  const resultsArea = $("imgmeta-results");
+  const previewImg = $("imgmeta-preview-img");
+  const rawIcon = $("imgmeta-raw-icon");
+  const fileNameEl = $("imgmeta-file-name");
+  const fileTypeEl = $("imgmeta-file-type");
+  const fileSizeEl = $("imgmeta-file-size");
+  const tableBody = $("imgmeta-table-body");
+  const noTagsEl = $("imgmeta-no-tags");
+  const camView = $("imgmeta-cam-view");
+  const tableWrapper = $("imgmeta-table-wrapper");
+  const searchInput = $("imgmeta-tag-search");
+  const downloadBtn = $("imgmeta-download-json");
+  const clearBtn = $("imgmeta-clear");
+  const statusEl = $("imgmeta-status");
 
   let currentTags = null;
   let currentFileName = "";
@@ -1647,7 +1647,7 @@ function setupExifAnalyzer() {
     resultsArea.style.display = "none";
     dropzone.style.display = "flex";
     statusEl.textContent = "";
-    document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
+    document.querySelectorAll(".imgmeta-tabs .tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.getAttribute("data-tab") === "all");
     });
   };
@@ -1659,9 +1659,9 @@ function setupExifAnalyzer() {
   });
 
   // ─── Tabs ─────────────────────────────────────────────────────────────────
-  document.querySelectorAll(".exif-tabs .tab-btn").forEach(btn => {
+  document.querySelectorAll(".imgmeta-tabs .tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".exif-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".imgmeta-tabs .tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeTab = btn.getAttribute("data-tab");
       renderView();
@@ -1704,26 +1704,26 @@ function setupExifAnalyzer() {
       anyGroup = true;
 
       const groupEl = document.createElement('div');
-      groupEl.className = 'exif-param-group';
+      groupEl.className = 'imgmeta-param-group';
 
       const header = document.createElement('div');
-      header.className = 'exif-param-group-header';
+      header.className = 'imgmeta-param-group-header';
       header.innerHTML = `<span class="group-icon">${group.icon}</span>${group.label}`;
       groupEl.appendChild(header);
 
       const grid = document.createElement('div');
-      grid.className = 'exif-param-grid';
+      grid.className = 'imgmeta-param-grid';
 
       params.forEach(p => {
         const cell = document.createElement('div');
-        cell.className = 'exif-stat-cell';
+        cell.className = 'imgmeta-stat-cell';
 
         const lbl = document.createElement('div');
-        lbl.className = 'exif-stat-label';
+        lbl.className = 'imgmeta-stat-label';
         lbl.textContent = p.label;
 
         const val = document.createElement('div');
-        val.className = 'exif-stat-value' + (p.value ? '' : ' not-available');
+        val.className = 'imgmeta-stat-value' + (p.value ? '' : ' not-available');
         val.textContent = p.value || '—';
         val.title = p.value || '';
 
@@ -1733,7 +1733,7 @@ function setupExifAnalyzer() {
       });
 
       // Remove bottom border from last row of cells
-      const allCells = grid.querySelectorAll('.exif-stat-cell');
+      const allCells = grid.querySelectorAll('.imgmeta-stat-cell');
       // Rough: mark all cells in last visual row as no-bottom
       // We can't know the grid flow easily, so just strip bottom from all
       // Actually, leave border on all for clean look
@@ -1743,7 +1743,7 @@ function setupExifAnalyzer() {
     }
 
     if (!anyGroup) {
-      camView.innerHTML = '<div class="exif-no-tags-cam">No matching parameters found.</div>';
+      camView.innerHTML = '<div class="imgmeta-no-tags-cam">No matching parameters found.</div>';
     }
   }
 
@@ -2282,7 +2282,7 @@ function init() {
   setupBaseConverter();
   setupDnaConverter();
   setupIpLookup();
-  setupExifAnalyzer();
+  setupImgMeta();
   setupRandomWheel();
 }
 

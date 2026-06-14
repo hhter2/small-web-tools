@@ -78,8 +78,8 @@ export default defineConfig({
       closeBundle() {
         try {
           fs.copyFileSync('app.js', 'dist/app.js');
-          fs.copyFileSync('exif-reader.js', 'dist/exif-reader.js');
-          console.log('Successfully copied app.js and exif-reader.js to dist/');
+          fs.copyFileSync('img-meta.js', 'dist/img-meta.js');
+          console.log('Successfully copied app.js and img-meta.js to dist/');
         } catch (err) {
           console.error('Error copying assets to dist/:', err);
         }

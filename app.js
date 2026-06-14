@@ -1047,7 +1047,7 @@ function setupSidebar() {
 
       // ImgMeta, Wheel, and Home tools need extra width; remove constraint for them
       if (toolStage) {
-        const isWide = toolId === "tool-home" || toolId === "tool-imgmeta" || toolId === "tool-wheel" || toolId === "tool-iplookup";
+        const isWide = true;
         toolStage.classList.toggle("wide-tool", isWide);
         const mainHeader = document.querySelector(".main-header");
         const mainContent = document.querySelector(".main-content");

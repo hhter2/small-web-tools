@@ -349,7 +349,8 @@ function fmtResolution(tags) {
   const h = getImageHeight(tags);
   if (!w || !h) return null;
   const mp = ((w * h) / 1_000_000).toFixed(1);
-  return `${w} × ${h} (${mp} MP)`;
+  const dpi = fmtDPI(tags);
+  return dpi ? `${mp} MP (${dpi})` : `${mp} MP`;
 }
 
 function fmtMeteringMode(tags) {
@@ -509,7 +510,6 @@ const EXIF_GROUPS = [
       { label: 'White Balance', fn: fmtWhiteBalance },
       { label: 'Color Space',   fn: fmtColorSpace },
       { label: 'Color Depth',   fn: fmtColorDepth },
-      { label: 'DPI',           fn: fmtDPI },
     ],
   },
   {
@@ -635,7 +635,6 @@ const COMPARE_FIELDS = [
   { label: 'Focal Length', fn: (img) => fmtFocalLength(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
   { label: 'Color Space', fn: (img) => fmtColorSpace(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
   { label: 'Color Depth', fn: (img) => fmtColorDepth(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
-  { label: 'DPI', fn: (img) => fmtDPI(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
   { label: 'GPS', fn: (img) => fmtGPS(img.strippedInfo ? img.strippedInfo.tags : img.tags) },
   { label: 'Software', fn: (img) => fmtVal(exifGet(img.strippedInfo ? img.strippedInfo.tags : img.tags, 'Software')) },
 ];

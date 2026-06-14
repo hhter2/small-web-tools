@@ -383,6 +383,13 @@ export default function RandomWheel() {
             
             <div className="wheel-options-footer">
               <button
+                id="wheel-title-btn"
+                className="btn-secondary-sm"
+                onClick={() => setShowTitleInput(prev => !prev)}
+              >
+                Title
+              </button>
+              <button
                 id="wheel-edit-btn"
                 className={`btn-secondary-sm ${isEditing ? 'btn-primary-sm' : ''}`}
                 onClick={() => setIsEditing(prev => !prev)}
@@ -391,7 +398,7 @@ export default function RandomWheel() {
               </button>
               <button
                 id="wheel-clear-btn"
-                className="btn-danger-sm"
+                className="btn-secondary-sm"
                 onClick={() => !isSpinning && setShowClearModal(true)}
                 disabled={isSpinning}
               >
@@ -400,52 +407,42 @@ export default function RandomWheel() {
             </div>
           </div>
 
-          {/* Settings Box */}
-          <div className="wheel-settings-card">
-            <div className="form-group-row">
-              <label htmlFor="wheel-title-input">Wheel Title</label>
-              <div className="wheel-title-row">
-                <button
-                  id="wheel-title-btn"
-                  className="btn-secondary-sm"
-                  onClick={() => setShowTitleInput(prev => !prev)}
-                >
-                  Change Title
-                </button>
-              </div>
+          {showTitleInput && (
+            <div id="wheel-title-input-group" className="form-group" style={{ display: 'block', transition: 'all 0.3s ease' }}>
+              <label htmlFor="wheel-title-input">Edit Wheel Title</label>
+              <input
+                id="wheel-title-input"
+                type="text"
+                placeholder="Random Wheel"
+                value={title}
+                onChange={(e) => setTitle(e.target.value || 'Random Wheel')}
+              />
             </div>
-            {showTitleInput && (
-              <div id="wheel-title-input-group" className="form-group border-top" style={{ display: 'block', paddingTop: '10px' }}>
-                <input
-                  id="wheel-title-input"
-                  type="text"
-                  placeholder="Random Wheel"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value || 'Random Wheel')}
-                />
-              </div>
-            )}
-            <div className="form-group-row border-top" style={{ paddingTop: '12px' }}>
-              <div className="checkbox-wrapper">
-                <input
-                  type="checkbox"
-                  id="wheel-allow-duplicate"
-                  checked={allowDuplicate}
-                  onChange={(e) => setAllowDuplicate(e.target.checked)}
-                />
-                <label htmlFor="wheel-allow-duplicate">Allow duplicate draws</label>
-              </div>
-            </div>
+          )}
+
+          {/* Options: Allow Duplicate */}
+          <div className="form-group checkbox-group">
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                id="wheel-allow-duplicate"
+                checked={allowDuplicate}
+                onChange={(e) => setAllowDuplicate(e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+              <span className="toggle-label">Allow duplicate selection (can draw again)</span>
+            </label>
           </div>
-          
-          <div className="wheel-shortcuts-card">
+
+          {/* Keyboard shortcuts reminder */}
+          <div className="keyboard-shortcuts-card">
             <h4>Keyboard Shortcuts</h4>
-            <div className="shortcuts-grid">
-              <div className="shortcut-row"><span>Space</span><span>Spin Wheel</span></div>
-              <div className="shortcut-row"><span>E</span><span>Toggle Edit Mode</span></div>
-              <div className="shortcut-row"><span>R</span><span>Reset Eliminations</span></div>
-              <div className="shortcut-row"><span>C</span><span>Clear Wheel Options</span></div>
-            </div>
+            <ul>
+              <li><kbd>Space</kbd> Spin the wheel</li>
+              <li><kbd>E</kbd> Toggle Edit/View mode</li>
+              <li><kbd>R</kbd> Reset wheel items</li>
+              <li><kbd>C</kbd> Clear all text (requires confirmation)</li>
+            </ul>
           </div>
         </div>
 
@@ -453,14 +450,14 @@ export default function RandomWheel() {
 
       {/* Confirmation Clear Modal */}
       {showClearModal && (
-        <div id="wheel-clear-modal" className="modal-container" style={{ display: 'flex' }}>
+        <div id="wheel-clear-modal" className="custom-modal" style={{ display: 'flex' }}>
           <div id="wheel-clear-modal-backdrop" className="modal-backdrop" onClick={() => setShowClearModal(false)}></div>
-          <div className="modal-content card-glass">
+          <div className="modal-content">
             <h3>Clear All Options?</h3>
-            <p>Are you sure you want to delete all entries from the lucky wheel? This cannot be undone.</p>
-            <div className="modal-actions-row">
-              <button id="wheel-confirm-clear-btn" className="btn-danger-sm" onClick={confirmClear}>Clear All</button>
-              <button id="wheel-cancel-clear-btn" className="btn-secondary-sm" onClick={() => setShowClearModal(false)}>Cancel</button>
+            <p>Are you sure you want to clear all the typed options? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button id="wheel-confirm-clear-btn" className="btn-danger-confirm" onClick={confirmClear}>Yes, Clear All</button>
+              <button id="wheel-cancel-clear-btn" className="btn-secondary" onClick={() => setShowClearModal(false)}>Cancel</button>
             </div>
           </div>
         </div>

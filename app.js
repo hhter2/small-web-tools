@@ -1528,26 +1528,27 @@ function fmtGPS(tags) {
   const lon = exifGet(tags, 'GPSLongitude');
   if (!lat || !lon) return null;
   
-  const getDirAbbr = (ref) => {
-    if (!ref) return '';
+  const getDirSign = (ref, defaultSign) => {
+    if (!ref) return defaultSign;
     const s = String(ref).trim().toUpperCase();
-    if (s.startsWith('N')) return 'N';
-    if (s.startsWith('S')) return 'S';
-    if (s.startsWith('E')) return 'E';
-    if (s.startsWith('W')) return 'W';
-    return ref;
+    if (s.startsWith('S') || s.startsWith('W')) return '-';
+    if (s.startsWith('N') || s.startsWith('E')) return '';
+    return defaultSign;
   };
 
-  const roundCoord = (raw) => {
-    const n = parseFloat(raw);
-    return isNaN(n) ? raw : n.toFixed(6);
+  const latSign = getDirSign(fmtVal(exifGet(tags, 'GPSLatitudeRef')), '');
+  const lonSign = getDirSign(fmtVal(exifGet(tags, 'GPSLongitudeRef')), '');
+
+  const formatCoord = (raw, sign) => {
+    const n = Math.abs(parseFloat(raw));
+    if (isNaN(n)) return raw;
+    return `${sign}${n.toFixed(6)}`;
   };
 
-  const latRef = getDirAbbr(fmtVal(exifGet(tags, 'GPSLatitudeRef')) || 'N');
-  const lonRef = getDirAbbr(fmtVal(exifGet(tags, 'GPSLongitudeRef')) || 'E');
-  const latStr = roundCoord(fmtVal(lat));
-  const lonStr = roundCoord(fmtVal(lon));
-  return `${latStr} ${latRef}, ${lonStr} ${lonRef}`;
+  const latFormatted = formatCoord(fmtVal(lat), latSign);
+  const lonFormatted = formatCoord(fmtVal(lon), lonSign);
+
+  return `${latFormatted}, ${lonFormatted}`;
 }
 
 function fmtDateTime(tags) {

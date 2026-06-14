@@ -874,7 +874,6 @@ function setupCopyButtons() {
 function setupIpLookup() {
   const input = $("iplookup-input");
   const lookupBtn = $("iplookup-btn");
-  const myBtn = $("iplookup-my-btn");
   const loader = $("iplookup-loader");
   const results = $("iplookup-results");
   const status = $("iplookup-status");
@@ -938,11 +937,6 @@ function setupIpLookup() {
     if (e.key === "Enter") {
       doLookup(input.value);
     }
-  });
-
-  myBtn.addEventListener("click", () => {
-    input.value = "";
-    doLookup("");
   });
 }
 
@@ -1053,7 +1047,7 @@ function setupSidebar() {
 
       // ImgMeta, Wheel, and Home tools need extra width; remove constraint for them
       if (toolStage) {
-        const isWide = toolId === "tool-home" || toolId === "tool-imgmeta" || toolId === "tool-wheel";
+        const isWide = toolId === "tool-home" || toolId === "tool-imgmeta" || toolId === "tool-wheel" || toolId === "tool-iplookup";
         toolStage.classList.toggle("wide-tool", isWide);
         const mainHeader = document.querySelector(".main-header");
         const mainContent = document.querySelector(".main-content");

@@ -590,7 +590,6 @@
                 <div class="search-input-group">
                   <input id="iplookup-input" type="text" placeholder="Enter IP address (leave blank for your current IP)..." />
                   <button id="iplookup-btn" type="button" class="btn-primary">Lookup</button>
-                  <button id="iplookup-my-btn" type="button" class="btn-secondary">My IP</button>
                 </div>
               </div>
             </div>
@@ -601,56 +600,58 @@
             </div>
 
             <div id="iplookup-results" class="results-container" style="display: none;">
-              <div class="grid-outputs">
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-ip">IP Address</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-ip">Copy</button>
+              <div class="iplookup-results-layout">
+                <div class="grid-outputs">
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-ip">IP Address</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-ip">Copy</button>
+                    </div>
+                    <input id="iplookup-res-ip" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-ip" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-location">Location (City / Zip)</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-location">Copy</button>
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-location">Location (City / Zip)</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-location">Copy</button>
+                    </div>
+                    <input id="iplookup-res-location" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-location" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-region-country">Region &amp; Country</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-region-country">Copy</button>
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-region-country">Region &amp; Country</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-region-country">Copy</button>
+                    </div>
+                    <input id="iplookup-res-region-country" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-region-country" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-org">Organization (ISP)</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-org">Copy</button>
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-org">Organization (ISP)</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-org">Copy</button>
+                    </div>
+                    <input id="iplookup-res-org" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-org" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-timezone">Timezone</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-timezone">Copy</button>
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-timezone">Timezone</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-timezone">Copy</button>
+                    </div>
+                    <input id="iplookup-res-timezone" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-timezone" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <div class="label-row-with-copy">
-                    <label for="iplookup-res-coords">Coordinates</label>
-                    <button class="copy-btn-inline" data-target="iplookup-res-coords">Copy</button>
+                  <div class="form-group">
+                    <div class="label-row-with-copy">
+                      <label for="iplookup-res-coords">Coordinates</label>
+                      <button class="copy-btn-inline" data-target="iplookup-res-coords">Copy</button>
+                    </div>
+                    <input id="iplookup-res-coords" type="text" readonly />
                   </div>
-                  <input id="iplookup-res-coords" type="text" readonly />
                 </div>
-              </div>
 
-              <!-- Interactive Map -->
-              <div class="map-wrapper border-top">
-                <label>Map Preview</label>
-                <div class="map-container">
-                  <iframe id="iplookup-map" width="100%" height="250" frameborder="0" style="border:0; border-radius: 10px;" allowfullscreen></iframe>
+                <!-- Interactive Map -->
+                <div class="map-wrapper">
+                  <label>Map Preview</label>
+                  <div class="map-container">
+                    <iframe id="iplookup-map" width="100%" height="100%" frameborder="0" style="border:0; border-radius: 10px;" allowfullscreen></iframe>
+                  </div>
                 </div>
               </div>
             </div>

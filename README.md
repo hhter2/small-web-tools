@@ -2,7 +2,7 @@
 
 A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
 
-This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast local development server and optimized production builds.
+This project is built using **React** and **Vite** for a fast local development server and optimized production builds.
 
 ## Features & Upgrades
 
@@ -71,11 +71,14 @@ npm run preview
 
 ## Project Structure
 
-- `index.html` ??Layout structure including sidebar and tool containers.
-- `app.js` ??Core application logic, event listeners, converters, state management, and navigation.
-- `styles.css` ??Custom CSS variables, responsive design, animations, theme schemes, and utility widgets.
-- `package.json` ??Tooling configuration and dependencies.
-- `.gitignore` ??Standard gitignore configuration for Node/Vite projects.
+- `index.html` — HTML entry point hosting the root React container.
+- `package.json` — Tooling configuration and dependencies (including React, React-DOM, and ExifReader).
+- `.gitignore` — Standard gitignore configuration for Node/Vite/React projects.
+- `src/` — React source directory:
+  - `src/main.jsx` — Entry point rendering the root component.
+  - `src/App.jsx` — Core layout component managing sidebar, theme, search filters, and tool state.
+  - `src/styles.css` — Custom CSS variables, responsive designs, animations, and tool styling.
+  - `src/components/` — Individual utility tool React components.
 
 ---
 

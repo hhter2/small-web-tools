@@ -1,0 +1,494 @@
+import React, { useState, useEffect } from 'react';
+import HomeGrid from './components/HomeGrid.jsx';
+import SlashesConverter from './components/SlashesConverter.jsx';
+import WordCounter from './components/WordCounter.jsx';
+import DateCounter from './components/DateCounter.jsx';
+import CurrencyCounter from './components/CurrencyCounter.jsx';
+import ColorConverter from './components/ColorConverter.jsx';
+import AsciiConverter from './components/AsciiConverter.jsx';
+import UnicodeConverter from './components/UnicodeConverter.jsx';
+import BaseConverter from './components/BaseConverter.jsx';
+import DnaConverter from './components/DnaConverter.jsx';
+import IpLookup from './components/IpLookup.jsx';
+import ImgMeta from './components/ImgMeta.jsx';
+import RandomWheel from './components/RandomWheel.jsx';
+
+const toolDetails = {
+  "tool-home": {
+    title: "Small Web Tools",
+    desc: "A premium dashboard of handy utility tools."
+  },
+  "tool-slash": {
+    title: "Slashes Converter",
+    desc: "Normalize Windows paths to web-friendly forward slashes."
+  },
+  "tool-wc": {
+    title: "Word & Character Counter",
+    desc: "Calculate words, character lengths, and line endings in real time."
+  },
+  "tool-date": {
+    title: "Date Counter",
+    desc: "Calculate the exact number of days between two specified dates."
+  },
+  "tool-currency": {
+    title: "Currency Counter",
+    desc: "Sum multiple currency amounts with clean line-by-line inputs."
+  },
+  "tool-color": {
+    title: "Color Code Converter",
+    desc: "Seamlessly translate colors between HEX, RGB, and HSL formats."
+  },
+  "tool-ascii": {
+    title: "ASCII Converter",
+    desc: "Convert text characters to their ASCII codes and vice versa."
+  },
+  "tool-unicode": {
+    title: "Unicode Converter",
+    desc: "Encode text to Unicode code points or decode raw code points to text."
+  },
+  "tool-base": {
+    title: "Base Converter",
+    desc: "Interconvert numbers between binary, octal, decimal, hexadecimal, and sexagesimal."
+  },
+  "tool-dna": {
+    title: "DNA/RNA Direction Transfer",
+    desc: "Perform sequence base complementation, reversing, and swap 5'/3' strand orientations."
+  },
+  "tool-iplookup": {
+    title: "IP Address Lookup",
+    desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
+  },
+  "tool-imgmeta": {
+    title: "ImgMeta",
+    desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
+  },
+  "tool-wheel": {
+    title: "Random Wheel",
+    desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
+  }
+};
+
+const navItems = [
+  {
+    id: 'tool-slash',
+    name: 'Slashes Converter',
+    tooltip: 'Slashes Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="6" y1="18" x2="18" y2="6"></line>
+        <line x1="6" y1="6" x2="18" y2="18" strokeDasharray="2 2"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-wc',
+    name: 'Word Counter',
+    tooltip: 'Word Counter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-date',
+    name: 'Date Counter',
+    tooltip: 'Date Counter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-currency',
+    name: 'Currency Counter',
+    tooltip: 'Currency Counter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"></line>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-color',
+    name: 'Color Converter',
+    tooltip: 'Color Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
+        <circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"></circle>
+        <circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"></circle>
+        <circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"></circle>
+        <circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"></circle>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-ascii',
+    name: 'ASCII Converter',
+    tooltip: 'ASCII Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 17 10 11 4 5"></polyline>
+        <line x1="12" y1="19" x2="20" y2="19"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-unicode',
+    name: 'Unicode Converter',
+    tooltip: 'Unicode Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-base',
+    name: 'Base Converter',
+    tooltip: 'Base Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="9" x2="20" y2="9"></line>
+        <line x1="4" y1="15" x2="20" y2="15"></line>
+        <line x1="9" y1="4" x2="9" y2="20"></line>
+        <line x1="15" y1="4" x2="15" y2="20"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-dna',
+    name: 'DNA/RNA Converter',
+    tooltip: 'DNA/RNA Converter',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
+        <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
+        <line x1="8" y1="7" x2="8" y2="14"></line>
+        <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
+        <line x1="16" y1="7" x2="16" y2="14"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-iplookup',
+    name: 'IP Lookup',
+    tooltip: 'IP Lookup',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-imgmeta',
+    name: 'ImgMeta',
+    tooltip: 'ImgMeta',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+        <circle cx="12" cy="13" r="4"></circle>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-wheel',
+    name: 'Random Wheel',
+    tooltip: 'Random Wheel',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="2" x2="12" y2="22"></line>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M16.24 7.76l-8.48 8.48"></path>
+        <path d="M7.76 7.76l8.48 8.48"></path>
+      </svg>
+    )
+  }
+];
+
+export default function App() {
+  const [activeTool, setActiveTool] = useState(() => {
+    try {
+      return localStorage.getItem("activeTool") || "tool-home";
+    } catch (e) {
+      return "tool-home";
+    }
+  });
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("sidebarCollapsed") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [theme, setTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) return savedTheme;
+    } catch (e) {}
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
+
+  // Sync theme to document element and localStorage
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch (e) {}
+  }, [theme]);
+
+  // Sync activeTool to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("activeTool", activeTool);
+    } catch (e) {}
+  }, [activeTool]);
+
+  // Sync sidebarCollapsed to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("sidebarCollapsed", isSidebarCollapsed ? "true" : "false");
+    } catch (e) {}
+  }, [isSidebarCollapsed]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(prev => !prev);
+  };
+
+  const handleNavClick = (toolId) => {
+    setActiveTool(toolId);
+    setMobileSidebarOpen(false);
+  };
+
+  // Tooltip logic for collapsed sidebar
+  const handleMouseEnter = (e, item) => {
+    if (isSidebarCollapsed) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltipState({
+        text: item.tooltip,
+        top: rect.top + rect.height / 2,
+        left: rect.right + 10,
+        visible: true
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipState(prev => ({ ...prev, visible: false }));
+  };
+
+  // Filter navigation items
+  const filteredNavItems = navItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
+  // Render active tool component
+  const renderActiveTool = () => {
+    switch (activeTool) {
+      case 'tool-home':
+        return <HomeGrid onSelectTool={handleNavClick} />;
+      case 'tool-slash':
+        return <SlashesConverter />;
+      case 'tool-wc':
+        return <WordCounter />;
+      case 'tool-date':
+        return <DateCounter />;
+      case 'tool-currency':
+        return <CurrencyCounter />;
+      case 'tool-color':
+        return <ColorConverter />;
+      case 'tool-ascii':
+        return <AsciiConverter />;
+      case 'tool-unicode':
+        return <UnicodeConverter />;
+      case 'tool-base':
+        return <BaseConverter />;
+      case 'tool-dna':
+        return <DnaConverter />;
+      case 'tool-iplookup':
+        return <IpLookup />;
+      case 'tool-imgmeta':
+        return <ImgMeta />;
+      case 'tool-wheel':
+        return <RandomWheel />;
+      default:
+        return <HomeGrid onSelectTool={handleNavClick} />;
+    }
+  };
+
+  const activeDetails = toolDetails[activeTool] || toolDetails['tool-home'];
+
+  return (
+    <div className={`app-layout ${isSidebarCollapsed ? 'collapsed-sidebar' : ''}`}>
+      
+      {/* Mobile Header */}
+      <header className="mobile-header">
+        <button
+          id="sidebar-toggle"
+          className="icon-btn"
+          aria-label="Toggle Sidebar"
+          onClick={() => setMobileSidebarOpen(prev => !prev)}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <span className="mobile-logo-text">Small Web Tools</span>
+      </header>
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${mobileSidebarOpen ? 'open' : ''}`} id="sidebar">
+        <div className="sidebar-brand">
+          <div
+            className="brand-logo-container"
+            id="brand-logo-btn"
+            title="Go to Home"
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+            onClick={() => handleNavClick('tool-home')}
+          >
+            <div className="brand-logo">
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span className="brand-text">Small Web Tools</span>
+          </div>
+          
+          <button
+            id="sidebar-collapse-btn"
+            className="sidebar-collapse-btn"
+            aria-label="Collapse Sidebar"
+            onClick={toggleSidebarCollapse}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div className="sidebar-search-container">
+          <div className="search-wrapper">
+            <svg className="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              id="tool-search"
+              placeholder="Search tools..."
+              aria-label="Search tools"
+              autoComplete="off"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          {filteredNavItems.map(item => (
+            <button
+              key={item.id}
+              className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
+              data-tool={item.id}
+              data-tooltip={item.tooltip}
+              onClick={() => handleNavClick(item.id)}
+              onMouseEnter={(e) => handleMouseEnter(e, item)}
+              onMouseLeave={handleMouseLeave}
+            >
+              {item.icon}
+              <span>{item.name}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="theme-switch-wrapper">
+            <span className="theme-label">Theme</span>
+            <button
+              id="theme-toggle"
+              className="theme-toggle-btn"
+              aria-label="Toggle dark/light mode"
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? (
+                <svg className="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              ) : (
+                <svg className="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Sidebar Overlay for mobile */}
+      <div
+        className={`sidebar-overlay ${mobileSidebarOpen ? 'visible' : ''}`}
+        id="sidebar-overlay"
+        onClick={() => setMobileSidebarOpen(false)}
+      ></div>
+
+      {/* Main Content Area */}
+      <main className={`main-content ${activeTool !== 'tool-home' ? 'no-header' : ''}`}>
+        
+        {activeTool === 'tool-home' && (
+          <header className="main-header wide-header">
+            <div className="header-text-container">
+              <h1 id="active-tool-title">{activeDetails.title}</h1>
+              <p id="active-tool-desc" className="subtitle">{activeDetails.desc}</p>
+            </div>
+          </header>
+        )}
+
+        <section className="tool-stage wide-tool">
+          {renderActiveTool()}
+        </section>
+      </main>
+
+      {/* Collapsed Sidebar Hover Tooltip */}
+      {tooltipState.visible && (
+        <div
+          className="sidebar-tooltip visible"
+          style={{ top: `${tooltipState.top}px`, left: `${tooltipState.left}px` }}
+        >
+          {tooltipState.text}
+        </div>
+      )}
+
+    </div>
+  );
+}

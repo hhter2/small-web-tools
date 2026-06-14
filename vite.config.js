@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import fs from 'fs';
 
 // Server-side geo lookup — runs in Node.js, bypasses browser network restrictions
@@ -73,18 +74,7 @@ async function geoLookup(ip) {
 
 export default defineConfig({
   plugins: [
-    {
-      name: 'copy-dist-assets',
-      closeBundle() {
-        try {
-          fs.copyFileSync('app.js', 'dist/app.js');
-          fs.copyFileSync('img-meta.js', 'dist/img-meta.js');
-          console.log('Successfully copied app.js and img-meta.js to dist/');
-        } catch (err) {
-          console.error('Error copying assets to dist/:', err);
-        }
-      }
-    },
+    react(),
     {
       name: 'ip-lookup-api',
       configureServer(server) {

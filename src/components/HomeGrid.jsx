@@ -1,0 +1,166 @@
+import React from 'react';
+
+export default function HomeGrid({ onSelectTool }) {
+  const tools = [
+    {
+      id: 'tool-slash',
+      title: 'Slashes Converter',
+      desc: 'Normalize Windows paths to web-friendly forward slashes.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" y1="18" x2="18" y2="6"></line>
+          <line x1="6" y1="6" x2="18" y2="18" stroke-dasharray="2 2"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-wc',
+      title: 'Word Counter',
+      desc: 'Calculate words, character lengths, and line endings in real time.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-date',
+      title: 'Date Counter',
+      desc: 'Calculate the exact number of days between two specified dates.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-currency',
+      title: 'Currency Counter',
+      desc: 'Sum multiple currency amounts with clean line-by-line inputs.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-color',
+      title: 'Color Converter',
+      desc: 'Seamlessly translate colors between HEX, RGB, and HSL formats.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
+          <circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"></circle>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-ascii',
+      title: 'ASCII Converter',
+      desc: 'Convert text characters to their ASCII codes and vice versa.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-unicode',
+      title: 'Unicode Converter',
+      desc: 'Encode text to Unicode code points or decode raw code points.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-base',
+      title: 'Base Converter',
+      desc: 'Convert numbers between binary, octal, decimal, hex, and base-60.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="9" x2="20" y2="9"></line>
+          <line x1="4" y1="15" x2="20" y2="15"></line>
+          <line x1="9" y1="4" x2="9" y2="20"></line>
+          <line x1="15" y1="4" x2="15" y2="20"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-dna',
+      title: 'DNA/RNA Converter',
+      desc: "Complements, reverses, and swaps 5'/3' strand sequence orientations.",
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
+          <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
+          <line x1="8" y1="7" x2="8" y2="14"></line>
+          <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
+          <line x1="16" y1="7" x2="16" y2="14"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-iplookup',
+      title: 'IP Lookup',
+      desc: 'Geolocate, identify ISP, timezone, and coordinates for any IP address.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-imgmeta',
+      title: 'ImgMeta',
+      desc: 'Locally analyze metadata, camera model, and GPS details of images.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-wheel',
+      title: 'Random Wheel',
+      desc: 'Spin the customizable wheel to draw random items with elimination.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M16.24 7.76l-8.48 8.48"></path>
+          <path d="M7.76 7.76l8.48 8.48"></path>
+        </svg>
+      )
+    }
+  ];
+
+  return (
+    <article id="tool-home" className="tool-card active">
+      <h2>Select a Utility Tool</h2>
+      <div className="home-grid">
+        {tools.map(tool => (
+          <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+            <div className="home-card-icon">{tool.icon}</div>
+            <h3>{tool.title}</h3>
+            <p>{tool.desc}</p>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}

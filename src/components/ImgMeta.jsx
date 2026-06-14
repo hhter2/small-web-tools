@@ -534,8 +534,12 @@ const EXIF_GROUPS = [
       { label: 'Shooting Time', fn: fmtDateTime },
       { label: 'Last Edit Time',fn: fmtEditTime },
       { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },
-      { label: 'Camera Model',  fn: (t) => fmtVal(exifGet(t, 'Model')) },
-      { label: 'Lens Model',    fn: (t) => fmtVal(exifGet(t, 'LensModel', 'LensType')) },
+      { label: 'Camera / Lens', fn: (t) => {
+          const model = fmtVal(exifGet(t, 'Model'));
+          const lens = fmtVal(exifGet(t, 'LensModel', 'LensType'));
+          if (model && lens) return `${model} / ${lens}`;
+          return model || lens || null;
+      } },
       { label: 'File Type',     fn: (t) => fmtVal(exifGet(t, 'FileType')) },
       { label: 'GPS',           fn: fmtGPS },
     ],
@@ -1039,8 +1043,8 @@ export default function ImgMeta() {
         // If there is an isolated GPS block, do not show GPS in the Other/All tables
         if (p.label === 'GPS' && gpsCoord) return false;
         
-        // Hide Camera Model and Lens Model under Others if they are empty
-        if ((p.label === 'Camera Model' || p.label === 'Lens Model') && !p.value) return false;
+        // Hide Camera / Lens under Others if it is empty
+        if (p.label === 'Camera / Lens' && !p.value) return false;
         
         if (!query) return true;
         return p.label.toLowerCase().includes(query) || (p.value || '').toLowerCase().includes(query);

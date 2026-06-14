@@ -1056,8 +1056,21 @@ function setupSidebar() {
         const isWide = toolId === "tool-home" || toolId === "tool-imgmeta" || toolId === "tool-wheel";
         toolStage.classList.toggle("wide-tool", isWide);
         const mainHeader = document.querySelector(".main-header");
+        const mainContent = document.querySelector(".main-content");
         if (mainHeader) {
           mainHeader.classList.toggle("wide-header", isWide);
+          if (toolId === "tool-home") {
+            mainHeader.style.display = "";
+          } else {
+            mainHeader.style.display = "none";
+          }
+        }
+        if (mainContent) {
+          if (toolId === "tool-home") {
+            mainContent.classList.remove("no-header");
+          } else {
+            mainContent.classList.add("no-header");
+          }
         }
       }
       

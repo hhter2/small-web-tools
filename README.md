@@ -18,6 +18,7 @@ This project is built using vanilla HTML/JS/CSS, powered by **Vite** for a fast 
 - **IP Address Lookup**: Retrieve coordinates, timezone, city, region, country, and organization/ISP details for any IP address or automatically detect the current client IP, accompanied by an interactive OpenStreetMap preview.
 - **ImgMeta**: Instantly extract metadata (camera settings, lens specifications, exposure settings, GPS details) from image files (including Canon `.CR3` RAW files) locally in the browser with 100% privacy (no files are uploaded), accompanied by live search, categorization tabs, and JSON export.
 - **Random Wheel (Lucky Draw)**: Spin a customizable visual wheel to draw items from a typed options list (defaulting to 1-5). Supports editable wheel titles, light/dark themes, custom-modal confirmation for clears, keyboard shortcuts, and single-draw elimination mode (drawn options are grayed out/struck through in the status list and automatically removed from the wheel).
+- **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
 
 ## Included Tools
 

@@ -1291,9 +1291,8 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-main);
-  white-space: nowrap;       /* force single line */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
   font-family: 'Outfit', sans-serif;
 }
 

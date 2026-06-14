@@ -349,7 +349,7 @@ function fmtResolution(tags) {
   const h = getImageHeight(tags);
   if (!w || !h) return null;
   const mp = ((w * h) / 1_000_000).toFixed(1);
-  return `${w} × ${h} px (${mp} MP)`;
+  return `${w} × ${h} (${mp} MP)`;
 }
 
 function fmtMeteringMode(tags) {
@@ -1530,53 +1530,103 @@ export default function ImgMeta() {
               {activeTab !== 'advanced' && (
                 <div id="imgmeta-cam-view" className="imgmeta-cam-view" style={{ display: 'flex' }}>
                   {renderCamView()}
+                  
+                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
+                  {gpsCoords && (
+                    <div className="card-glass imgmeta-gps-card green-region-gps">
+                      <div className="green-region-gps-inner">
+                        <div className="gps-header">
+                          <h4>📍 GPS Location</h4>
+                          <p className="coords-text">{gpsCoord}</p>
+                          <div className="gps-actions">
+                            <button
+                              type="button"
+                              className="btn-accent-outline btn-sm"
+                              onClick={() => setShowMap(!showMap)}
+                            >
+                              {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
+                            </button>
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-secondary btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                            >
+                              Google Maps ↗
+                            </a>
+                          </div>
+                        </div>
+                        {showMap && (
+                          <div className="gps-map-container large-map">
+                            <iframe
+                              title="GPS Location Map"
+                              width="100%"
+                              height="380"
+                              frameBorder="0"
+                              scrolling="no"
+                              marginHeight="0"
+                              marginWidth="0"
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
+                              style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                            ></iframe>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Advanced Table View - Collapsible Groups */}
-              {activeTab === 'advanced' && renderAdvancedGroups()}
-
-              {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) - Moved to bottom of right column */}
-              {gpsCoords && (
-                <div className="card-glass imgmeta-gps-card green-region-gps">
-                  <div className="green-region-gps-inner">
-                    <div className="gps-header">
-                      <h4>📍 GPS Location</h4>
-                      <p className="coords-text">{gpsCoord}</p>
-                      <div className="gps-actions">
-                        <button
-                          className="btn-accent-outline btn-sm"
-                          onClick={() => setShowMap(!showMap)}
-                        >
-                          {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
-                        </button>
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-secondary btn-sm"
-                          style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
-                        >
-                          Google Maps ↗
-                        </a>
+              {activeTab === 'advanced' && (
+                <div className="imgmeta-advanced-wrapper-outer" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {renderAdvancedGroups()}
+                  
+                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
+                  {gpsCoords && (
+                    <div className="card-glass imgmeta-gps-card green-region-gps">
+                      <div className="green-region-gps-inner">
+                        <div className="gps-header">
+                          <h4>📍 GPS Location</h4>
+                          <p className="coords-text">{gpsCoord}</p>
+                          <div className="gps-actions">
+                            <button
+                              type="button"
+                              className="btn-accent-outline btn-sm"
+                              onClick={() => setShowMap(!showMap)}
+                            >
+                              {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
+                            </button>
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-secondary btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                            >
+                              Google Maps ↗
+                            </a>
+                          </div>
+                        </div>
+                        {showMap && (
+                          <div className="gps-map-container large-map">
+                            <iframe
+                              title="GPS Location Map"
+                              width="100%"
+                              height="380"
+                              frameBorder="0"
+                              scrolling="no"
+                              marginHeight="0"
+                              marginWidth="0"
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
+                              style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                            ></iframe>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {showMap && (
-                      <div className="gps-map-container large-map">
-                        <iframe
-                          title="GPS Location Map"
-                          width="100%"
-                          height="380"
-                          frameBorder="0"
-                          scrolling="no"
-                          marginHeight="0"
-                          marginWidth="0"
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                          style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
-                        ></iframe>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
             </div>

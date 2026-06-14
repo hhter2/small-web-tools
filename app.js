@@ -1593,6 +1593,7 @@ const EXIF_GROUPS = [
       { label: 'White Balance', fn: fmtWhiteBalance },
       { label: 'Color Space',   fn: fmtColorSpace },
       { label: 'Color Depth',   fn: fmtColorDepth },
+      { label: 'DPI',           fn: fmtDPI },
     ],
   },
   {
@@ -1614,7 +1615,6 @@ const EXIF_GROUPS = [
     tabs: ['others', 'all'],
     params: [
       { label: 'Resolution',    fn: fmtResolution },
-      { label: 'DPI',           fn: fmtDPI },
       { label: 'Shooting Time', fn: fmtDateTime },
       { label: 'Last Edit Time',fn: fmtEditTime },
       { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },

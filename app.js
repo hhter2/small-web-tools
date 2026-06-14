@@ -1474,10 +1474,46 @@ function fmtColorSpace(tags) {
 }
 
 function fmtColorDepth(tags) {
-  const tag = exifGet(tags, 'BitsPerSample');
-  if (!tag) return null;
-  const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;
-  return v ? `${v}-bit` : fmtVal(tag);
+  const bpsTag = exifGet(tags, 'Bits Per Sample', 'BitsPerSample');
+  if (!bpsTag) return null;
+  const bps = Number(Array.isArray(bpsTag.value) ? bpsTag.value[0] : bpsTag.value);
+  if (isNaN(bps)) return fmtVal(bpsTag);
+
+  const compTag = exifGet(tags, 'Color Components', 'SamplesPerPixel', 'ColorComponents');
+  let comp = 1;
+  if (compTag) {
+    const c = Number(Array.isArray(compTag.value) ? compTag.value[0] : compTag.value);
+    if (!isNaN(c)) comp = c;
+  } else if (bps === 8) {
+    comp = 3;
+  }
+
+  const totalBits = bps * comp;
+  return `${totalBits}-bit`;
+}
+
+function fmtDPI(tags) {
+  const xResTag = exifGet(tags, 'XResolution', 'X Resolution');
+  if (!xResTag) return null;
+  
+  let val = xResTag.value;
+  if (Array.isArray(val)) {
+    val = val[0] / val[1];
+  } else {
+    val = Number(val);
+  }
+  
+  if (isNaN(val)) return fmtVal(xResTag);
+  
+  const unitTag = exifGet(tags, 'ResolutionUnit', 'Resolution Unit');
+  const unit = unitTag ? (Array.isArray(unitTag.value) ? unitTag.value[0] : unitTag.value) : 2;
+  
+  if (unit === 3) {
+    const dpi = Math.round(val * 2.54);
+    return `${dpi} dpi`;
+  }
+  
+  return `${Math.round(val)} dpi`;
 }
 
 function fmtGPS(tags) {
@@ -1578,6 +1614,7 @@ const EXIF_GROUPS = [
     tabs: ['others', 'all'],
     params: [
       { label: 'Resolution',    fn: fmtResolution },
+      { label: 'DPI',           fn: fmtDPI },
       { label: 'Shooting Time', fn: fmtDateTime },
       { label: 'Last Edit Time',fn: fmtEditTime },
       { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },

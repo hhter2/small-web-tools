@@ -2261,6 +2261,8 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
 
 .compare-table {
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .compare-table th, 
@@ -2270,6 +2272,26 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   word-wrap: break-word;
   word-break: break-all;
   vertical-align: middle;
+}
+
+/* Sticky comparison table headers */
+.compare-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 3;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.compare-table thead th.active-col {
+  background: linear-gradient(0deg, rgba(79, 70, 229, 0.03), rgba(79, 70, 229, 0.03)), var(--bg-card);
+}
+
+.compare-table thead th:first-child {
+  top: 0;
+  left: 0;
+  z-index: 4;
+  background: var(--bg-app);
 }
 
 .compare-table th:first-child,
@@ -2336,6 +2358,33 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
 .compare-field-label {
   font-weight: 600;
   color: var(--text-muted);
+}
+
+/* Compare Empty State */
+.compare-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.compare-empty-state p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Thumbnail checkbox for comparison toggling */
+.thumb-compare-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
 }
 
 /* Jpeg Stripper Card */

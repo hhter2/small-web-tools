@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ExifReader from 'exifreader';
 import JSZip from 'jszip';
 
@@ -677,10 +677,27 @@ export default function ImgMeta() {
   const [images, setImages] = useState([]); // Array of parsed image objects
   const [selectedImageId, setSelectedImageId] = useState(null); // Active single-view image
   const [compareMode, setCompareMode] = useState(false); // Toggle side-by-side view
+  const [compareSelectedIds, setCompareSelectedIds] = useState([]); // Selected image IDs for comparison
   const [showMap, setShowMap] = useState(false); // GPS Map toggle
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
+
+  // Synchronize compareSelectedIds with loaded images
+  useEffect(() => {
+    setCompareSelectedIds(prev => {
+      const activeIds = images.map(img => img.id);
+      const kept = prev.filter(id => activeIds.includes(id));
+      const newIds = activeIds.filter(id => !prev.includes(id));
+      return [...kept, ...newIds];
+    });
+  }, [images]);
+
+  const handleToggleCompareSelection = (id) => {
+    setCompareSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
   const [collapsedGroups, setCollapsedGroups] = useState({
     exif: false,
@@ -1189,6 +1206,8 @@ export default function ImgMeta() {
   };
 
   const renderCompareView = () => {
+    const comparedImages = images.filter(img => compareSelectedIds.includes(img.id));
+
     return (
       <div className="imgmeta-compare-container card-glass">
         <div className="compare-header">
@@ -1198,48 +1217,57 @@ export default function ImgMeta() {
           </button>
         </div>
         <div className="imgmeta-table-container compare-table-wrapper">
-          <table className="imgmeta-table compare-table">
-            <thead>
-              <tr>
-                <th>Field / Parameter</th>
-                {images.map(img => (
-                  <th key={img.id} className={img.id === selectedImageId ? 'active-col' : ''}>
-                    <div className="compare-th-content">
-                      <span className="compare-filename" title={img.name}>{img.name}</span>
-                      <button
-                        className="btn-close-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveImage(img.id);
-                        }}
-                        title="Remove image"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARE_FIELDS.map((field, fIdx) => (
-                <tr key={fIdx}>
-                  <td className="compare-field-label">{field.label}</td>
-                  {images.map(img => {
-                    const val = field.fn(img);
-                    return (
-                      <td
-                        key={img.id}
-                        className={`${img.id === selectedImageId ? 'active-col' : ''} ${!val ? 'not-available' : ''}`}
-                      >
-                        {val || '—'}
-                      </td>
-                    );
-                  })}
+          {comparedImages.length > 0 ? (
+            <table className="imgmeta-table compare-table">
+              <thead>
+                <tr>
+                  <th>Field / Parameter</th>
+                  {comparedImages.map(img => (
+                    <th key={img.id} className={img.id === selectedImageId ? 'active-col' : ''}>
+                      <div className="compare-th-content">
+                        <span className="compare-filename" title={img.name}>{img.name}</span>
+                        <button
+                          className="btn-close-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleCompareSelection(img.id);
+                          }}
+                          title="Exclude from comparison"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {COMPARE_FIELDS.map((field, fIdx) => (
+                  <tr key={fIdx}>
+                    <td className="compare-field-label">{field.label}</td>
+                    {comparedImages.map(img => {
+                      const val = field.fn(img);
+                      return (
+                        <td
+                          key={img.id}
+                          className={`${img.id === selectedImageId ? 'active-col' : ''} ${!val ? 'not-available' : ''}`}
+                        >
+                          {val || '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="compare-empty-state">
+              <p>No images selected for comparison.</p>
+              <p className="small text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                Use the checkboxes on the thumbnails above to select images to compare.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1261,6 +1289,19 @@ export default function ImgMeta() {
                 setSelectedImageId(img.id);
               }}
             >
+              {images.length > 1 && (
+                <input
+                  type="checkbox"
+                  className="thumb-compare-checkbox"
+                  checked={compareSelectedIds.includes(img.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleToggleCompareSelection(img.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Include in comparison"
+                />
+              )}
               <div className="thumb-img-wrapper">
                 {img.previewSrc ? (
                   <img src={img.previewSrc} alt={img.name} />
@@ -1338,7 +1379,7 @@ export default function ImgMeta() {
             onClick={() => setCompareMode(!compareMode)}
             title="Toggle side-by-side comparison"
           >
-            ⚖️ Compare {images.length > 1 ? `(${images.length})` : ''}
+            ⚖️ Compare {images.length > 1 ? `(${compareSelectedIds.length})` : ''}
           </button>
           <button
             className="btn-primary"

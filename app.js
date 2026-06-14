@@ -1447,7 +1447,16 @@ function fmtWhiteBalance(tags) {
 }
 
 function fmtColorSpace(tags) {
-  const tag = exifGet(tags, 'ColorSpace');
+  // 1. Try ICC Description first
+  const iccDesc = fmtVal(exifGet(tags, 'ICC Description'));
+  if (iccDesc) return iccDesc;
+
+  // 2. Try ICC Color Space
+  const iccSpace = fmtVal(exifGet(tags, 'Color Space'));
+  if (iccSpace?.trim()) return iccSpace.trim();
+
+  // 3. Fallback to EXIF ColorSpace tag
+  const tag = exifGet(tags, 'ColorSpace', 'exif:ColorSpace');
   if (!tag) return null;
   const map = { 1:'sRGB', 65535:'Uncalibrated', 2:'Adobe RGB' };
   const v = Array.isArray(tag.value) ? tag.value[0] : tag.value;

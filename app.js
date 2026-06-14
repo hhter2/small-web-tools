@@ -1934,9 +1934,6 @@ function setupRandomWheel() {
   function updateTitle() {
     const titleVal = titleInput.value.trim() || "Random Wheel";
     displayTitle.textContent = titleVal;
-    if (toolDetails["tool-wheel"]) {
-      toolDetails["tool-wheel"].title = titleVal;
-    }
   }
   titleInput.addEventListener("input", updateTitle);
   updateTitle();

@@ -1315,6 +1315,24 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   min-height: 520px;
 }
 
+.wheel-title-pill {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  padding: 10px 36px;
+  border-radius: 28px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 24px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  user-select: none;
+  z-index: 5;
+  letter-spacing: 0.03em;
+}
+
 .wheel-canvas-wrapper {
   position: relative;
   width: 420px;

@@ -1398,12 +1398,25 @@ function fmtCropFactor(tags) {
   return `${parseFloat(crop.toFixed(2))}×`;
 }
 
+function getImageWidth(tags) {
+  const tag = exifGet(tags, 'Image Width', 'ImageWidth', 'PixelXDimension', 'ExifImageWidth');
+  if (!tag) return null;
+  const val = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+}
+
+function getImageHeight(tags) {
+  const tag = exifGet(tags, 'Image Height', 'ImageLength', 'PixelYDimension', 'ExifImageHeight');
+  if (!tag) return null;
+  const val = Array.isArray(tag.value) ? tag.value[0] : tag.value;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+}
+
 function fmtAspectRatio(tags) {
-  const wTag = exifGet(tags, 'ImageWidth', 'PixelXDimension', 'ExifImageWidth');
-  const hTag = exifGet(tags, 'ImageLength', 'PixelYDimension', 'ExifImageHeight');
-  if (!wTag || !hTag) return null;
-  const w = Number(Array.isArray(wTag.value) ? wTag.value[0] : wTag.value);
-  const h = Number(Array.isArray(hTag.value) ? hTag.value[0] : hTag.value);
+  const w = getImageWidth(tags);
+  const h = getImageHeight(tags);
   if (!w || !h) return null;
   const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
   const g = gcd(w, h);
@@ -1411,14 +1424,11 @@ function fmtAspectRatio(tags) {
 }
 
 function fmtResolution(tags) {
-  const wTag = exifGet(tags, 'ImageWidth', 'PixelXDimension', 'ExifImageWidth');
-  const hTag = exifGet(tags, 'ImageLength', 'PixelYDimension', 'ExifImageHeight');
-  if (!wTag || !hTag) return null;
-  const w = Number(Array.isArray(wTag.value) ? wTag.value[0] : wTag.value);
-  const h = Number(Array.isArray(hTag.value) ? hTag.value[0] : hTag.value);
+  const w = getImageWidth(tags);
+  const h = getImageHeight(tags);
   if (!w || !h) return null;
   const mp = ((w * h) / 1_000_000).toFixed(1);
-  return `${w} × ${h} px  (${mp} MP)`;
+  return `${w} × ${h} px (${mp} MP)`;
 }
 
 function fmtMeteringMode(tags) {

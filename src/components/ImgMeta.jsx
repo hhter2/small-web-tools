@@ -534,12 +534,8 @@ const EXIF_GROUPS = [
       { label: 'Shooting Time', fn: fmtDateTime },
       { label: 'Last Edit Time',fn: fmtEditTime },
       { label: 'Manufacturer',  fn: (t) => fmtVal(exifGet(t, 'Make')) },
-      { label: 'Camera / Lens', fn: (t) => {
-          const model = fmtVal(exifGet(t, 'Model'));
-          const lens = fmtVal(exifGet(t, 'LensModel', 'LensType'));
-          if (model && lens) return `${model} / ${lens}`;
-          return model || lens || null;
-      } },
+      { label: 'Camera Model',  fn: (t) => fmtVal(exifGet(t, 'Model')) },
+      { label: 'Lens Model',    fn: (t) => fmtVal(exifGet(t, 'LensModel', 'LensType')) },
       { label: 'File Type',     fn: (t) => fmtVal(exifGet(t, 'FileType')) },
       { label: 'GPS',           fn: fmtGPS },
     ],
@@ -607,7 +603,6 @@ function getDecimalCoords(tags, expandedTags) {
 }
 
 const COMPARE_FIELDS = [
-  { label: 'Filename', fn: (img) => img.name },
   { label: 'Preview', fn: (img) => (
       <div className="compare-preview-thumb">
         {img.previewSrc ? (
@@ -1043,8 +1038,8 @@ export default function ImgMeta() {
         // If there is an isolated GPS block, do not show GPS in the Other/All tables
         if (p.label === 'GPS' && gpsCoord) return false;
         
-        // Hide Camera / Lens under Others if it is empty
-        if (p.label === 'Camera / Lens' && !p.value) return false;
+        // Hide Camera Model and Lens Model under Others if they are empty
+        if ((p.label === 'Camera Model' || p.label === 'Lens Model') && !p.value) return false;
         
         if (!query) return true;
         return p.label.toLowerCase().includes(query) || (p.value || '').toLowerCase().includes(query);
@@ -1060,14 +1055,44 @@ export default function ImgMeta() {
             {group.label}
           </div>
           <div className="imgmeta-param-grid">
-            {params.map((p, idx) => (
-              <div key={idx} className="imgmeta-stat-cell">
-                <div className="imgmeta-stat-label">{p.label}</div>
-                <div className={`imgmeta-stat-value ${p.value ? '' : 'not-available'}`} title={p.value || ''}>
-                  {p.value || '—'}
-                </div>
-              </div>
-            ))}
+            {(() => {
+              const cells = [];
+              let i = 0;
+              while (i < params.length) {
+                const p = params[i];
+                if (p.label === 'Camera Model' && i + 1 < params.length && params[i+1].label === 'Lens Model') {
+                  const pNext = params[i+1];
+                  cells.push(
+                    <div key={`group-${i}`} className="imgmeta-stat-row-group" style={{ display: 'flex', width: '100%', flex: '1 1 100%' }}>
+                      <div className="imgmeta-stat-cell" style={{ flex: 1 }}>
+                        <div className="imgmeta-stat-label">{p.label}</div>
+                        <div className={`imgmeta-stat-value ${p.value ? '' : 'not-available'}`} title={p.value || ''}>
+                          {p.value || '—'}
+                        </div>
+                      </div>
+                      <div className="imgmeta-stat-cell" style={{ flex: 1 }}>
+                        <div className="imgmeta-stat-label">{pNext.label}</div>
+                        <div className={`imgmeta-stat-value ${pNext.value ? '' : 'not-available'}`} title={pNext.value || ''}>
+                          {pNext.value || '—'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                  i += 2;
+                } else {
+                  cells.push(
+                    <div key={i} className="imgmeta-stat-cell">
+                      <div className="imgmeta-stat-label">{p.label}</div>
+                      <div className={`imgmeta-stat-value ${p.value ? '' : 'not-available'}`} title={p.value || ''}>
+                        {p.value || '—'}
+                      </div>
+                    </div>
+                  );
+                  i += 1;
+                }
+              }
+              return cells;
+            })()}
           </div>
         </div>
       );

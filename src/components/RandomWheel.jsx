@@ -381,7 +381,18 @@ export default function RandomWheel() {
               )}
             </div>
             
-            <div className="wheel-options-footer">
+            <div className="wheel-options-footer" style={{ alignItems: 'center' }}>
+              <label className="toggle-switch" style={{ marginRight: 'auto' }}>
+                <input
+                  type="checkbox"
+                  id="wheel-allow-duplicate"
+                  checked={allowDuplicate}
+                  onChange={(e) => setAllowDuplicate(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label" style={{ fontSize: '0.8rem' }}>Allow duplicates</span>
+              </label>
+
               <button
                 id="wheel-title-btn"
                 className="btn-secondary-sm"
@@ -419,20 +430,6 @@ export default function RandomWheel() {
               />
             </div>
           )}
-
-          {/* Options: Allow Duplicate */}
-          <div className="form-group checkbox-group">
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                id="wheel-allow-duplicate"
-                checked={allowDuplicate}
-                onChange={(e) => setAllowDuplicate(e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-              <span className="toggle-label">Allow duplicate selection (can draw again)</span>
-            </label>
-          </div>
 
           {/* Keyboard shortcuts reminder */}
           <div className="keyboard-shortcuts-card">

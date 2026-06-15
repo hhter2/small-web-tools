@@ -148,23 +148,23 @@ export default function BaseConverter() {
       </div>
       <div className="grid-outputs">
         <div className="form-group">
-          <label htmlFor="base-bin">Binary</label>
+          <label htmlFor="base-bin">Binary (2)</label>
           <input id="base-bin" type="text" readOnly value={binVal} />
         </div>
         <div className="form-group">
-          <label htmlFor="base-oct">Octal</label>
+          <label htmlFor="base-oct">Octal (8)</label>
           <input id="base-oct" type="text" readOnly value={octVal} />
         </div>
         <div className="form-group">
-          <label htmlFor="base-dec">Decimal</label>
+          <label htmlFor="base-dec">Decimal (10)</label>
           <input id="base-dec" type="text" readOnly value={decVal} />
         </div>
         <div className="form-group">
-          <label htmlFor="base-hex">Hexadecimal</label>
+          <label htmlFor="base-hex">Hexadecimal (16)</label>
           <input id="base-hex" type="text" readOnly value={hexVal} />
         </div>
         <div className="form-group full-width">
-          <label htmlFor="base-60">Sexagesimal (colon-separated)</label>
+          <label htmlFor="base-60">Sexagesimal (60) (colon-separated)</label>
           <input id="base-60" type="text" readOnly value={sexagesimalVal} />
         </div>
       </div>

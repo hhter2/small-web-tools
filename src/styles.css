@@ -941,6 +941,10 @@ html[data-theme="dark"] .copy-btn-inline.copied {
   align-items: center;
 }
 
+.dropzone-content .btn-secondary {
+  align-self: center;
+}
+
 .dropzone-title {
   font-size: 1.1rem;
   font-weight: 600;

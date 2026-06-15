@@ -219,7 +219,7 @@ const navItems = [
 export default function App() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
-      return localStorage.getItem("activeTool") || "tool-home";
+      return sessionStorage.getItem("activeTool") || "tool-home";
     } catch (e) {
       return "tool-home";
     }
@@ -253,10 +253,10 @@ export default function App() {
     } catch (e) {}
   }, [theme]);
 
-  // Sync activeTool to localStorage
+  // Sync activeTool to sessionStorage
   useEffect(() => {
     try {
-      localStorage.setItem("activeTool", activeTool);
+      sessionStorage.setItem("activeTool", activeTool);
     } catch (e) {}
   }, [activeTool]);
 

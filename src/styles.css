@@ -344,17 +344,6 @@ html[data-theme="dark"] .moon-icon {
   padding-top: 24px;
 }
 
-.main-content.no-header .tool-stage {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.main-content.no-header .tool-card.active {
-  margin-top: auto;
-  margin-bottom: auto;
-}
-
 .main-header {
   max-width: 760px;
   margin: 0 auto;
@@ -441,17 +430,13 @@ html[data-theme="dark"] .moon-icon {
   line-height: 1.5;
 }
 
-/* Tool Stage */
+/* Tool Stage — full width container, centers each tool-card */
 .tool-stage {
-  max-width: 760px;
-  margin: 0 auto;
   width: 100%;
   flex: 1;
-}
-
-/* Some tools (e.g. ImgMeta) need full-width layout */
-.tool-stage.wide-tool {
-  max-width: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Tool Card Styles */
@@ -464,11 +449,25 @@ html[data-theme="dark"] .moon-icon {
   box-shadow: var(--shadow-card);
   flex-direction: column;
   gap: 20px;
+  /* Default width: standard tools — shrinks to content, caps at 680px */
+  width: 100%;
+  max-width: 680px;
 }
 
 .tool-card.active {
   display: flex;
   animation: fadeInScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Compact tools (simple 1-2 field converters) */
+.tool-card--compact {
+  max-width: 520px;
+}
+
+/* Wide tools (full-panel tools: DNA, IP Lookup, ImgMeta, Random Wheel) */
+.tool-card--wide {
+  max-width: none;
+  width: 100%;
 }
 
 @keyframes fadeInScale {
@@ -1884,16 +1883,16 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   margin-left: -48px;
   margin-right: -48px;
   margin-bottom: 0;
-  padding: 24px 48px;
-  background: var(--bg-footer);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 5px 48px;
+  background: var(--bg-sidebar);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-top: 1px solid var(--border-color);
   border-bottom: none;
   border-left: none;
   border-right: none;
   border-radius: 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -1915,11 +1914,12 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   position: relative;
   z-index: 2;
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
@@ -1955,7 +1955,7 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
     width: calc(100% + 64px);
     margin-left: -32px;
     margin-right: -32px;
-    padding: 20px 32px;
+    padding: 8px 32px;
   }
 }
 
@@ -1964,7 +1964,7 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
     width: calc(100% + 40px);
     margin-left: -20px;
     margin-right: -20px;
-    padding: 20px 20px;
+    padding: 8px 20px;
   }
 }
 

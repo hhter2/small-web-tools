@@ -122,7 +122,7 @@ export default function IpLookup() {
   }
 
   return (
-    <article id="tool-iplookup" className="tool-card active">
+    <article id="tool-iplookup" className="tool-card tool-card--wide active">
       <h2>IP Address Lookup</h2>
       <div className="row">
         <div className="form-group flex-1">

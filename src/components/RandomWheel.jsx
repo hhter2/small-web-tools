@@ -307,7 +307,7 @@ export default function RandomWheel() {
   };
 
   return (
-    <article id="tool-wheel" className="tool-card active">
+    <article id="tool-wheel" className="tool-card tool-card--wide active">
       <div className="wheel-layout">
         
         {/* Left side: Wheel Canvas & Win Banner */}

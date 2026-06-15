@@ -150,7 +150,7 @@ export default function HomeGrid({ onSelectTool }) {
   ];
 
   return (
-    <article id="tool-home" className="tool-card active">
+    <article id="tool-home" className="tool-card tool-card--wide active">
       <h2>Select a Utility Tool</h2>
       <div className="home-grid">
         {tools.map(tool => (

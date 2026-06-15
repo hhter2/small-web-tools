@@ -10,7 +10,7 @@ export default function SlashesConverter() {
   };
 
   return (
-    <article id="tool-slash" className="tool-card active">
+    <article id="tool-slash" className="tool-card tool-card--compact active">
       <h2>Slashes Converter</h2>
       <div className="form-group">
         <label htmlFor="slash-input">Input Path</label>

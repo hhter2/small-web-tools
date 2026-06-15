@@ -1430,7 +1430,7 @@ export default function ImgMeta() {
   };
 
   return (
-    <article id="tool-imgmeta" className="tool-card active">
+    <article id="tool-imgmeta" className="tool-card tool-card--wide active">
       <h2>ImgMeta</h2>
       <div 
         className="imgmeta-container"

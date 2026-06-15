@@ -474,9 +474,16 @@ export default function App() {
           </header>
         )}
 
-        <section className="tool-stage wide-tool">
+        <section className="tool-stage">
           {renderActiveTool()}
         </section>
+
+        <footer className="shiny-footer">
+          <div className="shiny-footer-content">
+            <span className="footer-brand-name">Small Web Tools</span>
+            <span className="footer-copyright">· Run locally without upload.  © H. Huang · {new Date().getFullYear()}</span>
+          </div>
+        </footer>
       </main>
 
       {/* Collapsed Sidebar Hover Tooltip */}

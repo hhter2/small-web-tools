@@ -32,7 +32,7 @@ export default function DateCounter() {
   };
 
   return (
-    <article id="tool-date" className="tool-card active">
+    <article id="tool-date" className="tool-card tool-card--compact active">
       <h2>Date Counter</h2>
       <div className="row inputs">
         <div className="form-group">

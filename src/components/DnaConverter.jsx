@@ -160,7 +160,7 @@ export default function DnaConverter() {
   }, [input, seqType, direction]);
 
   return (
-    <article id="tool-dna" className="tool-card active">
+    <article id="tool-dna" className="tool-card tool-card--wide active">
       <h2>DNA/RNA Direction Transfer</h2>
       
       <div className="row">

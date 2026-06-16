@@ -2782,3 +2782,206 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
 }
 
 
+/* Color Converter & HSL Selector Parallel Layout */
+.color-tool-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1.1fr;
+  gap: 32px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .color-tool-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+.color-converter-section,
+.color-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.color-converter-section h3,
+.color-picker-section h3 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+/* Eyedropper Button Integration */
+.input-with-button {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-with-button input {
+  flex: 1;
+}
+
+.eyedropper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-app);
+  color: var(--text-main);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.eyedropper-btn:hover {
+  background: var(--border-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.eyedropper-btn:active {
+  transform: translateY(1px);
+}
+
+/* HSL 2D Picker and Slider Container */
+.hsl-picker-container {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* HSL 2D board with rainbow gradient */
+.hsl-picker-board {
+  position: relative;
+  height: 220px;
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  cursor: crosshair;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.hsl-picker-board-rainbow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+}
+
+.hsl-picker-board-saturation {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(128, 128, 128, 0) 0%, rgba(128, 128, 128, 1) 100%);
+}
+
+.hsl-marker {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Vertical Lightness Slider */
+.lightness-slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.lightness-slider-wrapper .slider-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.lightness-slider {
+  position: relative;
+  width: 28px;
+  height: 220px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  cursor: ns-resize;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.lightness-handle {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 8px;
+  background: #ffffff;
+  border: 2px solid #2d3748;
+  border-radius: 4px;
+  transform: translateY(-50%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* Palette Swatches Styles */
+.swatches-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.swatches-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.swatches-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.swatch-btn:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: var(--accent);
+}
+
+.swatch-btn:active {
+  transform: scale(0.95);
+}
+
+.recent-colors {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 12px;
+}
+
+
+

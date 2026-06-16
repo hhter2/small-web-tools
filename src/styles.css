@@ -2983,5 +2983,130 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   padding-top: 12px;
 }
 
+/* Palette Swatches Header & Custom Controls */
+.swatches-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.swatches-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.palette-control-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.palette-control-btn:hover {
+  background: var(--border-hover);
+  color: var(--text-main);
+  border-color: var(--border-hover);
+}
+
+.palette-control-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.palette-control-btn.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.palette-control-btn.danger {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.palette-control-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
+}
+
+/* Swatch Wrapper & Deletion */
+.swatch-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.swatch-delete-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
+  padding: 0;
+  line-height: 1;
+  z-index: 2;
+}
+
+.swatch-delete-btn:hover {
+  transform: scale(1.2);
+  background: #dc2626;
+}
+
+/* Swatch Add Color Button */
+.swatch-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.swatch-add-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+  transform: scale(1.08);
+}
+
+.swatch-add-btn:active {
+  transform: scale(0.95);
+}
+
+.swatches-grid.editing {
+  gap: 10px; /* Give slightly more room for delete buttons */
+}
+
+
 
 

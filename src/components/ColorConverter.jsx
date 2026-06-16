@@ -154,6 +154,24 @@ function formatHsl({ h, s, l }) {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+// Cookie Helper Functions
+const saveCookie = (name, value, days = 365) => {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires}; path=/`;
+};
+
+const getCookie = (name) => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    try {
+      return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+    } catch (e) {}
+  }
+  return null;
+};
+
 // 12 Curated modern presets
 const DEFAULT_PRESETS = [
   "#EF4444", // Red
@@ -182,8 +200,24 @@ export default function ColorConverter() {
     }
   });
 
+  // State for Customizable Standard Palettes
+  const [presets, setPresets] = useState(() => {
+    try {
+      const savedLocal = localStorage.getItem("customPresets");
+      if (savedLocal) return JSON.parse(savedLocal);
+    } catch (e) {}
+
+    const savedCookie = getCookie("customPresets");
+    if (savedCookie) return savedCookie;
+
+    return DEFAULT_PRESETS;
+  });
+
+  const [isEditingPresets, setIsEditingPresets] = useState(false);
+
   const svRef = useRef(null);
   const lRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const trimmed = input.trim();
 
@@ -250,6 +284,14 @@ export default function ColorConverter() {
       } catch (e) {}
       return next;
     });
+  };
+
+  // Clear Recent Colors
+  const handleClearRecents = () => {
+    setRecentColors([]);
+    try {
+      localStorage.removeItem("recentColors");
+    } catch (e) {}
   };
 
   // Eyedropper API
@@ -433,6 +475,78 @@ export default function ColorConverter() {
     addRecentColor(hex);
   };
 
+  // Preset customization controls
+  const handleAddPreset = () => {
+    if (swatchBg && swatchBg !== 'transparent') {
+      const formatted = swatchBg.toUpperCase();
+      if (presets.includes(formatted)) {
+        alert("This color is already in the standard palette!");
+        return;
+      }
+      const next = [...presets, formatted];
+      setPresets(next);
+      try {
+        localStorage.setItem("customPresets", JSON.stringify(next));
+      } catch (e) {}
+      saveCookie("customPresets", next);
+    }
+  };
+
+  const handleDeletePreset = (indexToDelete) => {
+    const next = presets.filter((_, idx) => idx !== indexToDelete);
+    setPresets(next);
+    try {
+      localStorage.setItem("customPresets", JSON.stringify(next));
+    } catch (e) {}
+    saveCookie("customPresets", next);
+  };
+
+  const handleResetPresets = () => {
+    if (window.confirm("Are you sure you want to reset the Standard Palette to the default 12 colors?")) {
+      setPresets(DEFAULT_PRESETS);
+      try {
+        localStorage.removeItem("customPresets");
+      } catch (e) {}
+      document.cookie = "customPresets=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+  };
+
+  const handleExportPresets = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presets, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "custom_color_palette.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleImportPresets = (e) => {
+    const fileReader = new FileReader();
+    const file = e.target.files[0];
+    if (!file) return;
+
+    fileReader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string' && item.startsWith('#'))) {
+          setPresets(parsed);
+          try {
+            localStorage.setItem("customPresets", JSON.stringify(parsed));
+          } catch (e) {}
+          saveCookie("customPresets", parsed);
+        } else {
+          alert("Invalid file format. The JSON file must contain an array of hex color strings (e.g. ['#FF0000', '#00FF00']).");
+        }
+      } catch (err) {
+        alert("Failed to parse JSON file.");
+      }
+    };
+    fileReader.readAsText(file);
+    // Reset file input value so same file can be imported again if edited
+    e.target.value = "";
+  };
+
   return (
     <article id="tool-color" className="tool-card tool-card--wide active">
       <h2>Color Code Converter & HSL Selector</h2>
@@ -543,25 +657,112 @@ export default function ColorConverter() {
             </div>
           </div>
 
+          {/* Standard Palette section */}
           <div className="swatches-section">
-            <span className="swatches-label">Standard Palettes</span>
-            <div className="swatches-grid">
-              {DEFAULT_PRESETS.map((hex) => (
-                <button
-                  key={hex}
-                  type="button"
-                  className="swatch-btn"
-                  style={{ backgroundColor: hex }}
-                  title={hex}
-                  onClick={() => handleSwatchClick(hex)}
-                />
+            <div className="swatches-header">
+              <span className="swatches-label">Standard Palettes</span>
+              <div className="swatches-controls">
+                {!isEditingPresets ? (
+                  <button
+                    type="button"
+                    className="palette-control-btn"
+                    onClick={() => setIsEditingPresets(true)}
+                  >
+                    Customize
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="palette-control-btn primary"
+                      onClick={() => setIsEditingPresets(false)}
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      className="palette-control-btn danger"
+                      onClick={handleResetPresets}
+                      title="Reset to default 12 colors"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      className="palette-control-btn"
+                      onClick={handleExportPresets}
+                      title="Export palette as JSON"
+                    >
+                      Export
+                    </button>
+                    <button
+                      type="button"
+                      className="palette-control-btn"
+                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      title="Import palette from JSON"
+                    >
+                      Import
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      style={{ display: 'none' }}
+                      onChange={handleImportPresets}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className={`swatches-grid ${isEditingPresets ? 'editing' : ''}`}>
+              {presets.map((hex, idx) => (
+                <div key={`${hex}-${idx}`} className="swatch-wrapper">
+                  <button
+                    type="button"
+                    className="swatch-btn"
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                    onClick={() => !isEditingPresets && handleSwatchClick(hex)}
+                  />
+                  {isEditingPresets && (
+                    <button
+                      type="button"
+                      className="swatch-delete-btn"
+                      title="Delete color"
+                      onClick={() => handleDeletePreset(idx)}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
               ))}
+              {isEditingPresets && swatchBg && swatchBg !== 'transparent' && (
+                <button
+                  type="button"
+                  className="swatch-add-btn"
+                  title={`Add current color (${swatchBg})`}
+                  onClick={handleAddPreset}
+                >
+                  +
+                </button>
+              )}
             </div>
           </div>
 
+          {/* Recent Colors section */}
           {recentColors.length > 0 && (
             <div className="swatches-section recent-colors">
-              <span className="swatches-label">Recent Colors</span>
+              <div className="swatches-header">
+                <span className="swatches-label">Recent Colors</span>
+                <button
+                  type="button"
+                  className="palette-control-btn danger"
+                  onClick={handleClearRecents}
+                >
+                  Clear
+                </button>
+              </div>
               <div className="swatches-grid">
                 {recentColors.map((hex, idx) => (
                   <button

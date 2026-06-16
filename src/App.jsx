@@ -12,6 +12,7 @@ import DnaConverter from './components/DnaConverter.jsx';
 import IpLookup from './components/IpLookup.jsx';
 import ImgMeta from './components/ImgMeta.jsx';
 import RandomWheel from './components/RandomWheel.jsx';
+import TypingSpeedTest from './components/TypingSpeedTest.jsx';
 
 const toolDetails = {
   "tool-home": {
@@ -65,6 +66,10 @@ const toolDetails = {
   "tool-wheel": {
     title: "Random Wheel",
     desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
+  },
+  "tool-typing": {
+    title: "Typing Speed Test",
+    desc: "Test and improve your typing speed in English or Chinese with custom templates."
   }
 };
 
@@ -174,6 +179,26 @@ const navItems = [
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-typing',
+    name: 'Typing Speed Test',
+    tooltip: 'Typing Speed Test',
+    category: 'text',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+        <line x1="6" y1="8" x2="6.01" y2="8"></line>
+        <line x1="10" y1="8" x2="10.01" y2="8"></line>
+        <line x1="14" y1="8" x2="14.01" y2="8"></line>
+        <line x1="18" y1="8" x2="18.01" y2="8"></line>
+        <line x1="6" y1="12" x2="6.01" y2="12"></line>
+        <line x1="10" y1="12" x2="10.01" y2="12"></line>
+        <line x1="14" y1="12" x2="14.01" y2="12"></line>
+        <line x1="18" y1="12" x2="18.01" y2="12"></line>
+        <line x1="7" y1="16" x2="17" y2="16"></line>
       </svg>
     )
   },
@@ -428,6 +453,8 @@ export default function App() {
         return <ImgMeta />;
       case 'tool-wheel':
         return <RandomWheel />;
+      case 'tool-typing':
+        return <TypingSpeedTest />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} />;
     }

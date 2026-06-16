@@ -113,6 +113,26 @@ export default function HomeGrid({ onSelectTool }) {
       )
     },
     {
+      id: 'tool-typing',
+      title: 'Typing Speed Test',
+      category: 'text',
+      desc: 'Measure your typing speed and accuracy in English or Chinese with custom templates and real-time statistics.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <line x1="6" y1="8" x2="6.01" y2="8"></line>
+          <line x1="10" y1="8" x2="10.01" y2="8"></line>
+          <line x1="14" y1="8" x2="14.01" y2="8"></line>
+          <line x1="18" y1="8" x2="18.01" y2="8"></line>
+          <line x1="6" y1="12" x2="6.01" y2="12"></line>
+          <line x1="10" y1="12" x2="10.01" y2="12"></line>
+          <line x1="14" y1="12" x2="14.01" y2="12"></line>
+          <line x1="18" y1="12" x2="18.01" y2="12"></line>
+          <line x1="7" y1="16" x2="17" y2="16"></line>
+        </svg>
+      )
+    },
+    {
       id: 'tool-date',
       title: 'Date Counter',
       category: 'calculation',

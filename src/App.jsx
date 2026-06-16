@@ -68,11 +68,97 @@ const toolDetails = {
   }
 };
 
+const categories = [
+  {
+    id: 'text',
+    name: 'Text',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    )
+  },
+  {
+    id: 'calculation',
+    name: 'Calculation',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'developer',
+    name: 'Developer',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
+    )
+  },
+  {
+    id: 'network',
+    name: 'Network',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'media',
+    name: 'Media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+    )
+  },
+  {
+    id: 'bioinfo',
+    name: 'Bioinfo',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
+        <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
+        <line x1="8" y1="7" x2="8" y2="14"></line>
+        <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
+        <line x1="16" y1="7" x2="16" y2="14"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'utilities',
+    name: 'Utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="2" x2="12" y2="22"></line>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M16.24 7.76l-8.48 8.48"></path>
+        <path d="M7.76 7.76l8.48 8.48"></path>
+      </svg>
+    )
+  }
+];
+
 const navItems = [
   {
     id: 'tool-slash',
     name: 'Slashes Converter',
     tooltip: 'Slashes Converter',
+    category: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="6" y1="18" x2="18" y2="6"></line>
@@ -84,6 +170,7 @@ const navItems = [
     id: 'tool-wc',
     name: 'Word Counter',
     tooltip: 'Word Counter',
+    category: 'text',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
@@ -94,6 +181,7 @@ const navItems = [
     id: 'tool-date',
     name: 'Date Counter',
     tooltip: 'Date Counter',
+    category: 'calculation',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -107,6 +195,7 @@ const navItems = [
     id: 'tool-currency',
     name: 'Currency Counter',
     tooltip: 'Currency Counter',
+    category: 'calculation',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -118,6 +207,7 @@ const navItems = [
     id: 'tool-color',
     name: 'Color Converter',
     tooltip: 'Color Converter',
+    category: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
@@ -132,6 +222,7 @@ const navItems = [
     id: 'tool-ascii',
     name: 'ASCII Converter',
     tooltip: 'ASCII Converter',
+    category: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 17 10 11 4 5"></polyline>
@@ -143,6 +234,7 @@ const navItems = [
     id: 'tool-unicode',
     name: 'Unicode Converter',
     tooltip: 'Unicode Converter',
+    category: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -155,6 +247,7 @@ const navItems = [
     id: 'tool-base',
     name: 'Base Converter',
     tooltip: 'Base Converter',
+    category: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="4" y1="9" x2="20" y2="9"></line>
@@ -168,6 +261,7 @@ const navItems = [
     id: 'tool-dna',
     name: 'DNA/RNA Converter',
     tooltip: 'DNA/RNA Converter',
+    category: 'bioinfo',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
@@ -182,6 +276,7 @@ const navItems = [
     id: 'tool-iplookup',
     name: 'IP Lookup',
     tooltip: 'IP Lookup',
+    category: 'network',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -193,6 +288,7 @@ const navItems = [
     id: 'tool-imgmeta',
     name: 'ImgMeta',
     tooltip: 'ImgMeta',
+    category: 'media',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -204,6 +300,7 @@ const navItems = [
     id: 'tool-wheel',
     name: 'Random Wheel',
     tooltip: 'Random Wheel',
+    category: 'utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -408,20 +505,48 @@ export default function App() {
         </div>
 
         <nav className="sidebar-nav">
-          {filteredNavItems.map(item => (
-            <button
-              key={item.id}
-              className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
-              data-tool={item.id}
-              data-tooltip={item.tooltip}
-              onClick={() => handleNavClick(item.id)}
-              onMouseEnter={(e) => handleMouseEnter(e, item)}
-              onMouseLeave={handleMouseLeave}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </button>
-          ))}
+          {searchQuery.trim() !== '' ? (
+            filteredNavItems.map(item => (
+              <button
+                key={item.id}
+                className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
+                data-tool={item.id}
+                data-tooltip={item.tooltip}
+                onClick={() => handleNavClick(item.id)}
+                onMouseEnter={(e) => handleMouseEnter(e, item)}
+                onMouseLeave={handleMouseLeave}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </button>
+            ))
+          ) : (
+            categories.map(cat => {
+              const catItems = filteredNavItems.filter(item => item.category === cat.id);
+              if (catItems.length === 0) return null;
+              return (
+                <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
+                  <div className="sidebar-category-header">
+                    <span className="sidebar-category-title">{cat.name}</span>
+                  </div>
+                  {catItems.map(item => (
+                    <button
+                      key={item.id}
+                      className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
+                      data-tool={item.id}
+                      data-tooltip={item.tooltip}
+                      onClick={() => handleNavClick(item.id)}
+                      onMouseEnter={(e) => handleMouseEnter(e, item)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })
+          )}
         </nav>
 
         <div className="sidebar-footer">

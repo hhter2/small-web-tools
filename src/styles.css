@@ -1992,6 +1992,132 @@ html[data-theme="dark"] .imgmeta-tabs .tab-btn.active {
   transform: translateY(-50%) translateX(0);
 }
 
+/* Sidebar Category Grouping Styles */
+.sidebar-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.sidebar-category-group:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-category-header {
+  padding: 6px 12px 2px 12px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sidebar-category-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.55;
+}
+
+/* Collapsed state divider */
+.collapsed-sidebar .sidebar-category-header {
+  display: none !important;
+}
+
+.collapsed-sidebar .sidebar-category-group {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.collapsed-sidebar .sidebar-category-group::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--border-color);
+  margin: 8px auto 0 auto;
+  opacity: 0.5;
+}
+
+.collapsed-sidebar .sidebar-category-group:last-child::after {
+  display: none;
+}
+
+/* Homepage Category Tabs Styles */
+.home-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.tab-btn svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.tab-btn.active svg {
+  opacity: 1;
+}
+
+.home-category-section {
+  margin-bottom: 40px;
+}
+
+.home-category-section:last-child {
+  margin-bottom: 0;
+}
+
+.home-category-heading {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.home-category-heading svg {
+  color: var(--accent);
+  width: 18px;
+  height: 18px;
+}
+
 /* Home Page Utility Grid Styles */
 .home-grid {
   display: grid;

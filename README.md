@@ -7,6 +7,8 @@ This project is built using **React** and **Vite** for a fast local development 
 ## Features & Upgrades
 
 - **Sidebar Navigation Layout**: Clean sidebar navigation on the left, displaying only the selected tool card in the main staging area on the right.
+- **Grouped Tool Categories**: All tools are organized into 7 clear, logical categories: Text, Calculation, Developer, Network, Media, Bioinfo, and Utilities. Group headers separate items in the sidebar, which are hidden in search mode to display flat search results cleanly.
+- **Category Filter Tabs**: The homepage features interactive filter tabs allowing users to instantly filter the dashboard to display specific categories. Selecting "All" displays tools grouped under styled section headings with category icons.
 - **Collapsible Left Sidebar**: Collapse the sidebar to a mini-sidebar layout (78px width) with a single click of the collapse button in the bottom-left sidebar footer. Keeps navigation icons visible and shows text labels as tooltips on hover, remembering your preference via `localStorage`.
 - **Search Filtering**: Instantly search/filter through the list of tools inside the sidebar to find what you need.
 - **Theme Switcher**: Fully functional Light & Dark theme toggle with automatic system preference detection and state persistence (saves choice to `localStorage`).

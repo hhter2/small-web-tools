@@ -38,10 +38,140 @@ const reverseString = (str) => {
   return str.split("").reverse().join("");
 };
 
+const codonTable = {
+  // Phenylalanine
+  'TTT': 'Phe', 'TTC': 'Phe', 'UUU': 'Phe', 'UUC': 'Phe',
+  // Leucine
+  'TTA': 'Leu', 'TTG': 'Leu', 'UUA': 'Leu', 'UUG': 'Leu',
+  'CTT': 'Leu', 'CTC': 'Leu', 'CTA': 'Leu', 'CTG': 'Leu',
+  'CUU': 'Leu', 'CUC': 'Leu', 'CUA': 'Leu', 'CUG': 'Leu',
+  // Isoleucine
+  'ATT': 'Ile', 'ATC': 'Ile', 'ATA': 'Ile',
+  'AUU': 'Ile', 'AUC': 'Ile', 'AUA': 'Ile',
+  // Methionine
+  'ATG': 'Met', 'AUG': 'Met',
+  // Valine
+  'GTT': 'Val', 'GTC': 'Val', 'GTA': 'Val', 'GTG': 'Val',
+  'GUU': 'Val', 'GUC': 'Val', 'GUA': 'Val', 'GUG': 'Val',
+  // Serine
+  'TCT': 'Ser', 'TCC': 'Ser', 'TCA': 'Ser', 'TCG': 'Ser',
+  'UCU': 'Ser', 'UCC': 'Ser', 'UCA': 'Ser', 'UCG': 'Ser',
+  'AGU': 'Ser', 'AGC': 'Ser',
+  // Proline
+  'CCT': 'Pro', 'CCC': 'Pro', 'CCA': 'Pro', 'CCG': 'Pro',
+  'CCU': 'Pro',
+  // Threonine
+  'ACT': 'Thr', 'ACC': 'Thr', 'ACA': 'Thr', 'ACG': 'Thr',
+  'ACU': 'Thr',
+  // Alanine
+  'GCT': 'Ala', 'GCC': 'Ala', 'GCA': 'Ala', 'GCG': 'Ala',
+  'GCU': 'Ala',
+  // Tyrosine
+  'TAT': 'Tyr', 'TAC': 'Tyr', 'UAU': 'Tyr', 'UAC': 'Tyr',
+  // Stop
+  'TAA': 'Stop', 'TAG': 'Stop', 'TGA': 'Stop',
+  'UAA': 'Stop', 'UAG': 'Stop', 'UGA': 'Stop',
+  // Histidine
+  'CAT': 'His', 'CAC': 'His', 'CAU': 'His',
+  // Glutamine
+  'CAA': 'Gln', 'CAG': 'Gln',
+  // Asparagine
+  'AAT': 'Asn', 'AAC': 'Asn', 'AAU': 'Asn',
+  // Lysine
+  'AAA': 'Lys', 'AAG': 'Lys',
+  // Aspartic Acid
+  'GAT': 'Asp', 'GAC': 'Asp', 'GAU': 'Asp',
+  // Glutamic Acid
+  'GAA': 'Glu', 'GAG': 'Glu',
+  // Cysteine
+  'TGT': 'Cys', 'TGC': 'Cys', 'UGU': 'Cys', 'UGC': 'Cys',
+  // Tryptophan
+  'TGG': 'Trp', 'UGG': 'Trp',
+  // Arginine
+  'CGT': 'Arg', 'CGC': 'Arg', 'CGA': 'Arg', 'CGG': 'Arg',
+  'CGU': 'Arg', 'AGA': 'Arg', 'AGG': 'Arg',
+  // Glycine
+  'GGT': 'Gly', 'GGC': 'Gly', 'GGA': 'Gly', 'GGG': 'Gly',
+  'GGU': 'Gly'
+};
+
+const translateCodon = (codon) => {
+  if (codon.length < 3) return '';
+  const upper = codon.toUpperCase();
+  if (codonTable[upper]) return codonTable[upper];
+  
+  const firstTwo = upper.substring(0, 2);
+  if (firstTwo === 'AC') return 'Thr';
+  if (firstTwo === 'CC') return 'Pro';
+  if (firstTwo === 'CG') return 'Arg';
+  if (firstTwo === 'GC') return 'Ala';
+  if (firstTwo === 'GG') return 'Gly';
+  if (firstTwo === 'CT' || firstTwo === 'CU') return 'Leu';
+  if (firstTwo === 'GT' || firstTwo === 'GU') return 'Val';
+  if (firstTwo === 'TC' || firstTwo === 'UC') return 'Ser';
+  
+  return 'Xaa';
+};
+
+const formatCodons = (seq, direction) => {
+  const codons = seq.match(/.{1,3}/g) || [];
+  const joined = codons.join(" ");
+  return (direction === "5-3") ? `5'-${joined}-3'` : `3'-${joined}-5'`;
+};
+
+const formatAminoAcids = (seq, direction) => {
+  const is5to3 = (direction === "5-3");
+  const cleanSeq5to3 = is5to3 ? seq : reverseString(seq);
+  const codons = cleanSeq5to3.match(/.{1,3}/g) || [];
+  const aminos = codons.map(codon => {
+    if (codon.length < 3) return `[${codon}]`;
+    return translateCodon(codon);
+  });
+  if (is5to3) {
+    return `N-${aminos.join("-")}-C`;
+  } else {
+    return `C-${aminos.reverse().join("-")}-N`;
+  }
+};
+
+const getStrandGroups = (strandBases, direction, isRna) => {
+  const len = strandBases.length;
+  const groups = [];
+  const is5to3 = (direction === '5-3');
+  
+  if (is5to3) {
+    for (let i = 0; i < len; i += 3) {
+      const groupBases = strandBases.slice(i, i + 3);
+      const codon = groupBases.join('');
+      groups.push({
+        startIndex: i,
+        length: groupBases.length,
+        seq: codon,
+        amino: codon.length < 3 ? `[${codon}]` : translateCodon(codon)
+      });
+    }
+  } else {
+    for (let i = len - 1; i >= 0; i -= 3) {
+      const endIndex = i;
+      const startIndex = Math.max(0, i - 2);
+      const groupBases = strandBases.slice(startIndex, endIndex + 1);
+      const codon = groupBases.slice().reverse().join('');
+      groups.push({
+        startIndex: startIndex,
+        length: groupBases.length,
+        seq: codon,
+        amino: codon.length < 3 ? `[${codon}]` : translateCodon(codon)
+      });
+    }
+  }
+  return groups;
+};
+
 export default function DnaConverter() {
   const [input, setInput] = useState('');
   const [seqType, setSeqType] = useState('auto');
   const [direction, setDirection] = useState('5-3');
+  const [codonMode, setCodonMode] = useState('none'); // 'none', 'codon', 'amino'
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [viewMode, setViewMode] = useState('text'); // 'text' or 'figure'
 
@@ -148,26 +278,47 @@ export default function DnaConverter() {
 
     // A. Opposite Strand (3' ↔ 5' Swap)
     const oppositeComplement = getComplement(cleaned, isRna);
-    const oppositeStr = (currentDirection === "5-3") 
-      ? `3'-${oppositeComplement}-5'` 
-      : `5'-${oppositeComplement}-3'`;
+    let oppositeStr = "";
+    if (codonMode === 'codon') {
+      oppositeStr = formatCodons(oppositeComplement, currentDirection === "5-3" ? "3-5" : "5-3");
+    } else if (codonMode === 'amino') {
+      oppositeStr = formatAminoAcids(oppositeComplement, currentDirection === "5-3" ? "3-5" : "5-3");
+    } else {
+      oppositeStr = (currentDirection === "5-3") 
+        ? `3'-${oppositeComplement}-5'` 
+        : `5'-${oppositeComplement}-3'`;
+    }
 
     // B. Standard Reverse Complement (always written 5' → 3')
     const revcompSeq = reverseString(getComplement(seq5to3, isRna));
-    const revcompStr = `5'-${revcompSeq}-3'`;
+    let revcompStr = "";
+    if (codonMode === 'codon') {
+      revcompStr = formatCodons(revcompSeq, "5-3");
+    } else if (codonMode === 'amino') {
+      revcompStr = formatAminoAcids(revcompSeq, "5-3");
+    } else {
+      revcompStr = `5'-${revcompSeq}-3'`;
+    }
 
     // C. Same Strand (Reverse Direction)
     const reversedSeq = reverseString(cleaned);
-    const reverseStr = (currentDirection === "5-3")
-      ? `3'-${reversedSeq}-5'`
-      : `5'-${reversedSeq}-3'`;
+    let reverseStr = "";
+    if (codonMode === 'codon') {
+      reverseStr = formatCodons(reversedSeq, currentDirection === "5-3" ? "3-5" : "5-3");
+    } else if (codonMode === 'amino') {
+      reverseStr = formatAminoAcids(reversedSeq, currentDirection === "5-3" ? "3-5" : "5-3");
+    } else {
+      reverseStr = (currentDirection === "5-3")
+        ? `3'-${reversedSeq}-5'`
+        : `5'-${reversedSeq}-3'`;
+    }
 
     setOutputs({
       opposite: oppositeStr,
       revcomp: revcompStr,
       reverse: reverseStr,
     });
-  }, [input, seqType, direction]);
+  }, [input, seqType, direction, codonMode]);
 
   const renderVisualDna = () => {
     const cleaned = input
@@ -211,7 +362,7 @@ export default function DnaConverter() {
     const baseWidth = 50;
     const padding = 50;
     const svgWidth = padding * 2 + len * baseWidth;
-    const svgHeight = 220;
+    const svgHeight = 250;
 
     const isTopSense = (direction === '5-3');
     const topOpacity = isTopSense ? 1.0 : 0.3;
@@ -219,6 +370,9 @@ export default function DnaConverter() {
 
     const topStrand = isTopSense ? cleaned.split('') : cleaned.split('').map(b => getComplement(b, isRna));
     const bottomStrand = isTopSense ? cleaned.split('').map(b => getComplement(b, isRna)) : cleaned.split('');
+
+    const topStrandGroups = getStrandGroups(topStrand, '5-3', isRna);
+    const bottomStrandGroups = getStrandGroups(bottomStrand, '3-5', isRna);
 
     return (
       <div className="dna-visual-container">
@@ -266,7 +420,7 @@ export default function DnaConverter() {
               {/* Backbones */}
               <rect 
                 x={padding} 
-                y={35} 
+                y={45} 
                 width={len * baseWidth} 
                 height={10} 
                 fill="#ef4444" 
@@ -275,7 +429,7 @@ export default function DnaConverter() {
               />
               <rect 
                 x={padding} 
-                y={135} 
+                y={145} 
                 width={len * baseWidth} 
                 height={10} 
                 fill="#3b82f6" 
@@ -284,17 +438,17 @@ export default function DnaConverter() {
               />
 
               {/* Labels (Top is always 5' left, 3' right; Bottom is always 3' left, 5' right) */}
-              <text x={padding - 20} y={43} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
+              <text x={padding - 20} y={53} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
                 5'
               </text>
-              <text x={padding + len * baseWidth + 20} y={43} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
+              <text x={padding + len * baseWidth + 20} y={53} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
                 3'
               </text>
 
-              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
+              <text x={padding - 20} y={153} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
                 3'
               </text>
-              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
+              <text x={padding + len * baseWidth + 20} y={153} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
                 5'
               </text>
 
@@ -303,51 +457,95 @@ export default function DnaConverter() {
                 const x = padding + i * baseWidth + baseWidth / 2;
                 const bColor = baseColors[base] || '#9ca3af';
 
-                // Top base path (extending down from 45)
+                // Top base path (extending down from 55)
                 let topPath = '';
                 if (base === 'A') {
-                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 78 L ${x} 93 L ${x-15} 78 Z`;
+                  topPath = `M ${x-15} 55 L ${x+15} 55 L ${x+15} 88 L ${x} 103 L ${x-15} 88 Z`;
                 } else if (base === 'T' || base === 'U') {
-                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 93 L ${x} 78 L ${x-15} 93 Z`;
+                  topPath = `M ${x-15} 55 L ${x+15} 55 L ${x+15} 103 L ${x} 88 L ${x-15} 103 Z`;
                 } else if (base === 'C') {
-                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 78 Q ${x} 93 ${x-15} 78 Z`;
+                  topPath = `M ${x-15} 55 L ${x+15} 55 L ${x+15} 88 Q ${x} 103 ${x-15} 88 Z`;
                 } else if (base === 'G') {
-                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 93 Q ${x} 78 ${x-15} 93 Z`;
+                  topPath = `M ${x-15} 55 L ${x+15} 55 L ${x+15} 103 Q ${x} 88 ${x-15} 103 Z`;
                 } else {
-                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 85 L ${x-15} 85 Z`;
+                  topPath = `M ${x-15} 55 L ${x+15} 55 L ${x+15} 95 L ${x-15} 95 Z`;
                 }
 
                 const bottomBase = bottomStrand[i];
                 const bottomColor = baseColors[bottomBase] || '#9ca3af';
 
-                // Bottom base path (extending up from 135)
+                // Bottom base path (extending up from 145)
                 let bottomPath = '';
                 if (bottomBase === 'A') {
-                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 102 L ${x} 87 L ${x-15} 102 Z`;
+                  bottomPath = `M ${x-15} 145 L ${x+15} 145 L ${x+15} 112 L ${x} 97 L ${x-15} 112 Z`;
                 } else if (bottomBase === 'T' || bottomBase === 'U') {
-                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 87 L ${x} 102 L ${x-15} 87 Z`;
+                  bottomPath = `M ${x-15} 145 L ${x+15} 145 L ${x+15} 97 L ${x} 112 L ${x-15} 97 Z`;
                 } else if (bottomBase === 'C') {
-                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 102 Q ${x} 87 ${x-15} 102 Z`;
+                  bottomPath = `M ${x-15} 145 L ${x+15} 145 L ${x+15} 112 Q ${x} 97 ${x-15} 112 Z`;
                 } else if (bottomBase === 'G') {
-                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 87 Q ${x} 102 ${x-15} 87 Z`;
+                  bottomPath = `M ${x-15} 145 L ${x+15} 145 L ${x+15} 97 Q ${x} 112 ${x-15} 97 Z`;
                 } else {
-                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 95 L ${x-15} 95 Z`;
+                  bottomPath = `M ${x-15} 145 L ${x+15} 145 L ${x+15} 105 L ${x-15} 105 Z`;
                 }
 
                 return (
                   <g key={i}>
                     <path d={topPath} fill={bColor} opacity={topOpacity} />
-                    <text x={x} y={68} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={topOpacity}>
+                    <text x={x} y={78} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={topOpacity}>
                       {base}
                     </text>
 
                     <path d={bottomPath} fill={bottomColor} opacity={bottomOpacity} />
-                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={bottomOpacity}>
+                    <text x={x} y={126} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={bottomOpacity}>
                       {bottomBase}
                     </text>
                   </g>
                 );
               })}
+
+              {/* Codon Brackets for Top Strand */}
+              {codonMode !== 'none' && (
+                <g>
+                  {topStrandGroups.map((group, index) => {
+                    const xStart = padding + group.startIndex * baseWidth;
+                    const xEnd = xStart + group.length * baseWidth;
+                    const xMid = xStart + (group.length * baseWidth) / 2;
+                    const yStart = 33;
+                    const bracketPath = `M ${xStart + 5} ${yStart} L ${xStart + 5} ${yStart - 6} L ${xEnd - 5} ${yStart - 6} L ${xEnd - 5} ${yStart}`;
+                    const label = (codonMode === 'amino') ? group.amino : group.seq;
+                    return (
+                      <g key={index} opacity={topOpacity}>
+                        <path d={bracketPath} fill="none" stroke="var(--text-muted)" strokeWidth="1" />
+                        <text x={xMid} y={yStart - 10} textAnchor="middle" fill="var(--text-main)" fontSize="10" fontWeight="bold">
+                          {label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              )}
+
+              {/* Codon Brackets for Bottom Strand */}
+              {codonMode !== 'none' && (
+                <g>
+                  {bottomStrandGroups.map((group, index) => {
+                    const xStart = padding + group.startIndex * baseWidth;
+                    const xEnd = xStart + group.length * baseWidth;
+                    const xMid = xStart + (group.length * baseWidth) / 2;
+                    const yStart = 157;
+                    const bracketPath = `M ${xStart + 5} ${yStart} L ${xStart + 5} ${yStart + 6} L ${xEnd - 5} ${yStart + 6} L ${xEnd - 5} ${yStart}`;
+                    const label = (codonMode === 'amino') ? group.amino : group.seq;
+                    return (
+                      <g key={index} opacity={bottomOpacity}>
+                        <path d={bracketPath} fill="none" stroke="var(--text-muted)" strokeWidth="1" />
+                        <text x={xMid} y={yStart + 16} textAnchor="middle" fill="var(--text-main)" fontSize="10" fontWeight="bold">
+                          {label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              )}
 
               {/* Sense/Target Direction Indicator (above top strand, always 5' -> 3') */}
               <g>
@@ -378,9 +576,9 @@ export default function DnaConverter() {
               <g>
                 <line 
                   x1={isTopSense ? padding + len * baseWidth : padding} 
-                  y1={185} 
+                  y1={205} 
                   x2={isTopSense ? padding : padding + len * baseWidth} 
-                  y2={185} 
+                  y2={205} 
                   stroke="#3b82f6" 
                   strokeWidth="2" 
                   opacity={bottomOpacity}
@@ -388,7 +586,7 @@ export default function DnaConverter() {
                 />
                 <text 
                   x={padding + (len * baseWidth) / 2} 
-                  y={205} 
+                  y={225} 
                   textAnchor="middle" 
                   fill="#3b82f6" 
                   opacity={bottomOpacity} 
@@ -432,6 +630,32 @@ export default function DnaConverter() {
             <option value="5-3">5' → 3' (Default)</option>
             <option value="3-5">3' → 5'</option>
           </select>
+        </div>
+        <div className="form-group flex-1">
+          <label>Codon Display</label>
+          <div className="codon-toggle-container" role="group" aria-label="Codon Display Mode">
+            <button
+              type="button"
+              className={`codon-toggle-btn ${codonMode === 'none' ? 'active' : ''}`}
+              onClick={() => setCodonMode('none')}
+            >
+              Standard
+            </button>
+            <button
+              type="button"
+              className={`codon-toggle-btn ${codonMode === 'codon' ? 'active' : ''}`}
+              onClick={() => setCodonMode('codon')}
+            >
+              Codons
+            </button>
+            <button
+              type="button"
+              className={`codon-toggle-btn ${codonMode === 'amino' ? 'active' : ''}`}
+              onClick={() => setCodonMode('amino')}
+            >
+              Amino Acids
+            </button>
+          </div>
         </div>
       </div>
 

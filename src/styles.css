@@ -3571,6 +3571,50 @@ html[data-theme="dark"] .view-mode-btn.active {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
+/* Codon Toggle Buttons */
+.codon-toggle-container {
+  display: flex;
+  background: var(--bg-app);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  height: 46px;
+  width: 100%;
+}
+
+.codon-toggle-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+}
+
+.codon-toggle-btn:hover {
+  color: var(--text-main);
+}
+
+.codon-toggle-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="dark"] .codon-toggle-btn.active {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+
 .dna-visual-container {
   display: flex;
   flex-direction: column;

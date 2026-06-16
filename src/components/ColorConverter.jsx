@@ -224,7 +224,10 @@ const DEFAULT_PRESETS = [
 
 export default function ColorConverter() {
   const [input, setInput] = useState('#4F46E5');
-  const [hslState, setHslState] = useState({ h: 244, s: 76, l: 59 });
+  const [hslState, setHslState] = useState({ h: 244, s: 76, l: 59 }); // HSL Spectrum Selector coordinates
+  const [swatchSelectedHex, setSwatchSelectedHex] = useState('#4F46E5'); // HSL Swatches Grid highlight state
+  const [isSynced, setIsSynced] = useState(true); // Sync selection state toggle
+  
   const [recentColors, setRecentColors] = useState(() => {
     try {
       const saved = localStorage.getItem("recentColors");
@@ -282,29 +285,45 @@ export default function ColorConverter() {
     }
   }
 
-  // Sync text input edits to visual HSL state
-  useEffect(() => {
-    if (!trimmed) return;
-    const parsedHsl = parseHslColor(trimmed);
+  // Handle manual typing in the text input box and update coordinates
+  const handleUserTextChange = (e) => {
+    const val = e.target.value;
+    setInput(val);
+
+    const trimmedVal = val.trim();
+    if (!trimmedVal) return;
+
+    const parsedHsl = parseHslColor(trimmedVal);
     const rgb =
-      parseHexColor(trimmed) ||
-      parseRgbColor(trimmed) ||
+      parseHexColor(trimmedVal) ||
+      parseRgbColor(trimmedVal) ||
       (parsedHsl ? hslToRgb(parsedHsl) : null);
 
     if (rgb) {
       const computedHsl = rgbToHsl(rgb);
-      setHslState((prev) => {
-        if (
-          prev.h === computedHsl.h &&
-          prev.s === computedHsl.s &&
-          prev.l === computedHsl.l
-        ) {
-          return prev;
-        }
-        return computedHsl;
-      });
+      const hex = rgbToHex(rgb);
+
+      // Always update HSL Spectrum Selector coordinates
+      setHslState(computedHsl);
+
+      // Only update Swatches Grid selection if Sync mode is active
+      if (isSynced) {
+        setSwatchSelectedHex(hex);
+      }
     }
-  }, [input]);
+  };
+
+  // Handle Sync toggle click
+  const handleSyncToggle = () => {
+    const nextSync = !isSynced;
+    setIsSynced(nextSync);
+    if (nextSync) {
+      // Force sync Swatches Grid highlight to match current Spectrum selector color
+      const rgb = hslToRgb(hslState);
+      const hex = rgbToHex(rgb);
+      setSwatchSelectedHex(hex);
+    }
+  };
 
   // Add a hex color to recent colors list
   const addRecentColor = (hex) => {
@@ -337,7 +356,11 @@ export default function ColorConverter() {
       const result = await eyeDropper.open();
       const hex = result.sRGBHex;
       setInput(hex);
+      setSwatchSelectedHex(hex);
       addRecentColor(hex);
+      if (isSynced) {
+        setHslState(rgbToHsl(parseHexColor(hex)));
+      }
     } catch (err) {
       console.log("EyeDropper cancelled or failed", err);
     }
@@ -363,6 +386,10 @@ export default function ColorConverter() {
     const rgb = hslToRgb(nextHsl);
     const hex = rgbToHex(rgb);
     setInput(hex);
+
+    if (isSynced) {
+      setSwatchSelectedHex(hex);
+    }
   };
 
   const handleSvMouseDown = (e) => {
@@ -429,6 +456,10 @@ export default function ColorConverter() {
     const rgb = hslToRgb(nextHsl);
     const hex = rgbToHex(rgb);
     setInput(hex);
+
+    if (isSynced) {
+      setSwatchSelectedHex(hex);
+    }
   };
 
   const handleLMouseDown = (e) => {
@@ -503,10 +534,19 @@ export default function ColorConverter() {
     }
   };
 
-  // Swatch click helper
+  // Swatch click helper (Updates Code Converter input and highlights cell)
   const handleSwatchClick = (hex) => {
     setInput(hex);
+    setSwatchSelectedHex(hex);
     addRecentColor(hex);
+
+    // Sync HSL Spectrum selector coordinates if sync is active
+    if (isSynced) {
+      const rgb = parseHexColor(hex);
+      if (rgb) {
+        setHslState(rgbToHsl(rgb));
+      }
+    }
   };
 
   // Preset customization controls
@@ -597,7 +637,7 @@ export default function ColorConverter() {
                 type="text"
                 placeholder="#4F46E5 or rgb(79, 70, 229) or hsl(244, 76%, 59%)"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleUserTextChange}
                 onKeyDown={handleInputKeyDown}
                 onBlur={handleInputBlur}
               />
@@ -642,12 +682,22 @@ export default function ColorConverter() {
 
         {/* Panel 2: Visual Swatches Grid Selector */}
         <div className="color-picker-section">
-          <h3>HSL Swatches</h3>
+          <div className="section-header-row">
+            <h3>HSL Swatches</h3>
+            <button
+              type="button"
+              className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
+              onClick={handleSyncToggle}
+              title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
+            >
+              {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
+            </button>
+          </div>
           
           <div className="swatches-block-grid">
             {SWATCH_GRID.map((row, rIdx) => 
               row.map((hex, cIdx) => {
-                const isSelected = hexVal.toUpperCase() === hex.toUpperCase();
+                const isSelected = swatchSelectedHex.toUpperCase() === hex.toUpperCase();
                 return (
                   <button
                     key={`${rIdx}-${cIdx}`}

@@ -3210,6 +3210,58 @@ html[data-theme="dark"] .swatch-block.selected {
   box-shadow: 0 0 0 1.5px #1f2937, 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Sync Mode Toggle Button */
+.sync-toggle-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sync-toggle-btn::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1; /* Default gray indicator */
+  transition: background-color 0.2s ease;
+}
+
+.sync-toggle-btn.synced {
+  color: var(--text-main);
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.sync-toggle-btn.synced::before {
+  background: #10b981; /* Green active indicator */
+  box-shadow: 0 0 4px #10b981;
+}
+
+.sync-toggle-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--border-hover);
+  color: var(--text-main);
+}
+
+.sync-toggle-btn.synced:hover {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+
 
 
 

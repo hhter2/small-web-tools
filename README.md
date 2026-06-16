@@ -94,5 +94,8 @@ npm run preview
 ## Recent Bug Fixes
 
 - **ImgMeta** Dropzone Mobile Loop Fix**: Fixed a bug where tapping the "Browse File" label (or the file input element itself) inside the ImgMeta dropzone on mobile devices triggered a recursive click event loop, preventing files from being analyzed. Tapping/clicking now cleanly triggers the file chooser exactly once.
+- **DNA/RNA Visual Direction representation**: Fixed a bug where choosing `3' → 5'` input direction did not orient and render the input strand at the bottom correctly with matching arrows and labels. The bottom strand now correctly acts as the input strand, pointing left-to-right (`3' → 5'`) and rendering with 100% opacity, while the top strand is faded as the target strand (`5' → 3'`). Renamed all references to the `3' → 5'` strand to **Anti-sense Strand** and `5' → 3'` to **Sense Strand** in both the legend and SVG indicators.
+
+
 
 

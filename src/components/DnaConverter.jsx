@@ -213,21 +213,40 @@ export default function DnaConverter() {
     const svgWidth = padding * 2 + len * baseWidth;
     const svgHeight = 220;
 
-    const topStrand = (direction === '5-3') ? cleaned.split('') : reverseString(cleaned).split('');
-    const bottomStrand = topStrand.map(b => getComplement(b, isRna));
+    const isTopSense = (direction === '5-3');
+    const topOpacity = isTopSense ? 1.0 : 0.3;
+    const bottomOpacity = isTopSense ? 0.3 : 1.0;
+
+    const topStrand = isTopSense ? cleaned.split('') : cleaned.split('').map(b => getComplement(b, isRna));
+    const bottomStrand = isTopSense ? cleaned.split('').map(b => getComplement(b, isRna)) : cleaned.split('');
 
     return (
       <div className="dna-visual-container">
         <div className="dna-visual-wrapper">
           <div className="dna-visual-legend">
-            <div className="legend-item">
-              <span className="legend-line legend-line--red"></span>
-              <span>Sense Strand (Input strand, 100% opacity)</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-line legend-line--blue" style={{ opacity: 0.3 }}></span>
-              <span>Opposite Strand (Target, 30% opacity / 70% transparent)</span>
-            </div>
+            {isTopSense ? (
+              <>
+                <div className="legend-item">
+                  <span className="legend-line legend-line--red"></span>
+                  <span>Sense Strand (Input: 5' → 3')</span>
+                </div>
+                <div className="legend-item">
+                  <span className="legend-line legend-line--blue" style={{ opacity: 0.3 }}></span>
+                  <span>Anti-sense Strand (Target: 3' → 5')</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="legend-item">
+                  <span className="legend-line legend-line--blue"></span>
+                  <span>Anti-sense Strand (Input: 3' → 5')</span>
+                </div>
+                <div className="legend-item">
+                  <span className="legend-line legend-line--red" style={{ opacity: 0.3 }}></span>
+                  <span>Sense Strand (Target: 5' → 3')</span>
+                </div>
+              </>
+            )}
           </div>
           
           <div className="dna-visual-scroll-container">
@@ -239,6 +258,9 @@ export default function DnaConverter() {
                 <marker id="arrow-left-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                   <path d="M 10 0 L 0 5 L 10 10 z" fill="#3b82f6" />
                 </marker>
+                <marker id="arrow-right-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                </marker>
               </defs>
 
               {/* Backbones */}
@@ -248,6 +270,7 @@ export default function DnaConverter() {
                 width={len * baseWidth} 
                 height={10} 
                 fill="#ef4444" 
+                opacity={topOpacity}
                 rx={5} 
               />
               <rect 
@@ -256,22 +279,22 @@ export default function DnaConverter() {
                 width={len * baseWidth} 
                 height={10} 
                 fill="#3b82f6" 
-                opacity={0.3}
+                opacity={bottomOpacity}
                 rx={5} 
               />
 
               {/* Labels (Top is always 5' left, 3' right; Bottom is always 3' left, 5' right) */}
-              <text x={padding - 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+              <text x={padding - 20} y={43} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
                 5'
               </text>
-              <text x={padding + len * baseWidth + 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+              <text x={padding + len * baseWidth + 20} y={43} textAnchor="middle" fill="var(--text-main)" opacity={topOpacity} fontSize="14" fontWeight="bold">
                 3'
               </text>
 
-              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={0.3} fontSize="14" fontWeight="bold">
+              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
                 3'
               </text>
-              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={0.3} fontSize="14" fontWeight="bold">
+              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={bottomOpacity} fontSize="14" fontWeight="bold">
                 5'
               </text>
 
@@ -313,20 +336,20 @@ export default function DnaConverter() {
 
                 return (
                   <g key={i}>
-                    <path d={topPath} fill={bColor} />
-                    <text x={x} y={68} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">
+                    <path d={topPath} fill={bColor} opacity={topOpacity} />
+                    <text x={x} y={68} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={topOpacity}>
                       {base}
                     </text>
 
-                    <path d={bottomPath} fill={bottomColor} opacity={0.3} />
-                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={0.3}>
+                    <path d={bottomPath} fill={bottomColor} opacity={bottomOpacity} />
+                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={bottomOpacity}>
                       {bottomBase}
                     </text>
                   </g>
                 );
               })}
 
-              {/* Sense Direction Indicator (above top strand) */}
+              {/* Sense/Target Direction Indicator (above top strand, always 5' -> 3') */}
               <g>
                 <line 
                   x1={padding} 
@@ -335,6 +358,7 @@ export default function DnaConverter() {
                   y2={15} 
                   stroke="#ef4444" 
                   strokeWidth="2" 
+                  opacity={topOpacity}
                   markerEnd="url(#arrow-right-red)" 
                 />
                 <text 
@@ -342,35 +366,36 @@ export default function DnaConverter() {
                   y={10} 
                   textAnchor="middle" 
                   fill="#ef4444" 
+                  opacity={topOpacity}
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  Sense Strand Direction (5' → 3')
+                  {isTopSense ? "Sense Strand Direction (5' → 3')" : "Sense Strand (Target) Direction (5' → 3')"}
                 </text>
               </g>
 
-              {/* Target Direction Indicator (below bottom strand) */}
+              {/* Target/Sense Direction Indicator (below bottom strand) */}
               <g>
                 <line 
-                  x1={padding + len * baseWidth} 
+                  x1={isTopSense ? padding + len * baseWidth : padding} 
                   y1={185} 
-                  x2={padding} 
+                  x2={isTopSense ? padding : padding + len * baseWidth} 
                   y2={185} 
                   stroke="#3b82f6" 
                   strokeWidth="2" 
-                  opacity={0.3}
-                  markerEnd="url(#arrow-left-blue)" 
+                  opacity={bottomOpacity}
+                  markerEnd={isTopSense ? "url(#arrow-left-blue)" : "url(#arrow-right-blue)"} 
                 />
                 <text 
                   x={padding + (len * baseWidth) / 2} 
                   y={205} 
                   textAnchor="middle" 
                   fill="#3b82f6" 
-                  opacity={0.3} 
+                  opacity={bottomOpacity} 
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  Target Strand Direction (5' → 3')
+                  {isTopSense ? "Anti-sense Strand (Target) Direction (5' → 3')" : "Anti-sense Strand Direction (3' → 5')"}
                 </text>
               </g>
             </svg>

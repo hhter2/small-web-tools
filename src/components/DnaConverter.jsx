@@ -20,6 +20,15 @@ const rnaComplementMap = {
   'b': 'v', 'v': 'b', 'd': 'h', 'h': 'd', 'n': 'n'
 };
 
+const baseColors = {
+  'A': '#10b981', // green
+  'T': '#ef4444', // red
+  'U': '#ec4899', // purple/pink
+  'C': '#f59e0b', // orange
+  'G': '#3b82f6', // blue
+  'N': '#9ca3af'  // grey
+};
+
 const getComplement = (sequence, isRna) => {
   const map = isRna ? rnaComplementMap : dnaComplementMap;
   return sequence.split("").map(char => map[char] || char).join("");
@@ -34,6 +43,7 @@ export default function DnaConverter() {
   const [seqType, setSeqType] = useState('auto');
   const [direction, setDirection] = useState('5-3');
   const [copiedBtn, setCopiedBtn] = useState(null);
+  const [viewMode, setViewMode] = useState('text'); // 'text' or 'figure'
 
   // States to keep track of warning colors & messages
   const [statusText, setStatusText] = useState('Enter a sequence to convert.');
@@ -159,6 +169,219 @@ export default function DnaConverter() {
     });
   }, [input, seqType, direction]);
 
+  const renderVisualDna = () => {
+    const cleaned = input
+      .replace(/5['’](-)?/gi, '')
+      .replace(/3['’](-)?/gi, '')
+      .replace(/[-'’\s\d]/g, '')
+      .toUpperCase();
+
+    if (!cleaned) {
+      return (
+        <div className="dna-visual-placeholder">
+          Enter a valid sequence to see the visual representation.
+        </div>
+      );
+    }
+
+    if (/[^ACGUTN]/.test(cleaned)) {
+      return (
+        <div className="dna-visual-placeholder error">
+          Error: Only A, T, C, G, U, and N characters are allowed.
+        </div>
+      );
+    }
+
+    let isRna = false;
+    if (seqType === "auto") {
+      const hasU = cleaned.includes("U");
+      const hasT = cleaned.includes("T");
+      if (hasU && hasT) {
+        isRna = false;
+      } else if (hasU) {
+        isRna = true;
+      } else {
+        isRna = false;
+      }
+    } else {
+      isRna = seqType === "rna";
+    }
+
+    const len = cleaned.length;
+    const baseWidth = 50;
+    const padding = 50;
+    const svgWidth = padding * 2 + len * baseWidth;
+    const svgHeight = 220;
+
+    const topStrand = cleaned.split('');
+    const bottomStrand = topStrand.map(b => getComplement(b, isRna));
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const arrowColor = isDark ? "#fbbf24" : "#d97706";
+
+    return (
+      <div className="dna-visual-container">
+        <div className="dna-visual-wrapper">
+          <div className="dna-visual-legend">
+            <div className="legend-item">
+              <span className="legend-line legend-line--red"></span>
+              <span>Sense Strand (Input strand, 100% opacity)</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-line legend-line--blue"></span>
+              <span>Opposite Strand (Target, 60% opacity)</span>
+            </div>
+          </div>
+          
+          <div className="dna-visual-scroll-container">
+            <svg width={svgWidth} height={svgHeight} className="dna-svg">
+              <defs>
+                <marker id="arrow-left" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 10 0 L 0 5 L 10 10 z" fill={arrowColor} />
+                </marker>
+                <marker id="arrow-right" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill={arrowColor} />
+                </marker>
+              </defs>
+
+              {/* Backbones */}
+              <rect 
+                x={padding} 
+                y={35} 
+                width={len * baseWidth} 
+                height={10} 
+                fill="#ef4444" 
+                rx={5} 
+              />
+              <rect 
+                x={padding} 
+                y={135} 
+                width={len * baseWidth} 
+                height={10} 
+                fill="#3b82f6" 
+                opacity={0.6}
+                rx={5} 
+              />
+
+              {/* Labels */}
+              <text x={padding - 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+                {direction === '5-3' ? "5'" : "3'"}
+              </text>
+              <text x={padding + len * baseWidth + 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+                {direction === '5-3' ? "3'" : "5'"}
+              </text>
+
+              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+                {direction === '5-3' ? "3'" : "5'"}
+              </text>
+              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
+                {direction === '5-3' ? "5'" : "3'"}
+              </text>
+
+              {/* Render Nucleotides */}
+              {topStrand.map((base, i) => {
+                const x = padding + i * baseWidth + baseWidth / 2;
+                const bColor = baseColors[base] || '#9ca3af';
+
+                // Top base path (extending down from 45)
+                let topPath = '';
+                if (base === 'A') {
+                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 78 L ${x} 93 L ${x-15} 78 Z`;
+                } else if (base === 'T' || base === 'U') {
+                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 93 L ${x} 78 L ${x-15} 93 Z`;
+                } else if (base === 'C') {
+                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 78 Q ${x} 93 ${x-15} 78 Z`;
+                } else if (base === 'G') {
+                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 93 Q ${x} 78 ${x-15} 93 Z`;
+                } else {
+                  topPath = `M ${x-15} 45 L ${x+15} 45 L ${x+15} 85 L ${x-15} 85 Z`;
+                }
+
+                const bottomBase = bottomStrand[i];
+                const bottomColor = baseColors[bottomBase] || '#9ca3af';
+
+                // Bottom base path (extending up from 135)
+                let bottomPath = '';
+                if (bottomBase === 'A') {
+                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 102 L ${x} 87 L ${x-15} 102 Z`;
+                } else if (bottomBase === 'T' || bottomBase === 'U') {
+                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 87 L ${x} 102 L ${x-15} 87 Z`;
+                } else if (bottomBase === 'C') {
+                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 102 Q ${x} 87 ${x-15} 102 Z`;
+                } else if (bottomBase === 'G') {
+                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 87 Q ${x} 102 ${x-15} 87 Z`;
+                } else {
+                  bottomPath = `M ${x-15} 135 L ${x+15} 135 L ${x+15} 95 L ${x-15} 95 Z`;
+                }
+
+                return (
+                  <g key={i}>
+                    <path d={topPath} fill={bColor} />
+                    <text x={x} y={68} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">
+                      {base}
+                    </text>
+
+                    <path d={bottomPath} fill={bottomColor} opacity={0.6} />
+                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={0.6}>
+                      {bottomBase}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Direction Arrow */}
+              {direction === '5-3' ? (
+                <g>
+                  <line 
+                    x1={padding + len * baseWidth} 
+                    y1={185} 
+                    x2={padding} 
+                    y2={185} 
+                    stroke={arrowColor} 
+                    strokeWidth="2.5" 
+                    markerEnd="url(#arrow-left)" 
+                  />
+                  <text 
+                    x={padding + (len * baseWidth) / 2} 
+                    y={205} 
+                    textAnchor="middle" 
+                    fill={arrowColor} 
+                    fontSize="12" 
+                    fontWeight="600"
+                  >
+                    Direction of the target (5' → 3')
+                  </text>
+                </g>
+              ) : (
+                <g>
+                  <line 
+                    x1={padding} 
+                    y1={185} 
+                    x2={padding + len * baseWidth} 
+                    y2={185} 
+                    stroke={arrowColor} 
+                    strokeWidth="2.5" 
+                    markerEnd="url(#arrow-right)" 
+                  />
+                  <text 
+                    x={padding + (len * baseWidth) / 2} 
+                    y={205} 
+                    textAnchor="middle" 
+                    fill={arrowColor} 
+                    fontSize="12" 
+                    fontWeight="600"
+                  >
+                    Direction of the target (5' → 3')
+                  </text>
+                </g>
+              )}
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <article id="tool-dna" className="tool-card tool-card--wide active">
       <h2>DNA/RNA Direction Transfer</h2>
@@ -199,45 +422,66 @@ export default function DnaConverter() {
           onChange={(e) => setInput(e.target.value)}
         />
       </div>
-      
-      <div className="grid-outputs">
-        <div className="form-group">
-          <div className="label-row-with-copy">
-            <label htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
-            <button
-              className={`copy-btn-inline ${copiedBtn === 'opposite' ? 'copied' : ''}`}
-              onClick={() => handleCopy(outputs.opposite, 'opposite')}
-            >
-              {copiedBtn === 'opposite' ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <input id="dna-output-opposite" type="text" readOnly value={outputs.opposite} />
-        </div>
-        <div className="form-group">
-          <div className="label-row-with-copy">
-            <label htmlFor="dna-output-revcomp">Reverse Complement (Standard 5' → 3')</label>
-            <button
-              className={`copy-btn-inline ${copiedBtn === 'revcomp' ? 'copied' : ''}`}
-              onClick={() => handleCopy(outputs.revcomp, 'revcomp')}
-            >
-              {copiedBtn === 'revcomp' ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <input id="dna-output-revcomp" type="text" readOnly value={outputs.revcomp} />
-        </div>
-        <div className="form-group full-width">
-          <div className="label-row-with-copy">
-            <label htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
-            <button
-              className={`copy-btn-inline ${copiedBtn === 'reverse' ? 'copied' : ''}`}
-              onClick={() => handleCopy(outputs.reverse, 'reverse')}
-            >
-              {copiedBtn === 'reverse' ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <input id="dna-output-reverse" type="text" readOnly value={outputs.reverse} />
-        </div>
+
+      <div className="view-mode-toggle-container">
+        <button
+          type="button"
+          className={`view-mode-btn ${viewMode === 'text' ? 'active' : ''}`}
+          onClick={() => setViewMode('text')}
+        >
+          Text Mode
+        </button>
+        <button
+          type="button"
+          className={`view-mode-btn ${viewMode === 'figure' ? 'active' : ''}`}
+          onClick={() => setViewMode('figure')}
+        >
+          Figure Mode
+        </button>
       </div>
+
+      {viewMode === 'text' ? (
+        <div className="grid-outputs">
+          <div className="form-group">
+            <div className="label-row-with-copy">
+              <label htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
+              <button
+                className={`copy-btn-inline ${copiedBtn === 'opposite' ? 'copied' : ''}`}
+                onClick={() => handleCopy(outputs.opposite, 'opposite')}
+              >
+                {copiedBtn === 'opposite' ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <input id="dna-output-opposite" type="text" readOnly value={outputs.opposite} />
+          </div>
+          <div className="form-group">
+            <div className="label-row-with-copy">
+              <label htmlFor="dna-output-revcomp">Reverse Complement (Standard 5' → 3')</label>
+              <button
+                className={`copy-btn-inline ${copiedBtn === 'revcomp' ? 'copied' : ''}`}
+                onClick={() => handleCopy(outputs.revcomp, 'revcomp')}
+              >
+                {copiedBtn === 'revcomp' ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <input id="dna-output-revcomp" type="text" readOnly value={outputs.revcomp} />
+          </div>
+          <div className="form-group full-width">
+            <div className="label-row-with-copy">
+              <label htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
+              <button
+                className={`copy-btn-inline ${copiedBtn === 'reverse' ? 'copied' : ''}`}
+                onClick={() => handleCopy(outputs.reverse, 'reverse')}
+              >
+                {copiedBtn === 'reverse' ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <input id="dna-output-reverse" type="text" readOnly value={outputs.reverse} />
+          </div>
+        </div>
+      ) : (
+        renderVisualDna()
+      )}
       <p className="small status-msg" id="dna-status" style={statusStyle}>{statusText}</p>
     </article>
   );

@@ -3387,6 +3387,137 @@ html[data-theme="dark"] .swatch-block.selected {
   background: rgba(16, 185, 129, 0.1);
 }
 
+/* DNA Visual Mode Styles */
+.view-mode-toggle-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: var(--bg-app);
+  padding: 4px;
+  border-radius: 10px;
+  align-self: flex-start;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.view-mode-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.view-mode-btn:hover {
+  color: var(--text-main);
+}
+
+.view-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="dark"] .view-mode-btn.active {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dna-visual-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.dna-visual-placeholder {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.dna-visual-placeholder.error {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.dna-visual-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-shadow: var(--shadow-card);
+}
+
+.dna-visual-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.legend-line--red {
+  background: #ef4444;
+}
+
+.legend-line--blue {
+  background: #3b82f6;
+  opacity: 0.6;
+}
+
+.dna-visual-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 12px;
+}
+
+.dna-visual-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+.dna-visual-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dna-visual-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.dna-svg {
+  display: block;
+}
+
+
 
 
 

@@ -154,6 +154,40 @@ function formatHsl({ h, s, l }) {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+// HSL Swatches Block Grid Generation (12 columns x 10 rows)
+const SWATCH_GRID = (() => {
+  const grid = [];
+  const rowsCount = 10;
+  
+  // Grayscale values for Column 1
+  const grayscaleL = [100, 89, 78, 67, 56, 45, 34, 23, 12, 0];
+  
+  // 11 Hue columns spaced across spectrum
+  const hues = [0, 25, 45, 80, 140, 180, 205, 230, 265, 300, 330];
+  // Lightness levels for Hues
+  const hueL = [95, 85, 75, 65, 55, 45, 35, 25, 15, 8];
+
+  for (let r = 0; r < rowsCount; r++) {
+    const row = [];
+    
+    // Column 1: Grayscale (S = 0%)
+    const grayRgb = hslToRgb({ h: 0, s: 0, l: grayscaleL[r] });
+    const grayHex = rgbToHex(grayRgb);
+    row.push(grayHex);
+
+    // Columns 2-12: Hues (S = 100%)
+    for (let c = 0; c < hues.length; c++) {
+      const hueRgb = hslToRgb({ h: hues[c], s: 100, l: hueL[r] });
+      const hueHex = rgbToHex(hueRgb);
+      row.push(hueHex);
+    }
+    
+    grid.push(row);
+  }
+  
+  return grid;
+})();
+
 // Cookie Helper Functions
 const saveCookie = (name, value, days = 365) => {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -543,7 +577,6 @@ export default function ColorConverter() {
       }
     };
     fileReader.readAsText(file);
-    // Reset file input value so same file can be imported again if edited
     e.target.value = "";
   };
 
@@ -553,7 +586,7 @@ export default function ColorConverter() {
       
       <div className="color-tool-layout">
         
-        {/* Left Column: Code Converter Inputs/Outputs */}
+        {/* Panel 1: Code Converter Inputs/Outputs */}
         <div className="color-converter-section">
           <h3>Code Converter</h3>
           <div className="form-group">
@@ -607,54 +640,26 @@ export default function ColorConverter() {
           <p className="small status-msg" id="color-status">{statusText}</p>
         </div>
 
-        {/* Right Column: PowerPoint Customize Page HSL Selector */}
+        {/* Panel 2: Visual Swatches Grid Selector */}
         <div className="color-picker-section">
-          <h3>Visual HSL Selector</h3>
+          <h3>HSL Swatches</h3>
           
-          <div className="hsl-picker-container">
-            {/* 2D Hue-Saturation board */}
-            <div
-              ref={svRef}
-              className="hsl-picker-board"
-              onMouseDown={handleSvMouseDown}
-              onTouchStart={handleSvTouchStart}
-            >
-              {/* Rainbow horizontal overlay + gray vertical overlay */}
-              <div className="hsl-picker-board-rainbow" />
-              <div className="hsl-picker-board-saturation" />
-              
-              {/* Slider marker indicator */}
-              <div
-                className="hsl-marker"
-                style={{
-                  left: `${(hslState.h / 360) * 100}%`,
-                  top: `${100 - hslState.s}%`,
-                  backgroundColor: `hsl(${hslState.h}, ${hslState.s}%, ${hslState.l}%)`
-                }}
-              />
-            </div>
-
-            {/* Vertical Lightness slider */}
-            <div className="lightness-slider-wrapper">
-              <span className="slider-label">Lightness</span>
-              <div
-                ref={lRef}
-                className="lightness-slider"
-                style={{
-                  background: `linear-gradient(to top, #000 0%, hsl(${hslState.h}, ${hslState.s}%, 50%) 50%, #fff 100%)`
-                }}
-                onMouseDown={handleLMouseDown}
-                onTouchStart={handleLTouchStart}
-              >
-                {/* Vertical slider handle indicator */}
-                <div
-                  className="lightness-handle"
-                  style={{
-                    top: `${100 - hslState.l}%`
-                  }}
-                />
-              </div>
-            </div>
+          <div className="swatches-block-grid">
+            {SWATCH_GRID.map((row, rIdx) => 
+              row.map((hex, cIdx) => {
+                const isSelected = hexVal.toUpperCase() === hex.toUpperCase();
+                return (
+                  <button
+                    key={`${rIdx}-${cIdx}`}
+                    type="button"
+                    className={`swatch-block ${isSelected ? 'selected' : ''}`}
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                    onClick={() => handleSwatchClick(hex)}
+                  />
+                );
+              })
+            )}
           </div>
 
           {/* Standard Palette section */}
@@ -749,6 +754,57 @@ export default function ColorConverter() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Panel 3: Visual HSL Spectrum Selector */}
+        <div className="color-picker-section">
+          <h3>HSL Spectrum</h3>
+          
+          <div className="hsl-picker-container">
+            {/* 2D Hue-Saturation board */}
+            <div
+              ref={svRef}
+              className="hsl-picker-board"
+              onMouseDown={handleSvMouseDown}
+              onTouchStart={handleSvTouchStart}
+            >
+              {/* Rainbow horizontal overlay + gray vertical overlay */}
+              <div className="hsl-picker-board-rainbow" />
+              <div className="hsl-picker-board-saturation" />
+              
+              {/* Slider marker indicator */}
+              <div
+                className="hsl-marker"
+                style={{
+                  left: `${(hslState.h / 360) * 100}%`,
+                  top: `${100 - hslState.s}%`,
+                  backgroundColor: `hsl(${hslState.h}, ${hslState.s}%, ${hslState.l}%)`
+                }}
+              />
+            </div>
+
+            {/* Vertical Lightness slider */}
+            <div className="lightness-slider-wrapper">
+              <span className="slider-label">Lightness</span>
+              <div
+                ref={lRef}
+                className="lightness-slider"
+                style={{
+                  background: `linear-gradient(to top, #000 0%, hsl(${hslState.h}, ${hslState.s}%, 50%) 50%, #fff 100%)`
+                }}
+                onMouseDown={handleLMouseDown}
+                onTouchStart={handleLTouchStart}
+              >
+                {/* Vertical slider handle indicator */}
+                <div
+                  className="lightness-handle"
+                  style={{
+                    top: `${100 - hslState.l}%`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Recent Colors section */}
           {recentColors.length > 0 && (
@@ -777,7 +833,6 @@ export default function ColorConverter() {
               </div>
             </div>
           )}
-
         </div>
 
       </div>

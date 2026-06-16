@@ -34,7 +34,7 @@ This project is built using **React** and **Vite** for a fast local development 
 1. **Slashes Converter**: Normalize Windows file paths to web/URL-friendly paths.
 2. **Word & Character Counter**: Real-time counter of text words, characters, and spaces. Fully optimized for multilingual text, counting CJK (Chinese, Japanese, Korean) characters individually as words (matching Microsoft Word counting rules).
 3. **Date Counter**: Calculate the day difference between a start and end date.
-4. **Currency Counter**: Add up a list of decimal currency amounts (one per line) automatically formatted to selected locale currencies.
+4. **Currency Converter & Counter**: Convert global currencies (e.g. TWD to USD) for single amounts, or convert and sum a list of decimal currency amounts (one per line) in real-time.
 5. **Color Code Converter**: Interconvert between HEX, RGB, and HSL colors with interactive swatch previews, 12 standard color presets, recent color memory, and a PowerPoint-style HSL visual customize panel.
 6. **ASCII Converter**: Encode text to ASCII code points or decode decimal codes back to text.
 7. **Unicode Converter**: Translate characters to Unicode hex code points (e.g., `U+4F60`) and vice versa.

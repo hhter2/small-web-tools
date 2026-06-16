@@ -213,11 +213,8 @@ export default function DnaConverter() {
     const svgWidth = padding * 2 + len * baseWidth;
     const svgHeight = 220;
 
-    const topStrand = cleaned.split('');
+    const topStrand = (direction === '5-3') ? cleaned.split('') : reverseString(cleaned).split('');
     const bottomStrand = topStrand.map(b => getComplement(b, isRna));
-
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const arrowColor = isDark ? "#fbbf24" : "#d97706";
 
     return (
       <div className="dna-visual-container">
@@ -228,19 +225,19 @@ export default function DnaConverter() {
               <span>Sense Strand (Input strand, 100% opacity)</span>
             </div>
             <div className="legend-item">
-              <span className="legend-line legend-line--blue"></span>
-              <span>Opposite Strand (Target, 60% opacity)</span>
+              <span className="legend-line legend-line--blue" style={{ opacity: 0.3 }}></span>
+              <span>Opposite Strand (Target, 30% opacity / 70% transparent)</span>
             </div>
           </div>
           
           <div className="dna-visual-scroll-container">
             <svg width={svgWidth} height={svgHeight} className="dna-svg">
               <defs>
-                <marker id="arrow-left" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 10 0 L 0 5 L 10 10 z" fill={arrowColor} />
+                <marker id="arrow-right-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
                 </marker>
-                <marker id="arrow-right" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={arrowColor} />
+                <marker id="arrow-left-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 10 0 L 0 5 L 10 10 z" fill="#3b82f6" />
                 </marker>
               </defs>
 
@@ -259,23 +256,23 @@ export default function DnaConverter() {
                 width={len * baseWidth} 
                 height={10} 
                 fill="#3b82f6" 
-                opacity={0.6}
+                opacity={0.3}
                 rx={5} 
               />
 
-              {/* Labels */}
+              {/* Labels (Top is always 5' left, 3' right; Bottom is always 3' left, 5' right) */}
               <text x={padding - 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
-                {direction === '5-3' ? "5'" : "3'"}
+                5'
               </text>
               <text x={padding + len * baseWidth + 20} y={43} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
-                {direction === '5-3' ? "3'" : "5'"}
+                3'
               </text>
 
-              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
-                {direction === '5-3' ? "3'" : "5'"}
+              <text x={padding - 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={0.3} fontSize="14" fontWeight="bold">
+                3'
               </text>
-              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" fontSize="14" fontWeight="bold">
-                {direction === '5-3' ? "5'" : "3'"}
+              <text x={padding + len * baseWidth + 20} y={143} textAnchor="middle" fill="var(--text-main)" opacity={0.3} fontSize="14" fontWeight="bold">
+                5'
               </text>
 
               {/* Render Nucleotides */}
@@ -321,60 +318,61 @@ export default function DnaConverter() {
                       {base}
                     </text>
 
-                    <path d={bottomPath} fill={bottomColor} opacity={0.6} />
-                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={0.6}>
+                    <path d={bottomPath} fill={bottomColor} opacity={0.3} />
+                    <text x={x} y={116} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold" opacity={0.3}>
                       {bottomBase}
                     </text>
                   </g>
                 );
               })}
 
-              {/* Direction Arrow */}
-              {direction === '5-3' ? (
-                <g>
-                  <line 
-                    x1={padding + len * baseWidth} 
-                    y1={185} 
-                    x2={padding} 
-                    y2={185} 
-                    stroke={arrowColor} 
-                    strokeWidth="2.5" 
-                    markerEnd="url(#arrow-left)" 
-                  />
-                  <text 
-                    x={padding + (len * baseWidth) / 2} 
-                    y={205} 
-                    textAnchor="middle" 
-                    fill={arrowColor} 
-                    fontSize="12" 
-                    fontWeight="600"
-                  >
-                    Direction of the target (5' → 3')
-                  </text>
-                </g>
-              ) : (
-                <g>
-                  <line 
-                    x1={padding} 
-                    y1={185} 
-                    x2={padding + len * baseWidth} 
-                    y2={185} 
-                    stroke={arrowColor} 
-                    strokeWidth="2.5" 
-                    markerEnd="url(#arrow-right)" 
-                  />
-                  <text 
-                    x={padding + (len * baseWidth) / 2} 
-                    y={205} 
-                    textAnchor="middle" 
-                    fill={arrowColor} 
-                    fontSize="12" 
-                    fontWeight="600"
-                  >
-                    Direction of the target (5' → 3')
-                  </text>
-                </g>
-              )}
+              {/* Sense Direction Indicator (above top strand) */}
+              <g>
+                <line 
+                  x1={padding} 
+                  y1={15} 
+                  x2={padding + len * baseWidth} 
+                  y2={15} 
+                  stroke="#ef4444" 
+                  strokeWidth="2" 
+                  markerEnd="url(#arrow-right-red)" 
+                />
+                <text 
+                  x={padding + (len * baseWidth) / 2} 
+                  y={10} 
+                  textAnchor="middle" 
+                  fill="#ef4444" 
+                  fontSize="10" 
+                  fontWeight="600"
+                >
+                  Sense Strand Direction (5' → 3')
+                </text>
+              </g>
+
+              {/* Target Direction Indicator (below bottom strand) */}
+              <g>
+                <line 
+                  x1={padding + len * baseWidth} 
+                  y1={185} 
+                  x2={padding} 
+                  y2={185} 
+                  stroke="#3b82f6" 
+                  strokeWidth="2" 
+                  opacity={0.3}
+                  markerEnd="url(#arrow-left-blue)" 
+                />
+                <text 
+                  x={padding + (len * baseWidth) / 2} 
+                  y={205} 
+                  textAnchor="middle" 
+                  fill="#3b82f6" 
+                  opacity={0.3} 
+                  fontSize="10" 
+                  fontWeight="600"
+                >
+                  Target Strand Direction (5' → 3')
+                </text>
+              </g>
             </svg>
           </div>
         </div>

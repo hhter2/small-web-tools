@@ -250,7 +250,7 @@ const FISCHER_HEIGHTS = {
   Ile: 155,
   Phe: 155,
   Tyr: 170,
-  Trp: 155,
+  Trp: 175,
   Glu: 155,
   Met: 180,
   Gln: 170,

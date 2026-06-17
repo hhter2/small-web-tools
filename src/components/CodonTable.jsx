@@ -479,11 +479,6 @@ export default function CodonTable() {
               </div>
             </div>
 
-            {/* Right axis: "Third Base" vertical label */}
-            <div className="ct-axis-label ct-axis-label--right" aria-label="Third base in codon">
-              <span>Third Base (3')</span>
-            </div>
-
           </div>
         </div>
 

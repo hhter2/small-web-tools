@@ -312,7 +312,7 @@ function renderSideChain(aa) {
     case 'Pro':
       return (
         <>
-          <path d="M 80,45 L 92,83 L 60,107 L 28,83 L 40,45" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M 83,55 L 92,83 L 60,107 L 28,83 L 37,55" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
           <rect x="83" y="74" width="18" height="18" fill="var(--bg-card)" />
           <rect x="51" y="98" width="18" height="18" fill="var(--bg-card)" />
           <rect x="19" y="74" width="18" height="18" fill="var(--bg-card)" />

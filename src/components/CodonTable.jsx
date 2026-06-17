@@ -509,13 +509,15 @@ function FischerProjection({ aa }) {
   const details = AMINO_ACID_DETAILS[aa];
   if (!details) return null;
 
-  const height = FISCHER_HEIGHTS[aa] || 135;
+  const baseHeight = FISCHER_HEIGHTS[aa] || 135;
+  const width = Math.round(160 * 1.2);
+  const height = Math.round(baseHeight * 1.2);
 
   return (
     <div className="ct-fischer-container">
       <span className="ct-fischer-title">Fischer Projection (L-Form)</span>
       <div className="ct-fischer-layout">
-        <svg className="ct-fischer-svg" width="160" height={height} viewBox={`0 0 160 ${height}`}>
+        <svg className="ct-fischer-svg" width={width} height={height} viewBox={`0 0 160 ${baseHeight}`}>
           {/* Main Backbone Bonds */}
           <line x1="50" y1="45" x2="70" y2="45" className="ct-fisc-main-bond" />
           <line x1="90" y1="45" x2="110" y2="45" className="ct-fisc-main-bond" />

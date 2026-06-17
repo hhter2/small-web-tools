@@ -4925,19 +4925,19 @@ html[data-theme="dark"] .ct-panel--stop  { background: linear-gradient(135deg, r
 
 .ct-fisc-text {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 1.08rem;
   fill: var(--text-muted);
 }
 
 .ct-fisc-main {
   font-weight: 700;
   fill: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 1.14rem;
 }
 
 .ct-fisc-side {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   font-weight: 700;
   fill: #0284c7;
 }
@@ -4948,7 +4948,7 @@ html[data-theme="dark"] .ct-fisc-side {
 
 .ct-fisc-side-bond {
   stroke: #0284c7;
-  stroke-width: 2px;
+  stroke-width: 2.4px;
   stroke-linecap: round;
 }
 
@@ -4958,14 +4958,14 @@ html[data-theme="dark"] .ct-fisc-side-bond {
 
 .ct-fisc-main-bond {
   stroke: var(--text-muted);
-  stroke-width: 2px;
+  stroke-width: 2.4px;
   stroke-linecap: round;
   opacity: 0.85;
 }
 
 .ct-fisc-c {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.95rem;
+  font-size: 1.14rem;
   font-weight: 700;
   fill: var(--accent);
 }

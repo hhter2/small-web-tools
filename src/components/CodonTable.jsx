@@ -577,27 +577,17 @@ function InfoPanel({ codon, onClose }) {
     <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
       <button className="ct-panel-close" onClick={onClose} aria-label="Close info panel">✕</button>
       <div className="ct-panel-header">
-        <span className="ct-panel-codon">{codon}</span>
-        <span className="ct-panel-arrow">→</span>
         <span className="ct-panel-aa">{data.full}</span>
-      </div>
-      <div className="ct-panel-badges">
-        <span className="ct-badge ct-badge--codon">Codon: {codon}</span>
-        <span className="ct-badge ct-badge--3">{data.aa}</span>
-        <span className="ct-badge ct-badge--1">1-letter: {data.abbr}</span>
+        {data.aa !== 'Stop' && (
+          <div className="ct-panel-abbr-group">
+            <span className="ct-panel-abbr-badge">{data.aa}</span>
+            <span className="ct-panel-abbr-badge">1-letter: {data.abbr}</span>
+          </div>
+        )}
         {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
         {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
       </div>
-      {synonyms.length > 0 && (
-        <div className="ct-panel-synonyms">
-          <span className="ct-panel-syn-label">Synonymous codons:</span>
-          <div className="ct-panel-syn-list">
-            {synonyms.map(s => (
-              <span key={s} className="ct-syn-chip">{s}</span>
-            ))}
-          </div>
-        </div>
-      )}
+
       <div className="ct-panel-bases">
         {['1st', '2nd', '3rd'].map((pos, i) => (
           <div key={pos} className="ct-base-bubble">
@@ -606,6 +596,24 @@ function InfoPanel({ codon, onClose }) {
           </div>
         ))}
       </div>
+
+      <div className="ct-panel-codons-info">
+        <div className="ct-panel-selected-row">
+          <span className="ct-panel-syn-label">Selected Codon:</span>
+          <span className="ct-badge ct-badge--codon">Codon: {codon}</span>
+        </div>
+        {synonyms.length > 0 && (
+          <div className="ct-panel-synonyms">
+            <span className="ct-panel-syn-label">Synonymous codons:</span>
+            <div className="ct-panel-syn-list">
+              {synonyms.map(s => (
+                <span key={s} className="ct-syn-chip">{s}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {data.aa !== 'Stop' && (
         <FischerProjection aa={data.aa} />
       )}

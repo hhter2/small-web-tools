@@ -1141,7 +1141,7 @@ export default function CodonTable() {
   }, [filterMode]);
 
   const isCodonHighlighted = useCallback((codon) => {
-    if (typedCodon.length > 0) {
+    if (selectedCodon === null && typedCodon.length > 0) {
       return codon.startsWith(typedCodon);
     }
     const data = CODON_MAP[codon];
@@ -1162,7 +1162,7 @@ export default function CodonTable() {
     }
 
     return false;
-  }, [highlightedAA, typedCodon, selectedGroup, customGroups]);
+  }, [highlightedAA, selectedCodon, typedCodon, selectedGroup, customGroups]);
 
   const isCodonDimmed = useCallback((codon) => {
     const data = CODON_MAP[codon];
@@ -1173,7 +1173,7 @@ export default function CodonTable() {
     if (filterMode === 'stop' && data.type !== 'stop') return true;
 
     // 2. If typing search is active (partial or full), dim non-matching codons
-    if (typedCodon.length > 0) {
+    if (selectedCodon === null && typedCodon.length > 0) {
       return !codon.startsWith(typedCodon);
     }
 
@@ -1189,7 +1189,7 @@ export default function CodonTable() {
     }
 
     return false;
-  }, [filterMode, selectedGroup, typedCodon, customGroups]);
+  }, [filterMode, selectedCodon, selectedGroup, typedCodon, customGroups]);
 
   return (
     <article id="tool-codon" className="tool-card tool-card--wide active ct-root">

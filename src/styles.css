@@ -4730,13 +4730,13 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 .ct-panel-close {
   position: absolute;
   top: 0.75rem; right: 0.75rem;
-  width: 26px; height: 26px;
+  width: 20px; height: 20px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
   background: var(--bg-app);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.58rem;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
@@ -4768,6 +4768,13 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 }
 html[data-theme="dark"] .ct-panel-abbr-badge {
   background: rgba(255, 255, 255, 0.05);
+}
+.ct-panel-header-badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
 }
 .ct-badge {
   padding: 0.2rem 0.65rem;
@@ -5365,7 +5372,7 @@ html[data-theme="dark"] .ct-fisc-side-bond {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .ct-panel-title-empty {

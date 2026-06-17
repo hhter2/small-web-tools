@@ -351,12 +351,17 @@ function renderSideChain(aa) {
           <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
           <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
           <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
-          <polygon points="80,95 60,105 60,125 90,125 90,95" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
-          <line x1="77" y1="99" x2="61" y2="107" className="ct-fisc-side-bond" strokeWidth="1.5" />
-          <polygon points="90,95 107,85 125,95 125,125 107,135 90,125" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
-          <circle cx="107" cy="110" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
-          <rect x="47" y="116" width="26" height="18" fill="var(--bg-card)" />
-          <text x="60" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
+          {/* Pentagon (pyrrole ring, right) - proper regular pentagon like Pro */}
+          <polygon points="80,95 97,110 90,130 66,130 60,110" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          {/* Double bond inside pentagon (C2=C3) */}
+          <line x1="82" y1="99" x2="94" y2="111" className="ct-fisc-side-bond" strokeWidth="1.5" />
+          {/* Hexagon (benzene ring, left) - regular hexagon sharing edge with pentagon */}
+          <polygon points="60,110 40,105 26,120 32,140 52,145 66,130" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          {/* Aromatic circle inside hexagon */}
+          <circle cx="46" cy="125" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
+          {/* NH label at bottom-right vertex of pentagon */}
+          <rect x="77" y="121" width="26" height="18" fill="var(--bg-card)" />
+          <text x="90" y="130" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
         </>
       );
     case 'Met':
@@ -906,10 +911,10 @@ function InfoPanel({
               <div className="ct-panel-header-title">
                 <span className="ct-panel-aa">{data.full}</span>
                 {data.aa !== 'Stop' && (
-                  <>
+                  <div className="ct-panel-header-badges">
                     <span className="ct-panel-abbr-badge">{data.aa}</span>
                     <span className="ct-panel-abbr-badge">{data.abbr}</span>
-                  </>
+                  </div>
                 )}
                 {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
                 {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}

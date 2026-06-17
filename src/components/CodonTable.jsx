@@ -237,7 +237,7 @@ const FISCHER_HEIGHTS = {
   Gly: 90,
   Ala: 90,
   Val: 110,
-  Pro: 110,
+  Pro: 125,
   Cys: 120,
   Ser: 120,
   Thr: 120,
@@ -261,247 +261,242 @@ function renderSideChain(aa) {
     case 'Gly':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H</text>
         </>
       );
     case 'Ala':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Val':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="79" x2="49" y2="91" className="ct-fisc-side-bond" />
-          <line x1="69" y1="79" x2="81" y2="91" className="ct-fisc-side-bond" />
-          <text x="45" y="95" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <text x="85" y="95" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="73" y1="82" x2="67" y2="88" className="ct-fisc-side-bond" />
+          <line x1="87" y1="82" x2="93" y2="88" className="ct-fisc-side-bond" />
+          <text x="60" y="95" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <text x="100" y="95" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Leu':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="109" x2="49" y2="121" className="ct-fisc-side-bond" />
-          <line x1="69" y1="109" x2="81" y2="121" className="ct-fisc-side-bond" />
-          <text x="45" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <text x="85" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="73" y1="112" x2="67" y2="118" className="ct-fisc-side-bond" />
+          <line x1="87" y1="112" x2="93" y2="118" className="ct-fisc-side-bond" />
+          <text x="60" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <text x="100" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Ile':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="72" y1="75" x2="88" y2="75" className="ct-fisc-side-bond" />
-          <text x="95" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="90" y1="75" x2="100" y2="75" className="ct-fisc-side-bond" />
+          <text x="110" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Pro':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="25" y1="52" x2="25" y2="68" className="ct-fisc-side-bond" />
-          <text x="25" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="79" x2="49" y2="91" className="ct-fisc-side-bond" />
-          <line x1="41" y1="91" x2="29" y2="79" className="ct-fisc-side-bond" />
-          <text x="45" y="95" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <path d="M 80,45 L 92,83 L 60,107 L 28,83 L 40,45" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <rect x="83" y="74" width="18" height="18" fill="var(--bg-card)" />
+          <rect x="51" y="98" width="18" height="18" fill="var(--bg-card)" />
+          <rect x="19" y="74" width="18" height="18" fill="var(--bg-card)" />
+          <text x="92" y="83" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <text x="60" y="107" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <text x="28" y="83" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Phe':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="95" className="ct-fisc-side-bond" />
-          <polygon points="65,95 82,105 82,125 65,135 48,125 48,105" fill="none" className="ct-fisc-side-bond" strokeWidth="2" />
-          <circle cx="65" cy="115" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <polygon points="80,95 97,105 97,125 80,135 63,125 63,105" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx="80" cy="115" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
         </>
       );
     case 'Tyr':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="95" className="ct-fisc-side-bond" />
-          <polygon points="65,95 82,105 82,125 65,135 48,125 48,105" fill="none" className="ct-fisc-side-bond" strokeWidth="2" />
-          <circle cx="65" cy="115" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
-          <line x1="65" y1="135" x2="65" y2="148" className="ct-fisc-side-bond" />
-          <text x="65" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <polygon points="80,95 97,105 97,125 80,135 63,125 63,105" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx="80" cy="115" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
+          <line x1="80" y1="135" x2="80" y2="145" className="ct-fisc-side-bond" />
+          <text x="80" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
         </>
       );
     case 'Trp':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="95" className="ct-fisc-side-bond" />
-          <line x1="64" y1="93" x2="44" y2="103" className="ct-fisc-side-bond" />
-          <line x1="66" y1="97" x2="46" y2="107" className="ct-fisc-side-bond" />
-          <line x1="45" y1="105" x2="45" y2="118" className="ct-fisc-side-bond" />
-          <text x="45" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
-          <line x1="53" y1="125" x2="75" y2="125" className="ct-fisc-side-bond" />
-          <line x1="75" y1="125" x2="75" y2="95" className="ct-fisc-side-bond" />
-          <line x1="75" y1="95" x2="65" y2="95" className="ct-fisc-side-bond" />
-          <polygon points="75,95 95,85 115,95 115,125 95,135 75,125" fill="none" className="ct-fisc-side-bond" strokeWidth="2" />
-          <circle cx="95" cy="110" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <polygon points="80,95 60,105 60,125 90,125 90,95" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <line x1="77" y1="99" x2="61" y2="107" className="ct-fisc-side-bond" strokeWidth="1.5" />
+          <polygon points="90,95 107,85 125,95 125,125 107,135 90,125" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx="107" cy="110" r="11" fill="none" className="ct-fisc-side-bond" strokeWidth="1.5" strokeDasharray="3,2" />
+          <rect x="47" y="116" width="26" height="18" fill="var(--bg-card)" />
+          <text x="60" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
         </>
       );
     case 'Met':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">S</text>
-          <line x1="65" y1="142" x2="65" y2="158" className="ct-fisc-side-bond" />
-          <text x="65" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">S</text>
+          <line x1="80" y1="145" x2="80" y2="155" className="ct-fisc-side-bond" />
+          <text x="80" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'Cys':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">SH</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">SH</text>
         </>
       );
     case 'Ser':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
         </>
       );
     case 'Thr':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="72" y1="75" x2="88" y2="75" className="ct-fisc-side-bond" />
-          <text x="95" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="90" y1="75" x2="100" y2="75" className="ct-fisc-side-bond" />
+          <text x="110" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">OH</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
         </>
       );
     case 'His':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="95" className="ct-fisc-side-bond" />
-          <line x1="64" y1="93" x2="44" y2="103" className="ct-fisc-side-bond" strokeWidth="1.5" />
-          <line x1="66" y1="97" x2="46" y2="107" className="ct-fisc-side-bond" strokeWidth="1.5" />
-          <line x1="45" y1="105" x2="45" y2="118" className="ct-fisc-side-bond" />
-          <text x="45" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
-          <line x1="53" y1="125" x2="70" y2="125" className="ct-fisc-side-bond" />
-          <line x1="68" y1="124" x2="73" y2="104" className="ct-fisc-side-bond" strokeWidth="1.5" />
-          <line x1="72" y1="126" x2="77" y2="106" className="ct-fisc-side-bond" strokeWidth="1.5" />
-          <text x="75" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">N</text>
-          <line x1="75" y1="98" x2="65" y2="95" className="ct-fisc-side-bond" />
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <polygon points="80,95 99,109 92,131 68,131 61,109" fill="none" className="ct-fisc-side-bond" strokeWidth="2" strokeLinejoin="round" />
+          <line x1="78" y1="98" x2="63" y2="110" className="ct-fisc-side-bond" strokeWidth="1.5" />
+          <line x1="89" y1="128" x2="95" y2="110" className="ct-fisc-side-bond" strokeWidth="1.5" />
+          <rect x="55" y="122" width="26" height="18" fill="var(--bg-card)" />
+          <rect x="91" y="100" width="16" height="18" fill="var(--bg-card)" />
+          <text x="68" y="131" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
+          <text x="99" y="109" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">N</text>
         </>
       );
     case 'Lys':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="142" x2="65" y2="158" className="ct-fisc-side-bond" />
-          <text x="65" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="172" x2="65" y2="188" className="ct-fisc-side-bond" />
-          <text x="65" y="195" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">⁺NH₃</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="145" x2="80" y2="155" className="ct-fisc-side-bond" />
+          <text x="80" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="175" x2="80" y2="185" className="ct-fisc-side-bond" />
+          <text x="80" y="195" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">⁺NH₃</text>
         </>
       );
     case 'Arg':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="142" x2="65" y2="158" className="ct-fisc-side-bond" />
-          <text x="65" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
-          <line x1="65" y1="172" x2="65" y2="188" className="ct-fisc-side-bond" />
-          <text x="65" y="195" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="200" x2="49" y2="210" className="ct-fisc-side-bond" />
-          <line x1="67" y1="200" x2="79" y2="210" className="ct-fisc-side-bond" />
-          <line x1="70" y1="202" x2="82" y2="212" className="ct-fisc-side-bond" />
-          <text x="45" y="215" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
-          <text x="85" y="215" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">⁺NH₂</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="145" x2="80" y2="155" className="ct-fisc-side-bond" />
+          <text x="80" y="165" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">NH</text>
+          <line x1="80" y1="175" x2="80" y2="185" className="ct-fisc-side-bond" />
+          <text x="80" y="195" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="73" y1="202" x2="67" y2="208" className="ct-fisc-side-bond" />
+          <line x1="86" y1="201" x2="92" y2="207" className="ct-fisc-side-bond" />
+          <line x1="88" y1="203" x2="94" y2="209" className="ct-fisc-side-bond" />
+          <text x="60" y="215" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
+          <text x="100" y="215" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">⁺NH₂</text>
         </>
       );
     case 'Asp':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">COO⁻</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">COO⁻</text>
         </>
       );
     case 'Asn':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="109" x2="49" y2="121" className="ct-fisc-side-bond" />
-          <line x1="67" y1="109" x2="79" y2="121" className="ct-fisc-side-bond" />
-          <line x1="70" y1="112" x2="82" y2="122" className="ct-fisc-side-bond" />
-          <text x="45" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
-          <text x="85" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">O</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="73" y1="112" x2="67" y2="118" className="ct-fisc-side-bond" />
+          <line x1="86" y1="111" x2="92" y2="117" className="ct-fisc-side-bond" />
+          <line x1="88" y1="113" x2="94" y2="119" className="ct-fisc-side-bond" />
+          <text x="60" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
+          <text x="100" y="125" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">O</text>
         </>
       );
     case 'Glu':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">COO⁻</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">COO⁻</text>
         </>
       );
     case 'Gln':
       return (
         <>
-          <line x1="65" y1="52" x2="65" y2="68" className="ct-fisc-side-bond" />
-          <text x="65" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="82" x2="65" y2="98" className="ct-fisc-side-bond" />
-          <text x="65" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="65" y1="112" x2="65" y2="128" className="ct-fisc-side-bond" />
-          <text x="65" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
-          <line x1="61" y1="139" x2="49" y2="151" className="ct-fisc-side-bond" />
-          <line x1="67" y1="139" x2="79" y2="151" className="ct-fisc-side-bond" />
-          <line x1="70" y1="142" x2="82" y2="152" className="ct-fisc-side-bond" />
-          <text x="45" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
-          <text x="85" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">O</text>
+          <line x1="80" y1="55" x2="80" y2="65" className="ct-fisc-side-bond" />
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="85" x2="80" y2="95" className="ct-fisc-side-bond" />
+          <text x="80" y="105" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="80" y1="115" x2="80" y2="125" className="ct-fisc-side-bond" />
+          <text x="80" y="135" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">C</text>
+          <line x1="73" y1="142" x2="67" y2="148" className="ct-fisc-side-bond" />
+          <line x1="86" y1="141" x2="92" y2="147" className="ct-fisc-side-bond" />
+          <line x1="88" y1="143" x2="94" y2="149" className="ct-fisc-side-bond" />
+          <text x="60" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">H₂N</text>
+          <text x="100" y="155" textAnchor="middle" dominantBaseline="central" className="ct-fisc-side">O</text>
         </>
       );
     default:
@@ -520,25 +515,25 @@ function FischerProjection({ aa }) {
     <div className="ct-fischer-container">
       <span className="ct-fischer-title">Fischer Projection (L-Form)</span>
       <div className="ct-fischer-layout">
-        <svg className="ct-fischer-svg" width="130" height={height} viewBox={`0 0 130 ${height}`}>
+        <svg className="ct-fischer-svg" width="160" height={height} viewBox={`0 0 160 ${height}`}>
           {/* Main Backbone Bonds */}
-          <line x1="32" y1="45" x2="58" y2="45" className="ct-fisc-main-bond" />
-          <line x1="72" y1="45" x2="98" y2="45" className="ct-fisc-main-bond" />
-          <line x1="65" y1="20" x2="65" y2="38" className="ct-fisc-main-bond" />
+          <line x1="50" y1="45" x2="70" y2="45" className="ct-fisc-main-bond" />
+          <line x1="90" y1="45" x2="110" y2="45" className="ct-fisc-main-bond" />
+          <line x1="80" y1="22" x2="80" y2="35" className="ct-fisc-main-bond" />
           
           {/* Top Label: Carboxyl Group */}
-          <text x="65" y="12" textAnchor="middle" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">COO⁻</text>
+          <text x="80" y="12" textAnchor="middle" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">COO⁻</text>
           
           {/* Left Label: Amino Group (or Imino for Proline) */}
-          <text x="25" y="45" textAnchor="end" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">
+          <text x="40" y="45" textAnchor="end" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">
             {aa === 'Pro' ? 'H₂N⁺' : 'H₃N⁺'}
           </text>
 
           {/* Right Label: Hydrogen */}
-          <text x="105" y="45" textAnchor="start" dominantBaseline="central" className="ct-fisc-text">H</text>
+          <text x="120" y="45" textAnchor="start" dominantBaseline="central" className="ct-fisc-text">H</text>
 
           {/* Center Carbon */}
-          <text x="65" y="45" textAnchor="middle" dominantBaseline="central" className="ct-fisc-c">C</text>
+          <text x="80" y="45" textAnchor="middle" dominantBaseline="central" className="ct-fisc-c">C</text>
 
           {/* Side Chain R Group */}
           {renderSideChain(aa)}

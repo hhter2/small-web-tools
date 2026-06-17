@@ -108,8 +108,5 @@ npm run preview
 - **ImgMeta** Dropzone Mobile Loop Fix**: Fixed a bug where tapping the "Browse File" label (or the file input element itself) inside the ImgMeta dropzone on mobile devices triggered a recursive click event loop, preventing files from being analyzed. Tapping/clicking now cleanly triggers the file chooser exactly once.
 - **DNA/RNA Visual Direction representation**: Fixed a bug where choosing `3' → 5'` input direction did not orient and render the input strand at the bottom correctly with matching arrows and labels. The bottom strand now correctly acts as the input strand, pointing left-to-right (`3' → 5'`) and rendering with 100% opacity, while the top strand is faded as the target strand (`5' → 3'`). Renamed all references to the `3' → 5'` strand to **Anti-sense Strand** and `5' → 3'` to **Sense Strand** in both the legend and SVG indicators.
 - **DNA/RNA Codon Display & Amino Acid Translation**: Added a styled, button-based toggle panel letting the user choose between standard sequence, codon grouping (three-nucleotide groups separated by spaces, e.g. `5'-CAC GTG-3'`), and three-letter amino acid translation (e.g. `N-His-[GT]-C`). In **Figure Mode**, this dynamically draws visual brackets grouping every 3 nucleotides, labeled with the codon sequence or translated amino acid abbreviation (supporting degenerate/unknown bases, and rendering incomplete codons as `[codon]` like `[TG]` in brackets).
-
-
-
-
+- **Proline Ring Angle Correction**: Corrected the pyrrolidine ring angles of the Proline (Pro) Fischer projection to match chemically accurate L-configuration geometry (regular inverted pentagon where the side edges flare outward from the horizontal N-C(alpha) backbone rather than sloping inward) and properly aligned the masking rectangles for clean rendering.
 

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 :root {
   color-scheme: light;
   
@@ -4222,8 +4224,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
    CODON TABLE  ·  ct-* namespace
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Google Fonts import for monospace codon text */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Google Fonts import for monospace codon text (moved to top of file) */
 
 /* ── Ripple keyframes ───────────────────────────────────────────────────── */
 @keyframes ct-ripple-anim {
@@ -4250,6 +4251,26 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   margin: 0 auto;
   padding: 1.5rem 1.25rem 2rem;
   font-family: "Inter", system-ui, sans-serif;
+}
+
+/* Workspace Layout */
+.ct-workspace {
+  display: flex;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.ct-table-container {
+  flex: 2.2;
+  min-width: 0;
+}
+
+.ct-side-panel {
+  flex: 1;
+  min-width: 300px;
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
@@ -4761,14 +4782,19 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 /* ── No-selection placeholder ────────────────────────────────────────────── */
 .ct-no-selection {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 1.25rem;
-  border-radius: 10px;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  border-radius: 12px;
   border: 1.5px dashed var(--border-color);
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   background: var(--bg-app);
+  text-align: center;
+  min-height: 250px;
+  box-sizing: border-box;
 }
 
 /* ── Stats bar ───────────────────────────────────────────────────────────── */
@@ -4806,6 +4832,22 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ct-workspace {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ct-side-panel {
+    position: static;
+    width: 100%;
+  }
+  .ct-no-selection {
+    min-height: auto;
+    padding: 1.25rem;
+    flex-direction: row;
+  }
+}
+
 @media (max-width: 780px) {
   .ct-root { padding: 1rem 0.5rem 1.5rem; }
   .ct-outer-grid { grid-template-columns: 20px 1fr 20px; }

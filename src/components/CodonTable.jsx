@@ -350,153 +350,158 @@ export default function CodonTable() {
         <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
       </div>
 
-      {/* ── Axis Labels + Grid ────────────────────────────────────── */}
-      <div className="ct-outer-grid">
+      {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
+      <div className="ct-workspace">
+        <div className="ct-table-container">
+          {/* ── Axis Labels + Grid ────────────────────────────────────── */}
+          <div className="ct-outer-grid">
 
-        {/* Left axis: "First Base" vertical label */}
-        <div className="ct-axis-label ct-axis-label--left" aria-label="First base in codon">
-          <span>First Base (5')</span>
-        </div>
-
-        {/* Inner: top axis + table */}
-        <div className="ct-inner-wrapper">
-
-          {/* Top axis: Second Base */}
-          <div className="ct-axis-top" role="row">
-            <div className="ct-axis-corner"></div>
-            {SECOND_BASES.map(b2 => (
-              <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`} role="columnheader">
-                <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
-                <span className="ct-axis-desc">2nd base</span>
-              </div>
-            ))}
-            <div className="ct-axis-corner"></div>
-          </div>
-
-          {/* Main table body */}
-          <div className="ct-table-body">
-
-            {/* Right axis: Third Base — one row per third-base letter, aligned via grid */}
-            <div className="ct-axis-right-container" aria-label="Third base in codon">
-              {THIRD_BASES.map(b3 => (
-                <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd ct-base-row-${b3}`} role="rowheader">
-                  <span className={`ct-axis-base ct-base-${b3}`}>{b3}</span>
-                </div>
-              ))}
+            {/* Left axis: "First Base" vertical label */}
+            <div className="ct-axis-label ct-axis-label--left" aria-label="First base in codon">
+              <span>First Base (5')</span>
             </div>
 
-            {BASES.map(b1 => (
-              <div key={b1} className={`ct-row-group ct-b1-${b1}`} role="rowgroup">
+            {/* Inner: top axis + table */}
+            <div className="ct-inner-wrapper">
 
-                {/* Left row header: first base letter */}
-                <div className={`ct-row-header ct-base-${b1}`} role="rowheader" aria-label={`First base: ${b1}`}>
-                  <span>{b1}</span>
-                </div>
+              {/* Top axis: Second Base */}
+              <div className="ct-axis-top" role="row">
+                <div className="ct-axis-corner"></div>
+                {SECOND_BASES.map(b2 => (
+                  <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`} role="columnheader">
+                    <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
+                    <span className="ct-axis-desc">2nd base</span>
+                  </div>
+                ))}
+                <div className="ct-axis-corner"></div>
+              </div>
 
-                {/* 4 columns (second base) × 4 rows (third base) */}
-                <div className="ct-row-cells">
-                  {SECOND_BASES.map(b2 => {
-                    const cellCodons = THIRD_BASES.map(b3 => `${b1}${b2}${b3}`);
-                    // Find the group of consecutive identical AAs to render a shared label
-                    const aaGroups = [];
-                    cellCodons.forEach((codon, idx) => {
-                      const aa = CODON_MAP[codon]?.aa;
-                      const last = aaGroups[aaGroups.length - 1];
-                      if (last && last.aa === aa && CODON_MAP[codon]?.type === last.type) {
-                        last.codons.push(codon);
-                      } else {
-                        aaGroups.push({ aa, type: CODON_MAP[codon]?.type, codons: [codon], startIdx: idx });
-                      }
-                    });
+              {/* Main table body */}
+              <div className="ct-table-body">
 
-                    return (
-                      <div key={b2} className={`ct-cell ct-cell-b2-${b2}`} role="group" aria-label={`${b1}${b2}x group`}>
-                        {cellCodons.map((codon, rowIdx) => {
-                          const isHidden = !isCodonVisible(codon);
-                          return (
-                            <div
-                              key={codon}
-                              className={`ct-codon-row ${isHidden ? 'ct-hidden' : ''}`}
-                              role="row"
-                            >
-                              <CodonButton
-                                codon={codon}
-                                isSelected={selectedCodon === codon}
-                                isHighlighted={isCodonHighlighted(codon)}
-                                onSelect={handleSelectCodon}
-                              />
-                            </div>
-                          );
-                        })}
-
-                        {/* AA labels — one per consecutive group, vertically centered */}
-                        <div className="ct-aa-labels" aria-label={`Amino acids for ${b1}${b2}x`}>
-                          {aaGroups.map((group, gi) => (
-                            <div
-                              key={gi}
-                              className="ct-aa-label-slot"
-                              style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
-                            >
-                              <AminoAcidButton
-                                codon={group.codons[0]}
-                                isHighlighted={highlightedAA === group.aa}
-                                onSelect={handleSelectCodon}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Repeating right axis per row group: U C A G */}
-                <div className="ct-row-right-axis">
+                {/* Right axis: Third Base — one row per third-base letter, aligned via grid */}
+                <div className="ct-axis-right-container" aria-label="Third base in codon">
                   {THIRD_BASES.map(b3 => (
-                    <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd-inline ct-base-${b3}`}>
-                      <span>{b3}</span>
+                    <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd ct-base-row-${b3}`} role="rowheader">
+                      <span className={`ct-axis-base ct-base-${b3}`}>{b3}</span>
                     </div>
                   ))}
                 </div>
 
-              </div>
-            ))}
+                {BASES.map(b1 => (
+                  <div key={b1} className={`ct-row-group ct-b1-${b1}`} role="rowgroup">
 
-          </div>
+                    {/* Left row header: first base letter */}
+                    <div className={`ct-row-header ct-base-${b1}`} role="rowheader" aria-label={`First base: ${b1}`}>
+                      <span>{b1}</span>
+                    </div>
 
-          {/* Bottom axis: Second Base (repeated) */}
-          <div className="ct-axis-bottom" role="row" aria-hidden="true">
-            <div className="ct-axis-corner"></div>
-            {SECOND_BASES.map(b2 => (
-              <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`}>
-                <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
+                    {/* 4 columns (second base) × 4 rows (third base) */}
+                    <div className="ct-row-cells">
+                      {SECOND_BASES.map(b2 => {
+                        const cellCodons = THIRD_BASES.map(b3 => `${b1}${b2}${b3}`);
+                        // Find the group of consecutive identical AAs to render a shared label
+                        const aaGroups = [];
+                        cellCodons.forEach((codon, idx) => {
+                          const aa = CODON_MAP[codon]?.aa;
+                          const last = aaGroups[aaGroups.length - 1];
+                          if (last && last.aa === aa && CODON_MAP[codon]?.type === last.type) {
+                            last.codons.push(codon);
+                          } else {
+                            aaGroups.push({ aa, type: CODON_MAP[codon]?.type, codons: [codon], startIdx: idx });
+                          }
+                        });
+
+                        return (
+                          <div key={b2} className={`ct-cell ct-cell-b2-${b2}`} role="group" aria-label={`${b1}${b2}x group`}>
+                            {cellCodons.map((codon, rowIdx) => {
+                              const isHidden = !isCodonVisible(codon);
+                              return (
+                                <div
+                                  key={codon}
+                                  className={`ct-codon-row ${isHidden ? 'ct-hidden' : ''}`}
+                                  role="row"
+                                >
+                                  <CodonButton
+                                    codon={codon}
+                                    isSelected={selectedCodon === codon}
+                                    isHighlighted={isCodonHighlighted(codon)}
+                                    onSelect={handleSelectCodon}
+                                  />
+                                </div>
+                              );
+                            })}
+
+                            {/* AA labels — one per consecutive group, vertically centered */}
+                            <div className="ct-aa-labels" aria-label={`Amino acids for ${b1}${b2}x`}>
+                              {aaGroups.map((group, gi) => (
+                                <div
+                                  key={gi}
+                                  className="ct-aa-label-slot"
+                                  style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
+                                >
+                                  <AminoAcidButton
+                                    codon={group.codons[0]}
+                                    isHighlighted={highlightedAA === group.aa}
+                                    onSelect={handleSelectCodon}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Repeating right axis per row group: U C A G */}
+                    <div className="ct-row-right-axis">
+                      {THIRD_BASES.map(b3 => (
+                        <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd-inline ct-base-${b3}`}>
+                          <span>{b3}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+                ))}
+
               </div>
-            ))}
-            <div className="ct-axis-corner"></div>
+
+              {/* Bottom axis: Second Base (repeated) */}
+              <div className="ct-axis-bottom" role="row" aria-hidden="true">
+                <div className="ct-axis-corner"></div>
+                {SECOND_BASES.map(b2 => (
+                  <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`}>
+                    <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
+                  </div>
+                ))}
+                <div className="ct-axis-corner"></div>
+              </div>
+            </div>
+
+            {/* Right axis: "Third Base" vertical label */}
+            <div className="ct-axis-label ct-axis-label--right" aria-label="Third base in codon">
+              <span>Third Base (3')</span>
+            </div>
+
           </div>
         </div>
 
-        {/* Right axis: "Third Base" vertical label */}
-        <div className="ct-axis-label ct-axis-label--right" aria-label="Third base in codon">
-          <span>Third Base (3')</span>
+        {/* ── Info Panel Sidebar ───────────────────────────────────── */}
+        <div className="ct-side-panel" ref={panelRef}>
+          {selectedCodon ? (
+            <InfoPanel codon={selectedCodon} onClose={handleClearSelection} />
+          ) : (
+            <div className="ct-no-selection" aria-live="polite">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Select a codon above to view detailed information
+            </div>
+          )}
         </div>
-
-      </div>
-
-      {/* ── Info Panel ───────────────────────────────────────────── */}
-      <div ref={panelRef}>
-        {selectedCodon ? (
-          <InfoPanel codon={selectedCodon} onClose={handleClearSelection} />
-        ) : (
-          <div className="ct-no-selection" aria-live="polite">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            Select a codon above to view detailed information
-          </div>
-        )}
       </div>
 
       {/* ── Stats Bar ────────────────────────────────────────────── */}

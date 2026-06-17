@@ -36,6 +36,7 @@ This project is built using **React** and **Vite** for a fast local development 
   - **JetBrains Mono** monospace font for codons; colour-coded base axes (U=violet, C=cyan, A=amber, G=green).
   - **Stats bar**: Live counters for total codons, amino acids, start/stop codons, and interaction count.
   - **Fully responsive** from desktop (full table) to narrow mobile (compacted rows).
+  - **Detailed Fischer Projections**: Displays full L-configuration zwitterionic Fischer projection molecular structure diagrams for each of the 20 amino acids inside the detail panel. The structures accurately model carbon side-chain skeletons, aromatic rings, amides, and charged groups with custom blue color-coding to match reference hand-drawings.
 - **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
 
 ## Included Tools

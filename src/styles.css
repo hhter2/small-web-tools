@@ -4887,6 +4887,110 @@ html[data-theme="dark"] .ct-info-panel {
 html[data-theme="dark"] .ct-panel--start { background: linear-gradient(135deg, rgba(22,163,74,0.1), #1a2236); }
 html[data-theme="dark"] .ct-panel--stop  { background: linear-gradient(135deg, rgba(220,38,38,0.08), #1a2236); }
 
+/* ── Fischer Projection Widget ──────────────────────────────────────────── */
+.ct-fischer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  margin-top: 0.4rem;
+}
+
+.ct-fischer-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.ct-fischer-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ct-fischer-svg {
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 0.25rem;
+}
+
+.ct-fisc-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  fill: var(--text-muted);
+}
+
+.ct-fisc-main {
+  font-weight: 700;
+  fill: var(--text-main);
+}
+
+.ct-fisc-side {
+  font-weight: 700;
+  fill: #0284c7;
+}
+
+html[data-theme="dark"] .ct-fisc-side {
+  fill: #38bdf8;
+}
+
+.ct-fisc-side-bond {
+  stroke: #0284c7;
+  stroke-width: 2px;
+  stroke-linecap: round;
+}
+
+html[data-theme="dark"] .ct-fisc-side-bond {
+  stroke: #38bdf8;
+}
+
+.ct-fisc-main-bond {
+  stroke: var(--text-muted);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.ct-fisc-c {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  fill: var(--accent);
+}
+
+.ct-fischer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.ct-fisc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ct-fisc-lbl {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.ct-fisc-val {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
 
 
 

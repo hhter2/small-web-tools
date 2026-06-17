@@ -356,9 +356,19 @@ export default function CodonTable() {
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
           <div className="ct-outer-grid">
 
-            {/* Left axis: "First Base" vertical label */}
-            <div className="ct-axis-label ct-axis-label--left" aria-label="First base in codon">
-              <span>First Base (5')</span>
+            {/* Left axis: "First Codon" vertical label */}
+            <div className="ct-axis-label ct-axis-label--left" aria-label="First codon position">
+              <span>First Codon (5')</span>
+            </div>
+
+            {/* Top axis: "Second Codon" horizontal label */}
+            <div className="ct-axis-label ct-axis-label--top" aria-label="Second codon position">
+              <span>Second Codon</span>
+            </div>
+
+            {/* Right axis: "Third Codon" vertical label */}
+            <div className="ct-axis-label ct-axis-label--right" aria-label="Third codon position">
+              <span>Third Codon (3')</span>
             </div>
 
             {/* Inner: top axis + table */}
@@ -370,7 +380,6 @@ export default function CodonTable() {
                 {SECOND_BASES.map(b2 => (
                   <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`} role="columnheader">
                     <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
-                    <span className="ct-axis-desc">2nd base</span>
                   </div>
                 ))}
                 <div className="ct-axis-corner"></div>

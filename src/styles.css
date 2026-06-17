@@ -4262,9 +4262,9 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 }
 
 .ct-table-container {
-  flex: 1.5;
+  flex: 2.2;
   min-width: 0;
-  max-width: 580px;
+  max-width: 760px;
 }
 
 .ct-side-panel {
@@ -4370,10 +4370,11 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 .ct-legend-item--stop  { color: #dc2626; font-weight: 600; }
 .ct-legend-item--highlight { color: var(--accent); font-weight: 600; }
 
-/* ── Outer grid: [axis-left] [table] ───────────────────────── */
+/* ── Outer grid: [axis-left] [top-axis] [axis-right] + [table] ──────────── */
 .ct-outer-grid {
   display: grid;
-  grid-template-columns: 36px 1fr;
+  grid-template-columns: 36px 1fr 36px;
+  grid-template-rows: 36px auto;
   gap: 0;
   align-items: stretch;
   border-radius: 12px;
@@ -4381,23 +4382,15 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-card);
   background: var(--bg-card);
-  aspect-ratio: 1 / 1;
 }
 
-/* ── Vertical axis labels (rotated) ─────────────────────────────────────── */
+/* ── Axis labels (left, top, right) ─────────────────────────────────────── */
 .ct-axis-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  writing-mode: vertical-rl;
-  background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(99,102,241,0.04) 100%);
-  border-right: 1px solid var(--border-color);
 }
-.ct-axis-label--right {
-  border-right: none;
-  border-left: 1px solid var(--border-color);
-  transform: rotate(180deg);
-}
+
 .ct-axis-label span {
   font-size: 0.65rem;
   font-weight: 700;
@@ -4407,11 +4400,36 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   white-space: nowrap;
 }
 
+.ct-axis-label--left {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  writing-mode: vertical-rl;
+  background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(99,102,241,0.04) 100%);
+  border-right: 1px solid var(--border-color);
+}
+
+.ct-axis-label--top {
+  grid-column: 2;
+  grid-row: 1;
+  background: linear-gradient(90deg, rgba(99,102,241,0.08) 0%, rgba(99,102,241,0.04) 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ct-axis-label--right {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  writing-mode: vertical-rl;
+  background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(99,102,241,0.04) 100%);
+  border-left: 1px solid var(--border-color);
+  transform: rotate(180deg);
+}
+
 /* ── Inner wrapper ───────────────────────────────────────────────────────── */
 .ct-inner-wrapper {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 /* ── Top & bottom axis rows ─────────────────────────────────────────────── */
@@ -4474,7 +4492,6 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   display: flex;
   flex-direction: column;
   position: relative;
-  flex: 1;
 }
 
 /* Right axis repeated inside each row group */
@@ -4485,7 +4502,6 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   display: grid;
   grid-template-columns: 36px 1fr 44px;
   border-top: 1px solid var(--border-color);
-  flex: 1;
 }
 .ct-row-group:first-child { border-top: none; }
 
@@ -4543,7 +4559,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   align-items: center;
   padding: 2px 4px;
   border-bottom: 1px solid rgba(var(--border-color), 0.5);
-  height: 100%;
+  min-height: 32px;
   transition: background 0.15s;
 }
 .ct-codon-row:last-child { border-bottom: none; }
@@ -4823,7 +4839,10 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 
 @media (max-width: 780px) {
   .ct-root { padding: 1rem 0.5rem 1.5rem; }
-  .ct-outer-grid { grid-template-columns: 24px 1fr; }
+  .ct-outer-grid {
+    grid-template-columns: 24px 1fr 24px;
+    grid-template-rows: 28px auto;
+  }
   .ct-row-header { font-size: 0.85rem; }
   .ct-codon-btn  { font-size: 0.66rem; padding: 2px 3px; }
   .ct-aa-labels  { width: 44px; }

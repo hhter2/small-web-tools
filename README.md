@@ -37,6 +37,8 @@ This project is built using **React** and **Vite** for a fast local development 
   - **Stats bar**: Live counters for total codons, amino acids, start/stop codons, and interaction count.
   - **Fully responsive** from desktop (full table) to narrow mobile (compacted rows).
   - **Detailed Fischer Projections**: Displays full L-configuration zwitterionic Fischer projection molecular structure diagrams for each of the 20 amino acids inside the detail panel. The structures accurately model carbon side-chain skeletons, aromatic rings, amides, and charged groups with custom blue color-coding to match reference hand-drawings.
+  - **Interactive Codon Typer (New)**: A passcode-style 3-card base input interface (1st, 2nd, and 3rd positions) for quick codon lookups. Typing characters (U, C, A, G or auto-mapped T -> U) shows the translated amino acid dynamically, highlighting matching codons in the table and dimming others.
+  - **Biochemical Group Filter (New)**: Select biochemical group filters (Hydrophobic, Polar Uncharged, Basic, or Acidic) to highlight related codons in the table and display interactive amino acid chips for quick exploration.
 - **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
 
 ## Included Tools

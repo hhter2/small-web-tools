@@ -5009,6 +5009,349 @@ html[data-theme="dark"] .ct-fisc-side-bond {
   color: var(--text-main);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   NEW: Interactive Codon Search (Typer) & Biochemical Group Filter
+   ───────────────────────────────────────────────────────────────────────────── */
+.ct-interactive-panel {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .ct-interactive-panel {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+.ct-typer-section,
+.ct-group-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.ct-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.4rem;
+}
+
+/* TYPER (PASSCODE STYLE) */
+.ct-typer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ct-typer-cards-row {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.ct-typer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 84px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ct-typer-card:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.ct-typer-card.is-active {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+  animation: ct-card-pulse 2s infinite ease-in-out;
+}
+
+@keyframes ct-card-pulse {
+  0%, 100% { border-color: var(--accent); }
+  50% { border-color: rgba(99, 102, 241, 0.5); }
+}
+
+.ct-typer-card-pos {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.02em;
+}
+
+.ct-typer-card-val {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+}
+
+/* Blinking cursor */
+.ct-typer-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.8rem;
+  background-color: var(--accent);
+  margin-left: 2px;
+  animation: ct-blink-anim 1s step-end infinite;
+}
+
+@keyframes ct-blink-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Hidden real input */
+.ct-typer-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Typer Translation Result */
+.ct-typer-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  min-height: 52px;
+}
+
+.ct-result-placeholder {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.ct-result-prompt {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ct-result-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ct-result-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ct-result-aa-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ct-result-aa-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ct-result-aa-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ct-result-type {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ct-typer-clear-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  border-color: var(--border-color);
+}
+
+.ct-typer-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+/* BIOCHEMICAL GROUP FILTER */
+.ct-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ct-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ct-group-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ct-group-btn:hover {
+  border-color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ct-group-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.ct-group-btn--hydrophobic.is-active {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.35);
+}
+.ct-group-btn--polar.is-active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+.ct-group-btn--basic.is-active {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+.ct-group-btn--acidic.is-active {
+  background: #ec4899;
+  border-color: #ec4899;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.35);
+}
+
+.ct-group-chips-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: ct-fade-in 0.25s ease-out;
+}
+
+@keyframes ct-fade-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ct-chips-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ct-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ct-aa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+}
+
+.ct-aa-chip:hover {
+  transform: scale(1.05);
+}
+
+.ct-aa-chip-abbr {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ct-aa-chip-full {
+  font-size: 0.68rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+/* TABLE HIGHLIGHT AND DIM SYSTEM */
+.ct-codon-btn,
+.ct-aa-btn {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ct-codon-btn.is-dimmed,
+.ct-aa-btn.is-dimmed {
+  opacity: 0.2;
+  filter: grayscale(40%);
+}
+
+.ct-codon-btn.is-highlighted {
+  box-shadow: 0 0 10px var(--accent);
+  transform: scale(1.03);
+  z-index: 2;
+}
+
+/* Specific styling for base letters in active search */
+.ct-codon-btn.is-highlighted .ct-codon-letters {
+  font-weight: 800;
+}
+
 
 
 

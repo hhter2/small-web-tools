@@ -507,13 +507,26 @@ function renderSideChain(aa) {
 }
 
 // Fischer Projection Widget Component
-function FischerProjection({ aa }) {
+function FischerProjection({ aa, customGroups = [] }) {
   const details = AMINO_ACID_DETAILS[aa];
   if (!details) return null;
 
   const baseHeight = FISCHER_HEIGHTS[aa] || 135;
   const width = Math.round(160 * 1.2);
   const height = Math.round(baseHeight * 1.2);
+
+  // Match standard group names
+  const matchedStd = Object.values(AA_GROUPS)
+    .filter(grp => grp.aas.includes(aa))
+    .map(grp => grp.name);
+
+  // Match custom group names
+  const matchedCustom = customGroups
+    .filter(grp => grp.aas.includes(aa))
+    .map(grp => grp.name);
+
+  const allMatched = [...matchedStd, ...matchedCustom];
+  const groupText = allMatched.length > 0 ? allMatched.join(', ') : details.type;
 
   return (
     <div className="ct-fischer-container">
@@ -550,7 +563,7 @@ function FischerProjection({ aa }) {
           </div>
           <div className="ct-fisc-field">
             <span className="ct-fisc-lbl">Group Type:</span>
-            <span className="ct-fisc-val">{details.type}</span>
+            <span className="ct-fisc-val">{groupText}</span>
           </div>
         </div>
       </div>
@@ -953,7 +966,7 @@ function InfoPanel({
 
             {/* Fischer Projection */}
             {data.aa !== 'Stop' && (
-              <FischerProjection aa={data.aa} />
+              <FischerProjection aa={data.aa} customGroups={customGroups} />
             )}
           </div>
         ) : (

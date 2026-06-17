@@ -1177,7 +1177,12 @@ export default function CodonTable() {
       return !codon.startsWith(typedCodon);
     }
 
-    // 3. If group filter is active, dim codons not in that group
+    // 3. If a specific AA is highlighted, dim all other AAs
+    if (highlightedAA !== null) {
+      return data.aa !== highlightedAA;
+    }
+
+    // 4. If group filter is active, dim codons not in that group
     if (selectedGroup !== 'all') {
       const activeGroup = selectedGroup.startsWith('custom-') 
         ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
@@ -1189,7 +1194,7 @@ export default function CodonTable() {
     }
 
     return false;
-  }, [filterMode, selectedCodon, selectedGroup, typedCodon, customGroups]);
+  }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
     <article id="tool-codon" className="tool-card tool-card--wide active ct-root">

@@ -13,6 +13,7 @@ import IpLookup from './components/IpLookup.jsx';
 import ImgMeta from './components/ImgMeta.jsx';
 import RandomWheel from './components/RandomWheel.jsx';
 import TypingSpeedTest from './components/TypingSpeedTest.jsx';
+import CodonTable from './components/CodonTable.jsx';
 
 const toolDetails = {
   "tool-home": {
@@ -70,6 +71,10 @@ const toolDetails = {
   "tool-typing": {
     title: "Typing Speed Test",
     desc: "Test and improve your typing speed in English or Chinese with custom templates."
+  },
+  "tool-codon": {
+    title: "RNA Codon Table",
+    desc: "Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties."
   }
 };
 
@@ -298,6 +303,21 @@ const navItems = [
     )
   },
   {
+    id: 'tool-codon',
+    name: 'Codon Table',
+    tooltip: 'RNA Codon Table',
+    category: 'bioinfo',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+        <line x1="3" y1="9" x2="21" y2="9"></line>
+        <line x1="3" y1="15" x2="21" y2="15"></line>
+        <line x1="9" y1="3" x2="9" y2="21"></line>
+        <line x1="15" y1="3" x2="15" y2="21"></line>
+      </svg>
+    )
+  },
+  {
     id: 'tool-iplookup',
     name: 'IP Lookup',
     tooltip: 'IP Lookup',
@@ -455,6 +475,8 @@ export default function App() {
         return <RandomWheel />;
       case 'tool-typing':
         return <TypingSpeedTest />;
+      case 'tool-codon':
+        return <CodonTable />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} />;
     }

@@ -28,6 +28,14 @@ This project is built using **React** and **Vite** for a fast local development 
   - **Grouped Collapsible Advanced Tab**: Groups raw metadata tags into EXIF, GPS, IPTC, XMP, ICC, and File/Other categories with a global "Expand All" toggle.
 - **Random Wheel (Lucky Draw)**: Spin a customizable visual wheel to draw items from a typed options list (defaulting to 1-5). Supports editable wheel titles, light/dark themes, custom-modal confirmation for clears, keyboard shortcuts, and single-draw elimination mode (drawn options are grayed out/struck through in the status list and automatically removed from the wheel).
 - **Typing Speed Test (New)**: Measure typing speed and accuracy under Free Typing (no-template) and Template Mode. Custom templates can be pasted or uploaded as `.txt` files. Features real-time WPM/CPM calculation, accuracy percentage, backspace correction count, and correction rate tracking. Supports Chinese language mode (hiding CPM and counting 1 Chinese character/word as 1 WPM) with native IME composition handling, and displays a floating spelling correction tooltip (`[typed] 🏰 [expected]`) above the active word. Includes local history logging and JSON export capabilities.
+- **RNA Codon Table (New)**: A professional, highly interactive standard genetic code reference table. All 64 RNA codons are organized in the canonical 4×4×4 format (first base rows × second base columns × third base sub-rows). Every codon and every amino acid label is a distinct clickable `<button>` element with ripple animation, hover/active states, and keyboard accessibility. Features include:
+  - **Start codon (AUG/Met)** highlighted in semantic green; **Stop codons (UAA/UAG/UGA)** highlighted in semantic red.
+  - **Click-to-explore**: Selecting a codon opens a glassmorphism detail panel showing the full amino acid name, 3-letter/1-letter codes, all synonymous codons, and a colour-coded per-base breakdown.
+  - **Amino acid grouping highlighting**: Clicking either a codon or its AA label highlights all codons encoding the same amino acid simultaneously.
+  - **Filter mode**: Toggle "★ Start" or "■ Stop" filters to dim unrelated codons instantly.
+  - **JetBrains Mono** monospace font for codons; colour-coded base axes (U=violet, C=cyan, A=amber, G=green).
+  - **Stats bar**: Live counters for total codons, amino acids, start/stop codons, and interaction count.
+  - **Fully responsive** from desktop (full table) to narrow mobile (compacted rows).
 - **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
 
 ## Included Tools
@@ -45,6 +53,7 @@ This project is built using **React** and **Vite** for a fast local development 
 11. **ImgMeta**: Load common images (JPEG, PNG, WebP, HEIC, AVIF) or Canon `.CR3` RAW files to extract EXIF, GPS, and manufacturer metadata client-side. Compare multiple images side-by-side, strip metadata losslessly, view location maps on toggle, sort raw tags in grouped advanced sections, and export images in bulk as a ZIP archive.
 12. **Random Wheel**: Draw items at random from custom typed options. Edit the wheel title dynamically, view active and eliminated options in real-time, reset or clear options (with custom modal confirmation), toggle duplicate selections, and use keyboard shortcuts (`Space` to spin, `E` to edit options, `R` to reset, `C` to clear).
 13. **Typing Speed Test**: Test typing speed in English or Chinese. Supports auto-timer triggers, template upload, character highlighting (correct/error state), floating spelling typo popups, and local history logging.
+14. **RNA Codon Table**: Interactive standard genetic code reference. All 64 codons and their amino acid products are individually clickable buttons. Click any codon or AA label to reveal synonyms, full names, 1-letter codes, and per-base colour breakdown in a slide-in detail panel. Start/Stop codons carry semantic colour distinctions. Includes filter mode and live interaction stats.
 
 ---
 

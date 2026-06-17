@@ -218,12 +218,27 @@ export default function HomeGrid({ onSelectTool }) {
       category: 'bioinfo',
       desc: "Complements, reverses, and swaps 5'/3' strand sequence orientations.",
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
           <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
           <line x1="8" y1="7" x2="8" y2="14"></line>
           <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
           <line x1="16" y1="7" x2="16" y2="14"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-codon',
+      title: 'RNA Codon Table',
+      category: 'bioinfo',
+      desc: 'Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="3" y1="15" x2="21" y2="15"></line>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
         </svg>
       )
     },

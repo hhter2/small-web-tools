@@ -1,0 +1,528 @@
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CODON DATA — authoritative JSON mapping (RNA codons)
+// type: 'start' | 'stop' | undefined
+// ─────────────────────────────────────────────────────────────────────────────
+const CODON_MAP = {
+  // ── U (first base) ──────────────────────────────────────────────────
+  UUU: { aa: 'Phe', full: 'Phenylalanine', abbr: 'F' },
+  UUC: { aa: 'Phe', full: 'Phenylalanine', abbr: 'F' },
+  UUA: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  UUG: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  UCU: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  UCC: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  UCA: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  UCG: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  UAU: { aa: 'Tyr', full: 'Tyrosine',      abbr: 'Y' },
+  UAC: { aa: 'Tyr', full: 'Tyrosine',      abbr: 'Y' },
+  UAA: { aa: 'Stop', full: 'Stop (Ochre)',  abbr: '*', type: 'stop' },
+  UAG: { aa: 'Stop', full: 'Stop (Amber)',  abbr: '*', type: 'stop' },
+  UGU: { aa: 'Cys', full: 'Cysteine',      abbr: 'C' },
+  UGC: { aa: 'Cys', full: 'Cysteine',      abbr: 'C' },
+  UGA: { aa: 'Stop', full: 'Stop (Opal)',   abbr: '*', type: 'stop' },
+  UGG: { aa: 'Trp', full: 'Tryptophan',    abbr: 'W' },
+  // ── C (first base) ──────────────────────────────────────────────────
+  CUU: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  CUC: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  CUA: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  CUG: { aa: 'Leu', full: 'Leucine',       abbr: 'L' },
+  CCU: { aa: 'Pro', full: 'Proline',       abbr: 'P' },
+  CCC: { aa: 'Pro', full: 'Proline',       abbr: 'P' },
+  CCA: { aa: 'Pro', full: 'Proline',       abbr: 'P' },
+  CCG: { aa: 'Pro', full: 'Proline',       abbr: 'P' },
+  CAU: { aa: 'His', full: 'Histidine',     abbr: 'H' },
+  CAC: { aa: 'His', full: 'Histidine',     abbr: 'H' },
+  CAA: { aa: 'Gln', full: 'Glutamine',     abbr: 'Q' },
+  CAG: { aa: 'Gln', full: 'Glutamine',     abbr: 'Q' },
+  CGU: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  CGC: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  CGA: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  CGG: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  // ── A (first base) ──────────────────────────────────────────────────
+  AUU: { aa: 'Ile', full: 'Isoleucine',    abbr: 'I' },
+  AUC: { aa: 'Ile', full: 'Isoleucine',    abbr: 'I' },
+  AUA: { aa: 'Ile', full: 'Isoleucine',    abbr: 'I' },
+  AUG: { aa: 'Met', full: 'Methionine (Start)', abbr: 'M', type: 'start' },
+  ACU: { aa: 'Thr', full: 'Threonine',     abbr: 'T' },
+  ACC: { aa: 'Thr', full: 'Threonine',     abbr: 'T' },
+  ACA: { aa: 'Thr', full: 'Threonine',     abbr: 'T' },
+  ACG: { aa: 'Thr', full: 'Threonine',     abbr: 'T' },
+  AAU: { aa: 'Asn', full: 'Asparagine',    abbr: 'N' },
+  AAC: { aa: 'Asn', full: 'Asparagine',    abbr: 'N' },
+  AAA: { aa: 'Lys', full: 'Lysine',        abbr: 'K' },
+  AAG: { aa: 'Lys', full: 'Lysine',        abbr: 'K' },
+  AGU: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  AGC: { aa: 'Ser', full: 'Serine',        abbr: 'S' },
+  AGA: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  AGG: { aa: 'Arg', full: 'Arginine',      abbr: 'R' },
+  // ── G (first base) ──────────────────────────────────────────────────
+  GUU: { aa: 'Val', full: 'Valine',        abbr: 'V' },
+  GUC: { aa: 'Val', full: 'Valine',        abbr: 'V' },
+  GUA: { aa: 'Val', full: 'Valine',        abbr: 'V' },
+  GUG: { aa: 'Val', full: 'Valine',        abbr: 'V' },
+  GCU: { aa: 'Ala', full: 'Alanine',       abbr: 'A' },
+  GCC: { aa: 'Ala', full: 'Alanine',       abbr: 'A' },
+  GCA: { aa: 'Ala', full: 'Alanine',       abbr: 'A' },
+  GCG: { aa: 'Ala', full: 'Alanine',       abbr: 'A' },
+  GAU: { aa: 'Asp', full: 'Aspartate',     abbr: 'D' },
+  GAC: { aa: 'Asp', full: 'Aspartate',     abbr: 'D' },
+  GAA: { aa: 'Glu', full: 'Glutamate',     abbr: 'E' },
+  GAG: { aa: 'Glu', full: 'Glutamate',     abbr: 'E' },
+  GGU: { aa: 'Gly', full: 'Glycine',       abbr: 'G' },
+  GGC: { aa: 'Gly', full: 'Glycine',       abbr: 'G' },
+  GGA: { aa: 'Gly', full: 'Glycine',       abbr: 'G' },
+  GGG: { aa: 'Gly', full: 'Glycine',       abbr: 'G' },
+};
+
+// Standard biological layout: rows = first base, cols = second base, 3rd = row within cell
+const BASES = ['U', 'C', 'A', 'G'];
+const SECOND_BASES = ['U', 'C', 'A', 'G'];
+const THIRD_BASES  = ['U', 'C', 'A', 'G'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Amino acid colour palette — distinct hue per AA group
+// ─────────────────────────────────────────────────────────────────────────────
+const AA_COLORS = {
+  Phe: '#a78bfa', Leu: '#8b5cf6', Ile: '#7c3aed', Met: null /* start */,
+  Val: '#6d28d9', Ser: '#3b82f6', Pro: '#0ea5e9', Thr: '#06b6d4',
+  Ala: '#14b8a6', Tyr: '#f59e0b', His: '#d97706', Gln: '#f97316',
+  Asn: '#ef4444', Lys: '#dc2626', Asp: '#ec4899', Glu: '#db2777',
+  Cys: '#84cc16', Trp: '#22c55e', Arg: '#10b981', Gly: '#6b7280',
+  Stop: null /* stop */,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: get CSS class modifier for a codon
+// ─────────────────────────────────────────────────────────────────────────────
+function codonClass(codon) {
+  const data = CODON_MAP[codon];
+  if (!data) return '';
+  if (data.type === 'start') return 'codon-start';
+  if (data.type === 'stop')  return 'codon-stop';
+  return '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ripple effect hook
+// ─────────────────────────────────────────────────────────────────────────────
+function useRipple() {
+  const triggerRipple = useCallback((e) => {
+    const btn = e.currentTarget;
+    const existing = btn.querySelector('.ct-ripple');
+    if (existing) existing.remove();
+
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2;
+    const x    = e.clientX - rect.left - size / 2;
+    const y    = e.clientY - rect.top  - size / 2;
+
+    const ripple = document.createElement('span');
+    ripple.className = 'ct-ripple';
+    ripple.style.cssText = `
+      position:absolute; border-radius:50%; pointer-events:none;
+      width:${size}px; height:${size}px; left:${x}px; top:${y}px;
+      background:rgba(255,255,255,0.25);
+      transform:scale(0); animation:ct-ripple-anim 0.55s ease-out forwards;
+    `;
+    btn.style.position = 'relative';
+    btn.style.overflow = 'hidden';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+  }, []);
+  return triggerRipple;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CodonButton — one interactive codon element
+// ─────────────────────────────────────────────────────────────────────────────
+function CodonButton({ codon, isSelected, isHighlighted, onSelect }) {
+  const data       = CODON_MAP[codon];
+  const triggerRipple = useRipple();
+  const cls = [
+    'ct-codon-btn',
+    codonClass(codon),
+    isSelected    ? 'is-selected'    : '',
+    isHighlighted ? 'is-highlighted' : '',
+  ].filter(Boolean).join(' ');
+
+  const handleClick = (e) => {
+    triggerRipple(e);
+    onSelect(codon);
+  };
+
+  return (
+    <button
+      id={`codon-${codon}`}
+      className={cls}
+      onClick={handleClick}
+      aria-label={`Codon ${codon} encodes ${data?.full ?? 'unknown'}`}
+      aria-pressed={isSelected}
+      title={`${codon} → ${data?.full ?? '?'} (${data?.abbr ?? '?'})`}
+    >
+      <span className="ct-codon-letters">{codon}</span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AminoAcidButton — the AA label inside each cell group
+// ─────────────────────────────────────────────────────────────────────────────
+function AminoAcidButton({ codon, isHighlighted, onSelect }) {
+  const data = CODON_MAP[codon];
+  const triggerRipple = useRipple();
+  if (!data) return null;
+
+  const aaColor = AA_COLORS[data.aa];
+  let cls = 'ct-aa-btn';
+  if (data.type === 'start') cls += ' ct-aa-start';
+  else if (data.type === 'stop') cls += ' ct-aa-stop';
+  if (isHighlighted) cls += ' is-highlighted';
+
+  const inlineStyle = aaColor ? { color: aaColor } : {};
+
+  const handleClick = (e) => {
+    triggerRipple(e);
+    onSelect(codon);
+  };
+
+  const label = data.type === 'start'
+    ? `${data.aa} ★`
+    : data.type === 'stop'
+    ? '■ Stop'
+    : data.aa;
+
+  return (
+    <button
+      id={`aa-${codon}`}
+      className={cls}
+      onClick={handleClick}
+      style={inlineStyle}
+      aria-label={`${data.aa}: ${data.full}`}
+      aria-pressed={isHighlighted}
+      title={`${data.full} · 1-letter: ${data.abbr}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// InfoPanel — detail card for selected codon
+// ─────────────────────────────────────────────────────────────────────────────
+function InfoPanel({ codon, onClose }) {
+  const data = CODON_MAP[codon];
+  if (!codon || !data) return null;
+
+  const synonyms = Object.keys(CODON_MAP).filter(
+    c => CODON_MAP[c].aa === data.aa && c !== codon
+  );
+
+  const bgClass = data.type === 'start'
+    ? 'ct-panel--start'
+    : data.type === 'stop'
+    ? 'ct-panel--stop'
+    : 'ct-panel--normal';
+
+  return (
+    <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
+      <button className="ct-panel-close" onClick={onClose} aria-label="Close info panel">✕</button>
+      <div className="ct-panel-header">
+        <span className="ct-panel-codon">{codon}</span>
+        <span className="ct-panel-arrow">→</span>
+        <span className="ct-panel-aa">{data.full}</span>
+      </div>
+      <div className="ct-panel-badges">
+        <span className="ct-badge ct-badge--codon">Codon: {codon}</span>
+        <span className="ct-badge ct-badge--3">{data.aa}</span>
+        <span className="ct-badge ct-badge--1">1-letter: {data.abbr}</span>
+        {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
+        {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
+      </div>
+      {synonyms.length > 0 && (
+        <div className="ct-panel-synonyms">
+          <span className="ct-panel-syn-label">Synonymous codons:</span>
+          <div className="ct-panel-syn-list">
+            {synonyms.map(s => (
+              <span key={s} className="ct-syn-chip">{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="ct-panel-bases">
+        {['1st', '2nd', '3rd'].map((pos, i) => (
+          <div key={pos} className="ct-base-bubble">
+            <span className="ct-base-pos">{pos}</span>
+            <span className={`ct-base-letter ct-base-${codon[i]}`}>{codon[i]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main CodonTable component
+// ─────────────────────────────────────────────────────────────────────────────
+export default function CodonTable() {
+  const [selectedCodon,    setSelectedCodon]    = useState(null);
+  const [highlightedAA,    setHighlightedAA]    = useState(null);
+  const [filterMode,       setFilterMode]       = useState('all'); // 'all' | 'start' | 'stop'
+  const [clickCount,       setClickCount]       = useState(0);
+  const panelRef = useRef(null);
+
+  // Scroll panel into view when codon selected
+  useEffect(() => {
+    if (selectedCodon && panelRef.current) {
+      panelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedCodon]);
+
+  const handleSelectCodon = useCallback((codon) => {
+    setSelectedCodon(prev => prev === codon ? null : codon);
+    const data = CODON_MAP[codon];
+    setHighlightedAA(prev => (prev === data?.aa ? null : data?.aa));
+    setClickCount(c => c + 1);
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedCodon(null);
+    setHighlightedAA(null);
+  }, []);
+
+  const isCodonVisible = useCallback((codon) => {
+    const data = CODON_MAP[codon];
+    if (filterMode === 'all')   return true;
+    if (filterMode === 'start') return data?.type === 'start';
+    if (filterMode === 'stop')  return data?.type === 'stop';
+    return true;
+  }, [filterMode]);
+
+  const isCodonHighlighted = useCallback((codon) => {
+    const data = CODON_MAP[codon];
+    return highlightedAA !== null && data?.aa === highlightedAA;
+  }, [highlightedAA]);
+
+  return (
+    <article id="tool-codon" className="tool-card tool-card--wide active ct-root">
+
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div className="ct-header">
+        <div className="ct-header-text">
+          <h2 className="ct-title">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
+              <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"/>
+              <line x1="8" y1="7" x2="8" y2="14"/><line x1="12" y1="5.5" x2="12" y2="15.5"/><line x1="16" y1="7" x2="16" y2="14"/>
+            </svg>
+            RNA Codon Table
+          </h2>
+          <p className="ct-subtitle">
+            Click any codon or amino acid to explore synonyms, properties, and base positions.
+            {clickCount > 0 && <span className="ct-click-counter">{clickCount} interaction{clickCount !== 1 ? 's' : ''}</span>}
+          </p>
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="ct-filter-bar" role="group" aria-label="Filter codons">
+          {[
+            { key: 'all',   label: 'All Codons' },
+            { key: 'start', label: '★ Start' },
+            { key: 'stop',  label: '■ Stop' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              id={`ct-filter-${key}`}
+              className={`ct-filter-btn ct-filter-btn--${key} ${filterMode === key ? 'is-active' : ''}`}
+              onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
+              aria-pressed={filterMode === key}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Legend ───────────────────────────────────────────────── */}
+      <div className="ct-legend" role="note" aria-label="Legend">
+        <span className="ct-legend-item ct-legend-item--start">★ Start codon (AUG / Met)</span>
+        <span className="ct-legend-item ct-legend-item--stop">■ Stop codon (UAA / UAG / UGA)</span>
+        <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
+      </div>
+
+      {/* ── Axis Labels + Grid ────────────────────────────────────── */}
+      <div className="ct-outer-grid">
+
+        {/* Left axis: "First Base" vertical label */}
+        <div className="ct-axis-label ct-axis-label--left" aria-label="First base in codon">
+          <span>First Base (5')</span>
+        </div>
+
+        {/* Inner: top axis + table */}
+        <div className="ct-inner-wrapper">
+
+          {/* Top axis: Second Base */}
+          <div className="ct-axis-top" role="row">
+            <div className="ct-axis-corner"></div>
+            {SECOND_BASES.map(b2 => (
+              <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`} role="columnheader">
+                <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
+                <span className="ct-axis-desc">2nd base</span>
+              </div>
+            ))}
+            <div className="ct-axis-corner"></div>
+          </div>
+
+          {/* Main table body */}
+          <div className="ct-table-body">
+
+            {/* Right axis: Third Base — one row per third-base letter, aligned via grid */}
+            <div className="ct-axis-right-container" aria-label="Third base in codon">
+              {THIRD_BASES.map(b3 => (
+                <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd ct-base-row-${b3}`} role="rowheader">
+                  <span className={`ct-axis-base ct-base-${b3}`}>{b3}</span>
+                </div>
+              ))}
+            </div>
+
+            {BASES.map(b1 => (
+              <div key={b1} className={`ct-row-group ct-b1-${b1}`} role="rowgroup">
+
+                {/* Left row header: first base letter */}
+                <div className={`ct-row-header ct-base-${b1}`} role="rowheader" aria-label={`First base: ${b1}`}>
+                  <span>{b1}</span>
+                </div>
+
+                {/* 4 columns (second base) × 4 rows (third base) */}
+                <div className="ct-row-cells">
+                  {SECOND_BASES.map(b2 => {
+                    const cellCodons = THIRD_BASES.map(b3 => `${b1}${b2}${b3}`);
+                    // Find the group of consecutive identical AAs to render a shared label
+                    const aaGroups = [];
+                    cellCodons.forEach((codon, idx) => {
+                      const aa = CODON_MAP[codon]?.aa;
+                      const last = aaGroups[aaGroups.length - 1];
+                      if (last && last.aa === aa && CODON_MAP[codon]?.type === last.type) {
+                        last.codons.push(codon);
+                      } else {
+                        aaGroups.push({ aa, type: CODON_MAP[codon]?.type, codons: [codon], startIdx: idx });
+                      }
+                    });
+
+                    return (
+                      <div key={b2} className={`ct-cell ct-cell-b2-${b2}`} role="group" aria-label={`${b1}${b2}x group`}>
+                        {cellCodons.map((codon, rowIdx) => {
+                          const isHidden = !isCodonVisible(codon);
+                          return (
+                            <div
+                              key={codon}
+                              className={`ct-codon-row ${isHidden ? 'ct-hidden' : ''}`}
+                              role="row"
+                            >
+                              <CodonButton
+                                codon={codon}
+                                isSelected={selectedCodon === codon}
+                                isHighlighted={isCodonHighlighted(codon)}
+                                onSelect={handleSelectCodon}
+                              />
+                            </div>
+                          );
+                        })}
+
+                        {/* AA labels — one per consecutive group, vertically centered */}
+                        <div className="ct-aa-labels" aria-label={`Amino acids for ${b1}${b2}x`}>
+                          {aaGroups.map((group, gi) => (
+                            <div
+                              key={gi}
+                              className="ct-aa-label-slot"
+                              style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
+                            >
+                              <AminoAcidButton
+                                codon={group.codons[0]}
+                                isHighlighted={highlightedAA === group.aa}
+                                onSelect={handleSelectCodon}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Repeating right axis per row group: U C A G */}
+                <div className="ct-row-right-axis">
+                  {THIRD_BASES.map(b3 => (
+                    <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd-inline ct-base-${b3}`}>
+                      <span>{b3}</span>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+
+          {/* Bottom axis: Second Base (repeated) */}
+          <div className="ct-axis-bottom" role="row" aria-hidden="true">
+            <div className="ct-axis-corner"></div>
+            {SECOND_BASES.map(b2 => (
+              <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`}>
+                <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
+              </div>
+            ))}
+            <div className="ct-axis-corner"></div>
+          </div>
+        </div>
+
+        {/* Right axis: "Third Base" vertical label */}
+        <div className="ct-axis-label ct-axis-label--right" aria-label="Third base in codon">
+          <span>Third Base (3')</span>
+        </div>
+
+      </div>
+
+      {/* ── Info Panel ───────────────────────────────────────────── */}
+      <div ref={panelRef}>
+        {selectedCodon ? (
+          <InfoPanel codon={selectedCodon} onClose={handleClearSelection} />
+        ) : (
+          <div className="ct-no-selection" aria-live="polite">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Select a codon above to view detailed information
+          </div>
+        )}
+      </div>
+
+      {/* ── Stats Bar ────────────────────────────────────────────── */}
+      <div className="ct-stats-bar">
+        <div className="ct-stat">
+          <span className="ct-stat-num">64</span>
+          <span className="ct-stat-lbl">Total Codons</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-num">20</span>
+          <span className="ct-stat-lbl">Amino Acids</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-num ct-stat-num--start">1</span>
+          <span className="ct-stat-lbl">Start Codon</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-num ct-stat-num--stop">3</span>
+          <span className="ct-stat-lbl">Stop Codons</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-num ct-stat-num--click">{clickCount}</span>
+          <span className="ct-stat-lbl">Interactions</span>
+        </div>
+      </div>
+
+    </article>
+  );
+}

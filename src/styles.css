@@ -4373,7 +4373,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 /* ── Outer grid: [axis-left] [table] [axis-right] ───────────────────────── */
 .ct-outer-grid {
   display: grid;
-  grid-template-columns: 28px 1fr 28px;
+  grid-template-columns: 36px 1fr 36px;
   gap: 0;
   align-items: stretch;
   border-radius: 12px;
@@ -4823,7 +4823,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 
 @media (max-width: 780px) {
   .ct-root { padding: 1rem 0.5rem 1.5rem; }
-  .ct-outer-grid { grid-template-columns: 20px 1fr 20px; }
+  .ct-outer-grid { grid-template-columns: 24px 1fr 24px; }
   .ct-row-header { font-size: 0.85rem; }
   .ct-codon-btn  { font-size: 0.66rem; padding: 2px 3px; }
   .ct-aa-labels  { width: 44px; }

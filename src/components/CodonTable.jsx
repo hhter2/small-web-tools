@@ -1127,8 +1127,24 @@ export default function CodonTable() {
       return codon.startsWith(typedCodon);
     }
     const data = CODON_MAP[codon];
-    return highlightedAA !== null && data?.aa === highlightedAA;
-  }, [highlightedAA, typedCodon]);
+    if (!data) return false;
+
+    // 1. If a specific AA is highlighted, highlight only that one
+    if (highlightedAA !== null) {
+      return data.aa === highlightedAA;
+    }
+
+    // 2. If a group is selected, highlight all AAs in that group
+    if (selectedGroup !== 'all') {
+      const activeGroup = selectedGroup.startsWith('custom-') 
+        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
+        : AA_GROUPS[selectedGroup];
+      
+      return activeGroup && activeGroup.aas.includes(data.aa);
+    }
+
+    return false;
+  }, [highlightedAA, typedCodon, selectedGroup, customGroups]);
 
   const isCodonDimmed = useCallback((codon) => {
     const data = CODON_MAP[codon];
@@ -1310,7 +1326,7 @@ export default function CodonTable() {
                                 >
                                   <AminoAcidButton
                                     codon={group.codons[0]}
-                                    isHighlighted={highlightedAA === group.aa}
+                                    isHighlighted={isCodonHighlighted(group.codons[0])}
                                     isDimmed={isCodonDimmed(group.codons[0])}
                                     onSelect={handleSelectCodon}
                                   />

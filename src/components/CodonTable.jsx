@@ -268,7 +268,6 @@ export default function CodonTable() {
   const [selectedCodon,    setSelectedCodon]    = useState(null);
   const [highlightedAA,    setHighlightedAA]    = useState(null);
   const [filterMode,       setFilterMode]       = useState('all'); // 'all' | 'start' | 'stop'
-  const [clickCount,       setClickCount]       = useState(0);
   const panelRef = useRef(null);
 
   // Scroll panel into view when codon selected
@@ -282,7 +281,6 @@ export default function CodonTable() {
     setSelectedCodon(prev => prev === codon ? null : codon);
     const data = CODON_MAP[codon];
     setHighlightedAA(prev => (prev === data?.aa ? null : data?.aa));
-    setClickCount(c => c + 1);
   }, []);
 
   const handleClearSelection = useCallback(() => {
@@ -308,7 +306,9 @@ export default function CodonTable() {
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="ct-header">
-        <div className="ct-header-text">
+        
+        {/* Title & Filter Bar on same line */}
+        <div className="ct-header-top">
           <h2 className="ct-title">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
@@ -317,38 +317,41 @@ export default function CodonTable() {
             </svg>
             RNA Codon Table
           </h2>
+
+          {/* Filter Buttons */}
+          <div className="ct-filter-bar" role="group" aria-label="Filter codons">
+            {[
+              { key: 'all',   label: 'All Codons' },
+              { key: 'start', label: '★ Start' },
+              { key: 'stop',  label: '■ Stop' },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                id={`ct-filter-${key}`}
+                className={`ct-filter-btn ct-filter-btn--${key} ${filterMode === key ? 'is-active' : ''}`}
+                onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
+                aria-pressed={filterMode === key}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Subtitle & Legend on same line below */}
+        <div className="ct-subtitle-row">
           <p className="ct-subtitle">
             Click any codon or amino acid to explore synonyms, properties, and base positions.
-            {clickCount > 0 && <span className="ct-click-counter">{clickCount} interaction{clickCount !== 1 ? 's' : ''}</span>}
           </p>
+          <div className="ct-legend" role="note" aria-label="Legend">
+            <span className="ct-legend-item ct-legend-item--start">★ Start Codon</span>
+            <span className="ct-legend-item ct-legend-item--stop">■ Stop Codon</span>
+            <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
+          </div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="ct-filter-bar" role="group" aria-label="Filter codons">
-          {[
-            { key: 'all',   label: 'All Codons' },
-            { key: 'start', label: '★ Start' },
-            { key: 'stop',  label: '■ Stop' },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              id={`ct-filter-${key}`}
-              className={`ct-filter-btn ct-filter-btn--${key} ${filterMode === key ? 'is-active' : ''}`}
-              onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
-              aria-pressed={filterMode === key}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* ── Legend ───────────────────────────────────────────────── */}
-      <div className="ct-legend" role="note" aria-label="Legend">
-        <span className="ct-legend-item ct-legend-item--start">★ Start codon (AUG / Met)</span>
-        <span className="ct-legend-item ct-legend-item--stop">■ Stop codon (UAA / UAG / UGA)</span>
-        <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
-      </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
       <div className="ct-workspace">

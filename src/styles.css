@@ -4278,13 +4278,19 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 /* ── Header ─────────────────────────────────────────────────────────────── */
 .ct-header {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.ct-header-top {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+  width: 100%;
 }
-
-.ct-header-text { flex: 1; min-width: 200px; }
 
 .ct-title {
   font-size: 1.45rem;
@@ -4293,7 +4299,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0;
 }
 
 .ct-subtitle {
@@ -4302,17 +4308,17 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   line-height: 1.5;
 }
 
-.ct-click-counter {
-  display: inline-block;
-  margin-left: 0.6rem;
-  padding: 0.15rem 0.55rem;
-  background: var(--accent-light);
-  color: var(--accent);
-  border-radius: 100px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.ct-subtitle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 0.2rem;
 }
+
+
 
 /* ── Filter bar ─────────────────────────────────────────────────────────── */
 .ct-filter-bar {

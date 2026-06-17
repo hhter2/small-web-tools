@@ -622,7 +622,30 @@ function getAAGroupKey(aa) {
 // ─────────────────────────────────────────────────────────────────────────────
 // InfoPanel — detail card for selected codon
 // ─────────────────────────────────────────────────────────────────────────────
-function InfoPanel({ typedCodon, selectedCodon, onType, onClear, inputRef }) {
+function InfoPanel({
+  typedCodon,
+  selectedCodon,
+  selectedGroup,
+  setSelectedGroup,
+  customGroups,
+  highlightedAA,
+  setHighlightedAA,
+  isCreatingGroup,
+  setIsCreatingGroup,
+  newGroupName,
+  setNewGroupName,
+  newGroupAAs,
+  setNewGroupAAs,
+  newGroupColor,
+  setNewGroupColor,
+  onType,
+  onClear,
+  inputRef,
+  handleDeleteCustomGroup,
+  handleToggleAAInNewGroup,
+  handleCreateCustomGroup,
+  setSelectedCodon
+}) {
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
 
@@ -644,103 +667,310 @@ function InfoPanel({ typedCodon, selectedCodon, onType, onClear, inputRef }) {
     }
   };
 
+  const activeGroup = selectedGroup.startsWith('custom-')
+    ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
+    : AA_GROUPS[selectedGroup];
+
+  const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
+
   return (
-    <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
+    <div className="ct-sidebar-container">
       
-      {/* Hidden input for capturing keys */}
-      <input
-        ref={inputRef}
-        type="text"
-        className="ct-typer-input-hidden"
-        value={typedCodon}
-        onChange={(e) => onType(e.target.value)}
-        placeholder="Type codon"
-        aria-label="Type codon code"
-      />
-
-      {/* Header section */}
-      <div className="ct-panel-header-merged">
-        {data ? (
-          <>
-            <div className="ct-panel-header-title">
-              <span className="ct-panel-aa">{data.full}</span>
-              {data.aa !== 'Stop' && (
-                <>
-                  <span className="ct-panel-abbr-badge">{data.aa}</span>
-                  <span className="ct-panel-abbr-badge">{data.abbr}</span>
-                </>
-              )}
-              {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
-              {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
-            </div>
-            <button className="ct-panel-close" onClick={onClear} aria-label="Clear selection">✕</button>
-          </>
-        ) : (
-          <>
-            <span className="ct-panel-title-empty">Codon Lookup</span>
-            {typedCodon.length > 0 && (
-              <button className="ct-panel-close" onClick={onClear} aria-label="Clear typing">✕</button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* The 3 passcode typing cards */}
-      <div className="ct-typer-cards-row ct-typer-cards-row--sidebar">
-        {['1ST', '2ND', '3RD'].map((posName, idx) => {
-          const char = typedCodon[idx] || '';
-          const isActive = typedCodon.length === idx;
-          const charColorClass = char ? `ct-base-${char}` : '';
-          return (
-            <div
-              key={idx}
-              className={`ct-typer-card ${isActive ? 'is-active' : ''} ${char ? 'has-value' : ''}`}
-              onClick={handleCardClick}
-              title="Click to type codon (U, C, A, G)"
+      {/* ── Filter by Groups Block ────────────────── */}
+      <div className="ct-sidebar-group-panel">
+        <span className="ct-section-title">Filter by Group</span>
+        <div className="ct-group-wrapper">
+          
+          <div className="ct-group-dropdown-row">
+            <select
+              value={selectedGroup}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedGroup(val);
+                setHighlightedAA(null);
+                setSelectedCodon(null);
+              }}
+              className="ct-group-dropdown"
+              style={{
+                borderLeft: activeGroupColor ? `4px solid ${activeGroupColor}` : '1px solid var(--border-color)',
+                paddingLeft: activeGroupColor ? '0.5rem' : '0.75rem'
+              }}
             >
-              <span className="ct-typer-card-pos">{posName}</span>
-              <span className={`ct-typer-card-val ${charColorClass}`}>
-                {char || '—'}
-                {isActive && <span className="ct-typer-cursor"></span>}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Display result/prompt depending on state */}
-      {data ? (
-        <div className="ct-panel-details-scroll">
-          {/* Synonymous codons */}
-          {synonyms.length > 0 && (
-            <div className="ct-panel-synonyms">
-              <span className="ct-panel-syn-label">Synonymous codons:</span>
-              <div className="ct-panel-syn-list">
-                {synonyms.map(s => (
-                  <span key={s} className="ct-syn-chip">{s}</span>
+              <option value="all">All Groups</option>
+              <optgroup label="Standard Groups">
+                {Object.entries(AA_GROUPS).map(([key, grp]) => (
+                  <option key={key} value={key}>{grp.name}</option>
                 ))}
+              </optgroup>
+              {customGroups.length > 0 && (
+                <optgroup label="Custom Groups">
+                  {customGroups.map((grp, idx) => (
+                    <option key={`custom-${idx}`} value={`custom-${idx}`}>
+                      {grp.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+
+            <div className="ct-group-control-btns">
+              {selectedGroup.startsWith('custom-') && (
+                <button
+                  type="button"
+                  className="ct-dropdown-action-btn ct-btn-delete"
+                  onClick={() => handleDeleteCustomGroup(parseInt(selectedGroup.split('-')[1], 10))}
+                  title="Delete active custom group"
+                >
+                  Delete
+                </button>
+              )}
+              <button
+                type="button"
+                className={`ct-dropdown-action-btn ${isCreatingGroup ? 'is-active' : ''}`}
+                onClick={() => setIsCreatingGroup(prev => !prev)}
+              >
+                {isCreatingGroup ? 'Close' : '+ Custom'}
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Group Creator Panel */}
+          {isCreatingGroup && (
+            <div className="ct-custom-creator-panel">
+              <span className="ct-creator-title">Create Custom Group</span>
+              <div className="ct-creator-form">
+                
+                {/* Name Input */}
+                <div className="ct-creator-field">
+                  <label className="ct-creator-label">Group Name</label>
+                  <input
+                    type="text"
+                    className="ct-creator-input"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="e.g. My Favorite AAs"
+                    maxLength={20}
+                  />
+                </div>
+
+                {/* Color Picker */}
+                <div className="ct-creator-field">
+                  <label className="ct-creator-label">Label Color</label>
+                  <div className="ct-creator-colors">
+                    {[
+                      '#d97706', '#e11d48', '#059669', '#4f46e5', '#ea580c', '#06b6d4', '#db2777'
+                    ].map(color => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`ct-color-circle ${newGroupColor === color ? 'is-selected' : ''}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setNewGroupColor(color)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amino Acid Selector Grid */}
+                <div className="ct-creator-field">
+                  <label className="ct-creator-label">Select Amino Acids ({newGroupAAs.length} chosen)</label>
+                  <div className="ct-creator-aa-grid">
+                    {Object.keys(AMINO_ACID_DETAILS).map(aa => {
+                      const isChosen = newGroupAAs.includes(aa);
+                      const aaColor = AA_COLORS[aa] || 'var(--accent)';
+                      const representativeCodon = Object.keys(CODON_MAP).find(c => CODON_MAP[c].aa === aa);
+                      const oneLetter = representativeCodon ? (CODON_MAP[representativeCodon]?.abbr || '') : '';
+                      return (
+                        <button
+                          key={aa}
+                          type="button"
+                          className={`ct-creator-aa-btn ${isChosen ? 'is-chosen' : ''}`}
+                          style={{
+                            borderColor: isChosen ? aaColor : 'var(--border-color)',
+                            backgroundColor: isChosen ? `${aaColor}15` : 'transparent',
+                            color: isChosen ? 'var(--text-main)' : 'var(--text-muted)'
+                          }}
+                          onClick={() => handleToggleAAInNewGroup(aa)}
+                        >
+                          <span className="ct-creator-aa-code" style={{ color: aaColor, fontWeight: 'bold' }}>{aa}</span>
+                          <span className="ct-creator-aa-letter">[{oneLetter}]</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="ct-creator-actions">
+                  <button
+                    type="button"
+                    className="ct-creator-btn-save"
+                    onClick={handleCreateCustomGroup}
+                    disabled={!newGroupName.trim() || newGroupAAs.length === 0}
+                  >
+                    Save Group
+                  </button>
+                  <button
+                    type="button"
+                    className="ct-creator-btn-cancel"
+                    onClick={() => {
+                      setIsCreatingGroup(false);
+                      setNewGroupName('');
+                      setNewGroupAAs([]);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+
               </div>
             </div>
           )}
 
-          {/* Fischer Projection */}
-          {data.aa !== 'Stop' && (
-            <FischerProjection aa={data.aa} />
+          {/* AA chips in active group */}
+          {selectedGroup !== 'all' && activeGroup && (
+            <div className="ct-group-chips-wrapper">
+              <span className="ct-chips-label">Amino acids in group:</span>
+              <div className="ct-group-chips">
+                {activeGroup.aas.map(aa => {
+                  const isSelected = highlightedAA === aa;
+                  const aaColor = AA_COLORS[aa] || 'var(--accent)';
+                  const firstCodon = Object.keys(CODON_MAP).find(c => CODON_MAP[c].aa === aa);
+                  const oneLetter = firstCodon ? (CODON_MAP[firstCodon]?.abbr || '') : '';
+                  return (
+                    <button
+                      key={aa}
+                      className={`ct-aa-chip ${isSelected ? 'is-selected' : ''}`}
+                      style={{
+                        '--aa-chip-color': aaColor,
+                        borderColor: isSelected ? aaColor : 'var(--border-color)',
+                        color: isSelected ? '#ffffff' : 'var(--text-main)',
+                        backgroundColor: isSelected ? aaColor : 'rgba(255, 255, 255, 0.03)'
+                      }}
+                      onClick={() => {
+                        setHighlightedAA(prev => {
+                          const next = prev === aa ? null : aa;
+                          if (next) {
+                            if (firstCodon) setSelectedCodon(firstCodon);
+                          } else {
+                            setSelectedCodon(null);
+                            setSelectedGroup('all'); // Clear selection -> show all!
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      <span className="ct-aa-chip-abbr">{aa}</span>
+                      <span className="ct-aa-chip-full">[{oneLetter}]</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
+
         </div>
-      ) : (
-        <div className="ct-panel-prompt">
-          {typedCodon.length > 0 ? (
-            <span className="ct-result-prompt">
-              Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
-            </span>
+      </div>
+
+      {/* ── Codon Lookup Block ────────────────── */}
+      <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
+        
+        {/* Hidden input for capturing keys */}
+        <input
+          ref={inputRef}
+          type="text"
+          className="ct-typer-input-hidden"
+          value={typedCodon}
+          onChange={(e) => onType(e.target.value)}
+          placeholder="Type codon"
+          aria-label="Type codon code"
+        />
+
+        {/* Header section */}
+        <div className="ct-panel-header-merged">
+          {data ? (
+            <>
+              <div className="ct-panel-header-title">
+                <span className="ct-panel-aa">{data.full}</span>
+                {data.aa !== 'Stop' && (
+                  <>
+                    <span className="ct-panel-abbr-badge">{data.aa}</span>
+                    <span className="ct-panel-abbr-badge">{data.abbr}</span>
+                  </>
+                )}
+                {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
+                {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
+              </div>
+              <button className="ct-panel-close" onClick={onClear} aria-label="Clear selection">✕</button>
+            </>
           ) : (
-            <span className="ct-result-placeholder">
-              Click cards above to type a codon sequence (e.g. UAU, AUG) or select a codon from the table.
-            </span>
+            <>
+              <span className="ct-panel-title-empty">Codon Lookup</span>
+              {typedCodon.length > 0 && (
+                <button className="ct-panel-close" onClick={onClear} aria-label="Clear typing">✕</button>
+              )}
+            </>
           )}
         </div>
-      )}
+
+        {/* The 3 passcode typing cards */}
+        <div className="ct-typer-cards-row ct-typer-cards-row--sidebar">
+          {['1ST', '2ND', '3RD'].map((posName, idx) => {
+            const char = typedCodon[idx] || '';
+            const isActive = typedCodon.length === idx;
+            const charColorClass = char ? `ct-base-${char}` : '';
+            return (
+              <div
+                key={idx}
+                className={`ct-typer-card ${isActive ? 'is-active' : ''} ${char ? 'has-value' : ''}`}
+                onClick={handleCardClick}
+                title="Click to type codon (U, C, A, G)"
+              >
+                <span className="ct-typer-card-pos">{posName}</span>
+                <span className={`ct-typer-card-val ${charColorClass}`}>
+                  {char || '—'}
+                  {isActive && <span className="ct-typer-cursor"></span>}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Display result/prompt depending on state */}
+        {data ? (
+          <div className="ct-panel-details-scroll">
+            {/* Synonymous codons */}
+            {synonyms.length > 0 && (
+              <div className="ct-panel-synonyms">
+                <span className="ct-panel-syn-label">Synonymous codons:</span>
+                <div className="ct-panel-syn-list">
+                  {synonyms.map(s => (
+                    <span key={s} className="ct-syn-chip">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fischer Projection */}
+            {data.aa !== 'Stop' && (
+              <FischerProjection aa={data.aa} />
+            )}
+          </div>
+        ) : (
+          <div className="ct-panel-prompt">
+            {typedCodon.length > 0 ? (
+              <span className="ct-result-prompt">
+                Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
+              </span>
+            ) : (
+              <span className="ct-result-placeholder">
+                Click cards above to type a codon sequence (e.g. UAU, AUG) or select a codon from the table.
+              </span>
+            )}
+          </div>
+        )}
+
+      </div>
 
     </div>
   );
@@ -754,7 +984,20 @@ export default function CodonTable() {
   const [highlightedAA,    setHighlightedAA]    = useState(null);
   const [filterMode,       setFilterMode]       = useState('all'); // 'all' | 'start' | 'stop'
   const [typedCodon,       setTypedCodon]       = useState('');
-  const [selectedGroup,    setSelectedGroup]    = useState('all'); // 'all' | 'hydrophobic' | 'polar' | 'basic' | 'acidic'
+  const [selectedGroup,    setSelectedGroup]    = useState('all'); // 'all' | 'hydrophobic' | 'polar' | 'basic' | 'acidic' ...
+  const [customGroups,     setCustomGroups]     = useState(() => {
+    try {
+      const saved = localStorage.getItem('ct-custom-groups');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isCreatingGroup,  setIsCreatingGroup]  = useState(false);
+  const [newGroupName,     setNewGroupName]     = useState('');
+  const [newGroupAAs,      setNewGroupAAs]      = useState([]);
+  const [newGroupColor,    setNewGroupColor]    = useState('#d97706'); // Default gold
+
   const panelRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -777,24 +1020,31 @@ export default function CodonTable() {
     }
   }, [selectedCodon]);
 
+  // Persist custom groups
+  useEffect(() => {
+    localStorage.setItem('ct-custom-groups', JSON.stringify(customGroups));
+  }, [customGroups]);
+
   const handleSelectCodon = useCallback((codon) => {
     const data = CODON_MAP[codon];
     if (!data) return;
 
     setSelectedCodon(prev => {
       const isSame = prev === codon;
-      const nextCodon = isSame ? null : codon;
-      
-      setHighlightedAA(prevAA => {
-        const nextAA = isSame ? null : data.aa;
-        if (nextAA) {
-          const grpKey = getAAGroupKey(nextAA);
-          if (grpKey) setSelectedGroup(grpKey);
+      if (isSame) {
+        // Deselecting: clear highlighted amino acid and reset group filter to show all
+        setHighlightedAA(null);
+        setSelectedGroup('all');
+        return null;
+      } else {
+        // Selecting: highlight amino acid and show its corresponding biochemical group
+        setHighlightedAA(data.aa);
+        const grpKey = getAAGroupKey(data.aa);
+        if (grpKey) {
+          setSelectedGroup(grpKey);
         }
-        return nextAA;
-      });
-
-      return nextCodon;
+        return codon;
+      }
     });
   }, []);
 
@@ -824,6 +1074,43 @@ export default function CodonTable() {
   const handleCardClick = () => {
     if (inputRef.current) {
       inputRef.current.focus();
+    }
+  };
+
+  const handleToggleAAInNewGroup = (aa) => {
+    setNewGroupAAs(prev => 
+      prev.includes(aa) ? prev.filter(item => item !== aa) : [...prev, aa]
+    );
+  };
+
+  const handleCreateCustomGroup = () => {
+    if (!newGroupName.trim() || newGroupAAs.length === 0) return;
+    const newGroup = {
+      name: newGroupName.trim(),
+      color: newGroupColor,
+      aas: newGroupAAs
+    };
+    setCustomGroups(prev => [...prev, newGroup]);
+    setSelectedGroup(`custom-${customGroups.length}`);
+    // Clear and close
+    setNewGroupName('');
+    setNewGroupAAs([]);
+    setIsCreatingGroup(false);
+  };
+
+  const handleDeleteCustomGroup = (indexToDelete) => {
+    setCustomGroups(prev => prev.filter((_, idx) => idx !== indexToDelete));
+    if (selectedGroup === `custom-${indexToDelete}`) {
+      setSelectedGroup('all');
+      setHighlightedAA(null);
+    } else if (selectedGroup.startsWith('custom-')) {
+      const activeIdx = parseInt(selectedGroup.split('-')[1], 10);
+      if (activeIdx > indexToDelete) {
+        setSelectedGroup(`custom-${activeIdx - 1}`);
+      } else if (activeIdx === indexToDelete) {
+        setSelectedGroup('all');
+        setHighlightedAA(null);
+      }
     }
   };
 
@@ -858,14 +1145,17 @@ export default function CodonTable() {
 
     // 3. If group filter is active, dim codons not in that group
     if (selectedGroup !== 'all') {
-      const groupData = AA_GROUPS[selectedGroup];
-      if (!groupData || !groupData.aas.includes(data.aa)) {
+      const activeGroup = selectedGroup.startsWith('custom-') 
+        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
+        : AA_GROUPS[selectedGroup];
+
+      if (!activeGroup || !activeGroup.aas.includes(data.aa)) {
         return true;
       }
     }
 
     return false;
-  }, [filterMode, selectedGroup, typedCodon]);
+  }, [filterMode, selectedGroup, typedCodon, customGroups]);
 
   return (
     <article id="tool-codon" className="tool-card tool-card--wide active ct-root">
@@ -913,83 +1203,6 @@ export default function CodonTable() {
             <span className="ct-legend-item ct-legend-item--start">★ Start Codon</span>
             <span className="ct-legend-item ct-legend-item--stop">■ Stop Codon</span>
             <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── Interactive Panel: Group Selector ────────────────── */}
-      <div className="ct-interactive-panel">
-        
-        {/* Amino Acid Group Filter */}
-        <div className="ct-group-section">
-          <span className="ct-section-title">Filter by Group</span>
-          <div className="ct-group-wrapper">
-            <div className="ct-group-buttons" role="group" aria-label="Biochemical groups">
-              <button
-                className={`ct-group-btn ${selectedGroup === 'all' ? 'is-active' : ''}`}
-                onClick={() => {
-                  setSelectedGroup('all');
-                  setHighlightedAA(null);
-                }}
-              >
-                All Groups
-              </button>
-              {Object.entries(AA_GROUPS).map(([key, grp]) => (
-                <button
-                  key={key}
-                  className={`ct-group-btn ct-group-btn--${key} ${selectedGroup === key ? 'is-active' : ''}`}
-                  onClick={() => {
-                    setSelectedGroup(key);
-                    setHighlightedAA(null);
-                  }}
-                >
-                  {grp.name}
-                </button>
-              ))}
-            </div>
-
-            {/* AA chips in active group */}
-            {selectedGroup !== 'all' && (
-              <div className="ct-group-chips-wrapper">
-                <span className="ct-chips-label">Amino acids in group:</span>
-                <div className="ct-group-chips">
-                  {AA_GROUPS[selectedGroup].aas.map(aa => {
-                    const isSelected = highlightedAA === aa;
-                    const aaColor = AA_COLORS[aa] || 'var(--accent)';
-                    const firstCodon = Object.keys(CODON_MAP).find(c => CODON_MAP[c].aa === aa);
-                    const oneLetter = firstCodon ? (CODON_MAP[firstCodon]?.abbr || '') : '';
-                    return (
-                      <button
-                        key={aa}
-                        className={`ct-aa-chip ${isSelected ? 'is-selected' : ''}`}
-                        style={{
-                          '--aa-chip-color': aaColor,
-                          borderColor: isSelected ? aaColor : 'var(--border-color)',
-                          color: isSelected ? '#ffffff' : 'var(--text-main)',
-                          backgroundColor: isSelected ? aaColor : 'rgba(255, 255, 255, 0.03)'
-                        }}
-                        onClick={() => {
-                          setHighlightedAA(prev => {
-                            const next = prev === aa ? null : aa;
-                            if (next) {
-                              if (firstCodon) setSelectedCodon(firstCodon);
-                            } else {
-                              setSelectedCodon(null);
-                            }
-                            return next;
-                          });
-                        }}
-                      >
-                        <span className="ct-aa-chip-abbr">{aa}</span>
-                        <span className="ct-aa-chip-full">[{oneLetter}]</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
           </div>
         </div>
 
@@ -1143,9 +1356,26 @@ export default function CodonTable() {
           <InfoPanel
             typedCodon={typedCodon}
             selectedCodon={selectedCodon}
+            selectedGroup={selectedGroup}
+            setSelectedGroup={setSelectedGroup}
+            customGroups={customGroups}
+            highlightedAA={highlightedAA}
+            setHighlightedAA={setHighlightedAA}
+            isCreatingGroup={isCreatingGroup}
+            setIsCreatingGroup={setIsCreatingGroup}
+            newGroupName={newGroupName}
+            setNewGroupName={setNewGroupName}
+            newGroupAAs={newGroupAAs}
+            setNewGroupAAs={setNewGroupAAs}
+            newGroupColor={newGroupColor}
+            setNewGroupColor={setNewGroupColor}
             onType={handleTypeCodon}
             onClear={handleClearSelection}
             inputRef={inputRef}
+            handleDeleteCustomGroup={handleDeleteCustomGroup}
+            handleToggleAAInNewGroup={handleToggleAAInNewGroup}
+            handleCreateCustomGroup={handleCreateCustomGroup}
+            setSelectedCodon={setSelectedCodon}
           />
         </div>
       </div>

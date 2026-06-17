@@ -5403,6 +5403,280 @@ html[data-theme="dark"] .ct-fisc-side-bond {
   background: var(--bg-card);
 }
 
+/* Custom Group Creator Panel Styles */
+.ct-custom-creator-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 0.5rem 0;
+  animation: ct-fade-in 0.25s ease-out;
+}
+
+.ct-creator-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.ct-creator-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ct-creator-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ct-creator-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.ct-creator-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.ct-creator-input:focus {
+  border-color: var(--accent);
+}
+
+.ct-creator-colors {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ct-color-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ct-color-circle:hover {
+  transform: scale(1.15);
+}
+
+.ct-color-circle.is-selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.ct-creator-aa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 0.4rem;
+}
+
+.ct-creator-aa-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.01);
+  padding: 0.35rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.75rem;
+}
+
+.ct-creator-aa-btn:hover {
+  border-color: var(--aa-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ct-creator-aa-btn.is-chosen {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.ct-creator-aa-code {
+  font-weight: 700;
+}
+
+.ct-creator-aa-letter {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.ct-creator-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 0.75rem;
+}
+
+.ct-creator-btn-save {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ct-creator-btn-save:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.ct-creator-btn-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ct-creator-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ct-creator-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+/* Sidebar Container & Group Dropdown Layout */
+.ct-sidebar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.ct-sidebar-group-panel {
+  position: relative;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: var(--shadow-card);
+  animation: ct-panel-slide-in 0.25s ease;
+}
+
+.ct-group-dropdown-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.ct-group-dropdown {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.ct-group-dropdown:focus {
+  border-color: var(--accent);
+}
+
+.ct-group-dropdown optgroup {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.ct-group-dropdown option {
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.85rem;
+}
+
+.ct-group-control-btns {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.ct-dropdown-action-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ct-dropdown-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-muted);
+}
+
+.ct-dropdown-action-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 1px 6px rgba(99, 102, 241, 0.25);
+}
+
+.ct-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+/* Custom group creator inside sidebar adjust */
+.ct-sidebar-group-panel .ct-custom-creator-panel {
+  margin-top: 0.25rem;
+  padding: 1rem;
+}
+
+.ct-sidebar-group-panel .ct-creator-aa-grid {
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+}
+
 
 
 

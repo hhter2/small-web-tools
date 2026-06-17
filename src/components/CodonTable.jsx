@@ -579,10 +579,10 @@ function InfoPanel({ codon, onClose }) {
       <div className="ct-panel-header">
         <span className="ct-panel-aa">{data.full}</span>
         {data.aa !== 'Stop' && (
-          <div className="ct-panel-abbr-group">
+          <>
             <span className="ct-panel-abbr-badge">{data.aa}</span>
-            <span className="ct-panel-abbr-badge">1-letter: {data.abbr}</span>
-          </div>
+            <span className="ct-panel-abbr-badge">{data.abbr}</span>
+          </>
         )}
         {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
         {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
@@ -597,22 +597,16 @@ function InfoPanel({ codon, onClose }) {
         ))}
       </div>
 
-      <div className="ct-panel-codons-info">
-        <div className="ct-panel-selected-row">
-          <span className="ct-panel-syn-label">Selected Codon:</span>
-          <span className="ct-badge ct-badge--codon">Codon: {codon}</span>
-        </div>
-        {synonyms.length > 0 && (
-          <div className="ct-panel-synonyms">
-            <span className="ct-panel-syn-label">Synonymous codons:</span>
-            <div className="ct-panel-syn-list">
-              {synonyms.map(s => (
-                <span key={s} className="ct-syn-chip">{s}</span>
-              ))}
-            </div>
+      {synonyms.length > 0 && (
+        <div className="ct-panel-synonyms">
+          <span className="ct-panel-syn-label">Synonymous codons:</span>
+          <div className="ct-panel-syn-list">
+            {synonyms.map(s => (
+              <span key={s} className="ct-syn-chip">{s}</span>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {data.aa !== 'Stop' && (
         <FischerProjection aa={data.aa} />

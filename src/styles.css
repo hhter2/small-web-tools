@@ -4755,11 +4755,6 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   color: var(--text-main);
   letter-spacing: -0.02em;
 }
-.ct-panel-abbr-group {
-  display: flex;
-  gap: 0.45rem;
-  align-items: center;
-}
 .ct-panel-abbr-badge {
   padding: 0.25rem 0.65rem;
   border-radius: 8px;
@@ -4773,18 +4768,6 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 }
 html[data-theme="dark"] .ct-panel-abbr-badge {
   background: rgba(255, 255, 255, 0.05);
-}
-
-.ct-panel-codons-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-}
-.ct-panel-selected-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
 }
 .ct-badge {
   padding: 0.2rem 0.65rem;
@@ -4800,14 +4783,14 @@ html[data-theme="dark"] .ct-panel-abbr-badge {
 .ct-badge--stop   { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.08); }
 .ct-badge--1      { font-family: 'JetBrains Mono', monospace; }
 
-.ct-panel-synonyms { display: flex; flex-direction: column; gap: 0.4rem; }
-.ct-panel-syn-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-.ct-panel-syn-list  { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.ct-panel-synonyms { display: flex; flex-direction: column; gap: 0.45rem; }
+.ct-panel-syn-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.ct-panel-syn-list  { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .ct-syn-chip {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 5px;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
   background: var(--bg-app);
   border: 1px solid var(--border-color);
   color: var(--text-muted);

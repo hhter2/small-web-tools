@@ -4258,11 +4258,13 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   display: flex;
   gap: 1.5rem;
   align-items: start;
+  justify-content: center;
 }
 
 .ct-table-container {
-  flex: 2.2;
+  flex: 1.5;
   min-width: 0;
+  max-width: 580px;
 }
 
 .ct-side-panel {
@@ -4436,7 +4438,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 
 .ct-axis-base {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 .ct-axis-desc {
@@ -4490,7 +4492,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   justify-content: center;
   border-right: 1px solid var(--border-color);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 700;
   padding: 0.25rem;
 }
@@ -4507,7 +4509,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   justify-content: center;
   border-bottom: 1px solid var(--border-color);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 700;
   padding: 0;
 }
@@ -4529,7 +4531,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 
 /* The AA label overlay uses CSS grid, positioned absolutely */
 .ct-cell {
-  padding-right: 58px; /* reserve space for aa labels */
+  padding-right: 64px; /* reserve space for aa labels */
 }
 
 .ct-codon-row {
@@ -4546,8 +4548,8 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 /* ── Codon button ────────────────────────────────────────────────────────── */
 .ct-codon-btn {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.76rem;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 600;
   padding: 3px 6px;
   border-radius: 5px;
   border: 1.5px solid transparent;
@@ -4628,7 +4630,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   right: 0;
   top: 0;
   bottom: 0;
-  width: 56px;
+  width: 62px;
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   border-left: 1px solid var(--border-color);
@@ -4645,7 +4647,7 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 /* ── Amino acid button ────────────────────────────────────────────────────── */
 .ct-aa-btn {
   font-family: "Inter", system-ui, sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   padding: 2px 4px;
   border-radius: 4px;
@@ -4674,12 +4676,12 @@ html[data-theme="dark"] .history-table tbody tr:hover {
 }
 .ct-aa-btn.ct-aa-start {
   color: #16a34a;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 .ct-aa-btn.ct-aa-start:hover { background: rgba(22,163,74,0.12); border-color: #16a34a; }
 .ct-aa-btn.ct-aa-stop  {
   color: #dc2626;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 .ct-aa-btn.ct-aa-stop:hover  { background: rgba(220,38,38,0.1); border-color: #dc2626; }
 

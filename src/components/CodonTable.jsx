@@ -592,58 +592,126 @@ function getAAGroupKey(aa) {
 // ─────────────────────────────────────────────────────────────────────────────
 // InfoPanel — detail card for selected codon
 // ─────────────────────────────────────────────────────────────────────────────
-function InfoPanel({ codon, onClose }) {
-  const data = CODON_MAP[codon];
-  if (!codon || !data) return null;
+function InfoPanel({ typedCodon, selectedCodon, onType, onClear, inputRef }) {
+  const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
+  const data = codon ? CODON_MAP[codon] : null;
 
-  const synonyms = Object.keys(CODON_MAP).filter(
+  const synonyms = data ? Object.keys(CODON_MAP).filter(
     c => CODON_MAP[c].aa === data.aa && c !== codon
-  );
+  ) : [];
 
-  const bgClass = data.type === 'start'
-    ? 'ct-panel--start'
-    : data.type === 'stop'
-    ? 'ct-panel--stop'
-    : 'ct-panel--normal';
+  const bgClass = data
+    ? (data.type === 'start'
+      ? 'ct-panel--start'
+      : data.type === 'stop'
+      ? 'ct-panel--stop'
+      : 'ct-panel--normal')
+    : 'ct-panel--empty';
+
+  const handleCardClick = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   return (
     <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
-      <button className="ct-panel-close" onClick={onClose} aria-label="Close info panel">✕</button>
-      <div className="ct-panel-header">
-        <span className="ct-panel-aa">{data.full}</span>
-        {data.aa !== 'Stop' && (
+      
+      {/* Hidden input for capturing keys */}
+      <input
+        ref={inputRef}
+        type="text"
+        className="ct-typer-input-hidden"
+        value={typedCodon}
+        onChange={(e) => onType(e.target.value)}
+        placeholder="Type codon"
+        aria-label="Type codon code"
+      />
+
+      {/* Header section */}
+      <div className="ct-panel-header-merged">
+        {data ? (
           <>
-            <span className="ct-panel-abbr-badge">{data.aa}</span>
-            <span className="ct-panel-abbr-badge">{data.abbr}</span>
+            <div className="ct-panel-header-title">
+              <span className="ct-panel-aa">{data.full}</span>
+              {data.aa !== 'Stop' && (
+                <>
+                  <span className="ct-panel-abbr-badge">{data.aa}</span>
+                  <span className="ct-panel-abbr-badge">{data.abbr}</span>
+                </>
+              )}
+              {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
+              {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
+            </div>
+            <button className="ct-panel-close" onClick={onClear} aria-label="Clear selection">✕</button>
+          </>
+        ) : (
+          <>
+            <span className="ct-panel-title-empty">Codon Lookup</span>
+            {typedCodon.length > 0 && (
+              <button className="ct-panel-close" onClick={onClear} aria-label="Clear typing">✕</button>
+            )}
           </>
         )}
-        {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
-        {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
       </div>
 
-      <div className="ct-panel-bases">
-        {['1st', '2nd', '3rd'].map((pos, i) => (
-          <div key={pos} className="ct-base-bubble">
-            <span className="ct-base-pos">{pos}</span>
-            <span className={`ct-base-letter ct-base-${codon[i]}`}>{codon[i]}</span>
-          </div>
-        ))}
+      {/* The 3 passcode typing cards */}
+      <div className="ct-typer-cards-row ct-typer-cards-row--sidebar">
+        {['1ST', '2ND', '3RD'].map((posName, idx) => {
+          const char = typedCodon[idx] || '';
+          const isActive = typedCodon.length === idx;
+          const charColorClass = char ? `ct-base-${char}` : '';
+          return (
+            <div
+              key={idx}
+              className={`ct-typer-card ${isActive ? 'is-active' : ''} ${char ? 'has-value' : ''}`}
+              onClick={handleCardClick}
+              title="Click to type codon (U, C, A, G)"
+            >
+              <span className="ct-typer-card-pos">{posName}</span>
+              <span className={`ct-typer-card-val ${charColorClass}`}>
+                {char || '—'}
+                {isActive && <span className="ct-typer-cursor"></span>}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {synonyms.length > 0 && (
-        <div className="ct-panel-synonyms">
-          <span className="ct-panel-syn-label">Synonymous codons:</span>
-          <div className="ct-panel-syn-list">
-            {synonyms.map(s => (
-              <span key={s} className="ct-syn-chip">{s}</span>
-            ))}
-          </div>
+      {/* Display result/prompt depending on state */}
+      {data ? (
+        <div className="ct-panel-details-scroll">
+          {/* Synonymous codons */}
+          {synonyms.length > 0 && (
+            <div className="ct-panel-synonyms">
+              <span className="ct-panel-syn-label">Synonymous codons:</span>
+              <div className="ct-panel-syn-list">
+                {synonyms.map(s => (
+                  <span key={s} className="ct-syn-chip">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fischer Projection */}
+          {data.aa !== 'Stop' && (
+            <FischerProjection aa={data.aa} />
+          )}
+        </div>
+      ) : (
+        <div className="ct-panel-prompt">
+          {typedCodon.length > 0 ? (
+            <span className="ct-result-prompt">
+              Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
+            </span>
+          ) : (
+            <span className="ct-result-placeholder">
+              Click cards above to type a codon sequence (e.g. UAU, AUG) or select a codon from the table.
+            </span>
+          )}
         </div>
       )}
 
-      {data.aa !== 'Stop' && (
-        <FischerProjection aa={data.aa} />
-      )}
     </div>
   );
 }
@@ -820,86 +888,10 @@ export default function CodonTable() {
 
       </div>
 
-      {/* ── Interactive Panel: Typer & Group Selector ────────────────── */}
+      {/* ── Interactive Panel: Group Selector ────────────────── */}
       <div className="ct-interactive-panel">
         
-        {/* Left Side: Codon Code Search / Typer */}
-        <div className="ct-typer-section">
-          <span className="ct-section-title">Codon Code Input</span>
-          <div className="ct-typer-wrapper">
-            
-            {/* Hidden Input Box */}
-            <input
-              ref={inputRef}
-              type="text"
-              className="ct-typer-input-hidden"
-              value={typedCodon}
-              onChange={(e) => handleTypeCodon(e.target.value)}
-              placeholder="Type codon"
-              aria-label="Type codon code"
-            />
-
-            {/* 3 cards passcode style */}
-            <div className="ct-typer-cards-row">
-              {['1ST', '2ND', '3RD'].map((posName, idx) => {
-                const char = typedCodon[idx] || '';
-                const isActive = typedCodon.length === idx;
-                const charColorClass = char ? `ct-base-${char}` : '';
-                return (
-                  <div
-                    key={idx}
-                    className={`ct-typer-card ${isActive ? 'is-active' : ''} ${char ? 'has-value' : ''}`}
-                    onClick={handleCardClick}
-                    title="Click to type codon (U, C, A, G)"
-                  >
-                    <span className="ct-typer-card-pos">{posName}</span>
-                    <span className={`ct-typer-card-val ${charColorClass}`}>
-                      {char || '—'}
-                      {isActive && <span className="ct-typer-cursor"></span>}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Translation Result Panel */}
-            <div className="ct-typer-result">
-              {typedCodon.length > 0 ? (
-                typedCodon.length === 3 ? (
-                  CODON_MAP[typedCodon] ? (
-                    <div className="ct-result-detail">
-                      <div className="ct-result-aa-row">
-                        <span className="ct-result-aa-label">Encodes:</span>
-                        <span className="ct-result-aa-name" style={{ color: AA_COLORS[CODON_MAP[typedCodon].aa] || 'var(--accent)' }}>
-                          {CODON_MAP[typedCodon].full} ({CODON_MAP[typedCodon].aa} / {CODON_MAP[typedCodon].abbr})
-                        </span>
-                      </div>
-                      <span className="ct-result-type">
-                        {CODON_MAP[typedCodon].type === 'start' ? '★ Start Codon' : CODON_MAP[typedCodon].type === 'stop' ? '■ Stop Codon' : AMINO_ACID_DETAILS[CODON_MAP[typedCodon].aa]?.type || ''}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="ct-result-error">Invalid Codon</span>
-                  )
-                ) : (
-                  <span className="ct-result-prompt">
-                    Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
-                  </span>
-                )
-              ) : (
-                <span className="ct-result-placeholder">Type codon sequence (e.g. UAU, AUG)</span>
-              )}
-              {typedCodon.length > 0 && (
-                <button className="ct-typer-clear-btn" onClick={handleClearSelection} title="Clear typing">
-                  ✕ Clear
-                </button>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* Right Side: Amino Acid Group Filter */}
+        {/* Amino Acid Group Filter */}
         <div className="ct-group-section">
           <span className="ct-section-title">Filter by Biochemical Group</span>
           <div className="ct-group-wrapper">
@@ -1118,18 +1110,13 @@ export default function CodonTable() {
 
         {/* ── Info Panel Sidebar ───────────────────────────────────── */}
         <div className="ct-side-panel" ref={panelRef}>
-          {selectedCodon ? (
-            <InfoPanel codon={selectedCodon} onClose={handleClearSelection} />
-          ) : (
-            <div className="ct-no-selection" aria-live="polite">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              Select a codon above to view detailed information
-            </div>
-          )}
+          <InfoPanel
+            typedCodon={typedCodon}
+            selectedCodon={selectedCodon}
+            onType={handleTypeCodon}
+            onClear={handleClearSelection}
+            inputRef={inputRef}
+          />
         </div>
       </div>
 

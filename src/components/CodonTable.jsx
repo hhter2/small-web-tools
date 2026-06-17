@@ -579,6 +579,36 @@ const AA_GROUPS = {
     name: 'Acidic (-)',
     class: 'grp-acidic',
     aas: ['Asp', 'Glu']
+  },
+  aliphatic: {
+    name: 'Aliphatic R Groups',
+    class: 'grp-aliphatic',
+    aas: ['Gly', 'Ala', 'Val', 'Leu', 'Ile', 'Pro']
+  },
+  aromatic: {
+    name: 'Aromatic R Groups',
+    class: 'grp-aromatic',
+    aas: ['Phe', 'Tyr', 'Trp']
+  },
+  sulfur: {
+    name: 'Sulfur',
+    class: 'grp-sulfur',
+    aas: ['Met', 'Cys']
+  },
+  alcohol: {
+    name: 'Alcohol',
+    class: 'grp-alcohol',
+    aas: ['Ser', 'Thr']
+  },
+  amide: {
+    name: 'Amide Derivatives',
+    class: 'grp-amide',
+    aas: ['Asn', 'Gln']
+  },
+  nonpolar: {
+    name: 'Non polar',
+    class: 'grp-nonpolar',
+    aas: ['Gly', 'Ala', 'Val', 'Leu', 'Ile', 'Phe', 'Trp', 'Pro', 'Met']
   }
 };
 
@@ -893,7 +923,7 @@ export default function CodonTable() {
         
         {/* Amino Acid Group Filter */}
         <div className="ct-group-section">
-          <span className="ct-section-title">Filter by Biochemical Group</span>
+          <span className="ct-section-title">Filter by Group</span>
           <div className="ct-group-wrapper">
             <div className="ct-group-buttons" role="group" aria-label="Biochemical groups">
               <button

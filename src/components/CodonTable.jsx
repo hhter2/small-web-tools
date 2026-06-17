@@ -504,29 +504,6 @@ export default function CodonTable() {
         </div>
       </div>
 
-      {/* ── Stats Bar ────────────────────────────────────────────── */}
-      <div className="ct-stats-bar">
-        <div className="ct-stat">
-          <span className="ct-stat-num">64</span>
-          <span className="ct-stat-lbl">Total Codons</span>
-        </div>
-        <div className="ct-stat">
-          <span className="ct-stat-num">20</span>
-          <span className="ct-stat-lbl">Amino Acids</span>
-        </div>
-        <div className="ct-stat">
-          <span className="ct-stat-num ct-stat-num--start">1</span>
-          <span className="ct-stat-lbl">Start Codon</span>
-        </div>
-        <div className="ct-stat">
-          <span className="ct-stat-num ct-stat-num--stop">3</span>
-          <span className="ct-stat-lbl">Stop Codons</span>
-        </div>
-        <div className="ct-stat">
-          <span className="ct-stat-num ct-stat-num--click">{clickCount}</span>
-          <span className="ct-stat-lbl">Interactions</span>
-        </div>
-      </div>
 
     </article>
   );

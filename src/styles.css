@@ -4797,39 +4797,6 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   box-sizing: border-box;
 }
 
-/* ── Stats bar ───────────────────────────────────────────────────────────── */
-.ct-stats-bar {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 0.85rem 1.1rem;
-  border-radius: 10px;
-  background: var(--bg-app);
-  border: 1px solid var(--border-color);
-}
-.ct-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  flex: 1;
-  min-width: 60px;
-}
-.ct-stat-num {
-  font-size: 1.4rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--accent);
-}
-.ct-stat-num--start { color: #16a34a; }
-.ct-stat-num--stop  { color: #dc2626; }
-.ct-stat-num--click { color: #f59e0b; }
-.ct-stat-lbl {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {

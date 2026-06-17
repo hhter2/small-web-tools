@@ -4646,6 +4646,18 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   background: #dc2626;
   color: #fff;
 }
+.ct-codon-btn.codon-stop.is-highlighted,
+.ct-aa-btn.ct-aa-stop.is-highlighted {
+  border-color: #dc2626;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.08);
+}
+.ct-codon-btn.codon-start.is-highlighted,
+.ct-aa-btn.ct-aa-start.is-highlighted {
+  border-color: #16a34a;
+  box-shadow: 0 0 10px rgba(22, 163, 74, 0.4);
+  background: rgba(22, 163, 74, 0.08);
+}
 
 /* ── AA label overlay ─────────────────────────────────────────────────────
    Positioned absolute to the right of the codon list inside each cell.

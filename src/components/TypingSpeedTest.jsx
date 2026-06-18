@@ -2,23 +2,64 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Preset templates
 const PRESETS = {
-  english: {
-    name: 'English Paragraph',
-    text: 'The quick brown fox jumps over the lazy dog. A journey of a thousand miles begins with a single step. To be or not to be, that is the question. The only thing we have to fear is fear itself. All that glitters is not gold. Ask not what your country can do for you, ask what you can do for your country. Life is what happens when you are busy making other plans.'
-  },
-  chinese: {
-    name: 'Chinese Classic',
-    text: '天將降大任於是人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？'
-  },
-  code: {
-    name: 'Javascript Code',
-    text: `const calculateWpm = (chars, time) => {
+  english: [
+    'The quick brown fox jumps over the lazy dog. A journey of a thousand miles begins with a single step. To be or not to be, that is the question. The only thing we have to fear is fear itself. All that glitters is not gold.',
+    'Success is not final, failure is not fatal: it is the courage to continue that counts. In the end, we will remember not the words of our enemies, but the silence of our friends. Believe you can and you are halfway there.',
+    'Life is what happens when you are busy making other plans. The future belongs to those who believe in the beauty of their dreams. Do not go where the path may lead, go instead where there is no path and leave a trail.',
+    'To live is the rarest thing in the world. Most people exist, that is all. You only live once, but if you do it right, once is enough. In three words I can sum up everything I have learned about life: it goes on.'
+  ],
+  chinese: [
+    '天將降大任於是人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？',
+    '北國風光，千里冰封，萬里雪飄。望長城內外，惟餘莽莽；大河上下，頓失滔滔。山舞銀蛇，原馳蠟象，欲與天公試比高。須晴日，看紅裝素裹，分外妖嬈。江山如此多嬌，引無數英雄競折腰。',
+    '大學之道，在明明德，在親民，在止於至善。知止而後有定，定而後能靜，靜而後能安，安而後能慮，慮而後能得。物有本末，事有終始，知所先後，則近道矣。古之欲明明德於天下者，先治其國。',
+    '世有伯樂，然後有千里馬。千里馬常有，而伯樂不常有。故雖有名馬，祗辱於奴隸人之手，駢死於槽櫨之間，不以千里稱也。馬之千里者，一食或盡粟一石。食馬者不知其能千里而食也。'
+  ],
+  code: [
+    `const calculateWpm = (chars, time) => {
   const minutes = time / 60;
   return Math.round((chars / 5) / minutes);
 };
 
-console.log("WPM Speed:", calculateWpm(250, 60));`
-  }
+console.log("WPM Speed:", calculateWpm(250, 60));`,
+
+    `function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}`,
+
+    `const fibonacci = (n) => {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log("Fibonacci of 10 is:", fibonacci(10));`,
+
+    `# Calculate vector mean in R
+calculate_mean <- function(numbers) {
+  total <- sum(numbers)
+  count <- length(numbers)
+  return(total / count)
+}
+
+x <- c(10, 20, 30, 40, 50)
+print(paste("Mean:", calculate_mean(x)))`
+  ]
+};
+
+// Detect programming language from code template text
+const detectCodeLanguage = (text) => {
+  const code = text.trim();
+  if (/<[a-z]+[^>]*>/i.test(code) && /<\/?[a-z]+>/i.test(code)) return 'HTML';
+  if (/^([{}]|.*{.*}|[.#a-zA-Z0-9_-]+\s*\{)/s.test(code) && /color:|margin:|padding:|display:|flex/i.test(code)) return 'CSS';
+  if (/def\s+[a-zA-Z_]\w*\(|import\s+[a-zA-Z_]\w*|print\s*\(|if\s+__name__\s*==/i.test(code)) return 'Python';
+  if (/public\s+class\s+|System\.out\.print|public\s+static\s+void\s+main/i.test(code)) return 'Java';
+  if (/#include\s+<|std::cout|int\s+main\s*\(/i.test(code)) return 'C++';
+  if (/<-|library\s*\(\s*[a-zA-Z_]\w*\s*\)|ggplot\s*\(|install\.packages\s*\(/i.test(code)) return 'R';
+  if (/const\s+|let\s+|var\s+|console\.log|function\s+|=>/i.test(code)) return 'JavaScript';
+  return 'Code';
 };
 
 // Parse template into words with positions
@@ -97,12 +138,18 @@ export default function TypingSpeedTest() {
   const [showNumbers, setShowNumbers] = useState(true);
   
   // Base raw template text
-  const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english.text);
+  const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english[0]);
 
   // Determine if code mode is active
   const isCodeMode = useMemo(() => {
     return mode === 'template' && (selectedPreset === 'code' || rawTemplateText.includes('\n'));
   }, [mode, selectedPreset, rawTemplateText]);
+
+  // Auto detect code language in code mode
+  const codeLanguage = useMemo(() => {
+    if (!isCodeMode) return '';
+    return detectCodeLanguage(templateText);
+  }, [templateText, isCodeMode]);
 
   // Typing state
   const [typedText, setTypedText] = useState('');
@@ -146,10 +193,30 @@ export default function TypingSpeedTest() {
     if (selectedPreset === 'custom') {
       setRawTemplateText(customText.trim() || 'Please enter or upload some custom text first...');
     } else if (PRESETS[selectedPreset]) {
-      setRawTemplateText(PRESETS[selectedPreset].text);
+      setRawTemplateText(PRESETS[selectedPreset][0]);
     }
     resetTest();
   }, [selectedPreset, customText]);
+
+  // Refresh/Get new random template text for the current preset (also forces template mode)
+  const refreshTemplate = () => {
+    setMode('template');
+    if (selectedPreset === 'custom') {
+      resetTest();
+      return;
+    }
+    const list = PRESETS[selectedPreset];
+    if (list && list.length > 0) {
+      let nextText = list[Math.floor(Math.random() * list.length)];
+      if (list.length > 1) {
+        while (nextText === rawTemplateText) {
+          nextText = list[Math.floor(Math.random() * list.length)];
+        }
+      }
+      setRawTemplateText(nextText);
+    }
+    resetTest();
+  };
 
   // Determine active language (either explicit or auto-detected)
   const activeLang = useMemo(() => {
@@ -874,6 +941,7 @@ export default function TypingSpeedTest() {
               {isCodeMode ? (
                 /* IDE Code Mode Layout */
                 <div className="typing-code-block">
+                  <div className="code-lang-badge">{codeLanguage}</div>
                   {codeLines.map((line) => (
                     <div key={line.lineIndex} className="code-line">
                       <span className="line-number">{line.lineIndex + 1}</span>
@@ -1046,6 +1114,22 @@ export default function TypingSpeedTest() {
                 onCompositionUpdate={handleCompositionUpdate}
                 onCompositionEnd={handleCompositionEnd}
               />
+            </div>
+          )}
+
+          {/* New Text Refresh Button (Visible in all modes, when not finished and not currently actively testing) */}
+          {!testFinished && !isTesting && (
+            <div className="template-refresh-row">
+              <button 
+                className="btn-secondary btn-small" 
+                onClick={refreshTemplate} 
+                title="Refresh template text (loads a new text)"
+              >
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>New Text</span>
+              </button>
             </div>
           )}
 

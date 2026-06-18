@@ -81,13 +81,15 @@ const detectLanguage = (text) => {
 export default function TypingSpeedTest() {
   // Configuration states
   const [mode, setMode] = useState('template'); // 'free' or 'template'
+  const [testType, setTestType] = useState('time'); // 'time' | 'words' | 'complete'
+  const [wordTarget, setWordTarget] = useState('25'); // '10' | '25' | '50' | '100'
   const [language, setLanguage] = useState('auto'); // 'auto', 'english', 'chinese'
-  const [duration, setDuration] = useState('30'); // '15', '30', '60', 'unlimited'
+  const [duration, setDuration] = useState('30'); // '15', '30', '60'
   const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
   const [customText, setCustomText] = useState('');
   
-  // Active template state
-  const [templateText, setTemplateText] = useState(PRESETS.english.text);
+  // Base raw template text
+  const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english.text);
 
   // Typing state
   const [typedText, setTypedText] = useState('');
@@ -129,9 +131,9 @@ export default function TypingSpeedTest() {
   // Handle Preset changes
   useEffect(() => {
     if (selectedPreset === 'custom') {
-      setTemplateText(customText.trim() || 'Please enter or upload some custom text first...');
+      setRawTemplateText(customText.trim() || 'Please enter or upload some custom text first...');
     } else if (PRESETS[selectedPreset]) {
-      setTemplateText(PRESETS[selectedPreset].text);
+      setRawTemplateText(PRESETS[selectedPreset].text);
     }
     resetTest();
   }, [selectedPreset, customText]);
@@ -139,18 +141,27 @@ export default function TypingSpeedTest() {
   // Determine active language (either explicit or auto-detected)
   const activeLang = useMemo(() => {
     if (language !== 'auto') return language;
-    return detectLanguage(mode === 'free' ? typedText : templateText);
-  }, [language, mode, typedText, templateText]);
+    return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
+  }, [language, mode, typedText, rawTemplateText]);
 
-  // Set default duration when template/free mode changes
-  useEffect(() => {
-    if (mode === 'free') {
-      if (duration === 'unlimited') {
-        setDuration('30');
-      }
+  // Sliced template text based on mode and settings
+  const templateText = useMemo(() => {
+    if (mode === 'free') return '';
+    if (testType !== 'words') return rawTemplateText;
+
+    const isChinese = activeLang === 'chinese';
+    if (isChinese) {
+      return rawTemplateText.slice(0, Number(wordTarget));
+    } else {
+      const words = rawTemplateText.split(/\s+/).filter(Boolean);
+      return words.slice(0, Number(wordTarget)).join(' ');
     }
+  }, [rawTemplateText, testType, wordTarget, activeLang, mode]);
+
+  // Reset test when configuration changes
+  useEffect(() => {
     resetTest();
-  }, [mode]);
+  }, [mode, testType, wordTarget, duration, language]);
 
   // Parse template into word spans for UI rendering
   const wordsList = useMemo(() => {
@@ -183,7 +194,7 @@ export default function TypingSpeedTest() {
     setCorrectKeystrokes(0);
     setResultsSaved(false);
     setElapsedTime(0);
-    setTimeLeft(duration === 'unlimited' ? 0 : Number(duration));
+    setTimeLeft(testType === 'time' ? Number(duration) : 0);
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -198,7 +209,7 @@ export default function TypingSpeedTest() {
         const elapsed = Math.round((now - startTimeRef.current) / 1000);
         setElapsedTime(elapsed);
 
-        if (duration !== 'unlimited') {
+        if (testType === 'time') {
           const remaining = Number(duration) - elapsed;
           if (remaining <= 0) {
             setTimeLeft(0);
@@ -207,12 +218,12 @@ export default function TypingSpeedTest() {
             setTimeLeft(remaining);
           }
         } else {
-          setTimeLeft(elapsed); // count up in unlimited mode
+          setTimeLeft(elapsed);
         }
       }, 1000);
     }
     return () => clearInterval(timerId);
-  }, [isTesting, paused, testFinished, duration]);
+  }, [isTesting, paused, testFinished, testType, duration]);
 
   // Finish test and calculate stats
   const finishTest = (finalText, finalSeconds) => {
@@ -460,22 +471,46 @@ export default function TypingSpeedTest() {
       {!isTesting && !testFinished && (
         <div className="typing-settings-panel">
           <div className="settings-grid">
+            {mode === 'template' && (
+              <div className="setting-control">
+                <label>Test Mode</label>
+                <select value={testType} onChange={(e) => setTestType(e.target.value)}>
+                  <option value="time">Time Limit</option>
+                  <option value="words">Word Count</option>
+                  <option value="complete">Complete Text</option>
+                </select>
+              </div>
+            )}
+
+            {((mode === 'template' && testType === 'time') || mode === 'free') && (
+              <div className="setting-control">
+                <label>Timer Duration</label>
+                <select value={duration} onChange={(e) => setDuration(e.target.value)}>
+                  <option value="15">15 seconds</option>
+                  <option value="30">30 seconds</option>
+                  <option value="60">60 seconds</option>
+                </select>
+              </div>
+            )}
+
+            {mode === 'template' && testType === 'words' && (
+              <div className="setting-control">
+                <label>Word Count Target</label>
+                <select value={wordTarget} onChange={(e) => setWordTarget(e.target.value)}>
+                  <option value="10">10 words</option>
+                  <option value="25">25 words</option>
+                  <option value="50">50 words</option>
+                  <option value="100">100 words</option>
+                </select>
+              </div>
+            )}
+
             <div className="setting-control">
               <label>Language</label>
               <select value={language} onChange={(e) => setLanguage(e.target.value)}>
                 <option value="auto">Auto Detect</option>
                 <option value="english">English / Code</option>
                 <option value="chinese">Chinese</option>
-              </select>
-            </div>
-
-            <div className="setting-control">
-              <label>Timer Duration</label>
-              <select value={duration} onChange={(e) => { setDuration(e.target.value); setTimeLeft(e.target.value === 'unlimited' ? 0 : Number(e.target.value)); }}>
-                <option value="15">15 seconds</option>
-                <option value="30">30 seconds</option>
-                <option value="60">60 seconds</option>
-                {mode === 'template' && <option value="unlimited">Finish Template</option>}
               </select>
             </div>
 
@@ -526,7 +561,9 @@ export default function TypingSpeedTest() {
             <div className="live-indicators">
               <div className="live-timer-container">
                 <span className="live-timer">
-                  {duration === 'unlimited' ? `${timeLeft}s` : timeLeft}
+                  {testType === 'time' && `${timeLeft}`}
+                  {testType === 'words' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
+                  {testType === 'complete' && `${timeLeft}s`}
                 </span>
               </div>
               <div className="live-stat-badges">
@@ -546,6 +583,11 @@ export default function TypingSpeedTest() {
                 <div className="badge">
                   Corrections: <span className="val">{backspacesPressed}</span>
                 </div>
+                {testType !== 'time' && (
+                  <div className="badge">
+                    Time: <span className="val">{elapsedTime}s</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

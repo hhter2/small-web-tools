@@ -49,6 +49,31 @@ print(paste("Mean:", calculate_mean(x)))`
   ]
 };
 
+// Repeat template text until it matches or exceeds the target count
+const repeatToTarget = (text, target, isChinese, isCode) => {
+  if (target <= 0) return text;
+  
+  if (isChinese) {
+    if (text.length >= target) return text;
+    let repeated = text;
+    while (repeated.length < target) {
+      repeated += text;
+    }
+    return repeated;
+  } else {
+    const getWordCount = (t) => t.split(/[\s\n]+/).filter(Boolean).length;
+    const count = getWordCount(text);
+    if (count >= target || count === 0) return text;
+    
+    let repeated = text;
+    const separator = isCode ? '\n\n' : ' ';
+    while (getWordCount(repeated) < target) {
+      repeated += separator + text;
+    }
+    return repeated;
+  }
+};
+
 // Detect programming language from code template text
 const detectCodeLanguage = (text) => {
   const code = text.trim();
@@ -247,9 +272,17 @@ export default function TypingSpeedTest() {
       baseText = baseText.replace(/\s+/g, ' ').trim();
     }
 
+    const isChinese = activeLang === 'chinese';
+
+    // Repeat template if too short for the target or time mode
+    if (testType === 'words') {
+      baseText = repeatToTarget(baseText, Number(wordTarget), isChinese, isCodeMode);
+    } else if (testType === 'time') {
+      baseText = repeatToTarget(baseText, 350, isChinese, isCodeMode);
+    }
+
     if (testType !== 'words') return baseText;
 
-    const isChinese = activeLang === 'chinese';
     if (isChinese) {
       return baseText.slice(0, Number(wordTarget));
     } else {

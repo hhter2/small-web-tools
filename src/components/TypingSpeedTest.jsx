@@ -12,7 +12,12 @@ const PRESETS = {
   },
   code: {
     name: 'Javascript Code',
-    text: 'const calculateWpm = (chars, time) => { const minutes = time / 60; return Math.round((chars / 5) / minutes); }; console.log("WPM Speed:", calculateWpm(250, 60));'
+    text: `const calculateWpm = (chars, time) => {
+  const minutes = time / 60;
+  return Math.round((chars / 5) / minutes);
+};
+
+console.log("WPM Speed:", calculateWpm(250, 60));`
   }
 };
 
@@ -94,6 +99,11 @@ export default function TypingSpeedTest() {
   // Base raw template text
   const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english.text);
 
+  // Determine if code mode is active
+  const isCodeMode = useMemo(() => {
+    return mode === 'template' && (selectedPreset === 'code' || rawTemplateText.includes('\n'));
+  }, [mode, selectedPreset, rawTemplateText]);
+
   // Typing state
   const [typedText, setTypedText] = useState('');
   const [compositionText, setCompositionText] = useState('');
@@ -143,28 +153,35 @@ export default function TypingSpeedTest() {
 
   // Determine active language (either explicit or auto-detected)
   const activeLang = useMemo(() => {
+    if (selectedPreset === 'english' || selectedPreset === 'code') return 'english';
+    if (selectedPreset === 'chinese') return 'chinese';
     if (language !== 'auto') return language;
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
-  }, [language, mode, typedText, rawTemplateText]);
+  }, [language, mode, typedText, rawTemplateText, selectedPreset]);
 
   // Sliced template text based on mode and settings, applying punctuation and number filters
   const templateText = useMemo(() => {
     if (mode === 'free') return '';
     
-    let baseText = rawTemplateText;
+    let baseText = rawTemplateText.replace(/\r\n/g, '\n');
     
-    // Apply punctuation stripping if unchecked
-    if (!showPunctuation) {
-      baseText = baseText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'，。？！（）“”‘’：；《》「」『』、]/g, '');
+    if (isCodeMode) {
+      // For code mode, trim trailing whitespaces, preserve indentations and newlines
+      baseText = baseText.split('\n').map(line => line.trimEnd()).join('\n').trim();
+    } else {
+      // Apply punctuation stripping if unchecked
+      if (!showPunctuation) {
+        baseText = baseText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'，。？！（）“”‘’：；《》「」『』、]/g, '');
+      }
+      
+      // Apply numbers stripping if unchecked
+      if (!showNumbers) {
+        baseText = baseText.replace(/[0-9０１２３４５６７８９]/g, '');
+      }
+      
+      // Normalize extra spaces
+      baseText = baseText.replace(/\s+/g, ' ').trim();
     }
-    
-    // Apply numbers stripping if unchecked
-    if (!showNumbers) {
-      baseText = baseText.replace(/[0-9０１２３４５６７８９]/g, '');
-    }
-    
-    // Normalize extra spaces
-    baseText = baseText.replace(/\s+/g, ' ').trim();
 
     if (testType !== 'words') return baseText;
 
@@ -172,15 +189,84 @@ export default function TypingSpeedTest() {
     if (isChinese) {
       return baseText.slice(0, Number(wordTarget));
     } else {
-      const words = baseText.split(/\s+/).filter(Boolean);
-      return words.slice(0, Number(wordTarget)).join(' ');
+      if (isCodeMode) {
+        // Words limit in code mode
+        const limit = Number(wordTarget);
+        let wordCount = 0;
+        let charLimitIdx = 0;
+        let inWord = false;
+        for (let i = 0; i < baseText.length; i++) {
+          const char = baseText[i];
+          const isSpace = /[\s\n]/.test(char);
+          if (!isSpace) {
+            if (!inWord) {
+              inWord = true;
+              wordCount++;
+              if (wordCount > limit) {
+                charLimitIdx = i;
+                break;
+              }
+            }
+          } else {
+            inWord = false;
+          }
+          charLimitIdx = i + 1;
+        }
+        return baseText.slice(0, charLimitIdx).trimEnd();
+      } else {
+        const words = baseText.split(/\s+/).filter(Boolean);
+        return words.slice(0, Number(wordTarget)).join(' ');
+      }
     }
-  }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers]);
+  }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers, isCodeMode]);
 
   // Reset test when configuration changes
   useEffect(() => {
     resetTest();
   }, [mode, testType, wordTarget, duration, language, showPunctuation, showNumbers]);
+
+  // Parse template into line structures for IDE code rendering
+  const codeLines = useMemo(() => {
+    if (!isCodeMode) return [];
+
+    const lines = [];
+    let globalIdx = 0;
+    const rawLines = templateText.split('\n');
+
+    for (let i = 0; i < rawLines.length; i++) {
+      const lineText = rawLines[i];
+      const chars = [];
+
+      for (let j = 0; j < lineText.length; j++) {
+        chars.push({
+          char: lineText[j],
+          globalIdx: globalIdx,
+          isNewline: false
+        });
+        globalIdx++;
+      }
+
+      let hasNewline = false;
+      if (i < rawLines.length - 1) {
+        chars.push({
+          char: '\n',
+          globalIdx: globalIdx,
+          isNewline: true
+        });
+        globalIdx++;
+        hasNewline = true;
+      }
+
+      lines.push({
+        lineIndex: i,
+        text: lineText,
+        chars: chars,
+        hasNewline: hasNewline
+      });
+    }
+
+    return lines;
+  }, [templateText, isCodeMode]);
 
   // Parse template into word spans for UI rendering
   const wordsList = useMemo(() => {
@@ -258,6 +344,62 @@ export default function TypingSpeedTest() {
 
     if (e.key === 'Backspace') {
       setBackspacesPressed(prev => prev + 1);
+
+      if (isCodeMode) {
+        const typedLength = typedText.length;
+        if (typedLength > 0) {
+          let charsToDelete = 1;
+          const lastChar = typedText[typedLength - 1];
+          if (lastChar === ' ') {
+            let i = typedLength - 1;
+            while (i >= 0 && typedText[i] === ' ') {
+              i--;
+            }
+            if (i >= 0 && typedText[i] === '\n') {
+              charsToDelete = typedLength - i;
+            }
+          } else if (lastChar === '\n') {
+            charsToDelete = 1;
+          }
+
+          if (charsToDelete > 1) {
+            e.preventDefault();
+            const newVal = typedText.slice(0, -charsToDelete);
+            handleValueChange(newVal);
+            if (inputRef.current) {
+              inputRef.current.value = newVal;
+            }
+          }
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isCodeMode) {
+        e.preventDefault();
+
+        const currentIdx = typedText.length;
+        const expectedChar = templateText[currentIdx];
+
+        if (expectedChar === '\n') {
+          let spacesCount = 0;
+          let nextIdx = currentIdx + 1;
+          while (nextIdx < templateText.length && templateText[nextIdx] === ' ') {
+            spacesCount++;
+            nextIdx++;
+          }
+          const toAppend = '\n' + ' '.repeat(spacesCount);
+          const newVal = typedText + toAppend;
+          handleValueChange(newVal);
+          if (inputRef.current) {
+            inputRef.current.value = newVal;
+          }
+        } else {
+          const newVal = typedText + '\n';
+          handleValueChange(newVal);
+          if (inputRef.current) {
+            inputRef.current.value = newVal;
+          }
+        }
+      }
     }
   };
 
@@ -488,145 +630,148 @@ export default function TypingSpeedTest() {
 
       {/* Settings Panel styled like Monkeytype */}
       {!isTesting && !testFinished && (
-        <div className="typing-config-bar">
-          {/* Punctuation & Numbers Toggles (Only in Template Mode) */}
-          {mode === 'template' && (
-            <>
-              <div className="config-group">
-                <div 
-                  className={`config-item ${showPunctuation ? 'active' : ''}`}
-                  onClick={() => setShowPunctuation(!showPunctuation)}
-                >
-                  <span className="icon">@</span>
-                  <span>punctuation</span>
-                </div>
-                <div 
-                  className={`config-item ${showNumbers ? 'active' : ''}`}
-                  onClick={() => setShowNumbers(!showNumbers)}
-                >
-                  <span className="icon">#</span>
-                  <span>numbers</span>
-                </div>
-              </div>
-              <div className="config-separator"></div>
-            </>
-          )}
-
-          {/* Test Modes (Only in Template Mode) */}
-          {mode === 'template' ? (
+        <div className="typing-config-container">
+          <div className="typing-config-bar">
+            {/* Preset Selector */}
             <div className="config-group">
-              <div 
-                className={`config-item ${testType === 'time' ? 'active' : ''}`}
-                onClick={() => setTestType('time')}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                <span>time</span>
-              </div>
-              <div 
-                className={`config-item ${testType === 'words' ? 'active' : ''}`}
-                onClick={() => setTestType('words')}
-              >
-                <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
-                <span>words</span>
-              </div>
-              <div 
-                className={`config-item ${testType === 'complete' ? 'active' : ''}`}
-                onClick={() => setTestType('complete')}
-              >
-                <span style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: 1, marginRight: '4px' }}>“</span>
-                <span>complete</span>
-              </div>
+              {['english', 'chinese', 'code', 'custom'].map((preset) => (
+                <div
+                  key={preset}
+                  className={`config-item ${selectedPreset === preset ? 'active' : ''}`}
+                  onClick={() => setSelectedPreset(preset)}
+                >
+                  {preset === 'custom' && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px', marginRight: '4px' }}>
+                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                  )}
+                  <span>{preset}</span>
+                </div>
+              ))}
             </div>
-          ) : (
-            /* Free mode indicator */
-            <div className="config-group">
-              <div className="config-item active">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                <span>free typing time mode</span>
-              </div>
-            </div>
-          )}
 
-          <div className="config-separator"></div>
-
-          {/* Test Target (Sub-options based on testType) */}
-          <div className="config-group">
-            {((mode === 'template' && testType === 'time') || mode === 'free') && (
+            {/* Language Selector (Only shown if custom is selected) */}
+            {selectedPreset === 'custom' && (
               <>
-                {['15', '30', '60'].map((t) => (
-                  <div
-                    key={t}
-                    className={`config-item ${duration === t ? 'active' : ''}`}
-                    onClick={() => setDuration(t)}
-                  >
-                    <span>{t}</span>
-                  </div>
-                ))}
+                <div className="config-separator"></div>
+                <div className="config-group">
+                  {['auto', 'english', 'chinese'].map((lang) => (
+                    <div
+                      key={lang}
+                      className={`config-item ${language === lang ? 'active' : ''}`}
+                      onClick={() => setLanguage(lang)}
+                    >
+                      <span>{lang === 'auto' ? 'auto' : lang === 'english' ? 'en' : 'zh'}</span>
+                    </div>
+                  ))}
+                </div>
               </>
-            )}
-
-            {mode === 'template' && testType === 'words' && (
-              <>
-                {['10', '25', '50', '100'].map((w) => (
-                  <div
-                    key={w}
-                    className={`config-item ${wordTarget === w ? 'active' : ''}`}
-                    onClick={() => setWordTarget(w)}
-                  >
-                    <span>{w}</span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {mode === 'template' && testType === 'complete' && (
-              <div className="config-item active">
-                <span>full</span>
-              </div>
             )}
           </div>
 
-          {/* Preset Selector */}
-          {mode === 'template' && (
-            <>
-              <div className="config-separator"></div>
-              <div className="config-group">
-                {['english', 'chinese', 'code', 'custom'].map((preset) => (
-                  <div
-                    key={preset}
-                    className={`config-item ${selectedPreset === preset ? 'active' : ''}`}
-                    onClick={() => setSelectedPreset(preset)}
+          {/* Sub Configuration Bar for extra settings */}
+          <div className="typing-sub-config-bar">
+            {/* Punctuation & Numbers (Only in Template Mode and when not code preset) */}
+            {mode === 'template' && selectedPreset !== 'code' && (
+              <>
+                <div className="config-group">
+                  <div 
+                    className={`config-item ${showPunctuation ? 'active' : ''}`}
+                    onClick={() => setShowPunctuation(!showPunctuation)}
                   >
-                    {preset === 'custom' && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px', marginRight: '4px' }}>
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                      </svg>
-                    )}
-                    <span>{preset}</span>
+                    <span className="icon">@</span>
+                    <span>punctuation</span>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+                  <div 
+                    className={`config-item ${showNumbers ? 'active' : ''}`}
+                    onClick={() => setShowNumbers(!showNumbers)}
+                  >
+                    <span className="icon">#</span>
+                    <span>numbers</span>
+                  </div>
+                </div>
+                <div className="config-separator"></div>
+              </>
+            )}
 
-          {/* Language Selector */}
-          <div className="config-separator"></div>
-          <div className="config-group">
-            {['auto', 'english', 'chinese'].map((lang) => (
-              <div
-                key={lang}
-                className={`config-item ${language === lang ? 'active' : ''}`}
-                onClick={() => setLanguage(lang)}
-              >
-                <span>{lang === 'auto' ? 'auto' : lang === 'english' ? 'en' : 'zh'}</span>
+            {/* Test Modes (Template Mode vs Free Mode) */}
+            {mode === 'template' ? (
+              <div className="config-group">
+                <div 
+                  className={`config-item ${testType === 'time' ? 'active' : ''}`}
+                  onClick={() => setTestType('time')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>time</span>
+                </div>
+                <div 
+                  className={`config-item ${testType === 'words' ? 'active' : ''}`}
+                  onClick={() => setTestType('words')}
+                >
+                  <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                  <span>words</span>
+                </div>
+                <div 
+                  className={`config-item ${testType === 'complete' ? 'active' : ''}`}
+                  onClick={() => setTestType('complete')}
+                >
+                  <span style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: 1, marginRight: '4px' }}>“</span>
+                  <span>complete</span>
+                </div>
               </div>
-            ))}
+            ) : (
+              <div className="config-group">
+                <div className="config-item active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>free typing time mode</span>
+                </div>
+              </div>
+            )}
+
+            <div className="config-separator"></div>
+
+            {/* Test Targets */}
+            <div className="config-group">
+              {((mode === 'template' && testType === 'time') || mode === 'free') && (
+                <>
+                  {['15', '30', '60'].map((t) => (
+                    <div
+                      key={t}
+                      className={`config-item ${duration === t ? 'active' : ''}`}
+                      onClick={() => setDuration(t)}
+                    >
+                      <span>{t}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {mode === 'template' && testType === 'words' && (
+                <>
+                  {['10', '25', '50', '100'].map((w) => (
+                    <div
+                      key={w}
+                      className={`config-item ${wordTarget === w ? 'active' : ''}`}
+                      onClick={() => setWordTarget(w)}
+                    >
+                      <span>{w}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {mode === 'template' && testType === 'complete' && (
+                <div className="config-item active">
+                  <span>full</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -712,7 +857,7 @@ export default function TypingSpeedTest() {
           {mode === 'template' ? (
             /* Template typing container */
             <div 
-              className={`typing-template-container ${isInputFocused ? 'focused' : ''}`}
+              className={`typing-template-container ${isInputFocused ? 'focused' : ''} ${isCodeMode ? 'code-mode-editor' : ''}`}
               onClick={focusInput}
             >
               {!isInputFocused && !isTesting && (
@@ -726,90 +871,166 @@ export default function TypingSpeedTest() {
                 </div>
               )}
 
-              <div className="typing-text-wrapper">
-                {wordsList.map((word) => {
-                  const isActive = activeWordIdx === word.id;
-                  
-                  // Extract typed prefix for this specific word
-                  const typedWordPrefix = typedText.slice(word.start, currentIndex);
-                  const expectedWord = word.text;
+              {isCodeMode ? (
+                /* IDE Code Mode Layout */
+                <div className="typing-code-block">
+                  {codeLines.map((line) => (
+                    <div key={line.lineIndex} className="code-line">
+                      <span className="line-number">{line.lineIndex + 1}</span>
+                      <span className="line-content">
+                        {line.chars.map((charObj) => {
+                          const { char, globalIdx, isNewline } = charObj;
 
-                  // Check if this word has errors so far
-                  let hasError = false;
-                  const wordTypedLength = Math.min(currentIndex - word.start, word.text.length);
-                  if (wordTypedLength > 0) {
-                    for (let cIdx = 0; cIdx < wordTypedLength; cIdx++) {
-                      if (typedText[word.start + cIdx] !== word.text[cIdx]) {
-                        hasError = true;
-                        break;
+                          let charClass = 'untyped';
+                          if (globalIdx < typedText.length) {
+                            charClass = typedText[globalIdx] === char ? 'correct' : 'incorrect';
+                          }
+
+                          const isCursorHere = globalIdx === typedText.length;
+
+                          if (isNewline) {
+                            return (
+                              <span 
+                                key={globalIdx} 
+                                className={`char newline-char ${charClass}`}
+                              >
+                                {isCursorHere && isInputFocused && (
+                                  <span className="caret">
+                                    {compositionText && (
+                                      <span className="ime-composition">{compositionText}</span>
+                                    )}
+                                  </span>
+                                )}
+                                ↵
+                              </span>
+                            );
+                          }
+
+                          if (char === ' ') {
+                            return (
+                              <span 
+                                key={globalIdx} 
+                                className={`char space-char ${charClass}`}
+                              >
+                                {isCursorHere && isInputFocused && (
+                                  <span className="caret">
+                                    {compositionText && (
+                                      <span className="ime-composition">{compositionText}</span>
+                                    )}
+                                  </span>
+                                )}
+                                &nbsp;
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <span 
+                              key={globalIdx} 
+                              className={`char ${charClass}`}
+                            >
+                              {isCursorHere && isInputFocused && (
+                                <span className="caret">
+                                  {compositionText && (
+                                    <span className="ime-composition">{compositionText}</span>
+                                  )}
+                                </span>
+                              )}
+                              {char}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Standard Word-wrapping Layout */
+                <div className="typing-text-wrapper">
+                  {wordsList.map((word) => {
+                    const isActive = activeWordIdx === word.id;
+                    
+                    // Extract typed prefix for this specific word
+                    const typedWordPrefix = typedText.slice(word.start, currentIndex);
+                    const expectedWord = word.text;
+
+                    // Check if this word has errors so far
+                    let hasError = false;
+                    const wordTypedLength = Math.min(currentIndex - word.start, word.text.length);
+                    if (wordTypedLength > 0) {
+                      for (let cIdx = 0; cIdx < wordTypedLength; cIdx++) {
+                        if (typedText[word.start + cIdx] !== word.text[cIdx]) {
+                          hasError = true;
+                          break;
+                        }
                       }
                     }
-                  }
 
-                  return (
-                    <span
-                      key={word.id}
-                      className={`typing-word ${isActive ? 'active' : ''} ${hasError ? 'error' : ''}`}
-                    >
-                      {/* Typo floating tooltip popup matching screenshot layout */}
-                      {isActive && typedWordPrefix.length > 0 && (
-                        <div className="typing-tooltip">
-                          <span className="tooltip-typed">{typedWordPrefix}</span>
-                          <span className="tooltip-divider">🏰</span>
-                          <span className="tooltip-expected">{expectedWord}</span>
-                        </div>
-                      )}
+                    return (
+                      <span
+                        key={word.id}
+                        className={`typing-word ${isActive ? 'active' : ''} ${hasError ? 'error' : ''}`}
+                      >
+                        {/* Typo floating tooltip popup matching screenshot layout */}
+                        {isActive && typedWordPrefix.length > 0 && (
+                          <div className="typing-tooltip">
+                            <span className="tooltip-typed">{typedWordPrefix}</span>
+                            <span className="tooltip-divider">🏰</span>
+                            <span className="tooltip-expected">{expectedWord}</span>
+                          </div>
+                        )}
 
-                      {/* Word characters */}
-                      {word.chars.map((char, charIdx) => {
-                        const globalIdx = word.start + charIdx;
-                        let charClass = 'untyped';
-                        if (globalIdx < typedText.length) {
-                          charClass = typedText[globalIdx] === char ? 'correct' : 'incorrect';
-                        }
-                        
-                        const isCursorHere = globalIdx === typedText.length;
+                        {/* Word characters */}
+                        {word.chars.map((char, charIdx) => {
+                          const globalIdx = word.start + charIdx;
+                          let charClass = 'untyped';
+                          if (globalIdx < typedText.length) {
+                            charClass = typedText[globalIdx] === char ? 'correct' : 'incorrect';
+                          }
+                          
+                          const isCursorHere = globalIdx === typedText.length;
 
-                        return (
-                          <span key={charIdx} className={`char ${charClass}`}>
-                            {isCursorHere && isInputFocused && (
-                              <span className="caret">
-                                {compositionText && (
-                                  <span className="ime-composition">{compositionText}</span>
-                                )}
-                              </span>
-                            )}
-                            {char}
-                          </span>
-                        );
-                      })}
+                          return (
+                            <span key={charIdx} className={`char ${charClass}`}>
+                              {isCursorHere && isInputFocused && (
+                                <span className="caret">
+                                  {compositionText && (
+                                    <span className="ime-composition">{compositionText}</span>
+                                  )}
+                                </span>
+                              )}
+                              {char}
+                            </span>
+                          );
+                        })}
 
-                      {/* Spacer space rendering */}
-                      {word.hasSpaceAfter && (() => {
-                        const spaceIdx = word.end;
-                        let spaceClass = 'untyped';
-                        if (spaceIdx < typedText.length) {
-                          spaceClass = typedText[spaceIdx] === ' ' ? 'correct' : 'incorrect';
-                        }
-                        const isCursorHere = spaceIdx === typedText.length;
+                        {/* Spacer space rendering */}
+                        {word.hasSpaceAfter && (() => {
+                          const spaceIdx = word.end;
+                          let spaceClass = 'untyped';
+                          if (spaceIdx < typedText.length) {
+                            spaceClass = typedText[spaceIdx] === ' ' ? 'correct' : 'incorrect';
+                          }
+                          const isCursorHere = spaceIdx === typedText.length;
 
-                        return (
-                          <span className={`char space ${spaceClass}`}>
-                            {isCursorHere && isInputFocused && (
-                              <span className="caret">
-                                {compositionText && (
-                                  <span className="ime-composition">{compositionText}</span>
-                                )}
-                              </span>
-                            )}
-                            &nbsp;
-                          </span>
-                        );
-                      })()}
-                    </span>
-                  );
-                })}
-              </div>
+                          return (
+                            <span className={`char space ${spaceClass}`}>
+                              {isCursorHere && isInputFocused && (
+                                <span className="caret">
+                                  {compositionText && (
+                                    <span className="ime-composition">{compositionText}</span>
+                                  )}
+                                </span>
+                              )}
+                              &nbsp;
+                            </span>
+                          );
+                        })()}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             /* Free typing container */

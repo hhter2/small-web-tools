@@ -4051,6 +4051,54 @@ html[data-theme="dark"] .char.untyped {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+.free-typing-textarea:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.free-typing-container.paused {
+  position: relative;
+}
+
+.free-typing-paused-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.free-typing-paused-overlay span:first-child {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.free-typing-paused-overlay .paused-hint {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+html[data-theme="light"] .free-typing-paused-overlay {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+html[data-theme="light"] .free-typing-paused-overlay span:first-child {
+  color: var(--text-main);
+}
+
+html[data-theme="light"] .free-typing-paused-overlay .paused-hint {
+  color: var(--text-muted);
+}
+
 /* Control actions buttons */
 .test-control-actions {
   display: flex;

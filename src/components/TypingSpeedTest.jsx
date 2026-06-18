@@ -324,6 +324,8 @@ export default function TypingSpeedTest() {
   const [wordTarget, setWordTarget] = useState('25'); // '10' | '25' | '50' | '100'
   const [selectedCodeLanguage, setSelectedCodeLanguage] = useState('javascript'); // 'javascript' | 'python' | 'cpp' | 'java' | 'r' | 'html' | 'css'
   const [duration, setDuration] = useState('30'); // '15', '30', '60'
+  const [freeStopMode, setFreeStopMode] = useState('manual'); // 'manual' | 'time' | 'words'
+  const [freeWordTarget, setFreeWordTarget] = useState('100'); // word limit for free mode
   const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
   const [customText, setCustomText] = useState('');
   
@@ -506,7 +508,7 @@ export default function TypingSpeedTest() {
   // Reset test when configuration changes
   useEffect(() => {
     resetTest();
-  }, [mode, testType, wordTarget, duration, showPunctuation, showNumbers]);
+  }, [mode, testType, wordTarget, duration, showPunctuation, showNumbers, freeStopMode, freeWordTarget]);
 
   // Parse template into line structures for IDE code rendering
   const codeLines = useMemo(() => {
@@ -605,13 +607,22 @@ export default function TypingSpeedTest() {
           } else {
             setTimeLeft(remaining);
           }
+        } else if (mode === 'free' && freeStopMode === 'time') {
+          // Free mode time-based auto-stop
+          const remaining = Number(duration) - elapsed;
+          if (remaining <= 0) {
+            setTimeLeft(0);
+            finishTest(typedTextRef.current, Number(duration));
+          } else {
+            setTimeLeft(remaining);
+          }
         } else {
           setTimeLeft(elapsed);
         }
       }, 1000);
     }
     return () => clearInterval(timerId);
-  }, [isTesting, paused, testFinished, testType, duration]);
+  }, [isTesting, paused, testFinished, testType, duration, mode, freeStopMode]);
 
   // Finish test and calculate stats
   const finishTest = (finalText, finalSeconds) => {
@@ -656,6 +667,15 @@ export default function TypingSpeedTest() {
         }
       }
     } else if (e.key === 'Enter') {
+      // Ctrl+Enter: pause/resume in free typing mode
+      if (e.ctrlKey && mode === 'free') {
+        e.preventDefault();
+        if (isTesting) {
+          setPaused(prev => !prev);
+        }
+        return;
+      }
+
       if (isCodeMode) {
         e.preventDefault();
 
@@ -763,6 +783,17 @@ export default function TypingSpeedTest() {
     if (mode === 'template' && newVal.length >= templateText.length) {
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
       finishTest(newVal, elapsed);
+    }
+
+    // Auto complete in free mode when word count target is hit
+    if (mode === 'free' && freeStopMode === 'words') {
+      const cjkCount = (newVal.match(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g) || []).length;
+      const engWords = newVal.replace(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g, ' ').split(/\s+/).filter(Boolean).length;
+      const totalWords = cjkCount + engWords;
+      if (totalWords >= Number(freeWordTarget)) {
+        const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
+        finishTest(newVal, elapsed);
+      }
     }
   };
 
@@ -1000,13 +1031,30 @@ export default function TypingSpeedTest() {
                 </div>
               </div>
             ) : (
+              /* Free mode stop mode selector */
               <div className="config-group">
-                <div className="config-item active">
+                <div
+                  className={`config-item ${freeStopMode === 'manual' ? 'active' : ''}`}
+                  onClick={() => setFreeStopMode('manual')}
+                >
+                  <span>Manual</span>
+                </div>
+                <div
+                  className={`config-item ${freeStopMode === 'time' ? 'active' : ''}`}
+                  onClick={() => setFreeStopMode('time')}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
-                  <span>free typing time mode</span>
+                  <span>Timer</span>
+                </div>
+                <div
+                  className={`config-item ${freeStopMode === 'words' ? 'active' : ''}`}
+                  onClick={() => setFreeStopMode('words')}
+                >
+                  <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                  <span>Words</span>
                 </div>
               </div>
             )}
@@ -1015,7 +1063,8 @@ export default function TypingSpeedTest() {
 
             {/* Test Targets */}
             <div className="config-group">
-              {((mode === 'template' && testType === 'time') || mode === 'free') && (
+              {/* Template time mode or free mode timer */}
+              {((mode === 'template' && testType === 'time') || (mode === 'free' && freeStopMode === 'time')) && (
                 <>
                   {['15', '30', '60'].map((t) => (
                     <div
@@ -1029,6 +1078,7 @@ export default function TypingSpeedTest() {
                 </>
               )}
 
+              {/* Template word mode word targets */}
               {mode === 'template' && testType === 'words' && (
                 <>
                   {['10', '25', '50', '100', '250', '500'].map((w) => (
@@ -1036,6 +1086,21 @@ export default function TypingSpeedTest() {
                       key={w}
                       className={`config-item ${wordTarget === w ? 'active' : ''}`}
                       onClick={() => setWordTarget(w)}
+                    >
+                      <span>{w}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Free mode word targets */}
+              {mode === 'free' && freeStopMode === 'words' && (
+                <>
+                  {['50', '100', '200', '500'].map((w) => (
+                    <div
+                      key={w}
+                      className={`config-item ${freeWordTarget === w ? 'active' : ''}`}
+                      onClick={() => setFreeWordTarget(w)}
                     >
                       <span>{w}</span>
                     </div>
@@ -1087,8 +1152,20 @@ export default function TypingSpeedTest() {
             <div className="live-indicators">
               <div className="live-timer-container">
                 <span className="live-timer">
-                  {testType === 'time' && `${timeLeft}`}
-                  {testType === 'words' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
+                  {/* Template time mode */}
+                  {mode === 'template' && testType === 'time' && `${timeLeft}`}
+                  {/* Template words mode */}
+                  {mode === 'template' && testType === 'words' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
+                  {/* Free mode - timer countdown */}
+                  {mode === 'free' && freeStopMode === 'time' && `${timeLeft}`}
+                  {/* Free mode - word count progress */}
+                  {mode === 'free' && freeStopMode === 'words' && (() => {
+                    const cjkCount = (typedText.match(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g) || []).length;
+                    const engWords = typedText.replace(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g, ' ').split(/\s+/).filter(Boolean).length;
+                    return `${cjkCount + engWords}/${freeWordTarget}`;
+                  })()}
+                  {/* Free mode - manual (elapsed time) */}
+                  {mode === 'free' && freeStopMode === 'manual' && `${elapsedTime}s`}
                 </span>
               </div>
               <div className="live-stat-badges">
@@ -1313,7 +1390,13 @@ export default function TypingSpeedTest() {
             </div>
           ) : (
             /* Free typing container */
-            <div className="free-typing-container">
+            <div className={`free-typing-container ${paused ? 'paused' : ''}`}>
+              {paused && (
+                <div className="free-typing-paused-overlay">
+                  <span>⏸ Paused</span>
+                  <span className="paused-hint">Press Ctrl+Enter or click Resume to continue</span>
+                </div>
+              )}
               <textarea
                 className="free-typing-textarea"
                 rows="6"
@@ -1324,6 +1407,7 @@ export default function TypingSpeedTest() {
                 onCompositionStart={handleCompositionStart}
                 onCompositionUpdate={handleCompositionUpdate}
                 onCompositionEnd={handleCompositionEnd}
+                disabled={paused}
               />
             </div>
           )}
@@ -1348,11 +1432,12 @@ export default function TypingSpeedTest() {
           {(isTesting || typedText.length > 0) && (
             <div className="test-control-actions">
               {isTesting && (
-                <button className="btn-secondary" onClick={() => setPaused(!paused)}>
+                <button className="btn-secondary" onClick={() => setPaused(!paused)} title={mode === 'free' ? 'Ctrl+Enter to toggle pause' : ''}>
                   {paused ? 'Resume' : 'Pause'}
+                  {mode === 'free' && !paused && <span style={{ opacity: 0.5, fontSize: '0.75rem', marginLeft: '6px' }}>Ctrl+↵</span>}
                 </button>
               )}
-              {typedText.length > 0 && (
+              {(isTesting || typedText.length > 0) && (
                 <button className="btn-primary" onClick={() => {
                   const currentElapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
                   finishTest(typedText, currentElapsed);

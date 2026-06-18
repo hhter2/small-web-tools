@@ -4489,6 +4489,12 @@ html[data-theme="light"] .uploaded-file-name {
   background: rgba(0, 0, 0, 0.02);
 }
 
+.code-languages-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 
 
 

@@ -13,15 +13,18 @@ const PRESETS = {
     '北國風光，千里冰封，萬里雪飄。望長城內外，惟餘莽莽；大河上下，頓失滔滔。山舞銀蛇，原馳蠟象，欲與天公試比高。須晴日，看紅裝素裹，分外妖嬈。江山如此多嬌，引無數英雄競折腰。',
     '大學之道，在明明德，在親民，在止於至善。知止而後有定，定而後能靜，靜而後能安，安而後能慮，慮而後能得。物有本末，事有終始，知所先後，則近道矣。古之欲明明德於天下者，先治其國。',
     '世有伯樂，然後有千里馬。千里馬常有，而伯樂不常有。故雖有名馬，祗辱於奴隸人之手，駢死於槽櫨之間，不以千里稱也。馬之千里者，一食或盡粟一石。食馬者不知其能千里而食也。'
-  ],
-  code: [
+  ]
+};
+
+// Programming language code presets
+const CODE_PRESETS = {
+  javascript: [
     `const calculateWpm = (chars, time) => {
   const minutes = time / 60;
   return Math.round((chars / 5) / minutes);
 };
 
 console.log("WPM Speed:", calculateWpm(250, 60));`,
-
     `function debounce(func, wait) {
   let timeout;
   return function(...args) {
@@ -29,14 +32,112 @@ console.log("WPM Speed:", calculateWpm(250, 60));`,
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }`,
-
     `const fibonacci = (n) => {
   if (n <= 1) return n;
   return fibonacci(n - 1) + fibonacci(n - 2);
 };
 
-console.log("Fibonacci of 10 is:", fibonacci(10));`,
+console.log("Fibonacci of 10 is:", fibonacci(10));`
+  ],
+  python: [
+    `def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
 
+print(quicksort([3, 6, 8, 10, 1, 2, 1]))`,
+    `class FileReader:
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __enter__(self):
+        self.file = open(self.filename, 'r')
+        return self.file
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file.close()`,
+    `def fibonacci_gen(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+print(list(fibonacci_gen(10)))`
+  ],
+  cpp: [
+    `#include <iostream>
+#include <vector>
+#include <numeric>
+
+int main() {
+    std::vector<int> nums = {1, 2, 3, 4, 5};
+    int total = std::accumulate(nums.begin(), nums.end(), 0);
+    std::cout << "Sum: " << total << std::endl;
+    return 0;
+}`,
+    `template <typename T>
+int binarySearch(const std::vector<T>& arr, T target) {
+    int left = 0, right = arr.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (arr[mid] == target) return mid;
+        if (arr[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}`,
+    `#include <string>
+
+class Rectangle {
+private:
+    double width, height;
+public:
+    Rectangle(double w, double h) : width(w), height(h) {}
+    double getArea() const { return width * height; }
+};`
+  ],
+  java: [
+    `public class Singleton {
+    private static Singleton instance;
+    private Singleton() {}
+    public static synchronized Singleton getInstance() {
+        if (instance == null) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+}`,
+    `public class ArrayUtils {
+    public static void reverse(int[] arr) {
+        int left = 0, right = arr.length - 1;
+        while (left < right) {
+            int temp = arr[left];
+            arr[left] = arr[right];
+            arr[right] = temp;
+            left++; right--;
+        }
+    }
+}`,
+    `public class Sort {
+    public static void bubbleSort(int[] arr) {
+        int n = arr.length;
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (arr[j] > arr[j+1]) {
+                    int temp = arr[j];
+                    arr[j] = arr[j+1];
+                    arr[j+1] = temp;
+                }
+            }
+        }
+    }
+}`
+  ],
+  r: [
     `# Calculate vector mean in R
 calculate_mean <- function(numbers) {
   total <- sum(numbers)
@@ -45,7 +146,74 @@ calculate_mean <- function(numbers) {
 }
 
 x <- c(10, 20, 30, 40, 50)
-print(paste("Mean:", calculate_mean(x)))`
+print(paste("Mean:", calculate_mean(x)))`,
+    `library(ggplot2)
+
+# Simple scatter plot function
+plot_scatter <- function(data, x_var, y_var) {
+  ggplot(data, aes_string(x = x_var, y = y_var)) +
+    geom_point(color = "blue", size = 3) +
+    theme_minimal()
+}`,
+    `# Fit linear regression model
+fit_model <- function(x, y) {
+  model <- lm(y ~ x)
+  summary_info <- summary(model)
+  return(summary_info)
+}`
+  ],
+  html: [
+    `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vite Web App</title>
+</head>
+<body>
+  <div id="app">
+    <h1>Hello, World!</h1>
+  </div>
+</body>
+</html>`,
+    `<form class="login-form">
+  <h2>Login</h2>
+  <div class="input-group">
+    <label for="username">Username</label>
+    <input type="text" id="username" required />
+  </div>
+  <button type="submit">Submit</button>
+</form>`,
+    `<div class="product-card">
+  <img src="product.jpg" alt="Product Image" />
+  <div class="product-info">
+    <h3>Wireless Headphones</h3>
+    <span class="price">$99.99</span>
+  </div>
+</div>`
+  ],
+  css: [
+    `.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}`,
+    `.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}`,
+    `@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.caret-blink {
+  animation: blink 1s step-end infinite;
+}`
   ]
 };
 
@@ -152,8 +320,9 @@ const detectLanguage = (text) => {
 export default function TypingSpeedTest() {
   // Configuration states
   const [mode, setMode] = useState('template'); // 'free' or 'template'
-  const [testType, setTestType] = useState('time'); // 'time' | 'words' | 'complete'
+  const [testType, setTestType] = useState('time'); // 'time' | 'words'
   const [wordTarget, setWordTarget] = useState('25'); // '10' | '25' | '50' | '100'
+  const [selectedCodeLanguage, setSelectedCodeLanguage] = useState('javascript'); // 'javascript' | 'python' | 'cpp' | 'java' | 'r' | 'html' | 'css'
   const [language, setLanguage] = useState('auto'); // 'auto', 'english', 'chinese'
   const [duration, setDuration] = useState('30'); // '15', '30', '60'
   const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
@@ -209,16 +378,22 @@ export default function TypingSpeedTest() {
     typedTextRef.current = typedText;
   }, [typedText]);
 
-  // Handle Preset changes
+  // Handle Preset and Code Language changes
   useEffect(() => {
     if (selectedPreset === 'custom') {
       setRawTemplateText(customText.trim() || 'Please enter or upload some custom text first...');
+    } else if (selectedPreset === 'code') {
+      const list = CODE_PRESETS[selectedCodeLanguage];
+      if (list && list.length > 0) {
+        setRawTemplateText(list[0]);
+      }
+      setUploadedFileName('');
     } else if (PRESETS[selectedPreset]) {
       setRawTemplateText(PRESETS[selectedPreset][0]);
       setUploadedFileName('');
     }
     resetTest();
-  }, [selectedPreset, customText]);
+  }, [selectedPreset, selectedCodeLanguage, customText]);
 
   // Refresh/Get new random template text for the current preset (also forces template mode)
   const refreshTemplate = () => {
@@ -227,7 +402,14 @@ export default function TypingSpeedTest() {
       resetTest();
       return;
     }
-    const list = PRESETS[selectedPreset];
+    
+    let list;
+    if (selectedPreset === 'code') {
+      list = CODE_PRESETS[selectedCodeLanguage];
+    } else {
+      list = PRESETS[selectedPreset];
+    }
+    
     if (list && list.length > 0) {
       let nextText = list[Math.floor(Math.random() * list.length)];
       if (list.length > 1) {
@@ -771,6 +953,24 @@ export default function TypingSpeedTest() {
 
           {/* Sub Configuration Bar for extra settings */}
           <div className="typing-sub-config-bar">
+            {/* Programming Language Selector (Only when code preset is selected) */}
+            {selectedPreset === 'code' && (
+              <>
+                <div className="config-group code-languages-group">
+                  {['javascript', 'python', 'cpp', 'java', 'r', 'html', 'css'].map((lang) => (
+                    <div
+                      key={lang}
+                      className={`config-item ${selectedCodeLanguage === lang ? 'active' : ''}`}
+                      onClick={() => setSelectedCodeLanguage(lang)}
+                    >
+                      <span>{lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang.toUpperCase()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="config-separator"></div>
+              </>
+            )}
+
             {/* Punctuation & Numbers (Only in Template Mode and when not code preset) */}
             {mode === 'template' && selectedPreset !== 'code' && (
               <>
@@ -813,13 +1013,6 @@ export default function TypingSpeedTest() {
                 >
                   <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
                   <span>words</span>
-                </div>
-                <div 
-                  className={`config-item ${testType === 'complete' ? 'active' : ''}`}
-                  onClick={() => setTestType('complete')}
-                >
-                  <span style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: 1, marginRight: '4px' }}>“</span>
-                  <span>complete</span>
                 </div>
               </div>
             ) : (
@@ -864,12 +1057,6 @@ export default function TypingSpeedTest() {
                     </div>
                   ))}
                 </>
-              )}
-
-              {mode === 'template' && testType === 'complete' && (
-                <div className="config-item active">
-                  <span>full</span>
-                </div>
               )}
             </div>
           </div>
@@ -918,7 +1105,6 @@ export default function TypingSpeedTest() {
                 <span className="live-timer">
                   {testType === 'time' && `${timeLeft}`}
                   {testType === 'words' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
-                  {testType === 'complete' && `${timeLeft}s`}
                 </span>
               </div>
               <div className="live-stat-badges">

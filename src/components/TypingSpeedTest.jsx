@@ -436,6 +436,15 @@ export default function TypingSpeedTest() {
     
     let baseText = rawTemplateText.replace(/\r\n/g, '\n');
     
+    if (selectedPreset === 'custom') {
+      if (isCodeMode) {
+        baseText = baseText.split('\n').map(line => line.trimEnd()).join('\n').trim();
+      } else {
+        baseText = baseText.replace(/\s+/g, ' ').trim();
+      }
+      return baseText;
+    }
+    
     if (isCodeMode) {
       // For code mode, trim trailing whitespaces, preserve indentations and newlines
       baseText = baseText.split('\n').map(line => line.trimEnd()).join('\n').trim();
@@ -497,7 +506,7 @@ export default function TypingSpeedTest() {
         return words.slice(0, Number(wordTarget)).join(' ');
       }
     }
-  }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers, isCodeMode]);
+  }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers, isCodeMode, selectedPreset]);
 
   // Auto detect code language in code mode
   const codeLanguage = useMemo(() => {
@@ -584,7 +593,7 @@ export default function TypingSpeedTest() {
     setCorrectKeystrokes(0);
     setResultsSaved(false);
     setElapsedTime(0);
-    setTimeLeft(testType === 'time' ? Number(duration) : 0);
+    setTimeLeft(testType === 'time' && selectedPreset !== 'custom' ? Number(duration) : 0);
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -599,7 +608,7 @@ export default function TypingSpeedTest() {
         const elapsed = Math.round((now - startTimeRef.current) / 1000);
         setElapsedTime(elapsed);
 
-        if (testType === 'time') {
+        if (testType === 'time' && selectedPreset !== 'custom') {
           const remaining = Number(duration) - elapsed;
           if (remaining <= 0) {
             setTimeLeft(0);
@@ -622,7 +631,7 @@ export default function TypingSpeedTest() {
       }, 1000);
     }
     return () => clearInterval(timerId);
-  }, [isTesting, paused, testFinished, testType, duration, mode, freeStopMode]);
+  }, [isTesting, paused, testFinished, testType, duration, mode, freeStopMode, selectedPreset]);
 
   // Finish test and calculate stats
   const finishTest = (finalText, finalSeconds) => {
@@ -967,148 +976,150 @@ export default function TypingSpeedTest() {
           </div>
 
           {/* Sub Configuration Bar for extra settings */}
-          <div className="typing-sub-config-bar">
-            {/* Programming Language Selector (Only when code preset is selected) */}
-            {selectedPreset === 'code' && (
-              <>
-                <div className="config-group code-languages-group">
-                  {['javascript', 'python', 'cpp', 'java', 'r', 'html', 'css'].map((lang) => (
-                    <div
-                      key={lang}
-                      className={`config-item ${selectedCodeLanguage === lang ? 'active' : ''}`}
-                      onClick={() => setSelectedCodeLanguage(lang)}
-                    >
-                      <span>{lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang.toUpperCase()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="config-separator"></div>
-              </>
-            )}
+          {!(selectedPreset === 'custom' && mode === 'template') && (
+            <div className="typing-sub-config-bar">
+              {/* Programming Language Selector (Only when code preset is selected) */}
+              {selectedPreset === 'code' && (
+                <>
+                  <div className="config-group code-languages-group">
+                    {['javascript', 'python', 'cpp', 'java', 'r', 'html', 'css'].map((lang) => (
+                      <div
+                        key={lang}
+                        className={`config-item ${selectedCodeLanguage === lang ? 'active' : ''}`}
+                        onClick={() => setSelectedCodeLanguage(lang)}
+                      >
+                        <span>{lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang.toUpperCase()}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="config-separator"></div>
+                </>
+              )}
 
-            {/* Punctuation & Numbers (Only in Template Mode and when not code preset) */}
-            {mode === 'template' && selectedPreset !== 'code' && (
-              <>
+              {/* Punctuation & Numbers (Only in Template Mode and when not code preset) */}
+              {mode === 'template' && selectedPreset !== 'code' && (
+                <>
+                  <div className="config-group">
+                    <div 
+                      className={`config-item ${showPunctuation ? 'active' : ''}`}
+                      onClick={() => setShowPunctuation(!showPunctuation)}
+                    >
+                      <span className="icon">@</span>
+                      <span>punctuation</span>
+                    </div>
+                    <div 
+                      className={`config-item ${showNumbers ? 'active' : ''}`}
+                      onClick={() => setShowNumbers(!showNumbers)}
+                    >
+                      <span className="icon">#</span>
+                      <span>numbers</span>
+                    </div>
+                  </div>
+                  <div className="config-separator"></div>
+                </>
+              )}
+
+              {/* Test Modes (Template Mode vs Free Mode) */}
+              {mode === 'template' ? (
                 <div className="config-group">
                   <div 
-                    className={`config-item ${showPunctuation ? 'active' : ''}`}
-                    onClick={() => setShowPunctuation(!showPunctuation)}
+                    className={`config-item ${testType === 'time' ? 'active' : ''}`}
+                    onClick={() => setTestType('time')}
                   >
-                    <span className="icon">@</span>
-                    <span>punctuation</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>time</span>
                   </div>
                   <div 
-                    className={`config-item ${showNumbers ? 'active' : ''}`}
-                    onClick={() => setShowNumbers(!showNumbers)}
+                    className={`config-item ${testType === 'words' ? 'active' : ''}`}
+                    onClick={() => setTestType('words')}
                   >
-                    <span className="icon">#</span>
-                    <span>numbers</span>
+                    <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                    <span>words</span>
                   </div>
                 </div>
-                <div className="config-separator"></div>
-              </>
-            )}
+              ) : (
+                /* Free mode stop mode selector */
+                <div className="config-group">
+                  <div
+                    className={`config-item ${freeStopMode === 'manual' ? 'active' : ''}`}
+                    onClick={() => setFreeStopMode('manual')}
+                  >
+                    <span>Manual</span>
+                  </div>
+                  <div
+                    className={`config-item ${freeStopMode === 'time' ? 'active' : ''}`}
+                    onClick={() => setFreeStopMode('time')}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Timer</span>
+                  </div>
+                  <div
+                    className={`config-item ${freeStopMode === 'words' ? 'active' : ''}`}
+                    onClick={() => setFreeStopMode('words')}
+                  >
+                    <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                    <span>Words</span>
+                  </div>
+                </div>
+              )}
 
-            {/* Test Modes (Template Mode vs Free Mode) */}
-            {mode === 'template' ? (
+              <div className="config-separator"></div>
+
+              {/* Test Targets */}
               <div className="config-group">
-                <div 
-                  className={`config-item ${testType === 'time' ? 'active' : ''}`}
-                  onClick={() => setTestType('time')}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span>time</span>
-                </div>
-                <div 
-                  className={`config-item ${testType === 'words' ? 'active' : ''}`}
-                  onClick={() => setTestType('words')}
-                >
-                  <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
-                  <span>words</span>
-                </div>
+                {/* Template time mode or free mode timer */}
+                {((mode === 'template' && testType === 'time') || (mode === 'free' && freeStopMode === 'time')) && (
+                  <>
+                    {['15', '30', '60'].map((t) => (
+                      <div
+                        key={t}
+                        className={`config-item ${duration === t ? 'active' : ''}`}
+                        onClick={() => setDuration(t)}
+                      >
+                        <span>{t}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Template word mode word targets */}
+                {mode === 'template' && testType === 'words' && (
+                  <>
+                    {['10', '25', '50', '100', '250', '500'].map((w) => (
+                      <div
+                        key={w}
+                        className={`config-item ${wordTarget === w ? 'active' : ''}`}
+                        onClick={() => setWordTarget(w)}
+                      >
+                        <span>{w}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Free mode word targets */}
+                {mode === 'free' && freeStopMode === 'words' && (
+                  <>
+                    {['50', '100', '200', '500'].map((w) => (
+                      <div
+                        key={w}
+                        className={`config-item ${freeWordTarget === w ? 'active' : ''}`}
+                        onClick={() => setFreeWordTarget(w)}
+                      >
+                        <span>{w}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
-            ) : (
-              /* Free mode stop mode selector */
-              <div className="config-group">
-                <div
-                  className={`config-item ${freeStopMode === 'manual' ? 'active' : ''}`}
-                  onClick={() => setFreeStopMode('manual')}
-                >
-                  <span>Manual</span>
-                </div>
-                <div
-                  className={`config-item ${freeStopMode === 'time' ? 'active' : ''}`}
-                  onClick={() => setFreeStopMode('time')}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span>Timer</span>
-                </div>
-                <div
-                  className={`config-item ${freeStopMode === 'words' ? 'active' : ''}`}
-                  onClick={() => setFreeStopMode('words')}
-                >
-                  <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
-                  <span>Words</span>
-                </div>
-              </div>
-            )}
-
-            <div className="config-separator"></div>
-
-            {/* Test Targets */}
-            <div className="config-group">
-              {/* Template time mode or free mode timer */}
-              {((mode === 'template' && testType === 'time') || (mode === 'free' && freeStopMode === 'time')) && (
-                <>
-                  {['15', '30', '60'].map((t) => (
-                    <div
-                      key={t}
-                      className={`config-item ${duration === t ? 'active' : ''}`}
-                      onClick={() => setDuration(t)}
-                    >
-                      <span>{t}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Template word mode word targets */}
-              {mode === 'template' && testType === 'words' && (
-                <>
-                  {['10', '25', '50', '100', '250', '500'].map((w) => (
-                    <div
-                      key={w}
-                      className={`config-item ${wordTarget === w ? 'active' : ''}`}
-                      onClick={() => setWordTarget(w)}
-                    >
-                      <span>{w}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Free mode word targets */}
-              {mode === 'free' && freeStopMode === 'words' && (
-                <>
-                  {['50', '100', '200', '500'].map((w) => (
-                    <div
-                      key={w}
-                      className={`config-item ${freeWordTarget === w ? 'active' : ''}`}
-                      onClick={() => setFreeWordTarget(w)}
-                    >
-                      <span>{w}</span>
-                    </div>
-                  ))}
-                </>
-              )}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1153,9 +1164,18 @@ export default function TypingSpeedTest() {
               <div className="live-timer-container">
                 <span className="live-timer">
                   {/* Template time mode */}
-                  {mode === 'template' && testType === 'time' && `${timeLeft}`}
+                  {mode === 'template' && testType === 'time' && selectedPreset !== 'custom' && `${timeLeft}`}
+                  {/* Template custom preset mode (progress & time) */}
+                  {mode === 'template' && selectedPreset === 'custom' && (
+                    <>
+                      <span style={{ fontSize: '1.2rem', color: 'var(--sub-color)', marginRight: '10px' }}>
+                        {activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`}
+                      </span>
+                      {`${elapsedTime}s`}
+                    </>
+                  )}
                   {/* Template words mode */}
-                  {mode === 'template' && testType === 'words' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
+                  {mode === 'template' && testType === 'words' && selectedPreset !== 'custom' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
                   {/* Free mode - timer countdown */}
                   {mode === 'free' && freeStopMode === 'time' && `${timeLeft}`}
                   {/* Free mode - word count progress */}

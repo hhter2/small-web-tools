@@ -4217,6 +4217,71 @@ html[data-theme="dark"] .history-table tbody tr:hover {
   color: #e2b714;
 }
 
+/* Monkeytype Configuration Bar Settings */
+.typing-config-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1e2022;
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Roboto Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  gap: 16px;
+  user-select: none;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-card);
+}
+
+html[data-theme="light"] .typing-config-bar {
+  background: #f8fafc;
+}
+
+.config-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.config-separator {
+  width: 2px;
+  height: 14px;
+  background: var(--border-color);
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.1s ease;
+  padding: 2px 4px;
+}
+
+.config-item:hover {
+  color: var(--text-main);
+  transform: scale(1.02);
+}
+
+.config-item.active {
+  color: #e2b714; /* Monkeytype Yellow */
+  font-weight: 600;
+}
+
+.config-item .icon {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.config-item svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
 
 
 

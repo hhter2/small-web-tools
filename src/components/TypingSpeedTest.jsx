@@ -88,6 +88,9 @@ export default function TypingSpeedTest() {
   const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
   const [customText, setCustomText] = useState('');
   
+  const [showPunctuation, setShowPunctuation] = useState(true);
+  const [showNumbers, setShowNumbers] = useState(true);
+  
   // Base raw template text
   const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english.text);
 
@@ -144,24 +147,40 @@ export default function TypingSpeedTest() {
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
   }, [language, mode, typedText, rawTemplateText]);
 
-  // Sliced template text based on mode and settings
+  // Sliced template text based on mode and settings, applying punctuation and number filters
   const templateText = useMemo(() => {
     if (mode === 'free') return '';
-    if (testType !== 'words') return rawTemplateText;
+    
+    let baseText = rawTemplateText;
+    
+    // Apply punctuation stripping if unchecked
+    if (!showPunctuation) {
+      baseText = baseText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'，。？！（）“”‘’：；《》「」『』、]/g, '');
+    }
+    
+    // Apply numbers stripping if unchecked
+    if (!showNumbers) {
+      baseText = baseText.replace(/[0-9０１２３４５６７８９]/g, '');
+    }
+    
+    // Normalize extra spaces
+    baseText = baseText.replace(/\s+/g, ' ').trim();
+
+    if (testType !== 'words') return baseText;
 
     const isChinese = activeLang === 'chinese';
     if (isChinese) {
-      return rawTemplateText.slice(0, Number(wordTarget));
+      return baseText.slice(0, Number(wordTarget));
     } else {
-      const words = rawTemplateText.split(/\s+/).filter(Boolean);
+      const words = baseText.split(/\s+/).filter(Boolean);
       return words.slice(0, Number(wordTarget)).join(' ');
     }
-  }, [rawTemplateText, testType, wordTarget, activeLang, mode]);
+  }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers]);
 
   // Reset test when configuration changes
   useEffect(() => {
     resetTest();
-  }, [mode, testType, wordTarget, duration, language]);
+  }, [mode, testType, wordTarget, duration, language, showPunctuation, showNumbers]);
 
   // Parse template into word spans for UI rendering
   const wordsList = useMemo(() => {
@@ -467,89 +486,172 @@ export default function TypingSpeedTest() {
         </div>
       </div>
 
-      {/* Settings Panel */}
+      {/* Settings Panel styled like Monkeytype */}
       {!isTesting && !testFinished && (
-        <div className="typing-settings-panel">
-          <div className="settings-grid">
-            {mode === 'template' && (
-              <div className="setting-control">
-                <label>Test Mode</label>
-                <select value={testType} onChange={(e) => setTestType(e.target.value)}>
-                  <option value="time">Time Limit</option>
-                  <option value="words">Word Count</option>
-                  <option value="complete">Complete Text</option>
-                </select>
+        <div className="typing-config-bar">
+          {/* Punctuation & Numbers Toggles (Only in Template Mode) */}
+          {mode === 'template' && (
+            <>
+              <div className="config-group">
+                <div 
+                  className={`config-item ${showPunctuation ? 'active' : ''}`}
+                  onClick={() => setShowPunctuation(!showPunctuation)}
+                >
+                  <span className="icon">@</span>
+                  <span>punctuation</span>
+                </div>
+                <div 
+                  className={`config-item ${showNumbers ? 'active' : ''}`}
+                  onClick={() => setShowNumbers(!showNumbers)}
+                >
+                  <span className="icon">#</span>
+                  <span>numbers</span>
+                </div>
               </div>
-            )}
+              <div className="config-separator"></div>
+            </>
+          )}
 
-            {((mode === 'template' && testType === 'time') || mode === 'free') && (
-              <div className="setting-control">
-                <label>Timer Duration</label>
-                <select value={duration} onChange={(e) => setDuration(e.target.value)}>
-                  <option value="15">15 seconds</option>
-                  <option value="30">30 seconds</option>
-                  <option value="60">60 seconds</option>
-                </select>
+          {/* Test Modes (Only in Template Mode) */}
+          {mode === 'template' ? (
+            <div className="config-group">
+              <div 
+                className={`config-item ${testType === 'time' ? 'active' : ''}`}
+                onClick={() => setTestType('time')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>time</span>
               </div>
+              <div 
+                className={`config-item ${testType === 'words' ? 'active' : ''}`}
+                onClick={() => setTestType('words')}
+              >
+                <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                <span>words</span>
+              </div>
+              <div 
+                className={`config-item ${testType === 'complete' ? 'active' : ''}`}
+                onClick={() => setTestType('complete')}
+              >
+                <span style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: 1, marginRight: '4px' }}>“</span>
+                <span>complete</span>
+              </div>
+            </div>
+          ) : (
+            /* Free mode indicator */
+            <div className="config-group">
+              <div className="config-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>free typing time mode</span>
+              </div>
+            </div>
+          )}
+
+          <div className="config-separator"></div>
+
+          {/* Test Target (Sub-options based on testType) */}
+          <div className="config-group">
+            {((mode === 'template' && testType === 'time') || mode === 'free') && (
+              <>
+                {['15', '30', '60'].map((t) => (
+                  <div
+                    key={t}
+                    className={`config-item ${duration === t ? 'active' : ''}`}
+                    onClick={() => setDuration(t)}
+                  >
+                    <span>{t}</span>
+                  </div>
+                ))}
+              </>
             )}
 
             {mode === 'template' && testType === 'words' && (
-              <div className="setting-control">
-                <label>Word Count Target</label>
-                <select value={wordTarget} onChange={(e) => setWordTarget(e.target.value)}>
-                  <option value="10">10 words</option>
-                  <option value="25">25 words</option>
-                  <option value="50">50 words</option>
-                  <option value="100">100 words</option>
-                </select>
-              </div>
+              <>
+                {['10', '25', '50', '100'].map((w) => (
+                  <div
+                    key={w}
+                    className={`config-item ${wordTarget === w ? 'active' : ''}`}
+                    onClick={() => setWordTarget(w)}
+                  >
+                    <span>{w}</span>
+                  </div>
+                ))}
+              </>
             )}
 
-            <div className="setting-control">
-              <label>Language</label>
-              <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                <option value="auto">Auto Detect</option>
-                <option value="english">English / Code</option>
-                <option value="chinese">Chinese</option>
-              </select>
-            </div>
-
-            {mode === 'template' && (
-              <div className="setting-control">
-                <label>Template Preset</label>
-                <select value={selectedPreset} onChange={(e) => setSelectedPreset(e.target.value)}>
-                  <option value="english">English Paragraph</option>
-                  <option value="chinese">Chinese Classic</option>
-                  <option value="code">Javascript Code</option>
-                  <option value="custom">Custom Text / Uploaded File</option>
-                </select>
+            {mode === 'template' && testType === 'complete' && (
+              <div className="config-item active">
+                <span>full</span>
               </div>
             )}
           </div>
 
-          {mode === 'template' && selectedPreset === 'custom' && (
-            <div className="custom-template-input-container">
-              <div className="form-group">
-                <label htmlFor="custom-paste-text">Paste Custom Template Text</label>
-                <textarea
-                  id="custom-paste-text"
-                  rows="3"
-                  placeholder="Paste template text here..."
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
-                />
+          {/* Preset Selector */}
+          {mode === 'template' && (
+            <>
+              <div className="config-separator"></div>
+              <div className="config-group">
+                {['english', 'chinese', 'code', 'custom'].map((preset) => (
+                  <div
+                    key={preset}
+                    className={`config-item ${selectedPreset === preset ? 'active' : ''}`}
+                    onClick={() => setSelectedPreset(preset)}
+                  >
+                    {preset === 'custom' && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px', marginRight: '4px' }}>
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                      </svg>
+                    )}
+                    <span>{preset}</span>
+                  </div>
+                ))}
               </div>
-              <div className="file-upload-group">
-                <span className="upload-label">Or upload a TXT file:</span>
-                <input
-                  type="file"
-                  id="template-file-picker"
-                  accept=".txt"
-                  onChange={handleFileUpload}
-                />
-              </div>
-            </div>
+            </>
           )}
+
+          {/* Language Selector */}
+          <div className="config-separator"></div>
+          <div className="config-group">
+            {['auto', 'english', 'chinese'].map((lang) => (
+              <div
+                key={lang}
+                className={`config-item ${language === lang ? 'active' : ''}`}
+                onClick={() => setLanguage(lang)}
+              >
+                <span>{lang === 'auto' ? 'auto' : lang === 'english' ? 'en' : 'zh'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isTesting && !testFinished && mode === 'template' && selectedPreset === 'custom' && (
+        <div className="custom-template-input-container">
+          <div className="form-group">
+            <label htmlFor="custom-paste-text">Paste Custom Template Text</label>
+            <textarea
+              id="custom-paste-text"
+              rows="3"
+              placeholder="Paste template text here..."
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+            />
+          </div>
+          <div className="file-upload-group">
+            <span className="upload-label">Or upload a TXT file:</span>
+            <input
+              type="file"
+              id="template-file-picker"
+              accept=".txt"
+              onChange={handleFileUpload}
+            />
+          </div>
         </div>
       )}
 

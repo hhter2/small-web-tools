@@ -323,7 +323,6 @@ export default function TypingSpeedTest() {
   const [testType, setTestType] = useState('time'); // 'time' | 'words'
   const [wordTarget, setWordTarget] = useState('25'); // '10' | '25' | '50' | '100'
   const [selectedCodeLanguage, setSelectedCodeLanguage] = useState('javascript'); // 'javascript' | 'python' | 'cpp' | 'java' | 'r' | 'html' | 'css'
-  const [language, setLanguage] = useState('auto'); // 'auto', 'english', 'chinese'
   const [duration, setDuration] = useState('30'); // '15', '30', '60'
   const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
   const [customText, setCustomText] = useState('');
@@ -422,13 +421,12 @@ export default function TypingSpeedTest() {
     resetTest();
   };
 
-  // Determine active language (either explicit or auto-detected)
+  // Determine active language (automatically preset-based or content-detected)
   const activeLang = useMemo(() => {
-    if (language !== 'auto') return language;
     if (selectedPreset === 'english' || selectedPreset === 'code') return 'english';
     if (selectedPreset === 'chinese') return 'chinese';
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
-  }, [language, mode, typedText, rawTemplateText, selectedPreset]);
+  }, [mode, typedText, rawTemplateText, selectedPreset]);
 
   // Sliced template text based on mode and settings, applying punctuation and number filters
   const templateText = useMemo(() => {
@@ -508,7 +506,7 @@ export default function TypingSpeedTest() {
   // Reset test when configuration changes
   useEffect(() => {
     resetTest();
-  }, [mode, testType, wordTarget, duration, language, showPunctuation, showNumbers]);
+  }, [mode, testType, wordTarget, duration, showPunctuation, showNumbers]);
 
   // Parse template into line structures for IDE code rendering
   const codeLines = useMemo(() => {
@@ -932,20 +930,6 @@ export default function TypingSpeedTest() {
                     </svg>
                   )}
                   <span>{preset.charAt(0).toUpperCase() + preset.slice(1)}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Language Selector (Always shown for all presets) */}
-            <div className="config-separator"></div>
-            <div className="config-group">
-              {['auto', 'english', 'chinese'].map((lang) => (
-                <div
-                  key={lang}
-                  className={`config-item ${language === lang ? 'active' : ''}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  <span>{lang.charAt(0).toUpperCase() + lang.slice(1)}</span>
                 </div>
               ))}
             </div>

@@ -137,6 +137,8 @@ export default function TypingSpeedTest() {
   const [showPunctuation, setShowPunctuation] = useState(true);
   const [showNumbers, setShowNumbers] = useState(true);
   
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  
   // Base raw template text
   const [rawTemplateText, setRawTemplateText] = useState(PRESETS.english[0]);
 
@@ -188,6 +190,7 @@ export default function TypingSpeedTest() {
       setRawTemplateText(customText.trim() || 'Please enter or upload some custom text first...');
     } else if (PRESETS[selectedPreset]) {
       setRawTemplateText(PRESETS[selectedPreset][0]);
+      setUploadedFileName('');
     }
     resetTest();
   }, [selectedPreset, customText]);
@@ -214,9 +217,9 @@ export default function TypingSpeedTest() {
 
   // Determine active language (either explicit or auto-detected)
   const activeLang = useMemo(() => {
+    if (language !== 'auto') return language;
     if (selectedPreset === 'english' || selectedPreset === 'code') return 'english';
     if (selectedPreset === 'chinese') return 'chinese';
-    if (language !== 'auto') return language;
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
   }, [language, mode, typedText, rawTemplateText, selectedPreset]);
 
@@ -658,6 +661,7 @@ export default function TypingSpeedTest() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadedFileName(file.name);
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target.result || '';
@@ -717,23 +721,19 @@ export default function TypingSpeedTest() {
               ))}
             </div>
 
-            {/* Language Selector (Only shown if custom is selected) */}
-            {selectedPreset === 'custom' && (
-              <>
-                <div className="config-separator"></div>
-                <div className="config-group">
-                  {['auto', 'english', 'chinese'].map((lang) => (
-                    <div
-                      key={lang}
-                      className={`config-item ${language === lang ? 'active' : ''}`}
-                      onClick={() => setLanguage(lang)}
-                    >
-                      <span>{lang === 'auto' ? 'auto' : lang === 'english' ? 'en' : 'zh'}</span>
-                    </div>
-                  ))}
+            {/* Language Selector (Always shown for all presets) */}
+            <div className="config-separator"></div>
+            <div className="config-group">
+              {['auto', 'english', 'chinese'].map((lang) => (
+                <div
+                  key={lang}
+                  className={`config-item ${language === lang ? 'active' : ''}`}
+                  onClick={() => setLanguage(lang)}
+                >
+                  <span>{lang === 'auto' ? 'auto' : lang === 'english' ? 'en' : 'zh'}</span>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
 
           {/* Sub Configuration Bar for extra settings */}
@@ -821,7 +821,7 @@ export default function TypingSpeedTest() {
 
               {mode === 'template' && testType === 'words' && (
                 <>
-                  {['10', '25', '50', '100'].map((w) => (
+                  {['10', '25', '50', '100', '250', '500'].map((w) => (
                     <div
                       key={w}
                       className={`config-item ${wordTarget === w ? 'active' : ''}`}
@@ -857,12 +857,20 @@ export default function TypingSpeedTest() {
           </div>
           <div className="file-upload-group">
             <span className="upload-label">Or upload a TXT file:</span>
+            <label htmlFor="template-file-picker" className="btn-secondary btn-small file-upload-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              Browse File
+            </label>
             <input
               type="file"
               id="template-file-picker"
               accept=".txt"
               onChange={handleFileUpload}
+              style={{ display: 'none' }}
             />
+            {uploadedFileName && <span className="uploaded-file-name">{uploadedFileName}</span>}
           </div>
         </div>
       )}

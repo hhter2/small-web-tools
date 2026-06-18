@@ -688,18 +688,21 @@ export default function TypingSpeedTest() {
           {(isTesting || typedText.length > 0) && (
             <div className="test-control-actions">
               {isTesting && (
-                <button className="secondary-btn" onClick={() => setPaused(!paused)}>
+                <button className="btn-secondary" onClick={() => setPaused(!paused)}>
                   {paused ? 'Resume' : 'Pause'}
                 </button>
               )}
-              <button className="primary-btn accent" onClick={resetTest}>
-                Restart Test
-              </button>
-              {!isTesting && typedText.length > 0 && (
-                <button className="primary-btn" onClick={() => finishTest(typedText, elapsedTime || 1)}>
-                  Complete Test
+              {typedText.length > 0 && (
+                <button className="btn-primary" onClick={() => {
+                  const currentElapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
+                  finishTest(typedText, currentElapsed);
+                }}>
+                  Stop &amp; Complete
                 </button>
               )}
+              <button className="btn-secondary" onClick={resetTest}>
+                Restart Test
+              </button>
             </div>
           )}
         </div>
@@ -741,13 +744,13 @@ export default function TypingSpeedTest() {
 
             <div className="results-actions">
               <button
-                className="primary-btn accent"
+                className="btn-primary"
                 onClick={saveResult}
                 disabled={resultsSaved}
               >
                 {resultsSaved ? 'Result Saved!' : 'Save Result'}
               </button>
-              <button className="secondary-btn" onClick={resetTest}>
+              <button className="btn-secondary" onClick={resetTest}>
                 Try Again
               </button>
             </div>

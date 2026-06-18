@@ -145,12 +145,6 @@ export default function TypingSpeedTest() {
     return mode === 'template' && (selectedPreset === 'code' || rawTemplateText.includes('\n'));
   }, [mode, selectedPreset, rawTemplateText]);
 
-  // Auto detect code language in code mode
-  const codeLanguage = useMemo(() => {
-    if (!isCodeMode) return '';
-    return detectCodeLanguage(templateText);
-  }, [templateText, isCodeMode]);
-
   // Typing state
   const [typedText, setTypedText] = useState('');
   const [compositionText, setCompositionText] = useState('');
@@ -286,6 +280,12 @@ export default function TypingSpeedTest() {
       }
     }
   }, [rawTemplateText, testType, wordTarget, activeLang, mode, showPunctuation, showNumbers, isCodeMode]);
+
+  // Auto detect code language in code mode
+  const codeLanguage = useMemo(() => {
+    if (!isCodeMode) return '';
+    return detectCodeLanguage(templateText);
+  }, [templateText, isCodeMode]);
 
   // Reset test when configuration changes
   useEffect(() => {

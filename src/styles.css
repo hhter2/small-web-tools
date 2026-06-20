@@ -724,7 +724,8 @@ html[data-theme="dark"] .status-msg {
   }
 
   .main-content {
-    padding: 80px 20px 0 20px; /* Offset for mobile header */
+    padding: 80px 16px 0 16px; /* Offset for mobile header */
+    gap: 24px;
   }
 
   .main-content.no-header {
@@ -732,7 +733,8 @@ html[data-theme="dark"] .status-msg {
   }
 
   .tool-card {
-    padding: 20px;
+    padding: 16px;
+    border-radius: 14px;
   }
 
   .main-header h1 {
@@ -750,6 +752,116 @@ html[data-theme="dark"] .status-msg {
 
   .grid-outputs .full-width {
     grid-column: span 1;
+  }
+
+  /* Random Wheel mobile overrides */
+  .wheel-canvas-container {
+    padding: 20px 12px;
+    min-height: auto;
+  }
+
+  .wheel-title-pill {
+    font-size: 1.05rem;
+    padding: 8px 24px;
+  }
+
+  .wheel-controls-panel {
+    padding: 16px;
+  }
+
+  /* Codon Table mobile: horizontal scroll */
+  .ct-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ct-outer-grid {
+    min-width: 580px;
+  }
+
+  .ct-root {
+    padding: 0.75rem 0.25rem 1rem;
+  }
+
+  /* Typing Speed Test mobile font scaling */
+  .typing-text-wrapper {
+    font-size: 1.15rem;
+    line-height: 1.55;
+  }
+
+  .typing-code-block {
+    font-size: 0.95rem;
+  }
+
+  .typing-template-container {
+    padding: 20px 16px;
+    min-height: 120px;
+  }
+
+  .live-timer {
+    font-size: 2rem;
+  }
+
+  .typing-results-dashboard {
+    padding: 20px 16px;
+  }
+
+  .typing-config-bar {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+
+  /* Currency Converter mobile swap button */
+  .currency-swap-btn {
+    align-self: center;
+    margin: 4px 0;
+  }
+
+  .currency-result-value {
+    font-size: 1.5rem;
+  }
+
+  /* Home grid mobile */
+  .home-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .home-card {
+    padding: 18px;
+  }
+
+  .home-tabs {
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .tab-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* ImgMeta mobile */
+  .imgmeta-results-grid {
+    gap: 14px;
+  }
+
+  .imgmeta-table td:nth-child(2),
+  .imgmeta-table td:nth-child(3) {
+    max-width: 140px;
+  }
+
+  /* IP Lookup mobile */
+  .map-container {
+    min-height: 200px;
+  }
+
+  /* Footer mobile */
+  .shiny-footer-content {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
   }
 }
 
@@ -1523,9 +1635,8 @@ html[data-theme="dark"] .currency-bulk-item {
 
 .wheel-canvas-wrapper {
   position: relative;
-  width: 420px;
-  height: 420px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 420px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
@@ -6023,11 +6134,185 @@ html[data-theme="dark"] .ct-fisc-side-bond {
 }
 
 
+/* ══════════════════════════════════════════════════════════════════════════
+   EXTRA SMALL MOBILE OVERRIDES (≤ 500px)
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 500px) {
+  .main-content {
+    padding: 72px 10px 0 10px;
+    gap: 18px;
+  }
 
+  .main-content.no-header {
+    padding-top: 66px;
+  }
 
+  .tool-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
 
+  .main-header h1 {
+    font-size: 1.45rem;
+  }
 
+  .subtitle {
+    font-size: 0.9rem;
+  }
 
+  /* Typing Test extra small */
+  .typing-text-wrapper {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
 
+  .typing-code-block {
+    font-size: 0.85rem;
+  }
 
+  .typing-template-container {
+    padding: 14px 12px;
+    min-height: 100px;
+  }
 
+  .live-timer {
+    font-size: 1.6rem;
+  }
+
+  .live-stat-badges .badge {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .typing-config-bar {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metric-box .value {
+    font-size: 1.45rem;
+  }
+
+  /* Random Wheel extra small */
+  .wheel-canvas-container {
+    padding: 14px 8px;
+  }
+
+  .wheel-title-pill {
+    font-size: 0.95rem;
+    padding: 6px 18px;
+    margin-bottom: 16px;
+  }
+
+  .wheel-spin-btn-center {
+    width: 50px;
+    height: 50px;
+    font-size: 0.7rem;
+  }
+
+  /* Currency extra small */
+  .currency-result-value {
+    font-size: 1.3rem;
+  }
+
+  .currency-manual-rate-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Color Converter extra small */
+  .hsl-picker-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .hsl-picker-board {
+    height: 180px;
+  }
+
+  .lightness-slider-wrapper {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lightness-slider {
+    width: 100%;
+    height: 28px;
+    border-radius: 14px;
+  }
+
+  .lightness-handle {
+    left: auto;
+    right: auto;
+    top: -2px;
+    bottom: -2px;
+    width: 8px;
+    height: auto;
+  }
+
+  /* Home grid extra small */
+  .home-card {
+    padding: 14px;
+  }
+
+  .home-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .home-card p {
+    font-size: 0.82rem;
+  }
+
+  /* DNA Visual extra small */
+  .dna-visual-wrapper {
+    padding: 14px 10px;
+  }
+
+  .dna-visual-legend {
+    gap: 12px;
+    font-size: 0.78rem;
+  }
+
+  /* ImgMeta extra small */
+  .imgmeta-dropzone {
+    padding: 28px 16px;
+  }
+
+  .imgmeta-cam-view {
+    max-height: none;
+  }
+
+  /* Form elements */
+  textarea,
+  input,
+  select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  label {
+    font-size: 0.85rem;
+  }
+
+  .btn-primary {
+    padding: 10px 20px;
+    font-size: 0.88rem;
+  }
+
+  .result-val {
+    font-size: 1.45rem;
+  }
+
+  /* Codon Table side panel on extra small */
+  .ct-side-panel {
+    min-width: unset;
+  }
+}

@@ -43,6 +43,7 @@ This project is built using **React** and **Vite** for a fast local development 
 - **Clean Tool Layout & Spacing**: Hides outer redundant headers, titles, and subtitles across the application (including the duplicate homepage main-header), keeping clean internal tool headings, minimizing blank space, and reducing vertical scrolling for a compact, desktop/mobile-friendly workspace.
 - **Green Accent Theme & Light Sidebar (New)**: Replaced the default blue color scheme with a curated green theme (`#4FB949` in light mode, `#5EC95A` in dark mode). The sidebar has been updated to render in a clean white background during light mode and deep charcoal in dark mode.
 - **Dynamic Responsive Footer (New)**: Structured the footer columns to dynamically mirror the 7 sidebar category groups exactly. Handled mobile responsive layouts by separating brand name and copyright into stacked rows on screens below 768px.
+- **QR Code & Barcode Generator (New)**: Create highly customizable QR codes and barcodes. Generate QR codes from text, URLs, WiFi networks, emails, phone numbers, and SMS. Customize the dot shape (square vs circle), position eyes (standard square, smooth rounded, or circular rings), choose solid or linear/radial gradient foreground colors, set background color (including transparent), upload and embed logo images with size slider and White Circle/Square padding overlays, and export to PNG or vector SVG format. Generate barcodes in multiple formats (CODE128, EAN-13, EAN-8, UPC-A, Code 39, ITF, Codabar) with live input validation, custom line/background colors, bar height/width sliders, toggleable text label, and download as PNG or vector SVG.
 
 ## Included Tools
 
@@ -60,6 +61,7 @@ This project is built using **React** and **Vite** for a fast local development 
 12. **Random Wheel**: Draw items at random from custom typed options. Edit the wheel title dynamically, view active and eliminated options in real-time, reset or clear options (with custom modal confirmation), toggle duplicate selections, and use keyboard shortcuts (`Space` to spin, `E` to edit options, `R` to reset, `C` to clear).
 13. **Typing Speed Test**: Test typing speed in English or Chinese. Supports auto-timer triggers, template upload, character highlighting (correct/error state), floating spelling typo popups, and local history logging.
 14. **RNA Codon Table**: Interactive standard genetic code reference. All 64 codons and their amino acid products are individually clickable buttons. Click any codon or AA label to reveal synonyms, full names, 1-letter codes, and per-base colour breakdown in a slide-in detail panel. Start/Stop codons carry semantic colour distinctions. Includes filter mode and live interaction stats.
+15. **QR Code & Barcode Generator**: Highly customizable styled QR codes (supporting gradients, dots/eyes styling, center logo uploading) and scan-valid barcodes (CODE128, EAN-13, UPC-A, etc.) with vector SVG and PNG downloads.
 
 ---
 
@@ -98,7 +100,7 @@ npm run preview
 ## Project Structure
 
 - `index.html` — HTML entry point hosting the root React container.
-- `package.json` — Tooling configuration and dependencies (including React, React-DOM, and ExifReader).
+- `package.json` — Tooling configuration and dependencies (including React, React-DOM, ExifReader, QRCode, and JsBarcode).
 - `.gitignore` — Standard gitignore configuration for Node/Vite/React projects.
 - `src/` — React source directory:
   - `src/main.jsx` — Entry point rendering the root component.

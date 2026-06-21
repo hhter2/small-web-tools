@@ -702,37 +702,30 @@ export default function App() {
 
         <footer className="shiny-footer">
           <div className="footer-links-section">
-            <div className="footer-col">
-              <span className="footer-col-title">Text Tools</span>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-wc')}>Word Counter</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-typing')}>Typing Speed Test</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-slash')}>Slashes Converter</button>
-            </div>
-            <div className="footer-col">
-              <span className="footer-col-title">Calculation</span>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-date')}>Date Counter</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-currency')}>Currency Converter</button>
-            </div>
-            <div className="footer-col">
-              <span className="footer-col-title">Developer</span>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-color')}>Color Converter</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-ascii')}>ASCII Converter</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-unicode')}>Unicode Converter</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-base')}>Base Converter</button>
-            </div>
-            <div className="footer-col">
-              <span className="footer-col-title">Bioinfo & Utilities</span>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-dna')}>DNA/RNA Transfer</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-codon')}>RNA Codon Table</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-imgmeta')}>ImgMeta</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-iplookup')}>IP Lookup</button>
-              <button className="footer-col-link" onClick={() => handleNavClick('tool-wheel')}>Random Wheel</button>
-            </div>
+            {categories.map(cat => {
+              const catItems = navItems.filter(item => item.category === cat.id);
+              if (catItems.length === 0) return null;
+              return (
+                <div key={cat.id} className="footer-col">
+                  <span className="footer-col-title">{cat.name}</span>
+                  {catItems.map(item => (
+                    <button
+                      key={item.id}
+                      className="footer-col-link"
+                      onClick={() => handleNavClick(item.id)}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
           </div>
           <div className="shiny-footer-content">
-            <div>
+            <div className="footer-brand-container">
               <span className="footer-brand-name">Small Web Tools</span>
-              <span className="footer-copyright"> &nbsp;·&nbsp; Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()}</span>
+              <span className="footer-sep">&nbsp;·&nbsp;</span>
+              <span className="footer-copyright">Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()}</span>
             </div>
             <div className="footer-social-row">
               <button className="footer-social-btn" title="GitHub" aria-label="GitHub">

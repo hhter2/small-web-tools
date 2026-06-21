@@ -40,6 +40,8 @@ This project is built using **React** and **Vite** for a fast local development 
   - **Interactive Codon Typer (New)**: A passcode-style 3-card base input interface (1st, 2nd, and 3rd positions) for quick codon lookups. Typing characters (U, C, A, G or auto-mapped T -> U) shows the translated amino acid dynamically, highlighting matching codons in the table and dimming others.
   - **Biochemical Group Filter (New)**: Select biochemical group filters (Hydrophobic, Polar Uncharged, Basic, or Acidic) to highlight related codons in the table and display interactive amino acid chips for quick exploration.
 - **Clean Tool Layout & Spacing**: Hides the outer redundant header/subtitles on individual utility pages, keeping the cleaner internal tool headings, minimizing blank space, and reducing vertical scrolling for a more compact, desktop/mobile-friendly workspace.
+- **Green Accent Theme & Light Sidebar (New)**: Replaced the default blue color scheme with a curated green theme (`#4FB949` in light mode, `#5EC95A` in dark mode). The sidebar has been updated to render in a clean white background during light mode and deep charcoal in dark mode.
+- **Dynamic Responsive Footer (New)**: Structured the footer columns to dynamically mirror the 7 sidebar category groups exactly. Handled mobile responsive layouts by separating brand name and copyright into stacked rows on screens below 768px.
 
 ## Included Tools
 

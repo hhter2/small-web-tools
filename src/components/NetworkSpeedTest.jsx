@@ -81,68 +81,73 @@ const runDownloadTest = (durationMs, onProgress, outerSignal) => {
   });
 };
 
-// ─── Time-boxed Upload Test (XHR POST for `durationMs` ms, then aborts) ─────
-const runUploadTest = (durationMs, onProgress, outerSignal) => {
-  return new Promise((resolve, reject) => {
-    // Build a 25MB blob as specified
-    const blobSize = 25 * 1024 * 1024; // 25 MB buffer
-    const blob = new Blob([new Uint8Array(blobSize)], { type: 'text/plain' });
+// ─── Time-boxed Upload Test (using chunked fetch POST to avoid CORS preflight) ───
+const runUploadTest = async (durationMs, onProgress, outerSignal) => {
+  const startTime = performance.now();
+  let totalBytes = 0;
+  const samples = [];
 
-    const xhr = new XMLHttpRequest();
-    let startTime = null;
-    let resolved = false;
-    let lastSample = 0;
-    const samples = [];
+  let currentChunkSize = 256 * 1024; // start with 256 KB
+  const maxChunkSize = 4 * 1024 * 1024; // 4 MB max chunk size to avoid server limits
+  const minChunkSize = 64 * 1024; // 64 KB min chunk size
 
-    const finish = (loaded) => {
-      if (resolved) return;
-      resolved = true;
-      const elapsed = startTime ? (performance.now() - startTime) / 1000 : 0;
-      const avgMbps = elapsed > 0 && loaded > 0 ? (loaded * 8) / elapsed / (1024 * 1024) : 0;
-      resolve({ avgMbps, bytes: loaded, samples });
-    };
+  const innerController = new AbortController();
+  const onOuter = () => innerController.abort();
+  outerSignal.addEventListener('abort', onOuter, { once: true });
 
-    // stop after durationMs
-    const timer = setTimeout(() => {
-      finish(xhr.upload._loaded || 0);
-      xhr.abort();
-    }, durationMs);
+  try {
+    while (performance.now() - startTime < durationMs && !outerSignal.aborted) {
+      // Build a text blob of currentChunkSize
+      const data = new Uint8Array(currentChunkSize);
+      const blob = new Blob([data], { type: 'text/plain' });
 
-    const onOuter = () => {
-      clearTimeout(timer);
-      xhr.abort();
-    };
-    outerSignal.addEventListener('abort', onOuter, { once: true });
+      const chunkStart = performance.now();
 
-    xhr.upload._loaded = 0;
-    xhr.upload.onloadstart = () => { startTime = performance.now(); };
+      // Perform the upload. Since method is POST and body is text/plain Blob,
+      // this is a simple CORS request and does not trigger OPTIONS preflight.
+      const response = await fetch('https://speed.cloudflare.com/__up', {
+        method: 'POST',
+        body: blob,
+        cache: 'no-store',
+        signal: innerController.signal,
+      });
 
-    xhr.upload.onprogress = (e) => {
-      if (!startTime) startTime = performance.now();
-      xhr.upload._loaded = e.loaded;
-      const now = performance.now();
-      const elapsed = (now - startTime) / 1000;
-      const speedMbps = elapsed > 0 ? (e.loaded * 8) / elapsed / (1024 * 1024) : 0;
-
-      if (now - lastSample > 150) {
-        samples.push(speedMbps);
-        onProgress({ bytes: e.loaded, elapsed, speedMbps, pct: Math.min((elapsed / (durationMs / 1000)) * 100, 100) });
-        lastSample = now;
+      if (!response.ok) {
+        throw new Error('Upload server returned error status');
       }
-    };
 
-    xhr.onload = () => { clearTimeout(timer); outerSignal.removeEventListener('abort', onOuter); finish(xhr.upload._loaded); };
-    xhr.onerror = () => { clearTimeout(timer); outerSignal.removeEventListener('abort', onOuter); reject(new Error('Upload request failed')); };
-    xhr.onabort = () => {
-      // This fires after we call finish() from timer or outerSignal; just clean up
-      outerSignal.removeEventListener('abort', onOuter);
-      if (!resolved) finish(xhr.upload._loaded || 0);
-    };
+      const chunkEnd = performance.now();
+      const chunkDurationSec = (chunkEnd - chunkStart) / 1000;
 
-    xhr.open('POST', 'https://speed.cloudflare.com/__up');
-    xhr.setRequestHeader('Content-Type', 'text/plain');
-    xhr.send(blob);
-  });
+      if (chunkDurationSec > 0) {
+        const speedMbps = (currentChunkSize * 8) / chunkDurationSec / (1024 * 1024);
+        samples.push(speedMbps);
+        totalBytes += currentChunkSize;
+
+        const elapsed = (chunkEnd - startTime) / 1000;
+        const pct = Math.min((elapsed / (durationMs / 1000)) * 100, 100);
+
+        onProgress({ bytes: totalBytes, elapsed, speedMbps, pct });
+
+        // Dynamically adjust chunk size for the next request to target ~0.3 seconds upload duration
+        const targetDuration = 0.3; // seconds
+        let targetSize = Math.round((speedMbps * 1024 * 1024 * targetDuration) / 8);
+        // Clamp the size
+        currentChunkSize = Math.max(minChunkSize, Math.min(maxChunkSize, targetSize));
+      }
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError' && !outerSignal.aborted) {
+      throw e;
+    }
+  } finally {
+    outerSignal.removeEventListener('abort', onOuter);
+  }
+
+  const totalElapsed = (performance.now() - startTime) / 1000;
+  const avgMbps = totalElapsed > 0 && totalBytes > 0 ? (totalBytes * 8) / totalElapsed / (1024 * 1024) : 0;
+
+  return { avgMbps, bytes: totalBytes, samples };
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────

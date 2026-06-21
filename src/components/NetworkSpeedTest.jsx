@@ -325,7 +325,7 @@ export default function NetworkSpeedTest() {
                 const sy = 95  - r * Math.cos(startRad);
                 const ex = 100 + r * Math.sin(endRad);
                 const ey = 95  - r * Math.cos(endRad);
-                const largeArc = ratio > 0.5 ? 1 : 0;
+                const largeArc = ratio > 0.75 ? 1 : 0;
                 return (
                   <path
                     d={`M ${sx.toFixed(2)},${sy.toFixed(2)} A 70,70 0 ${largeArc},1 ${ex.toFixed(2)},${ey.toFixed(2)}`}

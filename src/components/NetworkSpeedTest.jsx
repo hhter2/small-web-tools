@@ -101,6 +101,9 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
     let startTime = null;
     const samples = [];
     let lastSample = 0;
+    let warmUpBytes = 0;
+    let warmUpTime = 0;
+    let isWarmedUp = false;
 
     // abort inner when outer signals
     const onOuter = () => innerController.abort();
@@ -123,7 +126,19 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
           bytes += value.length;
           const now = performance.now();
           const elapsed = (now - startTime) / 1000;
-          const speedMbps = elapsed > 0 ? (bytes * 8) / elapsed / (1024 * 1024) : 0;
+
+          if (!isWarmedUp) {
+            if (elapsed >= 0.5) {
+              warmUpBytes = bytes;
+              warmUpTime = elapsed;
+              isWarmedUp = true;
+            }
+            continue;
+          }
+
+          const activeElapsed = elapsed - warmUpTime;
+          const activeBytes = bytes - warmUpBytes;
+          const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / (1024 * 1024) : 0;
 
           if (now - lastSample > 150) {
             samples.push(speedMbps);
@@ -143,7 +158,11 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
         outerSignal.removeEventListener('abort', onOuter);
         if (outerSignal.aborted && bytes === 0) { reject(new DOMException('Aborted', 'AbortError')); return; }
         const totalElapsed = startTime ? (performance.now() - startTime) / 1000 : 0;
-        const avgMbps = totalElapsed > 0 ? (bytes * 8) / totalElapsed / (1024 * 1024) : 0;
+        const activeElapsed = totalElapsed - warmUpTime;
+        const activeBytes = bytes - warmUpBytes;
+        const avgMbps = isWarmedUp && activeElapsed > 0 && activeBytes > 0
+          ? (activeBytes * 8) / activeElapsed / (1024 * 1024)
+          : (totalElapsed > 0 ? (bytes * 8) / totalElapsed / (1024 * 1024) : 0);
         resolve({ avgMbps, bytes, samples });
       });
   });
@@ -154,6 +173,9 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
   const startTime = performance.now();
   let totalBytes = 0;
   const samples = [];
+  let warmUpBytes = 0;
+  let warmUpTime = 0;
+  let isWarmedUp = false;
 
   let currentChunkSize = 256 * 1024; // start with 256 KB
   const maxChunkSize = 4 * 1024 * 1024; // 4 MB max chunk size to avoid server limits
@@ -189,13 +211,26 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
 
       const chunkEnd = performance.now();
       const chunkDurationSec = (chunkEnd - chunkStart) / 1000;
+      totalBytes += nextChunkSize;
+
+      const elapsed = (chunkEnd - startTime) / 1000;
+
+      if (!isWarmedUp) {
+        if (elapsed >= 0.5) {
+          warmUpBytes = totalBytes;
+          warmUpTime = elapsed;
+          isWarmedUp = true;
+        }
+        continue;
+      }
 
       if (chunkDurationSec > 0) {
-        const speedMbps = (nextChunkSize * 8) / chunkDurationSec / (1024 * 1024);
-        samples.push(speedMbps);
-        totalBytes += nextChunkSize;
+        const activeElapsed = elapsed - warmUpTime;
+        const activeBytes = totalBytes - warmUpBytes;
+        const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / (1024 * 1024) : 0;
 
-        const elapsed = (chunkEnd - startTime) / 1000;
+        samples.push(speedMbps);
+
         const timePct = (elapsed / (durationMs / 1000)) * 100;
         const bytesPct = (totalBytes / maxUploadBytes) * 100;
         const pct = Math.min(Math.max(timePct, bytesPct), 100);
@@ -218,7 +253,11 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
   }
 
   const totalElapsed = (performance.now() - startTime) / 1000;
-  const avgMbps = totalElapsed > 0 && totalBytes > 0 ? (totalBytes * 8) / totalElapsed / (1024 * 1024) : 0;
+  const activeElapsed = totalElapsed - warmUpTime;
+  const activeBytes = totalBytes - warmUpBytes;
+  const avgMbps = isWarmedUp && activeElapsed > 0 && activeBytes > 0
+    ? (activeBytes * 8) / activeElapsed / (1024 * 1024)
+    : (totalElapsed > 0 && totalBytes > 0 ? (totalBytes * 8) / totalElapsed / (1024 * 1024) : 0);
 
   return { avgMbps, bytes: totalBytes, samples };
 };
@@ -236,7 +275,9 @@ export default function NetworkSpeedTest() {
   const [speedHistory, setSpeedHistory] = useState([]); // { phase, speed }[]
   const [clientIp, setClientIp] = useState(null);
   const [clientOrg, setClientOrg] = useState(null);
-  const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy
+  const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy | custom
+  const [customDownload, setCustomDownload] = useState(100);
+  const [customUpload, setCustomUpload] = useState(25);
 
   const abortRef = useRef(null);
 
@@ -281,11 +322,23 @@ export default function NetworkSpeedTest() {
       setProgress(0);
       setCurrentSpeed(0);
 
-      const config = DATA_CONFIG[dataLimit];
+      let downloadBytes = 100_000_000;
+      let uploadBytes = 25 * 1024 * 1024;
+
+      if (dataLimit === 'custom') {
+        const dlMB = parseFloat(customDownload) || 100;
+        const ulMB = parseFloat(customUpload) || 25;
+        downloadBytes = Math.round(dlMB * 1024 * 1024);
+        uploadBytes = Math.round(ulMB * 1024 * 1024);
+      } else {
+        const config = DATA_CONFIG[dataLimit];
+        downloadBytes = config.downloadBytes;
+        uploadBytes = config.uploadBytes;
+      }
 
       const dl = await runDownloadTest(
         10_000,
-        config.downloadBytes,
+        downloadBytes,
         ({ speedMbps, pct }) => {
           setCurrentSpeed(speedMbps);
           setProgress(pct);
@@ -303,7 +356,7 @@ export default function NetworkSpeedTest() {
 
       const ul = await runUploadTest(
         10_000,
-        config.uploadBytes,
+        uploadBytes,
         ({ speedMbps, pct }) => {
           setCurrentSpeed(speedMbps);
           setProgress(pct);
@@ -348,35 +401,33 @@ export default function NetworkSpeedTest() {
     };
   });
 
-  // ── Chart math ──────────────────────────────────────────────────────────────
-  const peakSpeed = Math.max(...speedHistory.map(h => h.speed), 10);
-  const chartW = 270, chartH = 90, chartX0 = 15, chartY0 = 15;
-
-  const toXY = (idx, total, speed) => ({
-    x: total > 1 ? chartX0 + (idx / (total - 1)) * chartW : chartX0,
-    y: (chartY0 + chartH) - (speed / peakSpeed) * chartH,
-  });
-
-  const dlPoints = speedHistory
-    .map((h, i) => ({ ...h, i }))
-    .filter(h => h.phase === 'download');
-  const ulPoints = speedHistory
-    .map((h, i) => ({ ...h, i }))
-    .filter(h => h.phase === 'upload');
-
-  const total = speedHistory.length;
-  const makePath = (pts) =>
-    pts.length < 2 ? '' :
-    'M ' + pts.map(({ i, speed }) => { const p = toXY(i, total, speed); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' L ');
-
-  const dlPath = makePath(dlPoints);
-  const ulPath = makePath(ulPoints);
+  // ── Chart math (Separate Download and Upload) ────────────────────────────────
+  const chartW = 260, chartH = 75, chartX0 = 25, chartY0 = 15;
   const areaBase = chartY0 + chartH;
 
-  const allPts = speedHistory.map((h, i) => toXY(i, total, h.speed));
-  const areaPath = allPts.length > 1
-    ? `M ${chartX0},${areaBase} L ${allPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ')} L ${allPts[allPts.length - 1].x.toFixed(1)},${areaBase} Z`
-    : '';
+  const makeChartData = (points, peak) => {
+    const total = points.length;
+    const pts = points.map((p, idx) => {
+      const x = total > 1 ? chartX0 + (idx / (total - 1)) * chartW : chartX0;
+      const y = areaBase - (p.speed / peak) * chartH;
+      return { x, y };
+    });
+
+    const linePath = pts.length < 2 ? '' : 'M ' + pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ');
+    const areaPath = pts.length > 1
+      ? `M ${chartX0},${areaBase} L ${pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ')} L ${pts[pts.length - 1].x.toFixed(1)},${areaBase} Z`
+      : '';
+
+    return { linePath, areaPath, pts };
+  };
+
+  const dlPoints = speedHistory.filter(h => h.phase === 'download');
+  const peakDl = Math.max(...dlPoints.map(h => h.speed), 10);
+  const dlChart = makeChartData(dlPoints, peakDl);
+
+  const ulPoints = speedHistory.filter(h => h.phase === 'upload');
+  const peakUl = Math.max(...ulPoints.map(h => h.speed), 10);
+  const ulChart = makeChartData(ulPoints, peakUl);
 
   const showViz = isRunning || phase === 'complete';
 
@@ -413,8 +464,62 @@ export default function NetworkSpeedTest() {
             <option value="light">Light (30MB Down / 8MB Up)</option>
             <option value="standard">Standard (100MB Down / 25MB Up)</option>
             <option value="heavy">Heavy (200MB Down / 50MB Up)</option>
+            <option value="custom">Custom Size…</option>
           </select>
         </div>
+
+        {dataLimit === 'custom' && (
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label htmlFor="custom-down-input" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                Download (MB)
+              </label>
+              <input
+                id="custom-down-input"
+                type="number"
+                min="1"
+                max="1000"
+                value={customDownload}
+                onChange={(e) => setCustomDownload(e.target.value)}
+                disabled={isRunning}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
+                  outline: 'none',
+                  width: '95px',
+                  fontSize: '0.9rem',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label htmlFor="custom-up-input" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                Upload (MB)
+              </label>
+              <input
+                id="custom-up-input"
+                type="number"
+                min="1"
+                max="1000"
+                value={customUpload}
+                onChange={(e) => setCustomUpload(e.target.value)}
+                disabled={isRunning}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
+                  outline: 'none',
+                  width: '95px',
+                  fontSize: '0.9rem',
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div>
           {isRunning ? (
@@ -425,7 +530,7 @@ export default function NetworkSpeedTest() {
         </div>
       </div>
 
-      {/* ── Speedometer + Line Chart ── */}
+      {/* ── Speedometer + Line Charts ── */}
       {showViz && (
         <div className="row" style={{ marginBottom: '20px', gap: '20px', alignItems: 'flex-start' }}>
 
@@ -450,7 +555,7 @@ export default function NetworkSpeedTest() {
                   <path
                     d={`M ${sx.toFixed(2)},${sy.toFixed(2)} A 70,70 0 ${largeArc},1 ${ex.toFixed(2)},${ey.toFixed(2)}`}
                     fill="none"
-                    stroke="var(--accent)"
+                    stroke={phase === 'download' ? '#3b82f6' : phase === 'upload' ? '#ef4444' : 'var(--accent)'}
                     strokeWidth="8"
                     strokeLinecap="round"
                     opacity="0.8"
@@ -468,8 +573,10 @@ export default function NetworkSpeedTest() {
               <text x="176" y="137" fontSize="8" textAnchor="middle" fill="var(--text-muted)">{maxScale}</text>
               {/* Needle */}
               <line x1="100" y1="95" x2={needleX.toFixed(2)} y2={needleY.toFixed(2)}
-                stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="100" cy="95" r="7"   fill="var(--accent)" />
+                stroke={phase === 'download' ? '#3b82f6' : phase === 'upload' ? '#ef4444' : 'var(--accent)'}
+                strokeWidth="3" strokeLinecap="round" />
+              <circle cx="100" cy="95" r="7"
+                fill={phase === 'download' ? '#3b82f6' : phase === 'upload' ? '#ef4444' : 'var(--accent)'} />
               <circle cx="100" cy="95" r="2.5" fill="var(--bg-card)" />
               {/* Speed text */}
               <text x="100" y="124" fontSize="13" fontWeight="700" textAnchor="middle"
@@ -482,42 +589,52 @@ export default function NetworkSpeedTest() {
             </svg>
           </div>
 
-          {/* Line Chart */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <svg viewBox="0 0 300 120" style={{ width: '100%', height: 'auto' }}>
+          {/* Download Speed Chart */}
+          <div style={{ flex: '1 1 220px', minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
+            </span>
+            <svg viewBox="0 0 300 110" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
               {/* Grid */}
-              <line x1="15" y1="15"  x2="285" y2="15"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="15" y1="60"  x2="285" y2="60"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="15" y1="105" x2="285" y2="105" stroke="var(--border-color)" strokeWidth="0.8" />
+              <line x1="25" y1="15"  x2="285" y2="15"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+              <line x1="25" y1="52.5" x2="285" y2="52.5" stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+              <line x1="25" y1="90"  x2="285" y2="90"  stroke="var(--border-color)" strokeWidth="0.8" />
               {/* Y labels */}
-              <text x="10" y="18"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakSpeed.toFixed(0)}</text>
-              <text x="10" y="63"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakSpeed / 2).toFixed(0)}</text>
-              <text x="10" y="108" fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
+              <text x="20" y="18"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakDl.toFixed(0)}</text>
+              <text x="20" y="55.5" fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakDl / 2).toFixed(0)}</text>
+              <text x="20" y="93"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
               {/* Area fill */}
-              {areaPath && <path d={areaPath} fill="var(--accent)" opacity="0.07" />}
-              {/* Download line – solid */}
-              {dlPath && (
-                <path d={dlPath} fill="none" stroke="var(--accent)" strokeWidth="2"
+              {dlChart.areaPath && <path d={dlChart.areaPath} fill="#3b82f6" opacity="0.08" />}
+              {/* Line */}
+              {dlChart.linePath && (
+                <path d={dlChart.linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5"
                   strokeLinecap="round" strokeLinejoin="round" />
               )}
-              {/* Upload line – dashed */}
-              {ulPath && (
-                <path d={ulPath} fill="none" stroke="var(--accent)" strokeWidth="2"
-                  strokeDasharray="5 3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          {/* Upload Speed Chart */}
+          <div style={{ flex: '1 1 220px', minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
+            </span>
+            <svg viewBox="0 0 300 110" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
+              {/* Grid */}
+              <line x1="25" y1="15"  x2="285" y2="15"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+              <line x1="25" y1="52.5" x2="285" y2="52.5" stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+              <line x1="25" y1="90"  x2="285" y2="90"  stroke="var(--border-color)" strokeWidth="0.8" />
+              {/* Y labels */}
+              <text x="20" y="18"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakUl.toFixed(0)}</text>
+              <text x="20" y="55.5" fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakUl / 2).toFixed(0)}</text>
+              <text x="20" y="93"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
+              {/* Area fill */}
+              {ulChart.areaPath && <path d={ulChart.areaPath} fill="#ef4444" opacity="0.08" />}
+              {/* Line */}
+              {ulChart.linePath && (
+                <path d={ulChart.linePath} fill="none" stroke="#ef4444" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round" />
               )}
             </svg>
-
-            {/* Legend */}
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="var(--accent)" strokeWidth="2" /></svg>
-                Download
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 3" /></svg>
-                Upload
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -525,7 +642,10 @@ export default function NetworkSpeedTest() {
       {/* Progress bar */}
       {(phase === 'download' || phase === 'upload') && (
         <div className="progress-container" style={{ marginBottom: '20px' }}>
-          <div id="progress-bar" style={{ width: `${progress}%` }} />
+          <div id="progress-bar" style={{
+            width: `${progress}%`,
+            background: phase === 'download' ? '#3b82f6' : '#ef4444',
+          }} />
         </div>
       )}
 

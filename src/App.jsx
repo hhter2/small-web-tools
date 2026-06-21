@@ -17,7 +17,7 @@ import CodonTable from './components/CodonTable.jsx';
 
 const toolDetails = {
   "tool-home": {
-    title: "Small Web Tools",
+    title: "Dashboard",
     desc: "A premium dashboard of handy utility tools."
   },
   "tool-slash": {

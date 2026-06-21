@@ -27,6 +27,50 @@ const runPingTest = async (signal) => {
   return pings.length ? pings.reduce((a, b) => a + b) / pings.length : 0;
 };
 
+// ─── IP and ISP Lookup ────────────────────────────────────────────────────────
+const fetchIpInfo = async () => {
+  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+  if (isDev) {
+    const res = await fetch('/api/iplookup');
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'Server-side IP lookup failed');
+    return result.data;
+  }
+
+  const tryProvider = async (url, normalize) => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url} returned ${r.status}`);
+    return normalize(await r.json());
+  };
+
+  const providers = [
+    () => tryProvider(
+      'https://api.ip.sb/geoip',
+      (d) => ({
+        ip: d.ip,
+        org: d.isp || d.organization || '',
+      })
+    ),
+    () => tryProvider(
+      'https://ipapi.co/json/',
+      (d) => {
+        if (d.error) throw new Error(d.reason || 'ipapi.co error');
+        return {
+          ip: d.ip,
+          org: d.org || '',
+        };
+      }
+    ),
+  ];
+
+  let lastErr = null;
+  for (const p of providers) {
+    try { return await p(); } catch (e) { lastErr = e; }
+  }
+  throw new Error(`IP lookup failed: ${lastErr?.message}`);
+};
+
 // ─── Time-boxed Download Test (streams for `durationMs` ms, then aborts) ────
 const runDownloadTest = (durationMs, onProgress, outerSignal) => {
   return new Promise((resolve, reject) => {
@@ -161,6 +205,8 @@ export default function NetworkSpeedTest() {
   const [avgUploadSpeed, setAvgUploadSpeed] = useState(null);
   const [error, setError] = useState(null);
   const [speedHistory, setSpeedHistory] = useState([]); // { phase, speed }[]
+  const [clientIp, setClientIp] = useState(null);
+  const [clientOrg, setClientOrg] = useState(null);
 
   const abortRef = useRef(null);
 
@@ -181,6 +227,18 @@ export default function NetworkSpeedTest() {
     setAvgDownloadSpeed(null);
     setAvgUploadSpeed(null);
     setSpeedHistory([]);
+    setClientIp(null);
+    setClientOrg(null);
+
+    // Fetch client IP and ISP in the background
+    fetchIpInfo()
+      .then(info => {
+        setClientIp(info.ip);
+        setClientOrg(info.org);
+      })
+      .catch(err => {
+        console.warn('IP lookup failed:', err);
+      });
 
     try {
       // 1. Ping
@@ -450,6 +508,18 @@ export default function NetworkSpeedTest() {
               <span className="result-label">Latency (Ping)</span>
               <span className="result-val">
                 {pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
+              </span>
+            </div>
+            <div className="result-box">
+              <span className="result-label">IP Address</span>
+              <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
+                {clientIp || 'Fetching…'}
+              </span>
+            </div>
+            <div className="result-box">
+              <span className="result-label">Provider (ISP)</span>
+              <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
+                {clientOrg || 'Fetching…'}
               </span>
             </div>
           </div>

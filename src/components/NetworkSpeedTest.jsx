@@ -402,7 +402,7 @@ export default function NetworkSpeedTest() {
   });
 
   // ── Chart math (Separate Download and Upload) ────────────────────────────────
-  const chartW = 260, chartH = 75, chartX0 = 25, chartY0 = 15;
+  const chartW = 260, chartH = 70, chartX0 = 25, chartY0 = 10;
   const areaBase = chartY0 + chartH;
 
   const makeChartData = (points, peak) => {
@@ -432,7 +432,7 @@ export default function NetworkSpeedTest() {
   const showViz = isRunning || phase === 'complete';
 
   return (
-    <article id="tool-speedtest" className="tool-card active">
+    <article id="tool-speedtest" className="tool-card tool-card--wide active">
       <h2>Network Speed Test</h2>
 
       <p className="small note">
@@ -440,7 +440,7 @@ export default function NetworkSpeedTest() {
         Each phase runs for 10 seconds.
       </p>
 
-      <div className="form-group" style={{ marginBottom: '20px', display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'row', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label htmlFor="data-limit-select" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
             Test Size Limit
@@ -532,10 +532,21 @@ export default function NetworkSpeedTest() {
 
       {/* ── Speedometer + Line Charts ── */}
       {showViz && (
-        <div className="row" style={{ marginBottom: '20px', gap: '20px', alignItems: 'flex-start' }}>
+        <div className="row" style={{ marginBottom: '20px', gap: '20px', alignItems: 'stretch' }}>
 
-          {/* Speedometer */}
-          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* Speedometer Column */}
+          <div style={{
+            flex: '0 0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--bg-card)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            padding: '16px 24px',
+            minWidth: '220px'
+          }}>
             <svg viewBox="0 0 200 140" style={{ width: '200px', height: 'auto' }}>
               {/* Track */}
               <path d="M 39.38,130 A 70,70 0 1,1 160.62,130"
@@ -589,53 +600,57 @@ export default function NetworkSpeedTest() {
             </svg>
           </div>
 
-          {/* Download Speed Chart */}
-          <div style={{ flex: '1 1 220px', minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
-            </span>
-            <svg viewBox="0 0 300 110" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
-              {/* Grid */}
-              <line x1="25" y1="15"  x2="285" y2="15"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="25" y1="52.5" x2="285" y2="52.5" stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="25" y1="90"  x2="285" y2="90"  stroke="var(--border-color)" strokeWidth="0.8" />
-              {/* Y labels */}
-              <text x="20" y="18"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakDl.toFixed(0)}</text>
-              <text x="20" y="55.5" fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakDl / 2).toFixed(0)}</text>
-              <text x="20" y="93"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
-              {/* Area fill */}
-              {dlChart.areaPath && <path d={dlChart.areaPath} fill="#3b82f6" opacity="0.08" />}
-              {/* Line */}
-              {dlChart.linePath && (
-                <path d={dlChart.linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5"
-                  strokeLinecap="round" strokeLinejoin="round" />
-              )}
-            </svg>
+          {/* Charts Column (Stacked) */}
+          <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Download Speed Chart */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
+              </span>
+              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
+                {/* Grid */}
+                <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+                <line x1="25" y1="45"  x2="285" y2="45"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+                <line x1="25" y1="80"  x2="285" y2="80"  stroke="var(--border-color)" strokeWidth="0.8" />
+                {/* Y labels */}
+                <text x="20" y="13"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakDl.toFixed(0)}</text>
+                <text x="20" y="48"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakDl / 2).toFixed(0)}</text>
+                <text x="20" y="83"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
+                {/* Area fill */}
+                {dlChart.areaPath && <path d={dlChart.areaPath} fill="#3b82f6" opacity="0.08" />}
+                {/* Line */}
+                {dlChart.linePath && (
+                  <path d={dlChart.linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </div>
+
+            {/* Upload Speed Chart */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
+              </span>
+              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
+                {/* Grid */}
+                <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+                <line x1="25" y1="45"  x2="285" y2="45"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
+                <line x1="25" y1="80"  x2="285" y2="80"  stroke="var(--border-color)" strokeWidth="0.8" />
+                {/* Y labels */}
+                <text x="20" y="13"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakUl.toFixed(0)}</text>
+                <text x="20" y="48"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakUl / 2).toFixed(0)}</text>
+                <text x="20" y="83"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
+                {/* Area fill */}
+                {ulChart.areaPath && <path d={ulChart.areaPath} fill="#ef4444" opacity="0.08" />}
+                {/* Line */}
+                {ulChart.linePath && (
+                  <path d={ulChart.linePath} fill="none" stroke="#ef4444" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </div>
           </div>
 
-          {/* Upload Speed Chart */}
-          <div style={{ flex: '1 1 220px', minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
-            </span>
-            <svg viewBox="0 0 300 110" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
-              {/* Grid */}
-              <line x1="25" y1="15"  x2="285" y2="15"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="25" y1="52.5" x2="285" y2="52.5" stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
-              <line x1="25" y1="90"  x2="285" y2="90"  stroke="var(--border-color)" strokeWidth="0.8" />
-              {/* Y labels */}
-              <text x="20" y="18"  fontSize="7" textAnchor="end" fill="var(--text-muted)">{peakUl.toFixed(0)}</text>
-              <text x="20" y="55.5" fontSize="7" textAnchor="end" fill="var(--text-muted)">{(peakUl / 2).toFixed(0)}</text>
-              <text x="20" y="93"  fontSize="7" textAnchor="end" fill="var(--text-muted)">0</text>
-              {/* Area fill */}
-              {ulChart.areaPath && <path d={ulChart.areaPath} fill="#ef4444" opacity="0.08" />}
-              {/* Line */}
-              {ulChart.linePath && (
-                <path d={ulChart.linePath} fill="none" stroke="#ef4444" strokeWidth="2.5"
-                  strokeLinecap="round" strokeLinejoin="round" />
-              )}
-            </svg>
-          </div>
         </div>
       )}
 

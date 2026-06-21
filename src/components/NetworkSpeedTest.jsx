@@ -71,8 +71,30 @@ const fetchIpInfo = async () => {
   throw new Error(`IP lookup failed: ${lastErr?.message}`);
 };
 
+// ─── Speed Test Data Size Configurations ──────────────────────────────────────
+const DATA_CONFIG = {
+  light: {
+    downloadBytes: 30_000_000,
+    downloadLabel: '30MB',
+    uploadBytes: 8 * 1024 * 1024,
+    uploadLabel: '8MB',
+  },
+  standard: {
+    downloadBytes: 100_000_000,
+    downloadLabel: '100MB',
+    uploadBytes: 25 * 1024 * 1024,
+    uploadLabel: '25MB',
+  },
+  heavy: {
+    downloadBytes: 200_000_000,
+    downloadLabel: '200MB',
+    uploadBytes: 50 * 1024 * 1024,
+    uploadLabel: '50MB',
+  }
+};
+
 // ─── Time-boxed Download Test (streams for `durationMs` ms, then aborts) ────
-const runDownloadTest = (durationMs, onProgress, outerSignal) => {
+const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => {
   return new Promise((resolve, reject) => {
     const innerController = new AbortController();
     let bytes = 0;
@@ -87,7 +109,7 @@ const runDownloadTest = (durationMs, onProgress, outerSignal) => {
     // stop after durationMs
     const timer = setTimeout(() => innerController.abort(), durationMs);
 
-    fetch('https://speed.cloudflare.com/__down?bytes=100000000', {
+    fetch(`https://speed.cloudflare.com/__down?bytes=${downloadBytes}`, {
       cache: 'no-store',
       signal: innerController.signal,
     })
@@ -105,7 +127,9 @@ const runDownloadTest = (durationMs, onProgress, outerSignal) => {
 
           if (now - lastSample > 150) {
             samples.push(speedMbps);
-            onProgress({ bytes, elapsed, speedMbps, pct: Math.min((elapsed / (durationMs / 1000)) * 100, 100) });
+            const timePct = (elapsed / (durationMs / 1000)) * 100;
+            const bytesPct = (bytes / downloadBytes) * 100;
+            onProgress({ bytes, elapsed, speedMbps, pct: Math.min(Math.max(timePct, bytesPct), 100) });
             lastSample = now;
           }
         }
@@ -126,7 +150,7 @@ const runDownloadTest = (durationMs, onProgress, outerSignal) => {
 };
 
 // ─── Time-boxed Upload Test (using chunked fetch POST to avoid CORS preflight) ───
-const runUploadTest = async (durationMs, onProgress, outerSignal) => {
+const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal) => {
   const startTime = performance.now();
   let totalBytes = 0;
   const samples = [];
@@ -140,9 +164,12 @@ const runUploadTest = async (durationMs, onProgress, outerSignal) => {
   outerSignal.addEventListener('abort', onOuter, { once: true });
 
   try {
-    while (performance.now() - startTime < durationMs && !outerSignal.aborted) {
-      // Build a text blob of currentChunkSize
-      const data = new Uint8Array(currentChunkSize);
+    while (performance.now() - startTime < durationMs && !outerSignal.aborted && totalBytes < maxUploadBytes) {
+      const remainingBytes = maxUploadBytes - totalBytes;
+      const nextChunkSize = Math.min(currentChunkSize, remainingBytes);
+
+      // Build a text blob of nextChunkSize
+      const data = new Uint8Array(nextChunkSize);
       const blob = new Blob([data], { type: 'text/plain' });
 
       const chunkStart = performance.now();
@@ -164,12 +191,14 @@ const runUploadTest = async (durationMs, onProgress, outerSignal) => {
       const chunkDurationSec = (chunkEnd - chunkStart) / 1000;
 
       if (chunkDurationSec > 0) {
-        const speedMbps = (currentChunkSize * 8) / chunkDurationSec / (1024 * 1024);
+        const speedMbps = (nextChunkSize * 8) / chunkDurationSec / (1024 * 1024);
         samples.push(speedMbps);
-        totalBytes += currentChunkSize;
+        totalBytes += nextChunkSize;
 
         const elapsed = (chunkEnd - startTime) / 1000;
-        const pct = Math.min((elapsed / (durationMs / 1000)) * 100, 100);
+        const timePct = (elapsed / (durationMs / 1000)) * 100;
+        const bytesPct = (totalBytes / maxUploadBytes) * 100;
+        const pct = Math.min(Math.max(timePct, bytesPct), 100);
 
         onProgress({ bytes: totalBytes, elapsed, speedMbps, pct });
 
@@ -207,6 +236,7 @@ export default function NetworkSpeedTest() {
   const [speedHistory, setSpeedHistory] = useState([]); // { phase, speed }[]
   const [clientIp, setClientIp] = useState(null);
   const [clientOrg, setClientOrg] = useState(null);
+  const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy
 
   const abortRef = useRef(null);
 
@@ -251,8 +281,11 @@ export default function NetworkSpeedTest() {
       setProgress(0);
       setCurrentSpeed(0);
 
+      const config = DATA_CONFIG[dataLimit];
+
       const dl = await runDownloadTest(
         10_000,
+        config.downloadBytes,
         ({ speedMbps, pct }) => {
           setCurrentSpeed(speedMbps);
           setProgress(pct);
@@ -270,6 +303,7 @@ export default function NetworkSpeedTest() {
 
       const ul = await runUploadTest(
         10_000,
+        config.uploadBytes,
         ({ speedMbps, pct }) => {
           setCurrentSpeed(speedMbps);
           setProgress(pct);
@@ -355,12 +389,40 @@ export default function NetworkSpeedTest() {
         Each phase runs for 10 seconds.
       </p>
 
-      <div className="form-group" style={{ marginBottom: '20px' }}>
-        {isRunning ? (
-          <button className="btn-primary" onClick={stopTest} type="button">Stop Test</button>
-        ) : (
-          <button className="btn-primary" onClick={startTest} type="button">Start Test</button>
-        )}
+      <div className="form-group" style={{ marginBottom: '20px', display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label htmlFor="data-limit-select" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+            Test Size Limit
+          </label>
+          <select
+            id="data-limit-select"
+            value={dataLimit}
+            onChange={(e) => setDataLimit(e.target.value)}
+            disabled={isRunning}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-main)',
+              outline: 'none',
+              cursor: isRunning ? 'not-allowed' : 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            <option value="light">Light (30MB Down / 8MB Up)</option>
+            <option value="standard">Standard (100MB Down / 25MB Up)</option>
+            <option value="heavy">Heavy (200MB Down / 50MB Up)</option>
+          </select>
+        </div>
+
+        <div>
+          {isRunning ? (
+            <button className="btn-primary" onClick={stopTest} type="button">Stop Test</button>
+          ) : (
+            <button className="btn-primary" onClick={startTest} type="button">Start Test</button>
+          )}
+        </div>
       </div>
 
       {/* ── Speedometer + Line Chart ── */}
@@ -491,32 +553,37 @@ export default function NetworkSpeedTest() {
       {phase === 'complete' && (
         <div className="results-container">
           <h3>Test Results</h3>
-          <div className="row count-results">
-            <div className="result-box">
+          {/* Row 1: Speed Performance Metrics */}
+          <div className="row count-results" style={{ marginBottom: '16px' }}>
+            <div className="result-box" style={{ flex: '1 1 180px' }}>
               <span className="result-label">↓ Avg Download</span>
               <span className="result-val">
                 {avgDownloadSpeed != null ? `${avgDownloadSpeed.toFixed(2)} Mbps` : 'N/A'}
               </span>
             </div>
-            <div className="result-box">
+            <div className="result-box" style={{ flex: '1 1 180px' }}>
               <span className="result-label">↑ Avg Upload</span>
               <span className="result-val">
                 {avgUploadSpeed != null ? `${avgUploadSpeed.toFixed(2)} Mbps` : 'N/A'}
               </span>
             </div>
-            <div className="result-box">
+            <div className="result-box" style={{ flex: '1 1 180px' }}>
               <span className="result-label">Latency (Ping)</span>
               <span className="result-val">
                 {pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
               </span>
             </div>
-            <div className="result-box">
+          </div>
+
+          {/* Row 2: Connection Details */}
+          <div className="row count-results">
+            <div className="result-box" style={{ flex: '1 1 250px' }}>
               <span className="result-label">IP Address</span>
               <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
                 {clientIp || 'Fetching…'}
               </span>
             </div>
-            <div className="result-box">
+            <div className="result-box" style={{ flex: '1 1 250px' }}>
               <span className="result-label">Provider (ISP)</span>
               <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
                 {clientOrg || 'Fetching…'}

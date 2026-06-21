@@ -14,6 +14,7 @@ import ImgMeta from './components/ImgMeta.jsx';
 import RandomWheel from './components/RandomWheel.jsx';
 import TypingSpeedTest from './components/TypingSpeedTest.jsx';
 import CodonTable from './components/CodonTable.jsx';
+import NetworkSpeedTest from './components/NetworkSpeedTest.jsx';
 
 const toolDetails = {
   "tool-home": {
@@ -75,6 +76,10 @@ const toolDetails = {
   "tool-codon": {
     title: "RNA Codon Table",
     desc: "Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties."
+  },
+  "tool-speedtest": {
+    title: "Network Speed Test",
+    desc: "Test your network latency (ping) and download speed in real-time."
   }
 };
 
@@ -330,6 +335,19 @@ const navItems = [
     )
   },
   {
+    id: 'tool-speedtest',
+    name: 'Speed Test',
+    tooltip: 'Network Speed Test',
+    category: 'network',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="6" x2="12" y2="12"></line>
+        <line x1="12" y1="12" x2="16" y2="14"></line>
+      </svg>
+    )
+  },
+  {
     id: 'tool-imgmeta',
     name: 'ImgMeta',
     tooltip: 'ImgMeta',
@@ -469,6 +487,8 @@ export default function App() {
         return <DnaConverter />;
       case 'tool-iplookup':
         return <IpLookup />;
+      case 'tool-speedtest':
+        return <NetworkSpeedTest />;
       case 'tool-imgmeta':
         return <ImgMeta />;
       case 'tool-wheel':

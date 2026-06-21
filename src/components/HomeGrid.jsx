@@ -255,6 +255,18 @@ export default function HomeGrid({ onSelectTool }) {
       )
     },
     {
+      id: 'tool-speedtest',
+      title: 'Network Speed Test',
+      category: 'network',
+      desc: 'Test your network latency (ping) and download speed in real-time.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      )
+    },
+    {
       id: 'tool-imgmeta',
       title: 'ImgMeta',
       category: 'media',

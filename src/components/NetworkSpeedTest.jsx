@@ -532,11 +532,12 @@ export default function NetworkSpeedTest() {
 
       {/* ── Speedometer + Line Charts ── */}
       {showViz && (
-        <div className="row" style={{ marginBottom: '20px', gap: '20px', alignItems: 'stretch' }}>
+        <div className="row" style={{ marginBottom: '20px', gap: '16px', alignItems: 'stretch' }}>
 
-          {/* Speedometer Column */}
+          {/* Speedometer Box */}
           <div style={{
-            flex: '0 0 auto',
+            flex: '1 1 200px',
+            maxWidth: '240px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -544,10 +545,9 @@ export default function NetworkSpeedTest() {
             background: 'var(--bg-card)',
             borderRadius: '12px',
             border: '1px solid var(--border-color)',
-            padding: '16px 24px',
-            minWidth: '220px'
+            padding: '12px',
           }}>
-            <svg viewBox="0 0 200 140" style={{ width: '200px', height: 'auto' }}>
+            <svg viewBox="0 0 200 140" style={{ width: '100%', height: 'auto', maxHeight: '120px' }}>
               {/* Track */}
               <path d="M 39.38,130 A 70,70 0 1,1 160.62,130"
                 fill="none" stroke="var(--border-color)" strokeWidth="8" strokeLinecap="round" />
@@ -600,14 +600,22 @@ export default function NetworkSpeedTest() {
             </svg>
           </div>
 
-          {/* Charts Column (Stacked) */}
-          <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Download Speed Chart */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
-              </span>
-              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
+          {/* Download Speed Chart */}
+          <div style={{
+            flex: '2 1 280px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            background: 'var(--bg-card)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            padding: '12px',
+          }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
+            </span>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
                 {/* Grid */}
                 <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
                 <line x1="25" y1="45"  x2="285" y2="45"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
@@ -625,13 +633,24 @@ export default function NetworkSpeedTest() {
                 )}
               </svg>
             </div>
+          </div>
 
-            {/* Upload Speed Chart */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
-              </span>
-              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '6px' }}>
+          {/* Upload Speed Chart */}
+          <div style={{
+            flex: '2 1 280px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            background: 'var(--bg-card)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            padding: '12px',
+          }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
+            </span>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+              <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
                 {/* Grid */}
                 <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
                 <line x1="25" y1="45"  x2="285" y2="45"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />

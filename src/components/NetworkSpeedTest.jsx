@@ -536,8 +536,7 @@ export default function NetworkSpeedTest() {
 
           {/* Speedometer Box */}
           <div style={{
-            flex: '1 1 200px',
-            maxWidth: '240px',
+            flex: '2 1 280px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -547,7 +546,7 @@ export default function NetworkSpeedTest() {
             border: '1px solid var(--border-color)',
             padding: '12px',
           }}>
-            <svg viewBox="0 0 200 140" style={{ width: '100%', height: 'auto', maxHeight: '120px' }}>
+            <svg viewBox="0 0 200 140" style={{ width: '100%', height: 'auto', maxHeight: '150px' }}>
               {/* Track */}
               <path d="M 39.38,130 A 70,70 0 1,1 160.62,130"
                 fill="none" stroke="var(--border-color)" strokeWidth="8" strokeLinecap="round" />

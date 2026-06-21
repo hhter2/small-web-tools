@@ -44,6 +44,7 @@ This project is built using **React** and **Vite** for a fast local development 
 - **Clean Tool Layout & Spacing**: Hides outer redundant headers, titles, and subtitles across the application (including the duplicate homepage main-header), keeping clean internal tool headings, minimizing blank space, and reducing vertical scrolling for a compact, desktop/mobile-friendly workspace.
 - **Green Accent Theme & Light Sidebar (New)**: Replaced the default blue color scheme with a curated green theme (`#4FB949` in light mode, `#5EC95A` in dark mode). The sidebar has been updated to render in a clean white background during light mode and deep charcoal in dark mode.
 - **Dynamic Responsive Footer (New)**: Structured the footer columns to dynamically mirror the 7 sidebar category groups exactly. Handled mobile responsive layouts by separating brand name and copyright into stacked rows on screens below 768px.
+- **QR Code & Barcode Generator (New)**: Create highly customizable QR codes and barcodes. Generate QR codes from text, URLs, WiFi networks, emails, phone numbers, and SMS. Customize the dot shape (square vs circle), position eyes (standard square, smooth rounded, or circular rings), choose solid or linear/radial gradient foreground colors, set background color (including transparent), upload and embed logo images with size slider and White Circle/Square padding overlays, and export to PNG or vector SVG format. Generate barcodes in multiple formats (CODE128, EAN-13, EAN-8, UPC-A, Code 39, ITF, Codabar) with live input validation, custom line/background colors, bar height/width sliders, toggleable text label, and download as PNG or vector SVG.
 
 ## Included Tools
 
@@ -100,7 +101,7 @@ npm run preview
 ## Project Structure
 
 - `index.html` — HTML entry point hosting the root React container.
-- `package.json` — Tooling configuration and dependencies (including React, React-DOM, and ExifReader).
+- `package.json` — Tooling configuration and dependencies (including React, React-DOM, ExifReader, QRCode, and JsBarcode).
 - `.gitignore` — Standard gitignore configuration for Node/Vite/React projects.
 - `src/` — React source directory:
   - `src/main.jsx` — Entry point rendering the root component.

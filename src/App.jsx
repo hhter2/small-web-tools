@@ -15,6 +15,7 @@ import RandomWheel from './components/RandomWheel.jsx';
 import TypingSpeedTest from './components/TypingSpeedTest.jsx';
 import CodonTable from './components/CodonTable.jsx';
 import NetworkSpeedTest from './components/NetworkSpeedTest.jsx';
+import QrBarcodeGenerator from './components/QrBarcodeGenerator.jsx';
 
 const toolDetails = {
   "tool-home": {
@@ -76,6 +77,10 @@ const toolDetails = {
   "tool-codon": {
     title: "RNA Codon Table",
     desc: "Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties."
+  },
+  "tool-qrbarcode": {
+    title: "QR Code & Barcode Generator",
+    desc: "Create styled QR codes with logos and scan-valid barcodes."
   },
   "tool-speedtest": {
     title: "Network Speed Test",
@@ -373,6 +378,20 @@ const navItems = [
         <path d="M7.76 7.76l8.48 8.48"></path>
       </svg>
     )
+  },
+  {
+    id: 'tool-qrbarcode',
+    name: 'QR & Barcode',
+    tooltip: 'QR Code & Barcode Generator',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <rect x="7" y="7" width="3" height="3"></rect>
+        <rect x="14" y="7" width="3" height="3"></rect>
+        <rect x="7" y="14" width="3" height="3"></rect>
+      </svg>
+    )
   }
 ];
 
@@ -497,6 +516,8 @@ export default function App() {
         return <TypingSpeedTest />;
       case 'tool-codon':
         return <CodonTable />;
+      case 'tool-qrbarcode':
+        return <QrBarcodeGenerator />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} />;
     }

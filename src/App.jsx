@@ -365,7 +365,7 @@ const navItems = [
     id: 'tool-qrbarcode',
     name: 'QR & Barcode',
     tooltip: 'QR Code & Barcode Generator',
-    category: 'media',
+    category: 'utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>

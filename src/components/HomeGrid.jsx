@@ -284,7 +284,7 @@ export default function HomeGrid({ onSelectTool }) {
     {
       id: 'tool-qrbarcode',
       title: 'QR & Barcode Generator',
-      category: 'media',
+      category: 'utilities',
       desc: 'Generate styled QR codes with embedded logos and standardized barcodes.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">

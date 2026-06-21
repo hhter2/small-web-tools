@@ -514,11 +514,6 @@ export default function App() {
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
             onClick={() => handleNavClick('tool-home')}
           >
-            <div className="brand-logo">
-              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
             <span className="brand-text">Small Web Tools</span>
           </div>
           
@@ -641,6 +636,17 @@ export default function App() {
         {/* Top Bar */}
         <div className="top-bar">
           <div className="top-bar-left">
+            <div
+              className="brand-logo"
+              id="top-brand-logo"
+              title="Go to Home"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleNavClick('tool-home')}
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
             {activeTool !== 'tool-home' && (
               <>
                 <button
@@ -659,42 +665,10 @@ export default function App() {
             <span className="top-bar-title">{activeDetails.title}</span>
           </div>
           <div className="top-bar-right">
-            <button
-              id="top-theme-toggle"
-              className="top-bar-theme-btn"
-              aria-label="Toggle dark/light mode"
-              onClick={toggleTheme}
-            >
-              {theme === 'dark' ? (
-                <svg className="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              ) : (
-                <svg className="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-              )}
-              <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
-            </button>
           </div>
         </div>
 
-        {activeTool === 'tool-home' && (
-          <header className="main-header wide-header">
-            <div className="header-text-container">
-              <h1 id="active-tool-title">{activeDetails.title}</h1>
-              <p id="active-tool-desc" className="subtitle">{activeDetails.desc}</p>
-            </div>
-          </header>
-        )}
+
 
         <section className="tool-stage">
           {renderActiveTool()}

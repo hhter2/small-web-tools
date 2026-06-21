@@ -6896,3 +6896,19 @@ html[data-theme="dark"] .warning-note {
   font-weight: 500;
 }
 
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-align: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.preview-placeholder p {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+

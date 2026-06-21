@@ -455,24 +455,24 @@ export default function QrBarcodeGenerator() {
 
   // ================= QR State =================
   const [qrType, setQrType] = useState('url'); // 'text' | 'url' | 'wifi' | 'email' | 'phone' | 'sms'
-  const [qrText, setQrText] = useState('Hello Antigravity!');
-  const [qrUrl, setQrUrl] = useState('https://github.com');
+  const [qrText, setQrText] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
   const [qrPhone, setQrPhone] = useState('');
   
   // WiFi states
-  const [qrWifiSsid, setQrWifiSsid] = useState('MyHomeWiFi');
-  const [qrWifiPassword, setQrWifiPassword] = useState('SecretPassword');
+  const [qrWifiSsid, setQrWifiSsid] = useState('');
+  const [qrWifiPassword, setQrWifiPassword] = useState('');
   const [qrWifiAuth, setQrWifiAuth] = useState('WPA'); // 'WPA' | 'WEP' | 'nopass'
   const [qrWifiHidden, setQrWifiHidden] = useState(false);
 
   // Email states
-  const [qrEmailTo, setQrEmailTo] = useState('example@gmail.com');
-  const [qrEmailSubject, setQrEmailSubject] = useState('Hello');
-  const [qrEmailBody, setQrEmailBody] = useState('Just checking out the generator.');
+  const [qrEmailTo, setQrEmailTo] = useState('');
+  const [qrEmailSubject, setQrEmailSubject] = useState('');
+  const [qrEmailBody, setQrEmailBody] = useState('');
 
   // SMS states
   const [qrSmsPhone, setQrSmsPhone] = useState('');
-  const [qrSmsMessage, setQrSmsMessage] = useState('Send this code text.');
+  const [qrSmsMessage, setQrSmsMessage] = useState('');
 
   // QR Styling states
   const [qrDotsStyle, setQrDotsStyle] = useState('square'); // 'square' | 'circle'
@@ -499,7 +499,7 @@ export default function QrBarcodeGenerator() {
   const [copied, setCopied] = useState(false);
 
   // ================= Barcode State =================
-  const [barcodeValue, setBarcodeValue] = useState('123456789012');
+  const [barcodeValue, setBarcodeValue] = useState('');
   const [barcodeFormat, setBarcodeFormat] = useState('CODE128'); // CODE128, EAN13, EAN8, UPC, CODE39, ITF, CODABAR
   const [barcodeLineColor, setBarcodeLineColor] = useState('#111827');
   const [barcodeBgColor, setBarcodeBgColor] = useState('#ffffff');
@@ -514,6 +514,51 @@ export default function QrBarcodeGenerator() {
   const qrCanvasRef = useRef(null);
   const barcodeCanvasRef = useRef(null);
   const barcodeSvgRef = useRef(null);
+
+  const resetQR = () => {
+    setQrType('url');
+    setQrText('');
+    setQrUrl('');
+    setQrPhone('');
+    setQrWifiSsid('');
+    setQrWifiPassword('');
+    setQrWifiAuth('WPA');
+    setQrWifiHidden(false);
+    setQrEmailTo('');
+    setQrEmailSubject('');
+    setQrEmailBody('');
+    setQrSmsPhone('');
+    setQrSmsMessage('');
+    setQrDotsStyle('square');
+    setQrEyesStyle('square');
+    setQrFgType('solid');
+    setQrFgColor('#111827');
+    setQrGradType('linear');
+    setQrGradColor1('#4f46e5');
+    setQrGradColor2('#06b6d4');
+    setQrGradAngle(45);
+    setQrBgColor('#ffffff');
+    setQrBgTransparent(false);
+    setQrErrorCorrection('H');
+    setQrExportSize(512);
+    setLogoFile(null);
+    setLogoBase64(null);
+    setLogoImg(null);
+    setLogoScale(0.18);
+    setLogoBgShape('circle');
+  };
+
+  const resetBarcode = () => {
+    setBarcodeValue('');
+    setBarcodeFormat('CODE128');
+    setBarcodeLineColor('#111827');
+    setBarcodeBgColor('#ffffff');
+    setBarcodeWidth(2);
+    setBarcodeHeight(80);
+    setBarcodeDisplayValue(true);
+    setBarcodeFontSize(14);
+    setBarcodeMargin(10);
+  };
 
   // ================= QR Value Compiler =================
   const getQRValue = () => {
@@ -1189,6 +1234,11 @@ export default function QrBarcodeGenerator() {
                   </div>
                 )}
               </div>
+              <div style={{ marginTop: '24px' }}>
+                <button className="btn btn-secondary" onClick={resetQR} style={{ width: '100%' }}>
+                  Reset QR Settings to Default
+                </button>
+              </div>
             </>
           ) : (
             // ================= BARCODE INPUTS & STYLING =================
@@ -1326,6 +1376,11 @@ export default function QrBarcodeGenerator() {
                   </div>
                 </div>
               </div>
+              <div style={{ marginTop: '24px' }}>
+                <button className="btn btn-secondary" onClick={resetBarcode} style={{ width: '100%' }}>
+                  Reset Barcode Settings to Default
+                </button>
+              </div>
             </>
           )}
 
@@ -1339,11 +1394,36 @@ export default function QrBarcodeGenerator() {
             <div className="preview-area-container">
               {activeTab === 'qr' ? (
                 <div className="canvas-wrapper">
-                  <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="preview-element" />
+                  {!getQRValue() ? (
+                    <div className="preview-placeholder">
+                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <rect x="7" y="7" width="3" height="3"></rect>
+                        <rect x="14" y="7" width="3" height="3"></rect>
+                        <rect x="7" y="14" width="3" height="3"></rect>
+                      </svg>
+                      <p>Enter content to generate QR Code</p>
+                    </div>
+                  ) : (
+                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="preview-element" />
+                  )}
                 </div>
               ) : (
                 <div className="canvas-wrapper barcode-wrapper">
-                  {barcodeError ? (
+                  {!barcodeValue ? (
+                    <div className="preview-placeholder">
+                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="5" x2="3" y2="19"></line>
+                        <line x1="6" y1="5" x2="6" y2="19"></line>
+                        <line x1="10" y1="5" x2="10" y2="19"></line>
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="15" y1="5" x2="15" y2="19"></line>
+                        <line x1="18" y1="5" x2="18" y2="19"></line>
+                        <line x1="21" y1="5" x2="21" y2="19"></line>
+                      </svg>
+                      <p>Enter value to generate Barcode</p>
+                    </div>
+                  ) : barcodeError ? (
                     <div className="preview-error-placeholder">
                       <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -1367,22 +1447,22 @@ export default function QrBarcodeGenerator() {
             <div className="preview-actions">
               {activeTab === 'qr' ? (
                 <>
-                  <button className="btn btn-primary" onClick={handleQrDownloadPNG}>
+                  <button className="btn btn-primary" disabled={!getQRValue()} onClick={handleQrDownloadPNG}>
                     Download PNG
                   </button>
-                  <button className="btn btn-secondary" onClick={handleQrDownloadSVG}>
+                  <button className="btn btn-secondary" disabled={!getQRValue()} onClick={handleQrDownloadSVG}>
                     Download SVG (Vector)
                   </button>
-                  <button className={`btn btn-secondary btn-copy ${copied ? 'copied' : ''}`} onClick={handleQrCopy}>
+                  <button className={`btn btn-secondary btn-copy ${copied ? 'copied' : ''}`} disabled={!getQRValue()} onClick={handleQrCopy}>
                     {copied ? 'Copied Image!' : 'Copy to Clipboard'}
                   </button>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-primary" disabled={!!barcodeError} onClick={handleBarcodeDownloadPNG}>
+                  <button className="btn btn-primary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG}>
                     Download PNG
                   </button>
-                  <button className="btn btn-secondary" disabled={!!barcodeError} onClick={handleBarcodeDownloadSVG}>
+                  <button className="btn btn-secondary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG}>
                     Download SVG (Vector)
                   </button>
                 </>

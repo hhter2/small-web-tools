@@ -633,7 +633,14 @@ textarea {
 }
 
 textarea,
-input,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="url"],
+input[type="tel"],
+input[type="password"],
+input[type="search"],
+input[type="date"],
 select {
   font: inherit;
   font-size: 0.95rem;
@@ -648,13 +655,27 @@ select {
 }
 
 textarea:hover,
-input:hover,
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="email"]:hover,
+input[type="url"]:hover,
+input[type="tel"]:hover,
+input[type="password"]:hover,
+input[type="search"]:hover,
+input[type="date"]:hover,
 select:hover {
   border-color: var(--border-hover);
 }
 
 textarea:focus,
-input:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="date"]:focus,
 select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -662,14 +683,28 @@ select:focus {
 }
 
 textarea[readonly],
-input[readonly] {
+input[type="text"][readonly],
+input[type="number"][readonly],
+input[type="email"][readonly],
+input[type="url"][readonly],
+input[type="tel"][readonly],
+input[type="password"][readonly],
+input[type="search"][readonly],
+input[type="date"][readonly] {
   background: var(--bg-app);
   opacity: 0.75;
   cursor: text;
 }
 
 textarea[readonly]:focus,
-input[readonly]:focus {
+input[type="text"][readonly]:focus,
+input[type="number"][readonly]:focus,
+input[type="email"][readonly]:focus,
+input[type="url"][readonly]:focus,
+input[type="tel"][readonly]:focus,
+input[type="password"][readonly]:focus,
+input[type="search"][readonly]:focus,
+input[type="date"][readonly]:focus {
   box-shadow: none;
   border-color: var(--border-color);
   background: var(--bg-app);
@@ -6454,9 +6489,15 @@ html[data-theme="dark"] .ct-fisc-side-bond {
     max-height: none;
   }
 
-  /* Form elements */
   textarea,
-  input,
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="search"],
+  input[type="date"],
   select {
     padding: 10px 12px;
     font-size: 0.9rem;
@@ -6713,6 +6754,12 @@ html[data-theme="dark"] .btn-copy.copied {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
+}
+
+.content-inputs-card > *:not(:last-child),
+.style-card > *:not(:last-child),
+.logo-card > *:not(:last-child) {
+  margin-bottom: 18px;
 }
 
 .section-divider {

@@ -1134,16 +1134,28 @@ export default function QrBarcodeGenerator() {
               
               <div className="logo-card">
                 <div className="form-group">
-                  <label htmlFor="logo-file">Upload Logo</label>
+                  <label>Upload Logo</label>
                   <div className="logo-upload-controls">
+                    <label htmlFor="logo-file-picker" className="btn btn-secondary btn-small file-upload-btn">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                      </svg>
+                      {logoFile ? 'Change Logo' : 'Choose Logo'}
+                    </label>
                     <input 
-                      id="logo-file"
+                      id="logo-file-picker"
                       type="file" 
                       accept="image/png, image/jpeg, image/svg+xml"
                       onChange={handleLogoChange}
+                      style={{ display: 'none' }}
                     />
+                    {logoFile && (
+                      <span className="uploaded-file-name">
+                        {logoFile.name}
+                      </span>
+                    )}
                     {logoImg && (
-                      <button className="btn btn-secondary btn-small danger-text" onClick={removeLogo}>
+                      <button className="btn btn-secondary btn-small danger-text" style={{ marginLeft: 'auto' }} onClick={removeLogo}>
                         Remove Logo
                       </button>
                     )}

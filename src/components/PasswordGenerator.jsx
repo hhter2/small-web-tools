@@ -7,6 +7,7 @@ export default function PasswordGenerator() {
   const [passwordData, setPasswordData] = useState({ password: '', logs: [], stats: {} });
   const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
 
   // Generate password with debug info
   const handleGenerate = (currentLength = length, currentSpecial = includeSpecialChars) => {
@@ -107,14 +108,14 @@ export default function PasswordGenerator() {
       }
       return (
         <span key={index} className={`pw-char pw-char--${type}`}>
-          {char}
+          {showPassword ? char : '•'}
         </span>
       );
     });
   };
 
   return (
-    <article id="tool-password" className="tool-card active">
+    <article id="tool-password" className="tool-card tool-card--wide active">
       <h2>Secure Password Generator</h2>
       
       {/* Password Output Panel */}
@@ -127,6 +128,31 @@ export default function PasswordGenerator() {
           </div>
           
           <div className="password-output-actions">
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              className="action-btn visibility-btn"
+              title={showPassword ? "Hide password" : "Show password"}
+              aria-label="Toggle password visibility"
+            >
+              {showPassword ? (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <span>Hide</span>
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span>Show</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={handleCopy}
               className={`action-btn copy-btn ${copied ? 'copied' : ''}`}

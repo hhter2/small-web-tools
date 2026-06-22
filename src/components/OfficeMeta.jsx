@@ -345,8 +345,7 @@ export default function OfficeMeta() {
       }
 
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
+        const zip = await JSZip.loadAsync(file);
         
         // 1. Read core.xml
         let coreData = {};
@@ -443,8 +442,7 @@ export default function OfficeMeta() {
           custom: customData,
           sheets: sheets,
           thumbnail: thumbnail,
-          originalBuffer: arrayBuffer,
-          strippedInfo: null
+          originalFile: file // Keep the original File object for metadata stripping
         });
       } catch (err) {
         console.error("Error parsing Office file", err);
@@ -471,9 +469,6 @@ export default function OfficeMeta() {
       if (fileToRemove && fileToRemove.thumbnail) {
         URL.revokeObjectURL(fileToRemove.thumbnail);
       }
-      if (fileToRemove && fileToRemove.strippedInfo && fileToRemove.strippedInfo.thumbnail) {
-        URL.revokeObjectURL(fileToRemove.strippedInfo.thumbnail);
-      }
       const updated = prev.filter(f => f.id !== id);
       if (selectedFileId === id) {
         setSelectedFileId(updated.length > 0 ? updated[0].id : null);
@@ -488,9 +483,6 @@ export default function OfficeMeta() {
       if (f.thumbnail) {
         URL.revokeObjectURL(f.thumbnail);
       }
-      if (f.strippedInfo && f.strippedInfo.thumbnail) {
-        URL.revokeObjectURL(f.strippedInfo.thumbnail);
-      }
     });
     setFiles([]);
     setSelectedFileId(null);
@@ -499,180 +491,16 @@ export default function OfficeMeta() {
     setStatus('Cleared all files.');
   };
 
-  const handleStripMetadata = async (file, mode) => {
-    setLoading(true);
-    setStatus(`Stripping metadata (${mode})...`);
-    try {
-      const zip = await JSZip.loadAsync(file.originalBuffer);
-      const parser = new DOMParser();
-      const serializer = new XMLSerializer();
-
-      const clearTagValue = (xmlDoc, tagName, defaultValue = '') => {
-        const elements = xmlDoc.getElementsByTagName("*");
-        for (let i = 0; i < elements.length; i++) {
-          const el = elements[i];
-          if (el.localName === tagName || el.tagName.split(':').pop() === tagName) {
-            el.textContent = defaultValue;
-          }
-        }
-      };
-
-      // 1. Strip core.xml
-      const coreFile = zip.file("docProps/core.xml");
-      let strippedCore = {};
-      if (coreFile) {
-        const coreText = await coreFile.async("string");
-        const doc = parser.parseFromString(coreText, "application/xml");
-        
-        clearTagValue(doc, 'creator');
-        clearTagValue(doc, 'lastModifiedBy');
-        clearTagValue(doc, 'created');
-        clearTagValue(doc, 'modified');
-        clearTagValue(doc, 'lastPrinted');
-        clearTagValue(doc, 'title');
-        clearTagValue(doc, 'subject');
-        clearTagValue(doc, 'description');
-        clearTagValue(doc, 'keywords');
-        clearTagValue(doc, 'category');
-        clearTagValue(doc, 'contentStatus');
-        clearTagValue(doc, 'revision', '1');
-
-        const newCoreText = serializer.serializeToString(doc);
-        zip.file("docProps/core.xml", newCoreText);
-
-        strippedCore = {
-          creator: '',
-          lastModifiedBy: '',
-          created: '',
-          modified: '',
-          revision: '1',
-          title: '',
-          subject: '',
-          description: '',
-          keywords: '',
-          category: '',
-          contentStatus: '',
-          lastPrinted: ''
-        };
-      }
-
-      // 2. Strip app.xml
-      const appFile = zip.file("docProps/app.xml");
-      let strippedApp = { ...file.app };
-      if (appFile) {
-        const appText = await appFile.async("string");
-        const doc = parser.parseFromString(appText, "application/xml");
-
-        clearTagValue(doc, 'Company');
-        clearTagValue(doc, 'Manager');
-
-        strippedApp.Company = '';
-        strippedApp.Manager = '';
-
-        if (mode === 'all') {
-          clearTagValue(doc, 'Application', 'Microsoft Office');
-          clearTagValue(doc, 'AppVersion', '16.0000');
-          clearTagValue(doc, 'Template', 'Normal.dotm');
-          
-          strippedApp.Application = 'Microsoft Office';
-          strippedApp.AppVersion = '16.0000';
-          strippedApp.Template = 'Normal.dotm';
-        }
-
-        const newAppText = serializer.serializeToString(doc);
-        zip.file("docProps/app.xml", newAppText);
-      }
-
-      // 3. Strip custom.xml
-      const customFile = zip.file("docProps/custom.xml");
-      if (customFile) {
-        const emptyCustom = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties"></Properties>`;
-        zip.file("docProps/custom.xml", emptyCustom);
-      }
-      let strippedCustom = {};
-
-      // 4. Remove preview thumbnail if mode is 'all'
-      let strippedThumbnail = file.thumbnail;
-      if (mode === 'all') {
-        zip.remove("docProps/thumbnail.jpeg");
-        zip.remove("docProps/thumbnail.png");
-        strippedThumbnail = null;
-      }
-
-      const strippedBuffer = await zip.generateAsync({ type: "arraybuffer" });
-
-      setFiles(prev => prev.map(f => {
-        if (f.id === file.id) {
-          return {
-            ...f,
-            strippedInfo: {
-              buffer: strippedBuffer,
-              mode: mode,
-              formattedSize: formatBytes(strippedBuffer.byteLength),
-              core: strippedCore,
-              app: strippedApp,
-              custom: strippedCustom,
-              sheets: f.sheets,
-              thumbnail: strippedThumbnail
-            }
-          };
-        }
-        return f;
-      }));
-      setStatus(`Successfully stripped metadata (${mode}).`);
-    } catch (err) {
-      console.error("Error stripping metadata", err);
-      setStatus("Failed to strip metadata.");
-    }
-    setLoading(false);
-  };
-
-  const handleRestoreOriginal = (id) => {
-    setFiles(prev => prev.map(f => {
-      if (f.id === id) {
-        // revoke any stripped thumbnail object URL if it differed
-        if (f.strippedInfo && f.strippedInfo.thumbnail && f.strippedInfo.thumbnail !== f.thumbnail) {
-          URL.revokeObjectURL(f.strippedInfo.thumbnail);
-        }
-        return {
-          ...f,
-          strippedInfo: null
-        };
-      }
-      return f;
-    }));
-    setStatus("Restored original file.");
-  };
-
-  const downloadStrippedFile = (file) => {
-    if (!file || !file.strippedInfo) return;
-    const blob = new Blob([file.strippedInfo.buffer], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    
-    const dotIdx = file.name.lastIndexOf('.');
-    const nameWithoutExt = dotIdx !== -1 ? file.name.substring(0, dotIdx) : file.name;
-    const ext = dotIdx !== -1 ? file.name.substring(dotIdx + 1) : '';
-    a.download = `${nameWithoutExt}_stripped.${ext}`;
-    
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const handleExportJson = () => {
-    if (!activeFile) return;
-    const fileData = activeFile.strippedInfo || activeFile;
+    if (!displayFile) return;
     const metadata = {
       filename: activeFile.name,
-      fileSize: activeFile.strippedInfo ? activeFile.strippedInfo.buffer.byteLength : activeFile.size,
-      fileType: activeFile.type,
-      coreProperties: fileData.core,
-      applicationProperties: fileData.app,
-      customProperties: fileData.custom,
-      sheets: fileData.sheets
+      fileSize: displayFile.size,
+      fileType: displayFile.type,
+      coreProperties: displayFile.core,
+      applicationProperties: displayFile.app,
+      customProperties: displayFile.custom,
+      sheets: displayFile.sheets
     };
     const jsonString = JSON.stringify(metadata, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
@@ -686,6 +514,221 @@ export default function OfficeMeta() {
     URL.revokeObjectURL(url);
   };
 
+  const stripOfficeMetadata = async (fileObj, mode) => {
+    const zip = await JSZip.loadAsync(fileObj);
+    
+    // 1. Process docProps/core.xml
+    const coreFile = zip.file("docProps/core.xml");
+    if (coreFile) {
+      const coreText = await coreFile.async("string");
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(coreText, "application/xml");
+      
+      const elements = xmlDoc.getElementsByTagName("*");
+      for (let i = elements.length - 1; i >= 0; i--) {
+        const el = elements[i];
+        if (el.localName === "coreProperties" || el.tagName.split(':').pop() === "coreProperties") continue;
+        
+        const localName = el.localName || el.tagName.split(':').pop();
+        
+        if (mode === 'private') {
+          if (["creator", "lastModifiedBy", "created", "modified", "lastPrinted"].includes(localName)) {
+            el.textContent = "";
+          }
+        } else if (mode === 'all') {
+          if (localName !== "revision") {
+            el.textContent = "";
+          }
+        }
+      }
+      
+      const newCoreText = new XMLSerializer().serializeToString(xmlDoc);
+      zip.file("docProps/core.xml", newCoreText);
+    }
+    
+    // 2. Process docProps/app.xml
+    const appFile = zip.file("docProps/app.xml");
+    if (appFile) {
+      const appText = await appFile.async("string");
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(appText, "application/xml");
+      
+      const elements = xmlDoc.getElementsByTagName("*");
+      for (let i = elements.length - 1; i >= 0; i--) {
+        const el = elements[i];
+        if (el.localName === "Properties" || el.tagName.split(':').pop() === "Properties") continue;
+        
+        const localName = el.localName || el.tagName.split(':').pop();
+        
+        if (mode === 'private') {
+          if (["Company", "Manager"].includes(localName)) {
+            el.textContent = "";
+          }
+        } else if (mode === 'all') {
+          if (["Application", "AppVersion", "Company", "Manager", "Template", "TotalTime"].includes(localName)) {
+            el.textContent = "";
+          }
+        }
+      }
+      
+      const newAppText = new XMLSerializer().serializeToString(xmlDoc);
+      zip.file("docProps/app.xml", newAppText);
+    }
+    
+    // 3. Process docProps/custom.xml
+    if (zip.file("docProps/custom.xml")) {
+      zip.remove("docProps/custom.xml");
+      
+      // Remove relationships reference
+      const relsFile = zip.file("_rels/.rels");
+      if (relsFile) {
+        try {
+          const relsText = await relsFile.async("string");
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(relsText, "application/xml");
+          const relationships = xmlDoc.getElementsByTagName("Relationship");
+          for (let i = relationships.length - 1; i >= 0; i--) {
+            const rel = relationships[i];
+            const target = rel.getAttribute("Target");
+            if (target && (target.includes("custom.xml") || target.includes("custom"))) {
+              rel.parentNode.removeChild(rel);
+            }
+          }
+          const newRelsText = new XMLSerializer().serializeToString(xmlDoc);
+          zip.file(relsFile.name, newRelsText);
+        } catch (err) {
+          console.warn("Failed to clean custom properties relation", err);
+        }
+      }
+    }
+    
+    const strippedBlob = await zip.generateAsync({ type: "blob" });
+    return strippedBlob;
+  };
+
+  const handleStripMetadata = async (fileObj, mode) => {
+    setLoading(true);
+    setStatus(`Stripping ${mode === 'private' ? 'private' : 'all'} metadata from ${fileObj.name}...`);
+    try {
+      const strippedBlob = await stripOfficeMetadata(fileObj.originalFile, mode);
+      const zip = await JSZip.loadAsync(strippedBlob);
+      
+      let coreData = {};
+      const coreFile = zip.file("docProps/core.xml");
+      if (coreFile) {
+        const coreText = await coreFile.async("string");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(coreText, "application/xml");
+        coreData = {
+          creator: getTagValue(xmlDoc, "creator"),
+          lastModifiedBy: getTagValue(xmlDoc, "lastModifiedBy"),
+          created: getTagValue(xmlDoc, "created"),
+          modified: getTagValue(xmlDoc, "modified"),
+          revision: getTagValue(xmlDoc, "revision"),
+          title: getTagValue(xmlDoc, "title"),
+          subject: getTagValue(xmlDoc, "subject"),
+          description: getTagValue(xmlDoc, "description"),
+          keywords: getTagValue(xmlDoc, "keywords"),
+          category: getTagValue(xmlDoc, "category"),
+          contentStatus: getTagValue(xmlDoc, "contentStatus"),
+          lastPrinted: getTagValue(xmlDoc, "lastPrinted")
+        };
+      }
+
+      let appData = {};
+      const appFile = zip.file("docProps/app.xml");
+      if (appFile) {
+        const appText = await appFile.async("string");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(appText, "application/xml");
+        appData = {
+          Application: getTagValue(xmlDoc, "Application"),
+          AppVersion: getTagValue(xmlDoc, "AppVersion"),
+          Company: getTagValue(xmlDoc, "Company"),
+          Manager: getTagValue(xmlDoc, "Manager"),
+          Template: getTagValue(xmlDoc, "Template"),
+          TotalTime: getTagValue(xmlDoc, "TotalTime"),
+          Pages: getTagValue(xmlDoc, "Pages"),
+          Words: getTagValue(xmlDoc, "Words"),
+          Characters: getTagValue(xmlDoc, "Characters"),
+          CharactersWithSpaces: getTagValue(xmlDoc, "CharactersWithSpaces"),
+          Paragraphs: getTagValue(xmlDoc, "Paragraphs"),
+          Lines: getTagValue(xmlDoc, "Lines"),
+          Slides: getTagValue(xmlDoc, "Slides"),
+          HiddenSlides: getTagValue(xmlDoc, "HiddenSlides"),
+          Notes: getTagValue(xmlDoc, "Notes"),
+          PresentationFormat: getTagValue(xmlDoc, "PresentationFormat"),
+          MMClips: getTagValue(xmlDoc, "MMClips"),
+          headingPairs: parseHeadingPairs(xmlDoc)
+        };
+      }
+
+      let customData = {};
+      const customFile = zip.file("docProps/custom.xml");
+      if (customFile) {
+        const customText = await customFile.async("string");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(customText, "application/xml");
+        customData = parseCustomProperties(xmlDoc);
+      }
+
+      setFiles(prev => prev.map(f => {
+        if (f.id === fileObj.id) {
+          return {
+            ...f,
+            strippedInfo: {
+              mode: mode,
+              blob: strippedBlob,
+              size: strippedBlob.size,
+              formattedSize: formatBytes(strippedBlob.size),
+              core: coreData,
+              app: appData,
+              custom: customData,
+              sheets: f.sheets,
+              thumbnail: f.thumbnail
+            }
+          };
+        }
+        return f;
+      }));
+      
+      setStatus(`Successfully stripped ${mode === 'private' ? 'private' : 'all'} metadata!`);
+    } catch (err) {
+      console.error("Error stripping metadata", err);
+      setStatus(`Failed to strip metadata: ${err.message}`);
+    }
+    setLoading(false);
+  };
+
+  const downloadStrippedFile = (fileObj) => {
+    if (!fileObj.strippedInfo) return;
+    const url = URL.createObjectURL(fileObj.strippedInfo.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    const ext = fileObj.name.split('.').pop();
+    const nameWithoutExt = fileObj.name.substring(0, fileObj.name.lastIndexOf('.'));
+    a.download = `${nameWithoutExt}_stripped.${ext}`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRestoreOriginal = (fileId) => {
+    setFiles(prev => prev.map(f => {
+      if (f.id === fileId) {
+        return {
+          ...f,
+          strippedInfo: null
+        };
+      }
+      return f;
+    }));
+    setStatus("Restored original metadata.");
+  };
+
   const handleToggleCompareSelection = (id) => {
     setCompareSelectedIds(prev =>
       prev.includes(id) ? prev.filter(fId => fId !== id) : [...prev, id]
@@ -693,6 +736,7 @@ export default function OfficeMeta() {
   };
 
   const activeFile = files.find(f => f.id === selectedFileId);
+  const displayFile = activeFile ? (activeFile.strippedInfo || activeFile) : null;
 
   // File type specific badge / styles
   const getFileBadge = (type) => {
@@ -926,29 +970,28 @@ export default function OfficeMeta() {
 
   // Render key metadata cards as tabular imgmeta-tables (Overview)
   const renderOverviewTab = () => {
-    if (!activeFile) return null;
-
-    const fileData = activeFile.strippedInfo || activeFile;
+    const fileToUse = displayFile;
+    if (!fileToUse) return null;
 
     // 1. Core Properties (Key Fields only)
     const coreItems = [
-      { label: 'Title', value: fileData.core.title, description: FIELD_DESCRIPTIONS.title },
-      { label: 'Creator (Author)', value: fileData.core.creator, description: FIELD_DESCRIPTIONS.creator },
-      { label: 'Created Time', value: formatDate(fileData.core.created), description: FIELD_DESCRIPTIONS.created },
-      { label: 'Last Modified By', value: fileData.core.lastModifiedBy, description: FIELD_DESCRIPTIONS.lastModifiedBy },
-      { label: 'Modified Time', value: formatDate(fileData.core.modified), description: FIELD_DESCRIPTIONS.modified }
+      { label: 'Title', value: fileToUse.core.title, description: FIELD_DESCRIPTIONS.title },
+      { label: 'Creator (Author)', value: fileToUse.core.creator, description: FIELD_DESCRIPTIONS.creator },
+      { label: 'Created Time', value: formatDate(fileToUse.core.created), description: FIELD_DESCRIPTIONS.created },
+      { label: 'Last Modified By', value: fileToUse.core.lastModifiedBy, description: FIELD_DESCRIPTIONS.lastModifiedBy },
+      { label: 'Modified Time', value: formatDate(fileToUse.core.modified), description: FIELD_DESCRIPTIONS.modified }
     ].filter(item => item.value !== undefined && item.value !== '');
 
     // 2. Application Properties (Key Fields only)
     const appItems = [
-      { label: 'Application Software', value: fileData.app.Application, description: FIELD_DESCRIPTIONS.Application },
-      { label: 'Application Version', value: fileData.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion }
+      { label: 'Application Software', value: fileToUse.app.Application, description: FIELD_DESCRIPTIONS.Application },
+      { label: 'Application Version', value: fileToUse.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion }
     ].filter(item => item.value !== undefined && item.value !== '');
 
-    if (fileData.app.TotalTime !== undefined && fileData.app.TotalTime !== '') {
+    if (fileToUse.app.TotalTime !== undefined && fileToUse.app.TotalTime !== '') {
       appItems.push({
         label: 'Total Editing Time',
-        value: fileData.app.TotalTime,
+        value: fileToUse.app.TotalTime,
         description: FIELD_DESCRIPTIONS.TotalTime
       });
     }
@@ -989,27 +1032,27 @@ export default function OfficeMeta() {
 
     const renderFormatSpecific = () => {
       let items = [];
-      const badge = getFileBadge(fileData.type);
-      if (fileData.type === 'docx') {
+      const badge = getFileBadge(fileToUse.type);
+      if (fileToUse.type === 'docx') {
         items = [
-          { label: 'Total Pages', value: fileData.app.Pages, description: FIELD_DESCRIPTIONS.Pages },
-          { label: 'Words Count', value: fileData.app.Words, description: FIELD_DESCRIPTIONS.Words }
+          { label: 'Total Pages', value: fileToUse.app.Pages, description: FIELD_DESCRIPTIONS.Pages },
+          { label: 'Words Count', value: fileToUse.app.Words, description: FIELD_DESCRIPTIONS.Words }
         ].filter(item => item.value !== undefined && item.value !== '');
-      } else if (fileData.type === 'pptx') {
+      } else if (fileToUse.type === 'pptx') {
         items = [
-          { label: 'Slides Count', value: fileData.app.Slides, description: FIELD_DESCRIPTIONS.Slides }
+          { label: 'Slides Count', value: fileToUse.app.Slides, description: FIELD_DESCRIPTIONS.Slides }
         ].filter(item => item.value !== undefined && item.value !== '');
-      } else if (fileData.type === 'xlsx') {
+      } else if (fileToUse.type === 'xlsx') {
         const xlsxItems = [];
-        if (fileData.sheets && fileData.sheets.length > 0) {
+        if (fileToUse.sheets && fileToUse.sheets.length > 0) {
           xlsxItems.push({
             label: 'Sheets Count',
-            value: String(fileData.sheets.length),
+            value: String(fileToUse.sheets.length),
             description: 'Total number of worksheets'
           });
           xlsxItems.push({
             label: 'Worksheets List',
-            value: fileData.sheets.map(s => `${s.name}${s.state !== 'visible' ? ` (${s.state})` : ''}`).join(', '),
+            value: fileToUse.sheets.map(s => `${s.name}${s.state !== 'visible' ? ` (${s.state})` : ''}`).join(', '),
             description: FIELD_DESCRIPTIONS.Sheets
           });
         }
@@ -1029,9 +1072,9 @@ export default function OfficeMeta() {
 
   // Render collapsible cards containing parameter tables (Advanced/All Parameters)
   const renderAllParametersTab = () => {
-    if (!activeFile) return null;
+    if (!displayFile) return null;
 
-    const { groups, matchCount } = getGroupedAdvancedTags(activeFile.strippedInfo || activeFile);
+    const { groups, matchCount } = getGroupedAdvancedTags(displayFile);
 
     const advancedGroups = [
       {
@@ -1226,9 +1269,7 @@ export default function OfficeMeta() {
                     </div>
                     <div className="thumb-info">
                       <span className="thumb-name" title={file.name}>{file.name}</span>
-                      <span className="thumb-size">
-                        {file.strippedInfo ? file.strippedInfo.formattedSize : file.formattedSize}
-                      </span>
+                      <span className="thumb-size">{file.strippedInfo ? file.strippedInfo.formattedSize : file.formattedSize}</span>
                     </div>
                   </div>
                 );
@@ -1250,24 +1291,16 @@ export default function OfficeMeta() {
                       <button
                         className="btn-accent btn-sm"
                         onClick={() => handleStripMetadata(activeFile, 'private')}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Remove personal/private authoring metadata"
                       >
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        Private
+                        🔒 Private
                       </button>
                       <button
                         className="btn-accent-outline btn-sm"
                         onClick={() => handleStripMetadata(activeFile, 'all')}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Remove all metadata including software details and templates"
                       >
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        All
+                        🗑️ All
                       </button>
                     </>
                   ) : (
@@ -1278,24 +1311,16 @@ export default function OfficeMeta() {
                       <button
                         className="btn-primary btn-sm"
                         onClick={() => downloadStrippedFile(activeFile)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Download the stripped document"
                       >
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Download
+                        💾 Download
                       </button>
                       <button
                         className="btn-secondary btn-sm"
                         onClick={() => handleRestoreOriginal(activeFile.id)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Restore original metadata details"
                       >
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0-.57-8.38l5.67-5.67"></path>
-                        </svg>
-                        Restore
+                        🔄 Restore
                       </button>
                     </>
                   )}
@@ -1366,8 +1391,8 @@ export default function OfficeMeta() {
                 <div className="imgmeta-preview-col">
                   <div className="card-glass imgmeta-preview-card">
                     <div className="imgmeta-img-container" style={{ minHeight: '180px' }}>
-                      {displayedThumbnail ? (
-                        <img id="officemeta-preview-img" alt="Preview" src={displayedThumbnail} style={{ display: 'block' }} />
+                      {activeFile.thumbnail ? (
+                        <img id="officemeta-preview-img" alt="Preview" src={activeFile.thumbnail} style={{ display: 'block' }} />
                       ) : (
                         <div 
                           className="imgmeta-raw-icon" 
@@ -1387,7 +1412,7 @@ export default function OfficeMeta() {
                     <div className="imgmeta-file-meta">
                       <h3 id="officemeta-file-name">{activeFile.name}</h3>
                       <p><span className="label">Format:</span> <span>{activeFile.type.toUpperCase()}</span></p>
-                      <p><span className="label">Size:</span> <span>{displayedSize}</span></p>
+                      <p><span className="label">Size:</span> <span>{displayFile.formattedSize}</span></p>
                     </div>
                   </div>
 

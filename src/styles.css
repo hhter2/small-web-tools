@@ -7458,5 +7458,74 @@ html[data-theme="dark"] .warning-note {
   text-align: center;
 }
 
+/* Password Strength Checker Styles */
+.checker-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.checklist-item:hover {
+  border-color: var(--text-muted);
+}
+
+.checklist-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checklist-icon.pass {
+  color: var(--accent);
+}
+
+.checklist-icon.fail {
+  color: #ef4444;
+}
+
+.checklist-icon.muted {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.checklist-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist-title {
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.checklist-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.password-check-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 1.25rem;
+  padding: 4px 0;
+  outline: none;
+}
+
 
 

@@ -6,9 +6,8 @@ export default function PasswordGenerator() {
   const [includeCommonSpecial, setIncludeCommonSpecial] = useState(true);
   const [includeRareSpecial, setIncludeRareSpecial] = useState(true);
   const [passwordData, setPasswordData] = useState({ password: '', logs: [], stats: {} });
-  const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showPassword, setShowPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Generate password with debug info
   const handleGenerate = (
@@ -299,33 +298,7 @@ export default function PasswordGenerator() {
         </div>
       </div>
 
-      {/* Security Details Panel */}
-      <div className="debug-section">
-        <button
-          type="button"
-          className="debug-toggle-btn"
-          onClick={() => setShowDebug(!showDebug)}
-        >
-          <span className="debug-toggle-icon">{showDebug ? '▼' : '▶'}</span>
-          <span>Cryptographic Security Details</span>
-        </button>
 
-        {showDebug && (
-          <div className="debug-content-wrapper fade-in">
-            <div className="debug-explanation-card">
-              <p style={{ margin: '0 0 12px 0' }}>
-                <strong>CSPRNG Randomness</strong>: The generator utilizes <code>globalThis.crypto.getRandomValues()</code> to secure random numbers directly from the OS-level entropy pool. Unlike standard insecure <code>Math.random()</code>, this ensures full cryptographic unpredictability.
-              </p>
-              <p style={{ margin: '0 0 12px 0' }}>
-                <strong>Unbiased Rejection Sampling</strong>: Because 256 is not a multiple of the character pool size ({alphabetSize}), standard modulo operations (e.g. <code>randomByte % alphabetSize</code>) result in modulo bias. This gives characters at the beginning of the alphabet a slightly higher probability of selection. To prevent this, we calculate an unbiased threshold: <code>K = 256 - (256 % {alphabetSize}) = {256 - (256 % alphabetSize)}</code>. Any random byte $\ge K$ is discarded, ensuring mathematically perfect uniformity.
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>Prefetch Buffer</strong>: To optimize generation speed and reduce overhead from system API calls, random bytes are prefetched in batches of 64 and consumed sequentially.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
     </article>
   );
 }

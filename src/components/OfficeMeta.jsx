@@ -737,24 +737,18 @@ export default function OfficeMeta() {
     );
   };
 
-  // Render original grouped metadata cards, aligned as tabular imgmeta-tables (Overview)
+  // Render key metadata cards as tabular imgmeta-tables (Overview)
   const renderOverviewTab = () => {
     if (!activeFile) return null;
 
+    // 1. Core Properties (Key Fields only)
     const coreItems = [
       { label: 'Title', value: activeFile.core.title, description: FIELD_DESCRIPTIONS.title },
       { label: 'Creator (Author)', value: activeFile.core.creator, description: FIELD_DESCRIPTIONS.creator },
-      { label: 'Subject', value: activeFile.core.subject, description: FIELD_DESCRIPTIONS.subject },
-      { label: 'Description / Notes', value: activeFile.core.description, description: FIELD_DESCRIPTIONS.description },
-      { label: 'Keywords', value: activeFile.core.keywords, description: FIELD_DESCRIPTIONS.keywords },
-      { label: 'Category', value: activeFile.core.category, description: FIELD_DESCRIPTIONS.category },
-      { label: 'Content Status', value: activeFile.core.contentStatus, description: FIELD_DESCRIPTIONS.contentStatus },
-      { label: 'Revision Count', value: activeFile.core.revision, description: FIELD_DESCRIPTIONS.revision },
       { label: 'Created Time', value: formatDate(activeFile.core.created), description: FIELD_DESCRIPTIONS.created },
       { label: 'Last Modified By', value: activeFile.core.lastModifiedBy, description: FIELD_DESCRIPTIONS.lastModifiedBy },
-      { label: 'Modified Time', value: formatDate(activeFile.core.modified), description: FIELD_DESCRIPTIONS.modified },
-      { label: 'Last Printed', value: formatDate(activeFile.core.lastPrinted), description: FIELD_DESCRIPTIONS.lastPrinted }
-    ];
+      { label: 'Modified Time', value: formatDate(activeFile.core.modified), description: FIELD_DESCRIPTIONS.modified }
+    ].filter(item => item.value !== undefined && item.value !== '');
 
     const elapsed = calculateElapsedTime(activeFile.core.created, activeFile.core.modified);
     if (elapsed) {
@@ -765,13 +759,11 @@ export default function OfficeMeta() {
       });
     }
 
+    // 2. Application Properties (Key Fields only)
     const appItems = [
       { label: 'Application Software', value: activeFile.app.Application, description: FIELD_DESCRIPTIONS.Application },
-      { label: 'Application Version', value: activeFile.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion },
-      { label: 'Company', value: activeFile.app.Company, description: FIELD_DESCRIPTIONS.Company },
-      { label: 'Manager', value: activeFile.app.Manager, description: FIELD_DESCRIPTIONS.Manager },
-      { label: 'Template Used', value: activeFile.app.Template, description: FIELD_DESCRIPTIONS.Template }
-    ];
+      { label: 'Application Version', value: activeFile.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion }
+    ].filter(item => item.value !== undefined && item.value !== '');
 
     const formattedTime = formatMinutes(activeFile.app.TotalTime);
     if (formattedTime) {
@@ -799,24 +791,24 @@ export default function OfficeMeta() {
       if (filtered.length === 0 && query) return null;
 
       return (
-        <div className="officemeta-group-card card-glass" style={{ padding: '20px', borderRadius: '12px' }}>
-          <h3 className="officemeta-group-title" style={{ marginBottom: '12px' }}>{title}</h3>
-          <table className="imgmeta-table" style={{ width: '100%' }}>
+        <div className="officemeta-group-card card-glass">
+          <h3 className="officemeta-group-title">{title}</h3>
+          <table className="imgmeta-table">
             <thead>
               <tr>
-                <th style={{ textAlign: 'left' }}>Parameter Name</th>
-                <th style={{ textAlign: 'left' }}>Value</th>
-                <th style={{ textAlign: 'left' }}>Description</th>
+                <th>Parameter Name</th>
+                <th>Value</th>
+                <th>Description</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                  <td style={{ fontWeight: 600, color: 'var(--text-main)', padding: '8px 12px' }}>{item.label}</td>
-                  <td title={item.value} style={{ wordBreak: 'break-all', whiteSpace: 'normal', color: 'var(--text-main)', padding: '8px 12px' }}>
-                    {item.value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                <tr key={idx}>
+                  <td>{item.label}</td>
+                  <td title={item.value}>
+                    {item.value || <span className="text-muted">—</span>}
                   </td>
-                  <td title={item.description} style={{ color: 'var(--text-muted)', padding: '8px 12px' }}>{item.description || '—'}</td>
+                  <td title={item.description}>{item.description || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -831,20 +823,12 @@ export default function OfficeMeta() {
       if (activeFile.type === 'docx') {
         items = [
           { label: 'Total Pages', value: activeFile.app.Pages, description: FIELD_DESCRIPTIONS.Pages },
-          { label: 'Words Count', value: activeFile.app.Words, description: FIELD_DESCRIPTIONS.Words },
-          { label: 'Characters', value: activeFile.app.Characters, description: FIELD_DESCRIPTIONS.Characters },
-          { label: 'Characters (with spaces)', value: activeFile.app.CharactersWithSpaces, description: FIELD_DESCRIPTIONS.CharactersWithSpaces },
-          { label: 'Paragraphs', value: activeFile.app.Paragraphs, description: FIELD_DESCRIPTIONS.Paragraphs },
-          { label: 'Lines', value: activeFile.app.Lines, description: FIELD_DESCRIPTIONS.Lines }
-        ];
+          { label: 'Words Count', value: activeFile.app.Words, description: FIELD_DESCRIPTIONS.Words }
+        ].filter(item => item.value !== undefined && item.value !== '');
       } else if (activeFile.type === 'pptx') {
         items = [
-          { label: 'Slides Count', value: activeFile.app.Slides, description: FIELD_DESCRIPTIONS.Slides },
-          { label: 'Hidden Slides', value: activeFile.app.HiddenSlides, description: FIELD_DESCRIPTIONS.HiddenSlides },
-          { label: 'Notes Pages', value: activeFile.app.Notes, description: FIELD_DESCRIPTIONS.Notes },
-          { label: 'Presentation Format', value: activeFile.app.PresentationFormat, description: FIELD_DESCRIPTIONS.PresentationFormat },
-          { label: 'Multimedia Clips (MMClips)', value: activeFile.app.MMClips, description: FIELD_DESCRIPTIONS.MMClips }
-        ];
+          { label: 'Slides Count', value: activeFile.app.Slides, description: FIELD_DESCRIPTIONS.Slides }
+        ].filter(item => item.value !== undefined && item.value !== '');
       } else if (activeFile.type === 'xlsx') {
         const xlsxItems = [];
         if (activeFile.sheets && activeFile.sheets.length > 0) {
@@ -859,28 +843,9 @@ export default function OfficeMeta() {
             description: FIELD_DESCRIPTIONS.Sheets
           });
         }
-        if (activeFile.app.headingPairs && activeFile.app.headingPairs.length > 0) {
-          activeFile.app.headingPairs.forEach(pair => {
-            xlsxItems.push({
-              label: `Heading Pair: ${pair.label}`,
-              value: pair.count,
-              description: FIELD_DESCRIPTIONS.HeadingPairs
-            });
-          });
-        }
         return renderMetaTable(`${badge.label} Specific Properties`, xlsxItems);
       }
       return renderMetaTable(`${badge.label} Specific Properties`, items);
-    };
-
-    const renderCustomProperties = () => {
-      if (!activeFile.custom || Object.keys(activeFile.custom).length === 0) return null;
-      const customItems = Object.keys(activeFile.custom).map(key => ({
-        label: key,
-        value: activeFile.custom[key],
-        description: 'Custom user-defined metadata property'
-      }));
-      return renderMetaTable("Custom Properties", customItems);
     };
 
     return (
@@ -888,7 +853,6 @@ export default function OfficeMeta() {
         {renderFormatSpecific()}
         {renderMetaTable("Core Properties", coreItems)}
         {renderMetaTable("Application Properties", appItems)}
-        {renderCustomProperties()}
       </div>
     );
   };
@@ -979,7 +943,7 @@ export default function OfficeMeta() {
                 </div>
                 
                 {!isCollapsed && (
-                  <div className="advanced-group-body" style={{ maxHeight: 'none', overflow: 'visible' }}>
+                  <div className="advanced-group-body">
                     <table className="imgmeta-table">
                       <thead>
                         <tr>
@@ -991,11 +955,11 @@ export default function OfficeMeta() {
                       <tbody>
                         {list.map(tag => (
                           <tr key={tag.name}>
-                            <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{tag.name}</td>
-                            <td title={tag.value} style={{ wordBreak: 'break-all', whiteSpace: 'normal', color: 'var(--text-main)' }}>
-                              {tag.value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                            <td>{tag.name}</td>
+                            <td title={tag.value}>
+                              {tag.value || <span className="text-muted">—</span>}
                             </td>
-                            <td title={tag.description} style={{ color: 'var(--text-muted)' }}>{tag.description || '—'}</td>
+                            <td title={tag.description}>{tag.description || '—'}</td>
                           </tr>
                         ))}
                       </tbody>

@@ -7953,6 +7953,10 @@ html[data-theme="dark"] .warning-note {
   padding: 20px 0;
 }
 
-
-
-
+/* Table column overrides for OfficeMeta to prevent truncating metadata values/descriptions */
+#tool-officemeta .imgmeta-table td:nth-child(2),
+#tool-officemeta .imgmeta-table td:nth-child(3) {
+  white-space: normal;
+  max-width: none;
+  word-break: break-all;
+}

@@ -400,7 +400,7 @@ const navItems = [
   },
   {
     id: 'tool-password',
-    name: 'Password Gen',
+    name: 'Password Generator',
     tooltip: 'Secure Password Generator',
     category: 'utilities',
     icon: (

@@ -418,16 +418,53 @@ export default function OfficeMeta() {
           sheets = await extractWorksheets(zip);
         }
 
-        // 5. Try to read thumbnail image if present (typically docProps/thumbnail.jpeg or docProps/thumbnail.png)
+        // 5. Try to read thumbnail image if present (by checking _rels/.rels metadata/thumbnail relation first)
         let thumbnail = null;
         try {
-          const thumbFile = zip.file("docProps/thumbnail.jpeg") || zip.file("docProps/thumbnail.png");
-          if (thumbFile) {
-            const blob = await thumbFile.async("blob");
-            thumbnail = URL.createObjectURL(blob);
+          const relsFile = zip.file("_rels/.rels");
+          if (relsFile) {
+            const relsText = await relsFile.async("string");
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(relsText, "application/xml");
+            const relationships = xmlDoc.getElementsByTagName("Relationship");
+            let targetPath = null;
+            for (let j = 0; j < relationships.length; j++) {
+              const rel = relationships[j];
+              const type = rel.getAttribute("Type");
+              if (type && type.includes("relationships/metadata/thumbnail")) {
+                targetPath = rel.getAttribute("Target");
+                break;
+              }
+            }
+            if (targetPath) {
+              const cleanPath = targetPath.startsWith("/") ? targetPath.substring(1) : targetPath;
+              const thumbFile = zip.file(cleanPath);
+              if (thumbFile) {
+                const lowerPath = cleanPath.toLowerCase();
+                if (lowerPath.endsWith(".jpeg") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".png") || lowerPath.endsWith(".webp") || lowerPath.endsWith(".svg")) {
+                  const blob = await thumbFile.async("blob");
+                  thumbnail = URL.createObjectURL(blob);
+                }
+              }
+            }
           }
         } catch (thumbErr) {
-          console.warn("Failed to extract thumbnail", thumbErr);
+          console.warn("Failed to extract relationship thumbnail", thumbErr);
+        }
+
+        // Fallback to standard thumbnail paths if relationship lookup failed
+        if (!thumbnail) {
+          try {
+            const thumbFile = zip.file("docProps/thumbnail.jpeg") || 
+                              zip.file("docProps/thumbnail.png") || 
+                              zip.file("docProps/thumbnail.jpg");
+            if (thumbFile) {
+              const blob = await thumbFile.async("blob");
+              thumbnail = URL.createObjectURL(blob);
+            }
+          } catch (thumbErr) {
+            console.warn("Failed fallback thumbnail extraction", thumbErr);
+          }
         }
 
         const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

@@ -46,32 +46,7 @@ const formatMinutes = (minutesStr) => {
   return `${parts.join(' ')} (${mins} mins)`;
 };
 
-// Helper to calculate duration between created and modified dates
-const calculateElapsedTime = (createdStr, modifiedStr) => {
-  if (!createdStr || !modifiedStr) return '';
-  try {
-    const c = new Date(createdStr);
-    const m = new Date(modifiedStr);
-    if (isNaN(c.getTime()) || isNaN(m.getTime())) return '';
-    
-    const diffMs = m.getTime() - c.getTime();
-    if (diffMs <= 0) return '';
-    
-    const diffMins = Math.floor(diffMs / 60000);
-    const days = Math.floor(diffMins / 1440);
-    const hours = Math.floor((diffMins % 1440) / 60);
-    const minutes = diffMins % 60;
-    
-    const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0) parts.push(`${hours}h`);
-    if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
-    
-    return `${parts.join(' ')} (${diffMins} mins)`;
-  } catch (e) {
-    return '';
-  }
-};
+
 
 // Helper to get element textContent by checking localName (ignoring namespaces)
 const getTagValue = (xmlDoc, tagName) => {
@@ -230,7 +205,7 @@ const FIELD_DESCRIPTIONS = {
   Company: 'Company name',
   Manager: 'Manager name',
   Template: 'Template used (e.g. Normal.dotm)',
-  TotalTime: 'Total editing time in minutes',
+  TotalTime: 'Total editing time (min)',
   
   // docx Specific
   Pages: 'Page count',
@@ -269,10 +244,7 @@ const COMPARE_FIELDS = [
   { label: 'Last Modified By', fn: (f) => f.core.lastModifiedBy },
   { label: 'Modified Time', fn: (f) => formatDate(f.core.modified) },
   { label: 'Last Printed', fn: (f) => formatDate(f.core.lastPrinted) },
-  {
-    label: 'Elapsed Time (Created to Modified)',
-    fn: (f) => calculateElapsedTime(f.core.created, f.core.modified)
-  },
+
   // App properties
   { label: 'Application', fn: (f) => f.app.Application },
   { label: 'App Version', fn: (f) => f.app.AppVersion },
@@ -612,10 +584,7 @@ export default function OfficeMeta() {
       }
     });
 
-    const elapsed = calculateElapsedTime(file.core.created, file.core.modified);
-    if (elapsed) {
-      addTag('core', 'Elapsed Time (Created to Modified)', elapsed, 'Calculated time difference between creation and last modification');
-    }
+
 
     // 2. App Properties
     const appFields = [
@@ -795,14 +764,7 @@ export default function OfficeMeta() {
       { label: 'Modified Time', value: formatDate(activeFile.core.modified), description: FIELD_DESCRIPTIONS.modified }
     ].filter(item => item.value !== undefined && item.value !== '');
 
-    const elapsed = calculateElapsedTime(activeFile.core.created, activeFile.core.modified);
-    if (elapsed) {
-      coreItems.push({
-        label: 'Elapsed Time (Created to Modified)',
-        value: elapsed,
-        description: 'Calculated duration between creation and last modification'
-      });
-    }
+
 
     // 2. Application Properties (Key Fields only)
     const appItems = [
@@ -810,14 +772,7 @@ export default function OfficeMeta() {
       { label: 'Application Version', value: activeFile.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion }
     ].filter(item => item.value !== undefined && item.value !== '');
 
-    const formattedTime = formatMinutes(activeFile.app.TotalTime);
-    if (formattedTime) {
-      appItems.push({
-        label: 'Total Editing Time',
-        value: formattedTime,
-        description: FIELD_DESCRIPTIONS.TotalTime
-      });
-    } else if (activeFile.app.TotalTime !== undefined && activeFile.app.TotalTime !== '') {
+    if (activeFile.app.TotalTime !== undefined && activeFile.app.TotalTime !== '') {
       appItems.push({
         label: 'Total Editing Time',
         value: activeFile.app.TotalTime,

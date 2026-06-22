@@ -164,6 +164,50 @@ const getFileIcon = (type, size = 20) => {
   }
 };
 
+// Descriptions of standard metadata fields
+const FIELD_DESCRIPTIONS = {
+  // Core properties
+  creator: 'Original author',
+  lastModifiedBy: 'Username of the last person to modify the file',
+  created: 'Creation timestamp',
+  modified: 'Last modified timestamp',
+  revision: 'Revision count (number of times saved)',
+  title: 'Document title',
+  subject: 'Subject',
+  description: 'Description / notes',
+  keywords: 'Keywords',
+  category: 'Category',
+  contentStatus: 'Status (e.g. Draft, Final)',
+  lastPrinted: 'Last printed timestamp',
+  
+  // App properties
+  Application: 'Software used to create the file',
+  AppVersion: 'Office version number',
+  Company: 'Company name',
+  Manager: 'Manager name',
+  Template: 'Template used (e.g. Normal.dotm)',
+  TotalTime: 'Total editing time in minutes',
+  
+  // docx Specific
+  Pages: 'Page count',
+  Words: 'Word count',
+  Characters: 'Character count',
+  CharactersWithSpaces: 'Character count including spaces',
+  Paragraphs: 'Paragraph count',
+  Lines: 'Line count',
+  
+  // pptx Specific
+  Slides: 'Total slide count',
+  HiddenSlides: 'Number of hidden slides',
+  Notes: 'Number of notes pages',
+  PresentationFormat: 'Presentation format (e.g. On-screen Show 16:9)',
+  MMClips: 'Number of multimedia objects (audio/video)',
+  
+  // xlsx Specific
+  Sheets: 'All worksheet names (including hidden sheets)',
+  HeadingPairs: 'Worksheet grouping information'
+};
+
 // Fields to compare side-by-side
 const COMPARE_FIELDS = [
   { label: 'File Type', fn: (f) => f.type.toUpperCase() },
@@ -216,10 +260,14 @@ export default function OfficeMeta() {
   const [compareSelectedIds, setCompareSelectedIds] = useState([]);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' or 'all-parameters'
   
-  // Search & sorting
+  // Search & collapsed category cards
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState('key'); // 'key' or 'category'
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [collapsedGroups, setCollapsedGroups] = useState({
+    core: false,
+    app: false,
+    format: false,
+    custom: false
+  });
   
   const fileInputRef = useRef(null);
 
@@ -419,104 +467,138 @@ export default function OfficeMeta() {
     }
   };
 
-  // Compile all parameters for the selected file
-  const getAllParametersList = (file) => {
-    if (!file) return [];
-    const list = [];
+  // Compile, filter, and group all parameters for the selected file
+  const getGroupedAdvancedTags = (file) => {
+    if (!file) return { groups: {}, matchCount: 0 };
 
-    // Core Properties
+    const groups = {
+      core: [],
+      app: [],
+      format: [],
+      custom: []
+    };
+
+    let matchCount = 0;
+
+    const checkMatch = (name, value, desc) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return name.toLowerCase().includes(q) ||
+             String(value).toLowerCase().includes(q) ||
+             String(desc).toLowerCase().includes(q);
+    };
+
+    const addTag = (groupKey, name, value, desc) => {
+      if (checkMatch(name, value, desc)) {
+        groups[groupKey].push({ name, value, description: desc });
+        matchCount++;
+      }
+    };
+
+    // 1. Core Properties
     const coreFields = [
-      { key: 'Title', value: file.core.title, category: 'Core Properties' },
-      { key: 'Creator (Author)', value: file.core.creator, category: 'Core Properties' },
-      { key: 'Subject', value: file.core.subject, category: 'Core Properties' },
-      { key: 'Description / Notes', value: file.core.description, category: 'Core Properties' },
-      { key: 'Keywords', value: file.core.keywords, category: 'Core Properties' },
-      { key: 'Category', value: file.core.category, category: 'Core Properties' },
-      { key: 'Content Status', value: file.core.contentStatus, category: 'Core Properties' },
-      { key: 'Revision Count', value: file.core.revision, category: 'Core Properties' },
-      { key: 'Created Time', value: formatDate(file.core.created), category: 'Core Properties' },
-      { key: 'Last Modified By', value: file.core.lastModifiedBy, category: 'Core Properties' },
-      { key: 'Modified Time', value: formatDate(file.core.modified), category: 'Core Properties' },
-      { key: 'Last Printed', value: formatDate(file.core.lastPrinted), category: 'Core Properties' },
+      { key: 'Title', dbKey: 'title', rawValue: file.core.title },
+      { key: 'Creator (Author)', dbKey: 'creator', rawValue: file.core.creator },
+      { key: 'Subject', dbKey: 'subject', rawValue: file.core.subject },
+      { key: 'Description / Notes', dbKey: 'description', rawValue: file.core.description },
+      { key: 'Keywords', dbKey: 'keywords', rawValue: file.core.keywords },
+      { key: 'Category', dbKey: 'category', rawValue: file.core.category },
+      { key: 'Content Status', dbKey: 'contentStatus', rawValue: file.core.contentStatus },
+      { key: 'Revision Count', dbKey: 'revision', rawValue: file.core.revision },
+      { key: 'Created Time', dbKey: 'created', rawValue: formatDate(file.core.created) },
+      { key: 'Last Modified By', dbKey: 'lastModifiedBy', rawValue: file.core.lastModifiedBy },
+      { key: 'Modified Time', dbKey: 'modified', rawValue: formatDate(file.core.modified) },
+      { key: 'Last Printed', dbKey: 'lastPrinted', rawValue: formatDate(file.core.lastPrinted) },
     ];
     coreFields.forEach(f => {
-      if (f.value !== undefined) list.push(f);
+      if (f.rawValue !== undefined && f.rawValue !== '') {
+        addTag('core', f.key, f.rawValue, FIELD_DESCRIPTIONS[f.dbKey] || 'Shared core property');
+      }
     });
 
-    // App Properties
+    // 2. App Properties
     const appFields = [
-      { key: 'Application Software', value: file.app.Application, category: 'Application Properties' },
-      { key: 'Application Version', value: file.app.AppVersion, category: 'Application Properties' },
-      { key: 'Company', value: file.app.Company, category: 'Application Properties' },
-      { key: 'Manager', value: file.app.Manager, category: 'Application Properties' },
-      { key: 'Template Used', value: file.app.Template, category: 'Application Properties' },
-      { key: 'Total Editing Time (mins)', value: file.app.TotalTime, category: 'Application Properties' },
+      { key: 'Application Software', dbKey: 'Application', rawValue: file.app.Application },
+      { key: 'Application Version', dbKey: 'AppVersion', rawValue: file.app.AppVersion },
+      { key: 'Company', dbKey: 'Company', rawValue: file.app.Company },
+      { key: 'Manager', dbKey: 'Manager', rawValue: file.app.Manager },
+      { key: 'Template Used', dbKey: 'Template', rawValue: file.app.Template },
+      { key: 'Total Editing Time (mins)', dbKey: 'TotalTime', rawValue: file.app.TotalTime },
     ];
     appFields.forEach(f => {
-      if (f.value !== undefined) list.push(f);
+      if (f.rawValue !== undefined && f.rawValue !== '') {
+        addTag('app', f.key, f.rawValue, FIELD_DESCRIPTIONS[f.dbKey] || 'Application configuration property');
+      }
     });
 
-    // Format Specific Properties
+    // 3. Format Specific
     if (file.type === 'docx') {
       const docxFields = [
-        { key: 'Total Pages', value: file.app.Pages, category: 'Format Specific' },
-        { key: 'Words Count', value: file.app.Words, category: 'Format Specific' },
-        { key: 'Characters', value: file.app.Characters, category: 'Format Specific' },
-        { key: 'Characters (with spaces)', value: file.app.CharactersWithSpaces, category: 'Format Specific' },
-        { key: 'Paragraphs', value: file.app.Paragraphs, category: 'Format Specific' },
-        { key: 'Lines', value: file.app.Lines, category: 'Format Specific' },
+        { key: 'Total Pages', dbKey: 'Pages', rawValue: file.app.Pages },
+        { key: 'Words Count', dbKey: 'Words', rawValue: file.app.Words },
+        { key: 'Characters', dbKey: 'Characters', rawValue: file.app.Characters },
+        { key: 'Characters (with spaces)', dbKey: 'CharactersWithSpaces', rawValue: file.app.CharactersWithSpaces },
+        { key: 'Paragraphs', dbKey: 'Paragraphs', rawValue: file.app.Paragraphs },
+        { key: 'Lines', dbKey: 'Lines', rawValue: file.app.Lines },
       ];
-      docxFields.forEach(f => list.push(f));
+      docxFields.forEach(f => {
+        if (f.rawValue !== undefined && f.rawValue !== '') {
+          addTag('format', f.key, f.rawValue, FIELD_DESCRIPTIONS[f.dbKey] || 'Word document metric');
+        }
+      });
     } else if (file.type === 'pptx') {
       const pptxFields = [
-        { key: 'Slides Count', value: file.app.Slides, category: 'Format Specific' },
-        { key: 'Hidden Slides', value: file.app.HiddenSlides, category: 'Format Specific' },
-        { key: 'Notes Pages', value: file.app.Notes, category: 'Format Specific' },
-        { key: 'Presentation Format', value: file.app.PresentationFormat, category: 'Format Specific' },
-        { key: 'Multimedia Clips (MMClips)', value: file.app.MMClips, category: 'Format Specific' },
+        { key: 'Slides Count', dbKey: 'Slides', rawValue: file.app.Slides },
+        { key: 'Hidden Slides', dbKey: 'HiddenSlides', rawValue: file.app.HiddenSlides },
+        { key: 'Notes Pages', dbKey: 'Notes', rawValue: file.app.Notes },
+        { key: 'Presentation Format', dbKey: 'PresentationFormat', rawValue: file.app.PresentationFormat },
+        { key: 'Multimedia Clips (MMClips)', dbKey: 'MMClips', rawValue: file.app.MMClips },
       ];
-      pptxFields.forEach(f => list.push(f));
+      pptxFields.forEach(f => {
+        if (f.rawValue !== undefined && f.rawValue !== '') {
+          addTag('format', f.key, f.rawValue, FIELD_DESCRIPTIONS[f.dbKey] || 'PowerPoint presentation metric');
+        }
+      });
     } else if (file.type === 'xlsx') {
-      list.push({ key: 'Sheets Count', value: String(file.sheets.length), category: 'Format Specific' });
-      if (file.sheets.length > 0) {
-        list.push({
-          key: 'Worksheets List',
-          value: file.sheets.map(s => `${s.name}${s.state !== 'visible' ? ` (${s.state})` : ''}`).join(', '),
-          category: 'Format Specific'
-        });
+      if (file.sheets && file.sheets.length > 0) {
+        addTag('format', 'Sheets Count', String(file.sheets.length), 'Total number of worksheets');
+        addTag('format', 'Worksheets List', file.sheets.map(s => `${s.name}${s.state !== 'visible' ? ` (${s.state})` : ''}`).join(', '), FIELD_DESCRIPTIONS.Sheets);
       }
       if (file.app.headingPairs && file.app.headingPairs.length > 0) {
         file.app.headingPairs.forEach(pair => {
-          list.push({
-            key: `Heading Pair: ${pair.label}`,
-            value: pair.count,
-            category: 'Format Specific'
-          });
+          addTag('format', `Heading Pair: ${pair.label}`, pair.count, FIELD_DESCRIPTIONS.HeadingPairs);
         });
       }
     }
 
-    // Custom properties
+    // 4. Custom Properties
     if (file.custom) {
       Object.keys(file.custom).forEach(name => {
-        list.push({
-          key: name,
-          value: file.custom[name],
-          category: 'Custom Properties'
-        });
+        addTag('custom', name, file.custom[name], 'Custom user-defined metadata property');
       });
     }
 
-    return list;
+    // Sort each group alphabetically by tag name
+    Object.keys(groups).forEach(key => {
+      groups[key].sort((a, b) => {
+        const valA = String(a.name).toLowerCase();
+        const valB = String(b.name).toLowerCase();
+        return valA.localeCompare(valB);
+      });
+    });
+
+    return { groups, matchCount };
   };
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  const toggleExpandAll = () => {
+    const anyCollapsed = Object.values(collapsedGroups).some(v => v);
+    const target = !anyCollapsed;
+    setCollapsedGroups({
+      core: target,
+      app: target,
+      format: target,
+      custom: target
+    });
   };
 
   // Rendering side-by-side comparison view
@@ -735,80 +817,118 @@ export default function OfficeMeta() {
     );
   };
 
-  // Render Sortable and Searchable parameters list
+  // Render collapsible cards containing parameter tables (Advanced/All Parameters)
   const renderAllParametersTab = () => {
     if (!activeFile) return null;
 
-    const allParams = getAllParametersList(activeFile);
+    const { groups, matchCount } = getGroupedAdvancedTags(activeFile);
 
-    // Apply sorting
-    const sorted = [...allParams].sort((a, b) => {
-      const valA = String(a[sortField] || '').toLowerCase();
-      const valB = String(b[sortField] || '').toLowerCase();
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+    const advancedGroups = [
+      {
+        id: 'core',
+        label: 'Core Properties',
+        icon: (
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        )
+      },
+      {
+        id: 'app',
+        label: 'Application Properties',
+        icon: (
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        )
+      },
+      {
+        id: 'format',
+        label: 'Format-Specific Properties',
+        icon: (
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        )
+      },
+      {
+        id: 'custom',
+        label: 'Custom Properties',
+        icon: (
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+          </svg>
+        )
+      }
+    ];
 
-    // Apply filter
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = sorted.filter(item => {
-      if (!query) return true;
-      return item.key.toLowerCase().includes(query) ||
-             (item.value || '').toLowerCase().includes(query) ||
-             item.category.toLowerCase().includes(query);
-    });
+    if (matchCount === 0) {
+      return (
+        <div className="officemeta-empty-message">No matching parameters found.</div>
+      );
+    }
 
     return (
-      <div className="officemeta-all-params-view card-glass" style={{ padding: '24px', borderRadius: '14px' }}>
-        <div className="compare-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            All Extracted Parameters ({filtered.length})
-          </h3>
+      <div className="imgmeta-advanced-wrapper">
+        <div className="advanced-toolbar">
+          <span className="match-count">Found {matchCount} metadata parameters</span>
+          <button className="btn-secondary btn-sm" onClick={toggleExpandAll}>
+            {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
+          </button>
         </div>
-        <div className="imgmeta-table-container" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-          {filtered.length > 0 ? (
-            <table className="imgmeta-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th 
-                    onClick={() => handleSort('key')} 
-                    style={{ cursor: 'pointer', textAlign: 'left', userSelect: 'none', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}
-                  >
-                    Parameter Name {sortField === 'key' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </th>
-                  <th style={{ textAlign: 'left', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}>
-                    Value
-                  </th>
-                  <th 
-                    onClick={() => handleSort('category')} 
-                    style={{ cursor: 'pointer', textAlign: 'left', userSelect: 'none', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}
-                  >
-                    Category {sortField === 'category' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                    <td style={{ padding: '10px 12px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {item.key}
-                    </td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--text-main)', wordBreak: 'break-all' }}>
-                      {item.value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
-                    </td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      <span className={`badge-category`} style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--accent-light)', color: 'var(--accent)' }}>
-                        {item.category}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="officemeta-empty-message">No matching parameters found.</div>
-          )}
+        
+        <div className="advanced-groups-list">
+          {advancedGroups.map(g => {
+            const list = groups[g.id] || [];
+            if (list.length === 0) return null;
+            
+            const isCollapsed = collapsedGroups[g.id];
+            
+            return (
+              <div key={g.id} className={`advanced-group-card ${isCollapsed ? 'collapsed' : ''}`}>
+                <div
+                  className="advanced-group-header"
+                  onClick={() => setCollapsedGroups(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
+                >
+                  <div className="header-label">
+                    <span className="group-icon">{g.icon}</span>
+                    <span className="group-name">{g.label}</span>
+                    <span className="group-count">({list.length})</span>
+                  </div>
+                  <span className="collapse-arrow">{isCollapsed ? '▼' : '▲'}</span>
+                </div>
+                
+                {!isCollapsed && (
+                  <div className="advanced-group-body" style={{ maxHeight: 'none', overflow: 'visible' }}>
+                    <table className="imgmeta-table">
+                      <thead>
+                        <tr>
+                          <th>Parameter Name</th>
+                          <th>Value</th>
+                          <th>Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {list.map(tag => (
+                          <tr key={tag.name}>
+                            <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{tag.name}</td>
+                            <td title={tag.value} style={{ wordBreak: 'break-all', whiteSpace: 'normal', color: 'var(--text-main)' }}>
+                              {tag.value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                            </td>
+                            <td title={tag.description} style={{ color: 'var(--text-muted)' }}>{tag.description || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     );

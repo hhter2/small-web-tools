@@ -192,69 +192,90 @@ export default function PasswordGenerator() {
         </div>
       </div>
 
-      {/* Password Strength Section */}
-      <div className="strength-container">
-        <div className="strength-header">
-          <span className="strength-label">
-            Strength: <strong style={{ color: strength.color }}>{strength.label}</strong>
-          </span>
-          <span className="strength-entropy">{entropy.toFixed(1)} bits entropy</span>
-        </div>
-        <div className="strength-bar-track">
-          <div
-            className={`strength-bar-fill ${strength.class}`}
-            style={{ width: `${strength.percentage}%`, backgroundColor: strength.color }}
-          ></div>
-        </div>
-        <div className="strength-meta-row">
-          <span className="strength-desc">{strength.desc}</span>
-          <span className="crack-time">Crack Time: <strong>{getCrackTime(entropy)}</strong></span>
-        </div>
-      </div>
-
-      {/* Options Panel */}
-      <div className="password-options-panel">
-        <div className="row">
-          <div className="form-group flex-2">
-            <label htmlFor="password-length-slider" className="slider-label">
-              Password Length: <span className="length-val">{length}</span>
-            </label>
-            <div className="slider-container">
-              <input
-                id="password-length-slider"
-                type="range"
-                min="8"
-                max="128"
-                value={length}
-                onChange={handleLengthSliderChange}
-                className="custom-range"
-              />
-              <input
-                id="password-length-number"
-                type="number"
-                min="8"
-                max="128"
-                value={length}
-                onChange={handleLengthNumberChange}
-                className="length-number-input"
-              />
+      {/* Configuration and Strength Columns */}
+      <div className="password-main-grid">
+        {/* Left Column: Configuration */}
+        <div className="password-card-col">
+          <div className="password-options-panel">
+            <h3 className="section-title-compact">Configuration</h3>
+            
+            <div className="form-group">
+              <label htmlFor="password-length-slider" className="slider-label">
+                <span>Password Length</span>
+                <span className="length-val">{length}</span>
+              </label>
+              <div className="slider-container">
+                <input
+                  id="password-length-slider"
+                  type="range"
+                  min="8"
+                  max="128"
+                  value={length}
+                  onChange={handleLengthSliderChange}
+                  className="custom-range"
+                />
+                <input
+                  id="password-length-number"
+                  type="number"
+                  min="8"
+                  max="128"
+                  value={length}
+                  onChange={handleLengthNumberChange}
+                  className="length-number-input"
+                />
+              </div>
+            </div>
+            
+            <div className="form-group checkbox-group-container" style={{ marginTop: '20px' }}>
+              <div className="checkbox-wrapper">
+                <label htmlFor="include-special" className="checkbox-label">
+                  <input
+                    id="include-special"
+                    type="checkbox"
+                    checked={includeSpecialChars}
+                    onChange={(e) => setIncludeSpecialChars(e.target.checked)}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span className="checkbox-text">Special Characters</span>
+                </label>
+                <div className="checkbox-subtext">
+                  Allows: <code>!@#$%^&*()-_=+[]{}|;:',.&lt;&gt;?/~</code>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="form-group flex-1 checkbox-group-container">
-            <div className="checkbox-wrapper">
-              <label htmlFor="include-special" className="checkbox-label">
-                <input
-                  id="include-special"
-                  type="checkbox"
-                  checked={includeSpecialChars}
-                  onChange={(e) => setIncludeSpecialChars(e.target.checked)}
-                />
-                <span className="checkbox-custom"></span>
-                <span className="checkbox-text">Special Characters</span>
-              </label>
-              <div className="checkbox-subtext">
-                Allows: <code>!@#$%^&*()-_=+[]{}|;:',.&lt;&gt;?/~</code>
+        </div>
+
+        {/* Right Column: Strength Analytics */}
+        <div className="password-card-col">
+          <div className="strength-container">
+            <h3 className="section-title-compact">Security & Strength</h3>
+            
+            <div className="strength-header">
+              <span className="strength-label">
+                Strength: <strong style={{ color: strength.color }}>{strength.label}</strong>
+              </span>
+              <span className="strength-entropy">{entropy.toFixed(1)} bits</span>
+            </div>
+            <div className="strength-bar-track">
+              <div
+                className={`strength-bar-fill ${strength.class}`}
+                style={{ width: `${strength.percentage}%`, backgroundColor: strength.color }}
+              ></div>
+            </div>
+            
+            <div className="strength-details-list">
+              <div className="strength-detail-item">
+                <span className="detail-lbl">Entropy:</span>
+                <span className="detail-val">{entropy.toFixed(1)} bits</span>
+              </div>
+              <div className="strength-detail-item">
+                <span className="detail-lbl">Crack Time:</span>
+                <strong className="detail-val" style={{ color: strength.color }}>{getCrackTime(entropy)}</strong>
+              </div>
+              <div className="strength-detail-item">
+                <span className="detail-lbl">Security Level:</span>
+                <span className="detail-val" style={{ fontSize: '0.82rem', textAlign: 'right' }}>{strength.desc}</span>
               </div>
             </div>
           </div>

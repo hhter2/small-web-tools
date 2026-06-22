@@ -161,7 +161,7 @@ export default function HomeGrid({ onSelectTool }) {
     {
       id: 'tool-color',
       title: 'Color Converter',
-      category: 'developer',
+      category: 'media',
       desc: 'Seamlessly translate colors between HEX, RGB, and HSL formats.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">

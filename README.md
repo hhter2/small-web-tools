@@ -45,6 +45,7 @@ This project is built using **React** and **Vite** for a fast local development 
 - **Green Accent Theme & Light Sidebar (New)**: Replaced the default blue color scheme with a curated green theme (`#4FB949` in light mode, `#5EC95A` in dark mode). The sidebar has been updated to render in a clean white background during light mode and deep charcoal in dark mode.
 - **Dynamic Responsive Footer (New)**: Structured the footer columns to dynamically mirror the 7 sidebar category groups exactly. Handled mobile responsive layouts by separating brand name and copyright into stacked rows on screens below 768px.
 - **QR Code & Barcode Generator (New)**: Create highly customizable QR codes and barcodes. Generate QR codes from text, URLs, WiFi networks, emails, phone numbers, and SMS. Customize the dot shape (square vs circle), position eyes (standard square, smooth rounded, or circular rings), choose solid or linear/radial gradient foreground colors, set background color (including transparent), upload and embed logo images with size slider and White Circle/Square padding overlays, and export to PNG or vector SVG format. Generate barcodes in multiple formats (CODE128, EAN-13, EAN-8, UPC-A, Code 39, ITF, Codabar) with live input validation, custom line/background colors, bar height/width sliders, toggleable text label, and download as PNG or vector SVG.
+- **Secure Password Generator (New)**: Generate cryptographically secure random passwords using a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG) as the sole source of randomness. Uses unbiased rejection sampling (discarding biased remainder ranges, using a prefetch buffer of 64 bytes to minimize API overhead) to eliminate modulo bias. Offers customizable length (8-128), optional special characters, real-time entropy calculation, offline crack-time estimation, color-coded password display, and a live console-themed visualizer detailing the rejection sampling statistics (with theoretical vs. actual discard rates).
 
 ## Included Tools
 
@@ -63,6 +64,7 @@ This project is built using **React** and **Vite** for a fast local development 
 13. **Random Wheel**: Draw items at random from custom typed options. Edit the wheel title dynamically, view active and eliminated options in real-time, reset or clear options (with custom modal confirmation), toggle duplicate selections, and use keyboard shortcuts (`Space` to spin, `E` to edit options, `R` to reset, `C` to clear).
 14. **Typing Speed Test**: Test typing speed in English or Chinese. Supports auto-timer triggers, template upload, character highlighting (correct/error state), floating spelling typo popups, and local history logging.
 15. **RNA Codon Table**: Interactive standard genetic code reference. All 64 codons and their amino acid products are individually clickable buttons. Click any codon or AA label to reveal synonyms, full names, 1-letter codes, and per-base colour breakdown in a slide-in detail panel. Start/Stop codons carry semantic colour distinctions. Includes filter mode and live interaction stats.
+16. **Secure Password Generator**: Cryptographically secure random password generation tool. Implements batch prefetch buffer (64 bytes) CSPRNG rejection sampling to eliminate modulo bias. Configurable length (8-128) and special character set toggles. Computes entropy in bits, provides strength metrics and guessing-speed estimates, and displays a live terminal log mapping CSPRNG bytes to characters.
 
 ---
 
@@ -108,6 +110,8 @@ npm run preview
   - `src/App.jsx` — Core layout component managing sidebar, theme, search filters, and tool state.
   - `src/styles.css` — Custom CSS variables, responsive designs, animations, and tool styling.
   - `src/components/` — Individual utility tool React components.
+  - `src/utils/` — Utility helper scripts:
+    - `src/utils/passwordGenerator.js` — Core CSPRNG password generator with rejection sampling and batch prefetch buffer.
 
 ---
 

@@ -16,6 +16,7 @@ import TypingSpeedTest from './components/TypingSpeedTest.jsx';
 import CodonTable from './components/CodonTable.jsx';
 import NetworkSpeedTest from './components/NetworkSpeedTest.jsx';
 import QrBarcodeGenerator from './components/QrBarcodeGenerator.jsx';
+import PasswordGenerator from './components/PasswordGenerator.jsx';
 
 const toolDetails = {
   "tool-home": {
@@ -85,6 +86,10 @@ const toolDetails = {
   "tool-speedtest": {
     title: "Network Speed Test",
     desc: "Test your network latency (ping) and download speed in real-time."
+  },
+  "tool-password": {
+    title: "Secure Password Generator",
+    desc: "Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling."
   }
 };
 
@@ -392,6 +397,18 @@ const navItems = [
         <rect x="7" y="14" width="3" height="3"></rect>
       </svg>
     )
+  },
+  {
+    id: 'tool-password',
+    name: 'Password Gen',
+    tooltip: 'Secure Password Generator',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    )
   }
 ];
 
@@ -518,6 +535,8 @@ export default function App() {
         return <CodonTable />;
       case 'tool-qrbarcode':
         return <QrBarcodeGenerator />;
+      case 'tool-password':
+        return <PasswordGenerator />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} />;
     }

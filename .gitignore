@@ -44,3 +44,22 @@ sample.cr3
 thumbnail.jpg
 *.tmp
 temp/
+
+# Private environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Temporary Archives & Backups
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.bak
+*.swp
+

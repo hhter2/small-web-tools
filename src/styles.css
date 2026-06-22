@@ -7158,6 +7158,8 @@ html[data-theme="dark"] .warning-note {
 
 .checkbox-subtext code {
   font-family: "JetBrains Mono", monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
   color: var(--text-main);
   background: var(--bg-app);
   padding: 1px 4px;

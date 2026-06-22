@@ -234,8 +234,7 @@ export default function PasswordGenerator() {
                       checked={includeCommonSpecial}
                       onChange={(e) => setIncludeCommonSpecial(e.target.checked)}
                     />
-                    <span className="checkbox-custom"></span>
-                    <span className="checkbox-text">Common Special Characters</span>
+                    Common Special Characters
                   </label>
                   <div className="checkbox-subtext">
                     Allows: <code>!@#$%^&*()-_=+</code>
@@ -250,8 +249,7 @@ export default function PasswordGenerator() {
                       checked={includeRareSpecial}
                       onChange={(e) => setIncludeRareSpecial(e.target.checked)}
                     />
-                    <span className="checkbox-custom"></span>
-                    <span className="checkbox-text">Rare Special Characters</span>
+                    Rare Special Characters
                   </label>
                   <div className="checkbox-subtext">
                     Allows: <code>[]&#123;&#125;|;:',.&lt;&gt;?/~</code>
@@ -271,7 +269,6 @@ export default function PasswordGenerator() {
               <span className="strength-label">
                 Strength: <strong style={{ color: strength.color }}>{strength.label}</strong>
               </span>
-              <span className="strength-entropy">{entropy.toFixed(1)} bits</span>
             </div>
             <div className="strength-bar-track">
               <div

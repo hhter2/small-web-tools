@@ -3,18 +3,24 @@ import { generateSecurePassword } from '../utils/passwordGenerator.js';
 
 export default function PasswordGenerator() {
   const [length, setLength] = useState(16);
-  const [includeSpecialChars, setIncludeSpecialChars] = useState(true);
+  const [includeCommonSpecial, setIncludeCommonSpecial] = useState(true);
+  const [includeRareSpecial, setIncludeRareSpecial] = useState(true);
   const [passwordData, setPasswordData] = useState({ password: '', logs: [], stats: {} });
   const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(true);
 
   // Generate password with debug info
-  const handleGenerate = (currentLength = length, currentSpecial = includeSpecialChars) => {
+  const handleGenerate = (
+    currentLength = length,
+    currentCommon = includeCommonSpecial,
+    currentRare = includeRareSpecial
+  ) => {
     try {
       const data = generateSecurePassword({
         length: currentLength,
-        includeSpecialChars: currentSpecial,
+        includeCommonSpecial: currentCommon,
+        includeRareSpecial: currentRare,
         debug: true
       });
       setPasswordData(data);
@@ -25,8 +31,8 @@ export default function PasswordGenerator() {
 
   // Generate on mount and when options change
   useEffect(() => {
-    handleGenerate(length, includeSpecialChars);
-  }, [length, includeSpecialChars]);
+    handleGenerate(length, includeCommonSpecial, includeRareSpecial);
+  }, [length, includeCommonSpecial, includeRareSpecial]);
 
   const handleLengthSliderChange = (e) => {
     const val = parseInt(e.target.value, 10);
@@ -55,7 +61,9 @@ export default function PasswordGenerator() {
   };
 
   // Calculate password entropy: E = L * log2(N)
-  const alphabetSize = includeSpecialChars ? 91 : 62; // 62 base + 29 special chars
+  let alphabetSize = 62; // A-Z, a-z, 0-9
+  if (includeCommonSpecial) alphabetSize += 14;
+  if (includeRareSpecial) alphabetSize += 15;
   const entropy = length * Math.log2(alphabetSize);
 
   // Determine strength level details
@@ -214,32 +222,41 @@ export default function PasswordGenerator() {
                   onChange={handleLengthSliderChange}
                   className="custom-range"
                 />
-                <input
-                  id="password-length-number"
-                  type="number"
-                  min="8"
-                  max="128"
-                  value={length}
-                  onChange={handleLengthNumberChange}
-                  className="length-number-input"
-                />
               </div>
             </div>
             
             <div className="form-group checkbox-group-container" style={{ marginTop: '20px' }}>
-              <div className="checkbox-wrapper">
-                <label htmlFor="include-special" className="checkbox-label">
-                  <input
-                    id="include-special"
-                    type="checkbox"
-                    checked={includeSpecialChars}
-                    onChange={(e) => setIncludeSpecialChars(e.target.checked)}
-                  />
-                  <span className="checkbox-custom"></span>
-                  <span className="checkbox-text">Special Characters</span>
-                </label>
-                <div className="checkbox-subtext">
-                  Allows: <code>!@#$%^&*()-_=+[]{}|;:',.&lt;&gt;?/~</code>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="checkbox-wrapper">
+                  <label htmlFor="include-common-special" className="checkbox-label">
+                    <input
+                      id="include-common-special"
+                      type="checkbox"
+                      checked={includeCommonSpecial}
+                      onChange={(e) => setIncludeCommonSpecial(e.target.checked)}
+                    />
+                    <span className="checkbox-custom"></span>
+                    <span className="checkbox-text">Common Special Characters</span>
+                  </label>
+                  <div className="checkbox-subtext">
+                    Allows: <code>!@#$%^&*()-_=+</code>
+                  </div>
+                </div>
+
+                <div className="checkbox-wrapper">
+                  <label htmlFor="include-rare-special" className="checkbox-label">
+                    <input
+                      id="include-rare-special"
+                      type="checkbox"
+                      checked={includeRareSpecial}
+                      onChange={(e) => setIncludeRareSpecial(e.target.checked)}
+                    />
+                    <span className="checkbox-custom"></span>
+                    <span className="checkbox-text">Rare Special Characters</span>
+                  </label>
+                  <div className="checkbox-subtext">
+                    Allows: <code>[]&#123;&#125;|;:',.&lt;&gt;?/~</code>
+                  </div>
                 </div>
               </div>
             </div>
@@ -282,7 +299,7 @@ export default function PasswordGenerator() {
         </div>
       </div>
 
-      {/* Rejection Sampling Log / Visualizer */}
+      {/* Security Details Panel */}
       <div className="debug-section">
         <button
           type="button"
@@ -290,85 +307,21 @@ export default function PasswordGenerator() {
           onClick={() => setShowDebug(!showDebug)}
         >
           <span className="debug-toggle-icon">{showDebug ? '▼' : '▶'}</span>
-          <span>Security Math & CSPRNG Rejection Sampling Log</span>
+          <span>Cryptographic Security Details</span>
         </button>
 
         {showDebug && (
           <div className="debug-content-wrapper fade-in">
             <div className="debug-explanation-card">
-              <p>
-                <strong>Why Rejection Sampling?</strong> Simple modulo division (e.g. <code>randomByte % alphabetSize</code>) 
-                causes <em>modulo bias</em> when 256 is not a multiple of the alphabet size (which is {alphabetSize}). 
-                This bias makes characters at the beginning of the alphabet slightly more likely to be chosen. 
-                To prevent this, we calculate a secure threshold limit: <code>K = 256 - (256 % {alphabetSize}) = {256 - (256 % alphabetSize)}</code>. 
-                Any byte value greater than or equal to <code>{256 - (256 % alphabetSize)}</code> is rejected, ensuring perfect mathematical uniformity.
+              <p style={{ margin: '0 0 12px 0' }}>
+                <strong>CSPRNG Randomness</strong>: The generator utilizes <code>globalThis.crypto.getRandomValues()</code> to secure random numbers directly from the OS-level entropy pool. Unlike standard insecure <code>Math.random()</code>, this ensures full cryptographic unpredictability.
               </p>
-              <p className="debug-note-txt">
-                <em>Prefetch Optimization:</em> To optimize performance, we prefetch 64 bytes at a time in a single <code>crypto.getRandomValues()</code> CSPRNG buffer, refilling it only when exhausted.
+              <p style={{ margin: '0 0 12px 0' }}>
+                <strong>Unbiased Rejection Sampling</strong>: Because 256 is not a multiple of the character pool size ({alphabetSize}), standard modulo operations (e.g. <code>randomByte % alphabetSize</code>) result in modulo bias. This gives characters at the beginning of the alphabet a slightly higher probability of selection. To prevent this, we calculate an unbiased threshold: <code>K = 256 - (256 % {alphabetSize}) = {256 - (256 % alphabetSize)}</code>. Any random byte $\ge K$ is discarded, ensuring mathematically perfect uniformity.
               </p>
-            </div>
-
-            <div className="debug-console">
-              <div className="console-header">
-                <span className="console-title">CSPRNG Byte Stream Log</span>
-                <span className="console-indicator">Active Connection</span>
-              </div>
-              <div className="console-body">
-                {passwordData.logs && passwordData.logs.length > 0 ? (
-                  passwordData.logs.map((log, index) => (
-                    <div
-                      key={index}
-                      className={`console-line ${log.status === 'rejected' ? 'line-rejected' : 'line-accepted'}`}
-                    >
-                      <span className="line-num">[{index + 1}]</span>
-                      {log.status === 'rejected' ? (
-                        <>
-                          <span className="badge badge-rejected">REJECTED</span>
-                          <span className="log-msg">
-                            Byte: <code className="console-code">{log.byte}</code> &ge; limit <code className="console-code">{256 - (256 % alphabetSize)}</code>. Discarded to avoid modulo bias.
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="badge badge-accepted">ACCEPTED</span>
-                          <span className="log-msg">
-                            Byte: <code className="console-code">{log.byte}</code> &lt; limit <code className="console-code">{256 - (256 % alphabetSize)}</code>. Map: <code>{log.math}</code> &rarr; character <strong className="char-highlight">"{log.char}"</strong>
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="console-empty">No logs available.</div>
-                )}
-              </div>
-              
-              <div className="console-summary">
-                <div className="summary-col">
-                  <span className="summary-lbl">Alphabet Size:</span>
-                  <strong className="summary-val">{alphabetSize} chars</strong>
-                </div>
-                <div className="summary-col">
-                  <span className="summary-lbl">Total Bytes Drawn:</span>
-                  <strong className="summary-val">{passwordData.stats.totalBytesDrawn}</strong>
-                </div>
-                <div className="summary-col">
-                  <span className="summary-lbl">Bytes Discarded:</span>
-                  <strong className="summary-val text-rejected">{passwordData.stats.discardedBytes}</strong>
-                </div>
-                <div className="summary-col">
-                  <span className="summary-lbl">Theoretical Discard Rate:</span>
-                  <strong className="summary-val">
-                    {passwordData.stats.theoreticalDiscardRate ? passwordData.stats.theoreticalDiscardRate.toFixed(2) : 0}%
-                  </strong>
-                </div>
-                <div className="summary-col">
-                  <span className="summary-lbl">Actual Discard Rate:</span>
-                  <strong className="summary-val text-accent">
-                    {passwordData.stats.actualDiscardRate ? passwordData.stats.actualDiscardRate.toFixed(2) : 0}%
-                  </strong>
-                </div>
-              </div>
+              <p style={{ margin: 0 }}>
+                <strong>Prefetch Buffer</strong>: To optimize generation speed and reduce overhead from system API calls, random bytes are prefetched in batches of 64 and consumed sequentially.
+              </p>
             </div>
           </div>
         )}

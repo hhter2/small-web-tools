@@ -9,23 +9,40 @@
  * @throws {Error} If length is out of range (8 to 128)
  */
 export function generateSecurePassword(options = {}) {
-  const { length = 16, includeSpecialChars = true, debug = false } = options;
+  const { 
+    length = 16, 
+    includeCommonSpecial = true, 
+    includeRareSpecial = true, 
+    debug = false 
+  } = options;
 
   // Validation: Throw a clear error if length is out of the allowed range
   if (!Number.isInteger(length) || length < 8 || length > 128) {
     throw new Error('Password length must be an integer between 8 and 128.');
   }
 
+  // Backward compatibility check for includeSpecialChars
+  let useCommon = includeCommonSpecial;
+  let useRare = includeRareSpecial;
+  if (options.includeSpecialChars !== undefined) {
+    useCommon = options.includeSpecialChars;
+    useRare = options.includeSpecialChars;
+  }
+
   // Character set definitions
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const digits = '0123456789';
-  const specialChars = '!@#$%^&*()-_=+[]{}|;:\',.<>?/~';
+  const commonSpecialChars = '!@#$%^&*()-_=+';
+  const rareSpecialChars = '[]{}|;:\',.<>?/~';
 
   // Always include uppercase, lowercase, and digits. Optionally include special characters.
   let alphabet = lowercase + uppercase + digits;
-  if (includeSpecialChars) {
-    alphabet += specialChars;
+  if (useCommon) {
+    alphabet += commonSpecialChars;
+  }
+  if (useRare) {
+    alphabet += rareSpecialChars;
   }
 
   const alphabetLength = alphabet.length;

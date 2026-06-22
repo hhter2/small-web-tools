@@ -446,6 +446,18 @@ export default function OfficeMeta() {
           sheets = await extractWorksheets(zip);
         }
 
+        // 5. Try to read thumbnail image if present (typically docProps/thumbnail.jpeg or docProps/thumbnail.png)
+        let thumbnail = null;
+        try {
+          const thumbFile = zip.file("docProps/thumbnail.jpeg") || zip.file("docProps/thumbnail.png");
+          if (thumbFile) {
+            const blob = await thumbFile.async("blob");
+            thumbnail = URL.createObjectURL(blob);
+          }
+        } catch (thumbErr) {
+          console.warn("Failed to extract thumbnail", thumbErr);
+        }
+
         const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         newFiles.push({
           id,
@@ -456,7 +468,8 @@ export default function OfficeMeta() {
           core: coreData,
           app: appData,
           custom: customData,
-          sheets: sheets
+          sheets: sheets,
+          thumbnail: thumbnail
         });
       } catch (err) {
         console.error("Error parsing Office file", err);
@@ -479,6 +492,10 @@ export default function OfficeMeta() {
 
   const handleRemoveFile = (id) => {
     setFiles(prev => {
+      const fileToRemove = prev.find(f => f.id === id);
+      if (fileToRemove && fileToRemove.thumbnail) {
+        URL.revokeObjectURL(fileToRemove.thumbnail);
+      }
       const updated = prev.filter(f => f.id !== id);
       if (selectedFileId === id) {
         setSelectedFileId(updated.length > 0 ? updated[0].id : null);
@@ -489,11 +506,39 @@ export default function OfficeMeta() {
   };
 
   const handleClearAll = () => {
+    files.forEach(f => {
+      if (f.thumbnail) {
+        URL.revokeObjectURL(f.thumbnail);
+      }
+    });
     setFiles([]);
     setSelectedFileId(null);
     setCompareSelectedIds([]);
     setCompareMode(false);
     setStatus('Cleared all files.');
+  };
+
+  const handleExportJson = () => {
+    if (!activeFile) return;
+    const metadata = {
+      filename: activeFile.name,
+      fileSize: activeFile.size,
+      fileType: activeFile.type,
+      coreProperties: activeFile.core,
+      applicationProperties: activeFile.app,
+      customProperties: activeFile.custom,
+      sheets: activeFile.sheets
+    };
+    const jsonString = JSON.stringify(metadata, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = activeFile.name.replace(/\.[^/.]+$/, "") + "_metadata.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleToggleCompareSelection = (id) => {
@@ -1125,20 +1170,58 @@ export default function OfficeMeta() {
             renderCompareView()
           ) : (
             activeFile && (
-              <div className="officemeta-results-container">
-                
-                <div className="officemeta-file-summary card-glass">
-                  <div className="summary-left">
-                    <div className={`summary-type-icon ${getFileBadge(activeFile.type).colorClass}`}>
-                      {getFileBadge(activeFile.type).icon}
+              <div id="officemeta-results" className="imgmeta-results-grid" style={{ display: 'grid' }}>
+                {/* Left Column: File Info & Preview & Actions */}
+                <div className="imgmeta-preview-col">
+                  <div className="card-glass imgmeta-preview-card">
+                    <div className="imgmeta-img-container" style={{ minHeight: '180px' }}>
+                      {activeFile.thumbnail ? (
+                        <img id="officemeta-preview-img" alt="Preview" src={activeFile.thumbnail} style={{ display: 'block' }} />
+                      ) : (
+                        <div 
+                          className="imgmeta-raw-icon" 
+                          style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: '12px',
+                            color: activeFile.type === 'docx' ? '#2563eb' : activeFile.type === 'xlsx' ? '#10b981' : activeFile.type === 'pptx' ? '#f97316' : '#6b7280'
+                          }}
+                        >
+                          {getFileIcon(activeFile.type, 48)}
+                          <span>{getFileBadge(activeFile.type).label}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="summary-details">
-                      <h4>{activeFile.name}</h4>
-                      <p>{getFileBadge(activeFile.type).label} • {activeFile.formattedSize}</p>
+                    <div className="imgmeta-file-meta">
+                      <h3 id="officemeta-file-name">{activeFile.name}</h3>
+                      <p><span className="label">Format:</span> <span>{activeFile.type.toUpperCase()}</span></p>
+                      <p><span className="label">Size:</span> <span>{activeFile.formattedSize}</span></p>
                     </div>
                   </div>
-                  <div className="summary-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div className="home-tabs" style={{ margin: 0, padding: 0, border: 'none' }}>
+
+                  <div className="imgmeta-actions">
+                    <button
+                      id="officemeta-download-json"
+                      className="btn-primary flex-1"
+                      onClick={handleExportJson}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      Export JSON
+                    </button>
+                    <button id="officemeta-clear" className="btn-secondary" onClick={() => handleRemoveFile(activeFile.id)}>Remove</button>
+                  </div>
+                </div>
+
+                {/* Right Column: Metadata Tabs & Table */}
+                <div className="imgmeta-data-col">
+                  <div className="imgmeta-header-actions">
+                    <div className="imgmeta-tabs">
                       <button 
                         className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveTab('overview')}
@@ -1152,25 +1235,25 @@ export default function OfficeMeta() {
                         All Parameters
                       </button>
                     </div>
-                    <input 
-                      type="text"
-                      placeholder="🔍 Search metadata..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="officemeta-search-input"
-                    />
+                    <div className="imgmeta-search-wrapper">
+                      <input
+                        type="text"
+                        placeholder="Search tags..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
+
+                  {loading ? (
+                    <div className="officemeta-loading">
+                      <div className="spinner"></div>
+                      <p>Analyzing document...</p>
+                    </div>
+                  ) : (
+                    activeTab === 'overview' ? renderOverviewTab() : renderAllParametersTab()
+                  )}
                 </div>
-
-                {loading ? (
-                  <div className="officemeta-loading">
-                    <div className="spinner"></div>
-                    <p>Analyzing document...</p>
-                  </div>
-                ) : (
-                  activeTab === 'overview' ? renderOverviewTab() : renderAllParametersTab()
-                )}
-
               </div>
             )
           )

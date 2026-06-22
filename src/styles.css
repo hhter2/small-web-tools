@@ -7836,16 +7836,10 @@ html[data-theme="dark"] .warning-note {
   gap: 20px;
 }
 
-@media (min-width: 1024px) {
-  .officemeta-groups-layout {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .officemeta-excel-specific {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
+.officemeta-excel-specific {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
 }
 
 .officemeta-group-card {

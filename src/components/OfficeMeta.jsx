@@ -29,6 +29,50 @@ const formatDate = (dateStr) => {
   }
 };
 
+// Helper to format minutes into human-readable duration
+const formatMinutes = (minutesStr) => {
+  const mins = parseInt(minutesStr, 10);
+  if (isNaN(mins) || mins <= 0) return '';
+  
+  const days = Math.floor(mins / 1440);
+  const hours = Math.floor((mins % 1440) / 60);
+  const minutes = mins % 60;
+  
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+  
+  return `${parts.join(' ')} (${mins} mins)`;
+};
+
+// Helper to calculate duration between created and modified dates
+const calculateElapsedTime = (createdStr, modifiedStr) => {
+  if (!createdStr || !modifiedStr) return '';
+  try {
+    const c = new Date(createdStr);
+    const m = new Date(modifiedStr);
+    if (isNaN(c.getTime()) || isNaN(m.getTime())) return '';
+    
+    const diffMs = m.getTime() - c.getTime();
+    if (diffMs <= 0) return '';
+    
+    const diffMins = Math.floor(diffMs / 60000);
+    const days = Math.floor(diffMins / 1440);
+    const hours = Math.floor((diffMins % 1440) / 60);
+    const minutes = diffMins % 60;
+    
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+    
+    return `${parts.join(' ')} (${diffMins} mins)`;
+  } catch (e) {
+    return '';
+  }
+};
+
 // Helper to get element textContent by checking localName (ignoring namespaces)
 const getTagValue = (xmlDoc, tagName) => {
   const elements = xmlDoc.getElementsByTagName("*");
@@ -225,13 +269,20 @@ const COMPARE_FIELDS = [
   { label: 'Last Modified By', fn: (f) => f.core.lastModifiedBy },
   { label: 'Modified Time', fn: (f) => formatDate(f.core.modified) },
   { label: 'Last Printed', fn: (f) => formatDate(f.core.lastPrinted) },
+  {
+    label: 'Elapsed Time (Created to Modified)',
+    fn: (f) => calculateElapsedTime(f.core.created, f.core.modified)
+  },
   // App properties
   { label: 'Application', fn: (f) => f.app.Application },
   { label: 'App Version', fn: (f) => f.app.AppVersion },
   { label: 'Company', fn: (f) => f.app.Company },
   { label: 'Manager', fn: (f) => f.app.Manager },
   { label: 'Template', fn: (f) => f.app.Template },
-  { label: 'Total Editing Time (mins)', fn: (f) => f.app.TotalTime },
+  {
+    label: 'Total Editing Time',
+    fn: (f) => formatMinutes(f.app.TotalTime) || f.app.TotalTime
+  },
   // Format Specific
   {
     label: 'Format-Specific Details',
@@ -516,6 +567,11 @@ export default function OfficeMeta() {
       }
     });
 
+    const elapsed = calculateElapsedTime(file.core.created, file.core.modified);
+    if (elapsed) {
+      addTag('core', 'Elapsed Time (Created to Modified)', elapsed, 'Calculated time difference between creation and last modification');
+    }
+
     // 2. App Properties
     const appFields = [
       { key: 'Application Software', dbKey: 'Application', rawValue: file.app.Application },
@@ -523,13 +579,19 @@ export default function OfficeMeta() {
       { key: 'Company', dbKey: 'Company', rawValue: file.app.Company },
       { key: 'Manager', dbKey: 'Manager', rawValue: file.app.Manager },
       { key: 'Template Used', dbKey: 'Template', rawValue: file.app.Template },
-      { key: 'Total Editing Time (mins)', dbKey: 'TotalTime', rawValue: file.app.TotalTime },
     ];
     appFields.forEach(f => {
       if (f.rawValue !== undefined && f.rawValue !== '') {
         addTag('app', f.key, f.rawValue, FIELD_DESCRIPTIONS[f.dbKey] || 'Application configuration property');
       }
     });
+
+    const formattedTime = formatMinutes(file.app.TotalTime);
+    if (formattedTime) {
+      addTag('app', 'Total Editing Time', formattedTime, FIELD_DESCRIPTIONS.TotalTime);
+    } else if (file.app.TotalTime !== undefined && file.app.TotalTime !== '') {
+      addTag('app', 'Total Editing Time', file.app.TotalTime, FIELD_DESCRIPTIONS.TotalTime);
+    }
 
     // 3. Format Specific
     if (file.type === 'docx') {
@@ -675,55 +737,90 @@ export default function OfficeMeta() {
     );
   };
 
-  // Render original grouped metadata cards (Overview)
+  // Render original grouped metadata cards, aligned as tabular imgmeta-tables (Overview)
   const renderOverviewTab = () => {
     if (!activeFile) return null;
 
     const coreItems = [
-      { label: 'Title', value: activeFile.core.title },
-      { label: 'Creator (Author)', value: activeFile.core.creator },
-      { label: 'Subject', value: activeFile.core.subject },
-      { label: 'Description / Notes', value: activeFile.core.description },
-      { label: 'Keywords', value: activeFile.core.keywords },
-      { label: 'Category', value: activeFile.core.category },
-      { label: 'Content Status', value: activeFile.core.contentStatus },
-      { label: 'Revision Count', value: activeFile.core.revision },
-      { label: 'Created Time', value: formatDate(activeFile.core.created) },
-      { label: 'Last Modified By', value: activeFile.core.lastModifiedBy },
-      { label: 'Modified Time', value: formatDate(activeFile.core.modified) },
-      { label: 'Last Printed', value: formatDate(activeFile.core.lastPrinted) }
+      { label: 'Title', value: activeFile.core.title, description: FIELD_DESCRIPTIONS.title },
+      { label: 'Creator (Author)', value: activeFile.core.creator, description: FIELD_DESCRIPTIONS.creator },
+      { label: 'Subject', value: activeFile.core.subject, description: FIELD_DESCRIPTIONS.subject },
+      { label: 'Description / Notes', value: activeFile.core.description, description: FIELD_DESCRIPTIONS.description },
+      { label: 'Keywords', value: activeFile.core.keywords, description: FIELD_DESCRIPTIONS.keywords },
+      { label: 'Category', value: activeFile.core.category, description: FIELD_DESCRIPTIONS.category },
+      { label: 'Content Status', value: activeFile.core.contentStatus, description: FIELD_DESCRIPTIONS.contentStatus },
+      { label: 'Revision Count', value: activeFile.core.revision, description: FIELD_DESCRIPTIONS.revision },
+      { label: 'Created Time', value: formatDate(activeFile.core.created), description: FIELD_DESCRIPTIONS.created },
+      { label: 'Last Modified By', value: activeFile.core.lastModifiedBy, description: FIELD_DESCRIPTIONS.lastModifiedBy },
+      { label: 'Modified Time', value: formatDate(activeFile.core.modified), description: FIELD_DESCRIPTIONS.modified },
+      { label: 'Last Printed', value: formatDate(activeFile.core.lastPrinted), description: FIELD_DESCRIPTIONS.lastPrinted }
     ];
+
+    const elapsed = calculateElapsedTime(activeFile.core.created, activeFile.core.modified);
+    if (elapsed) {
+      coreItems.push({
+        label: 'Elapsed Time (Created to Modified)',
+        value: elapsed,
+        description: 'Calculated duration between creation and last modification'
+      });
+    }
 
     const appItems = [
-      { label: 'Application Software', value: activeFile.app.Application },
-      { label: 'Application Version', value: activeFile.app.AppVersion },
-      { label: 'Company', value: activeFile.app.Company },
-      { label: 'Manager', value: activeFile.app.Manager },
-      { label: 'Template Used', value: activeFile.app.Template },
-      { label: 'Total Editing Time (mins)', value: activeFile.app.TotalTime }
+      { label: 'Application Software', value: activeFile.app.Application, description: FIELD_DESCRIPTIONS.Application },
+      { label: 'Application Version', value: activeFile.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion },
+      { label: 'Company', value: activeFile.app.Company, description: FIELD_DESCRIPTIONS.Company },
+      { label: 'Manager', value: activeFile.app.Manager, description: FIELD_DESCRIPTIONS.Manager },
+      { label: 'Template Used', value: activeFile.app.Template, description: FIELD_DESCRIPTIONS.Template }
     ];
 
-    const renderMetaGrid = (title, items) => {
+    const formattedTime = formatMinutes(activeFile.app.TotalTime);
+    if (formattedTime) {
+      appItems.push({
+        label: 'Total Editing Time',
+        value: formattedTime,
+        description: FIELD_DESCRIPTIONS.TotalTime
+      });
+    } else if (activeFile.app.TotalTime !== undefined && activeFile.app.TotalTime !== '') {
+      appItems.push({
+        label: 'Total Editing Time',
+        value: activeFile.app.TotalTime,
+        description: FIELD_DESCRIPTIONS.TotalTime
+      });
+    }
+
+    const renderMetaTable = (title, items) => {
       const query = searchQuery.toLowerCase().trim();
       const filtered = items.filter(item => {
         if (!query) return true;
-        return item.label.toLowerCase().includes(query) || (item.value || '').toLowerCase().includes(query);
+        return item.label.toLowerCase().includes(query) || 
+               (item.value || '').toLowerCase().includes(query) ||
+               (item.description || '').toLowerCase().includes(query);
       });
       if (filtered.length === 0 && query) return null;
 
       return (
-        <div className="officemeta-group-card card-glass">
-          <h3 className="officemeta-group-title">{title}</h3>
-          <div className="officemeta-grid">
-            {filtered.map((item, idx) => (
-              <div key={idx} className="officemeta-cell">
-                <div className="officemeta-cell-label">{item.label}</div>
-                <div className={`officemeta-cell-value ${item.value ? '' : 'not-available'}`}>
-                  {item.value || '—'}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="officemeta-group-card card-glass" style={{ padding: '20px', borderRadius: '12px' }}>
+          <h3 className="officemeta-group-title" style={{ marginBottom: '12px' }}>{title}</h3>
+          <table className="imgmeta-table" style={{ width: '100%' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>Parameter Name</th>
+                <th style={{ textAlign: 'left' }}>Value</th>
+                <th style={{ textAlign: 'left' }}>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                  <td style={{ fontWeight: 600, color: 'var(--text-main)', padding: '8px 12px' }}>{item.label}</td>
+                  <td title={item.value} style={{ wordBreak: 'break-all', whiteSpace: 'normal', color: 'var(--text-main)', padding: '8px 12px' }}>
+                    {item.value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                  </td>
+                  <td title={item.description} style={{ color: 'var(--text-muted)', padding: '8px 12px' }}>{item.description || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       );
     };
@@ -733,85 +830,64 @@ export default function OfficeMeta() {
       const badge = getFileBadge(activeFile.type);
       if (activeFile.type === 'docx') {
         items = [
-          { label: 'Total Pages', value: activeFile.app.Pages },
-          { label: 'Words Count', value: activeFile.app.Words },
-          { label: 'Characters', value: activeFile.app.Characters },
-          { label: 'Characters (with spaces)', value: activeFile.app.CharactersWithSpaces },
-          { label: 'Paragraphs', value: activeFile.app.Paragraphs },
-          { label: 'Lines', value: activeFile.app.Lines }
+          { label: 'Total Pages', value: activeFile.app.Pages, description: FIELD_DESCRIPTIONS.Pages },
+          { label: 'Words Count', value: activeFile.app.Words, description: FIELD_DESCRIPTIONS.Words },
+          { label: 'Characters', value: activeFile.app.Characters, description: FIELD_DESCRIPTIONS.Characters },
+          { label: 'Characters (with spaces)', value: activeFile.app.CharactersWithSpaces, description: FIELD_DESCRIPTIONS.CharactersWithSpaces },
+          { label: 'Paragraphs', value: activeFile.app.Paragraphs, description: FIELD_DESCRIPTIONS.Paragraphs },
+          { label: 'Lines', value: activeFile.app.Lines, description: FIELD_DESCRIPTIONS.Lines }
         ];
       } else if (activeFile.type === 'pptx') {
         items = [
-          { label: 'Slides Count', value: activeFile.app.Slides },
-          { label: 'Hidden Slides', value: activeFile.app.HiddenSlides },
-          { label: 'Notes Pages', value: activeFile.app.Notes },
-          { label: 'Presentation Format', value: activeFile.app.PresentationFormat },
-          { label: 'Multimedia Clips (MMClips)', value: activeFile.app.MMClips }
+          { label: 'Slides Count', value: activeFile.app.Slides, description: FIELD_DESCRIPTIONS.Slides },
+          { label: 'Hidden Slides', value: activeFile.app.HiddenSlides, description: FIELD_DESCRIPTIONS.HiddenSlides },
+          { label: 'Notes Pages', value: activeFile.app.Notes, description: FIELD_DESCRIPTIONS.Notes },
+          { label: 'Presentation Format', value: activeFile.app.PresentationFormat, description: FIELD_DESCRIPTIONS.PresentationFormat },
+          { label: 'Multimedia Clips (MMClips)', value: activeFile.app.MMClips, description: FIELD_DESCRIPTIONS.MMClips }
         ];
       } else if (activeFile.type === 'xlsx') {
-        return (
-          <div className="officemeta-excel-specific">
-            <div className="officemeta-group-card card-glass">
-              <h3 className="officemeta-group-title">Excel Worksheets ({activeFile.sheets.length})</h3>
-              <div className="officemeta-sheets-list">
-                {activeFile.sheets.length > 0 ? (
-                  activeFile.sheets.map((sheet, idx) => (
-                    <div key={idx} className="officemeta-sheet-badge">
-                      <span className="sheet-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <line x1="9" y1="3" x2="9" y2="21"></line>
-                          <line x1="3" y1="9" x2="21" y2="9"></line>
-                        </svg>
-                      </span>
-                      <span className="sheet-name" title={sheet.name}>{sheet.name}</span>
-                      {sheet.state !== 'visible' && (
-                        <span className="sheet-state-hidden">Hidden</span>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="officemeta-empty-message">No worksheets detected.</div>
-                )}
-              </div>
-            </div>
-            <div className="officemeta-group-card card-glass">
-              <h3 className="officemeta-group-title">Heading Pairs (Grouping Info)</h3>
-              <div className="officemeta-grid">
-                {activeFile.app.headingPairs && activeFile.app.headingPairs.length > 0 ? (
-                  activeFile.app.headingPairs.map((pair, idx) => (
-                    <div key={idx} className="officemeta-cell">
-                      <div className="officemeta-cell-label">{pair.label}</div>
-                      <div className="officemeta-cell-value">{pair.count}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="officemeta-empty-message" style={{ gridColumn: 'span 2' }}>
-                    No heading pairs detected.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
+        const xlsxItems = [];
+        if (activeFile.sheets && activeFile.sheets.length > 0) {
+          xlsxItems.push({
+            label: 'Sheets Count',
+            value: String(activeFile.sheets.length),
+            description: 'Total number of worksheets'
+          });
+          xlsxItems.push({
+            label: 'Worksheets List',
+            value: activeFile.sheets.map(s => `${s.name}${s.state !== 'visible' ? ` (${s.state})` : ''}`).join(', '),
+            description: FIELD_DESCRIPTIONS.Sheets
+          });
+        }
+        if (activeFile.app.headingPairs && activeFile.app.headingPairs.length > 0) {
+          activeFile.app.headingPairs.forEach(pair => {
+            xlsxItems.push({
+              label: `Heading Pair: ${pair.label}`,
+              value: pair.count,
+              description: FIELD_DESCRIPTIONS.HeadingPairs
+            });
+          });
+        }
+        return renderMetaTable(`${badge.label} Specific Properties`, xlsxItems);
       }
-      return renderMetaGrid(`${badge.label} Specific Properties`, items);
+      return renderMetaTable(`${badge.label} Specific Properties`, items);
     };
 
     const renderCustomProperties = () => {
       if (!activeFile.custom || Object.keys(activeFile.custom).length === 0) return null;
       const customItems = Object.keys(activeFile.custom).map(key => ({
         label: key,
-        value: activeFile.custom[key]
+        value: activeFile.custom[key],
+        description: 'Custom user-defined metadata property'
       }));
-      return renderMetaGrid("Custom Properties", customItems);
+      return renderMetaTable("Custom Properties", customItems);
     };
 
     return (
       <div className="officemeta-groups-layout">
         {renderFormatSpecific()}
-        {renderMetaGrid("Core Properties", coreItems)}
-        {renderMetaGrid("Application Properties", appItems)}
+        {renderMetaTable("Core Properties", coreItems)}
+        {renderMetaTable("Application Properties", appItems)}
         {renderCustomProperties()}
       </div>
     );

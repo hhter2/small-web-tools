@@ -784,9 +784,8 @@ export default function OfficeMeta() {
       const query = searchQuery.toLowerCase().trim();
       const filtered = items.filter(item => {
         if (!query) return true;
-        return item.label.toLowerCase().includes(query) || 
-               (item.value || '').toLowerCase().includes(query) ||
-               (item.description || '').toLowerCase().includes(query);
+        return (item.description || '').toLowerCase().includes(query) || 
+               (item.value || '').toLowerCase().includes(query);
       });
       if (filtered.length === 0 && query) return null;
 
@@ -796,19 +795,17 @@ export default function OfficeMeta() {
           <table className="imgmeta-table">
             <thead>
               <tr>
-                <th>Parameter Name</th>
-                <th>Value</th>
                 <th>Description</th>
+                <th>Value</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.label}</td>
+                  <td>{item.description || item.label}</td>
                   <td title={item.value}>
                     {item.value || <span className="text-muted">—</span>}
                   </td>
-                  <td title={item.description}>{item.description || '—'}</td>
                 </tr>
               ))}
             </tbody>

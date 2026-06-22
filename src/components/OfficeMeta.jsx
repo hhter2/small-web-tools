@@ -122,6 +122,48 @@ const parseCustomProperties = (xmlDoc) => {
   return customData;
 };
 
+// Helper to get vector SVGs for files (replacing emojis)
+const getFileIcon = (type, size = 20) => {
+  switch (type) {
+    case 'docx':
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="file-svg-icon">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      );
+    case 'xlsx':
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="file-svg-icon">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="3" y1="15" x2="21" y2="15"></line>
+        </svg>
+      );
+    case 'pptx':
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="file-svg-icon">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="12" y1="3" x2="12" y2="21"></line>
+          <path d="M7 7l10 10M17 7L7 17"></path>
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="file-svg-icon">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+      );
+  }
+};
+
 // Fields to compare side-by-side
 const COMPARE_FIELDS = [
   { label: 'File Type', fn: (f) => f.type.toUpperCase() },
@@ -367,13 +409,13 @@ export default function OfficeMeta() {
   const getFileBadge = (type) => {
     switch (type) {
       case 'docx':
-        return { label: 'Word (DOCX)', colorClass: 'badge-docx', icon: '📝' };
+        return { label: 'Word (DOCX)', colorClass: 'badge-docx', icon: getFileIcon('docx', 20) };
       case 'xlsx':
-        return { label: 'Excel (XLSX)', colorClass: 'badge-xlsx', icon: '📊' };
+        return { label: 'Excel (XLSX)', colorClass: 'badge-xlsx', icon: getFileIcon('xlsx', 20) };
       case 'pptx':
-        return { label: 'PowerPoint (PPTX)', colorClass: 'badge-pptx', icon: '🎨' };
+        return { label: 'PowerPoint (PPTX)', colorClass: 'badge-pptx', icon: getFileIcon('pptx', 20) };
       default:
-        return { label: 'Unknown', colorClass: 'badge-unknown', icon: '📁' };
+        return { label: 'Unknown', colorClass: 'badge-unknown', icon: getFileIcon('default', 20) };
     }
   };
 
@@ -484,7 +526,12 @@ export default function OfficeMeta() {
     return (
       <div className="imgmeta-compare-container card-glass">
         <div className="compare-header">
-          <h3>⚖️ Side-by-Side Office Metadata Comparison</h3>
+          <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
+            </svg>
+            Side-by-Side Office Metadata Comparison
+          </h3>
           <button className="btn-secondary btn-sm" onClick={() => setCompareMode(false)}>
             Back to Detail View
           </button>
@@ -628,7 +675,13 @@ export default function OfficeMeta() {
                 {activeFile.sheets.length > 0 ? (
                   activeFile.sheets.map((sheet, idx) => (
                     <div key={idx} className="officemeta-sheet-badge">
-                      <span className="sheet-icon">📄</span>
+                      <span className="sheet-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="9" y1="3" x2="9" y2="21"></line>
+                          <line x1="3" y1="9" x2="21" y2="9"></line>
+                        </svg>
+                      </span>
                       <span className="sheet-name" title={sheet.name}>{sheet.name}</span>
                       {sheet.state !== 'visible' && (
                         <span className="sheet-state-hidden">Hidden</span>
@@ -710,7 +763,7 @@ export default function OfficeMeta() {
       <div className="officemeta-all-params-view card-glass" style={{ padding: '24px', borderRadius: '14px' }}>
         <div className="compare-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
           <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            📁 All Extracted Parameters ({filtered.length})
+            All Extracted Parameters ({filtered.length})
           </h3>
         </div>
         <div className="imgmeta-table-container" style={{ maxHeight: '600px', overflowY: 'auto' }}>
@@ -769,7 +822,7 @@ export default function OfficeMeta() {
       </p>
 
       <div 
-        className="officemeta-container"
+        className="imgmeta-container"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -786,9 +839,13 @@ export default function OfficeMeta() {
 
         {/* Drag over overlay when files exist */}
         {dragOver && files.length > 0 && (
-          <div className="officemeta-drag-overlay">
+          <div className="imgmeta-drag-overlay">
             <div className="overlay-content">
-              <span>📂 Drop Office files to analyze</span>
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <p>Drop Office files to analyze</p>
             </div>
           </div>
         )}
@@ -856,8 +913,12 @@ export default function OfficeMeta() {
                 className={`btn-secondary ${compareMode ? 'active' : ''}`}
                 onClick={() => setCompareMode(!compareMode)}
                 title="Toggle side-by-side comparison"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                ⚖️ Compare {files.length > 1 ? `(${compareSelectedIds.length})` : ''}
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
+                </svg>
+                Compare {files.length > 1 ? `(${compareSelectedIds.length})` : ''}
               </button>
               <button className="btn-secondary" onClick={handleClearAll}>
                 Clear All
@@ -869,16 +930,21 @@ export default function OfficeMeta() {
         {/* Dropzone for initially empty state */}
         {files.length === 0 && (
           <div 
-            className={`officemeta-dropzone ${dragOver ? 'dragover' : ''}`}
+            className={`imgmeta-dropzone ${dragOver ? 'dragover' : ''}`}
             onClick={handleDropzoneClick}
           >
             <div className="dropzone-content">
-              <div className="dropzone-icon">📂</div>
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <polyline points="9 15 12 12 15 15"></polyline>
+              </svg>
               <p className="dropzone-title">Drag &amp; drop Microsoft Office documents here</p>
               <p className="dropzone-or">or</p>
               <button 
                 type="button" 
-                className="btn-primary" 
+                className="btn-secondary" 
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
               >
                 Browse Files

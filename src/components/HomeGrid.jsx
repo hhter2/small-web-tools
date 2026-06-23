@@ -17,19 +17,6 @@ const categories = [
     )
   },
   {
-    id: 'text',
-    name: 'Text',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-        <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-    )
-  },
-  {
     id: 'developer',
     name: 'Developer',
     icon: (
@@ -238,11 +225,11 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
       )
-    },
-    {
+    },    {
       id: 'tool-barcode',
       title: 'Barcode Generator',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF, Codabar) with live validation.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -254,6 +241,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-currency',
       title: 'Currency Converter & Counter',
       category: 'utilities',
+      subGroup: 'Calculation',
       desc: 'Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -266,6 +254,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-date',
       title: 'Date Counter',
       category: 'utilities',
+      subGroup: 'Calculation',
       desc: 'Calculate the exact number of days between two specified dates.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -280,6 +269,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-password',
       title: 'Secure Password Generator',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -292,6 +282,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-pwstrength',
       title: 'Password Strength Checker',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Analyze password complexity, calculate entropy, estimate cracking time, and verify character rules.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -304,6 +295,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-qrcode',
       title: 'QR Code Generator',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Generate styled QR codes with custom dots, eyes, colors, gradients, and embedded logos.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -318,6 +310,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-wheel',
       title: 'Random Wheel',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Spin the customizable wheel to draw random items with elimination.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -342,6 +335,40 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
         categories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;
+          
+          if (cat.id === 'utilities') {
+            const subGroups = {};
+            catTools.forEach(tool => {
+              const sg = tool.subGroup || 'Utilities';
+              if (!subGroups[sg]) subGroups[sg] = [];
+              subGroups[sg].push(tool);
+            });
+            const sortedSubGroupNames = Object.keys(subGroups).sort();
+            
+            return (
+              <div key={cat.id} className="home-category-section">
+                <h3 className="home-category-heading">
+                  {cat.icon}
+                  {cat.name}
+                </h3>
+                {sortedSubGroupNames.map(sgName => (
+                  <div key={sgName} className="home-subcategory-section">
+                    <h4 className="home-subcategory-heading">{sgName}</h4>
+                    <div className="home-grid">
+                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
+                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-icon">{tool.icon}</div>
+                          <h3>{tool.title}</h3>
+                          <p>{tool.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          
           return (
             <div key={cat.id} className="home-category-section">
               <h3 className="home-category-heading">
@@ -362,17 +389,49 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
         })
       ) : (
         /* Render filtered grid for active category */
-        <div className="home-grid">
-          {tools
-            .filter(t => t.category === activeTab)
-            .map(tool => (
-              <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                <div className="home-card-icon">{tool.icon}</div>
-                <h3>{tool.title}</h3>
-                <p>{tool.desc}</p>
+        activeTab === 'utilities' ? (
+          (() => {
+            const catTools = tools.filter(t => t.category === 'utilities');
+            const subGroups = {};
+            catTools.forEach(tool => {
+              const sg = tool.subGroup || 'Utilities';
+              if (!subGroups[sg]) subGroups[sg] = [];
+              subGroups[sg].push(tool);
+            });
+            const sortedSubGroupNames = Object.keys(subGroups).sort();
+            
+            return (
+              <div className="home-category-section" style={{ marginTop: 0 }}>
+                {sortedSubGroupNames.map(sgName => (
+                  <div key={sgName} className="home-subcategory-section" style={{ marginBottom: '24px' }}>
+                    <h4 className="home-subcategory-heading">{sgName}</h4>
+                    <div className="home-grid">
+                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
+                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-icon">{tool.icon}</div>
+                          <h3>{tool.title}</h3>
+                          <p>{tool.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-        </div>
+            );
+          })()
+        ) : (
+          <div className="home-grid">
+            {tools
+              .filter(t => t.category === activeTab)
+              .map(tool => (
+                <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                  <div className="home-card-icon">{tool.icon}</div>
+                  <h3>{tool.title}</h3>
+                  <p>{tool.desc}</p>
+                </div>
+              ))}
+          </div>
+        )
       )}
     </article>
   );

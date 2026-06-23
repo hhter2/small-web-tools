@@ -8350,3 +8350,116 @@ html[data-theme="dark"] .warning-note {
   }
 }
 
+/* Utilities Sub-grouping Styles */
+.sidebar-subcategory-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.sidebar-subcategory-header {
+  padding: 4px 12px 2px 12px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sidebar-subcategory-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-sidebar-muted);
+  opacity: 0.55;
+}
+
+.sidebar-subcategory-group .nav-item {
+  padding-left: 20px;
+}
+
+.collapsed-sidebar .sidebar-subcategory-header {
+  display: none !important;
+}
+
+.collapsed-sidebar .sidebar-subcategory-group .nav-item {
+  padding-left: 10px !important;
+}
+
+.dropdown-subcategory-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.dropdown-subcategory-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.dropdown-subcategory-header {
+  padding: 4px 12px 2px 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.dropdown-subcategory-section .dropdown-item {
+  padding-left: 18px;
+}
+
+.footer-subcategory-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.footer-subcategory-group:last-child {
+  margin-bottom: 0;
+}
+
+.footer-subcategory-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin-bottom: 2px;
+}
+
+.footer-subcategory-group .footer-col-link {
+  padding-left: 8px;
+}
+
+.home-subcategory-section {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.home-subcategory-heading {
+  font-family: "TASA Orbiter", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-left: 6px;
+  border-left: 2px solid var(--accent);
+  line-height: 1;
+}
+
+.home-subcategory-section .home-grid {
+  margin-top: 12px;
+}
+

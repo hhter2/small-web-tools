@@ -350,6 +350,7 @@ const navItems = [
     name: 'Barcode Generator',
     tooltip: 'Barcode Generator',
     category: 'utilities',
+    subGroup: 'Utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
@@ -361,6 +362,7 @@ const navItems = [
     name: 'Currency Converter',
     tooltip: 'Currency Converter & Counter',
     category: 'utilities',
+    subGroup: 'Calculation',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -373,6 +375,7 @@ const navItems = [
     name: 'Date Counter',
     tooltip: 'Date Counter',
     category: 'utilities',
+    subGroup: 'Calculation',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -387,6 +390,7 @@ const navItems = [
     name: 'Password Generator',
     tooltip: 'Secure Password Generator',
     category: 'utilities',
+    subGroup: 'Utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -399,6 +403,7 @@ const navItems = [
     name: 'Password Strength',
     tooltip: 'Password Strength Checker',
     category: 'utilities',
+    subGroup: 'Utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -411,6 +416,7 @@ const navItems = [
     name: 'QR Code Generator',
     tooltip: 'QR Code Generator',
     category: 'utilities',
+    subGroup: 'Utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -425,6 +431,7 @@ const navItems = [
     name: 'Random Wheel',
     tooltip: 'Random Wheel',
     category: 'utilities',
+    subGroup: 'Utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -675,6 +682,46 @@ export default function App() {
             categories.map(cat => {
               const catItems = filteredNavItems.filter(item => item.category === cat.id);
               if (catItems.length === 0) return null;
+              
+              if (cat.id === 'utilities') {
+                const subGroups = {};
+                catItems.forEach(item => {
+                  const sg = item.subGroup || 'Utilities';
+                  if (!subGroups[sg]) subGroups[sg] = [];
+                  subGroups[sg].push(item);
+                });
+                const sortedSubGroupNames = Object.keys(subGroups).sort();
+                
+                return (
+                  <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
+                    <div className="sidebar-category-header">
+                      <span className="sidebar-category-title">{cat.name}</span>
+                    </div>
+                    {sortedSubGroupNames.map(sgName => (
+                      <div key={sgName} className="sidebar-subcategory-group">
+                        <div className="sidebar-subcategory-header">
+                          <span className="sidebar-subcategory-title">{sgName}</span>
+                        </div>
+                        {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                          <button
+                            key={item.id}
+                            className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
+                            data-tool={item.id}
+                            data-tooltip={item.tooltip}
+                            onClick={() => handleNavClick(item.id)}
+                            onMouseEnter={(e) => handleMouseEnter(e, item)}
+                            onMouseLeave={handleMouseLeave}
+                          >
+                            {item.icon}
+                            <span>{item.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
               return (
                 <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
                   <div className="sidebar-category-header">
@@ -790,19 +837,49 @@ export default function App() {
                   </button>
 
                   <div className={`dropdown-menu ${isOpen ? 'show' : ''}`}>
-                    {catItems.map(item => (
-                      <button
-                        key={item.id}
-                        className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
-                        onClick={() => {
-                          handleNavClick(item.id);
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        <span className="item-icon">{item.icon}</span>
-                        <span className="item-name">{item.name}</span>
-                      </button>
-                    ))}
+                    {cat.id === 'utilities' ? (
+                      (() => {
+                        const subGroups = {};
+                        catItems.forEach(item => {
+                          const sg = item.subGroup || 'Utilities';
+                          if (!subGroups[sg]) subGroups[sg] = [];
+                          subGroups[sg].push(item);
+                        });
+                        const sortedSubGroupNames = Object.keys(subGroups).sort();
+                        return sortedSubGroupNames.map(sgName => (
+                          <div key={sgName} className="dropdown-subcategory-section">
+                            <div className="dropdown-subcategory-header">{sgName}</div>
+                            {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                              <button
+                                key={item.id}
+                                className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
+                                onClick={() => {
+                                  handleNavClick(item.id);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                <span className="item-icon">{item.icon}</span>
+                                <span className="item-name">{item.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ));
+                      })()
+                    ) : (
+                      catItems.map(item => (
+                        <button
+                          key={item.id}
+                          className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
+                          onClick={() => {
+                            handleNavClick(item.id);
+                            setOpenDropdown(null);
+                          }}
+                        >
+                          <span className="item-icon">{item.icon}</span>
+                          <span className="item-name">{item.name}</span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -926,15 +1003,41 @@ export default function App() {
               return (
                 <div key={cat.id} className="footer-col">
                   <span className="footer-col-title">{cat.name}</span>
-                  {catItems.map(item => (
-                    <button
-                      key={item.id}
-                      className="footer-col-link"
-                      onClick={() => handleNavClick(item.id)}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
+                  {cat.id === 'utilities' ? (
+                    (() => {
+                      const subGroups = {};
+                      catItems.forEach(item => {
+                        const sg = item.subGroup || 'Utilities';
+                        if (!subGroups[sg]) subGroups[sg] = [];
+                        subGroups[sg].push(item);
+                      });
+                      const sortedSubGroupNames = Object.keys(subGroups).sort();
+                      return sortedSubGroupNames.map(sgName => (
+                        <div key={sgName} className="footer-subcategory-group">
+                          <span className="footer-subcategory-title">{sgName}</span>
+                          {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                            <button
+                              key={item.id}
+                              className="footer-col-link"
+                              onClick={() => handleNavClick(item.id)}
+                            >
+                              {item.name}
+                            </button>
+                          ))}
+                        </div>
+                      ));
+                    })()
+                  ) : (
+                    catItems.map(item => (
+                      <button
+                        key={item.id}
+                        className="footer-col-link"
+                        onClick={() => handleNavClick(item.id)}
+                      >
+                        {item.name}
+                      </button>
+                    ))
+                  )}
                 </div>
               );
             })}

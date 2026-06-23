@@ -15,26 +15,26 @@ export default function BioinfoIcon({ size = 24, color = 'currentColor', classNa
       className={className}
       {...props}
     >
-      {/* Biological Strand (Organic smooth curve representing DNA) */}
+      {/* Biological Strand (Organic smooth sine curve) */}
       <path d="M8 3c0 2.5 8 3.5 8 6s-8 3.5-8 6 8 3.5 8 6" />
 
-      {/* Computational Strand (Low-poly/straight-segmented network path) */}
-      <path d="M16 3L8 9l8 6-8 6" />
+      {/* Computational Strand & Rungs (Sharp square wave representing a digital signal) */}
+      <path d="M16 3H8v9h8v6H8v6h8" />
 
-      {/* Network Rungs (Dashed lines representing digital connections) */}
-      <line x1="8" y1="3" x2="16" y2="3" strokeDasharray="2 2" />
-      <line x1="8" y1="9" x2="16" y2="9" strokeDasharray="2 2" />
-      <line x1="8" y1="15" x2="16" y2="15" strokeDasharray="2 2" />
-      <line x1="8" y1="21" x2="16" y2="21" strokeDasharray="2 2" />
+      {/* Digital Data Blocks (Rounded squares at the corners) */}
+      <rect x="6.5" y="1.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="14.5" y="1.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="6.5" y="7.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="14.5" y="7.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="6.5" y="13.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="14.5" y="13.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="6.5" y="19.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      <rect x="14.5" y="19.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
 
-      {/* Data Nodes (Filled circles representing digital nodes) */}
-      <circle cx="16" cy="3" r="1.5" fill={color} stroke="none" />
-      <circle cx="12" cy="6" r="1.5" fill={color} stroke="none" />
-      <circle cx="8" cy="9" r="1.5" fill={color} stroke="none" />
-      <circle cx="12" cy="12" r="1.5" fill={color} stroke="none" />
-      <circle cx="16" cy="15" r="1.5" fill={color} stroke="none" />
-      <circle cx="12" cy="18" r="1.5" fill={color} stroke="none" />
-      <circle cx="8" cy="21" r="1.5" fill={color} stroke="none" />
+      {/* Network Data Nodes (Circles on the digital backbone) */}
+      <circle cx="8" cy="6" r="1.5" fill={color} stroke="none" />
+      <circle cx="16" cy="12" r="1.5" fill={color} stroke="none" />
+      <circle cx="8" cy="18" r="1.5" fill={color} stroke="none" />
     </svg>
   );
 }

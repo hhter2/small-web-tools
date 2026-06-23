@@ -163,6 +163,15 @@ const categories = [
     icon: <BioinfoIcon />
   },
   {
+    id: 'security',
+    name: 'Security',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+    )
+  },
+  {
     id: 'utilities',
     name: 'Utilities',
     icon: (
@@ -394,7 +403,7 @@ const navItems = [
     id: 'tool-qrbarcode',
     name: 'QR & Barcode',
     tooltip: 'QR Code & Barcode Generator',
-    category: 'utilities',
+    category: 'security',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -408,7 +417,7 @@ const navItems = [
     id: 'tool-password',
     name: 'Password Generator',
     tooltip: 'Secure Password Generator',
-    category: 'utilities',
+    category: 'security',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>

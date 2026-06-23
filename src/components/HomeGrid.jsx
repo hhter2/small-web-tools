@@ -65,6 +65,15 @@ const categories = [
     icon: <BioinfoIcon />
   },
   {
+    id: 'security',
+    name: 'Security',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+    )
+  },
+  {
     id: 'utilities',
     name: 'Utilities',
     icon: (
@@ -281,7 +290,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     {
       id: 'tool-qrbarcode',
       title: 'QR & Barcode Generator',
-      category: 'utilities',
+      category: 'security',
       desc: 'Generate styled QR codes with embedded logos and standardized barcodes.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -295,7 +304,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     {
       id: 'tool-password',
       title: 'Secure Password Generator',
-      category: 'utilities',
+      category: 'security',
       desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">

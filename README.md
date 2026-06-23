@@ -131,6 +131,8 @@ npm run preview
 - **Top Header Dropdowns & Footer Centering**: Replaced the desktop vertical sidebar layout with a top-aligned, sticky horizontal navigation header (`desktop-header`) on screens above 768px. The header features main groups (categories) with triangle chevron icons that rotate smoothly by 180 degrees using CSS transitions when the dropdown menus are hovered or active. Dropdown menus list and navigate to all sub-groups (tools). Integrated a compact search input and theme toggle inside the desktop header. Centered the footer copyright and brand info using a grid-based layout on desktop, while retaining standard flex/column layouts on mobile.
 - **Main Group Header Navigation**: Enabled category redirection and filtering. Clicking the main group category button in the desktop header redirects the user to the Home dashboard pre-filtered to show only the tools inside that selected category. Clicking any brand logo resets the Home dashboard filter to display "All" categories.
 - **Redundant Dashboard Tabs Removal**: Removed the secondary category filters tab bar (`home-tabs`) from the main dashboard since filtering is now handled natively via the desktop top-navigation header menu clicks.
+- **Light Gray Header Background**: Updated the `.desktop-header` background color to a sleek, modern light gray (`#f3f4f6`) in light theme to visually separate it from the white content elements on the dashboard, while retaining the deep charcoal background (`#151820`) in dark theme.
+
 
 
 

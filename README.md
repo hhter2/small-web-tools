@@ -132,6 +132,8 @@ npm run preview
 - **Main Group Header Navigation**: Enabled category redirection and filtering. Clicking the main group category button in the desktop header redirects the user to the Home dashboard pre-filtered to show only the tools inside that selected category. Clicking any brand logo resets the Home dashboard filter to display "All" categories.
 - **Redundant Dashboard Tabs Removal**: Removed the secondary category filters tab bar (`home-tabs`) from the main dashboard since filtering is now handled natively via the desktop top-navigation header menu clicks.
 - **Light Gray Header Background**: Updated the `.desktop-header` background color to a sleek, modern light gray (`#f3f4f6`) in light theme to visually separate it from the white content elements on the dashboard, while retaining the deep charcoal background (`#151820`) in dark theme.
+- **Top Header Brand Text Visibility Fix**: Fixed a bug where the site name ("Small Web Tools") in the desktop header was hidden when `collapsed-sidebar` was active. Scoped the collapsed CSS selector strictly to `.collapsed-sidebar .sidebar .brand-text` to ensure the header brand logo text remains visible at all times.
+
 
 
 

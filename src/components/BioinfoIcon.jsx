@@ -15,26 +15,26 @@ export default function BioinfoIcon({ size = 24, color = 'currentColor', classNa
       className={className}
       {...props}
     >
-      {/* Biological Strand (Organic smooth sine curve) */}
-      <path d="M8 3c0 2.5 8 3.5 8 6s-8 3.5-8 6 8 3.5 8 6" />
+      {/* Code Brackets representing Informatics / Programming */}
+      <polyline points="7 6 3 12 7 18" />
+      <polyline points="17 6 21 12 17 18" />
 
-      {/* Computational Strand & Rungs (Sharp square wave representing a digital signal) */}
-      <path d="M16 3H8v9h8v6H8v6h8" />
+      {/* DNA Double Helix representing Biology */}
+      {/* Strand A */}
+      <path d="M10 4c0 1.5 4 2.5 4 5s-4 3.5-4 6 4 3.5 4 5" />
+      {/* Strand B */}
+      <path d="M14 4c0 1.5-4 2.5-4 5s4 3.5 4 6-4 3.5-4 5" />
 
-      {/* Digital Data Blocks (Rounded squares at the corners) */}
-      <rect x="6.5" y="1.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="14.5" y="1.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="6.5" y="7.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="14.5" y="7.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="6.5" y="13.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="14.5" y="13.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="6.5" y="19.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
-      <rect x="14.5" y="19.5" width="3" height="3" rx="0.5" fill={color} stroke="none" />
+      {/* Horizontal Rungs (Base Pairs) */}
+      <line x1="10" y1="4" x2="14" y2="4" />
+      <line x1="10" y1="9" x2="14" y2="9" />
+      <line x1="10" y1="15" x2="14" y2="15" />
+      <line x1="10" y1="20" x2="14" y2="20" />
 
-      {/* Network Data Nodes (Circles on the digital backbone) */}
-      <circle cx="8" cy="6" r="1.5" fill={color} stroke="none" />
-      <circle cx="16" cy="12" r="1.5" fill={color} stroke="none" />
-      <circle cx="8" cy="18" r="1.5" fill={color} stroke="none" />
+      {/* Data Nodes representing Genomics / Informatics */}
+      <circle cx="12" cy="6.5" r="1.2" fill={color} stroke="none" />
+      <circle cx="12" cy="12" r="1.2" fill={color} stroke="none" />
+      <circle cx="12" cy="17.5" r="1.2" fill={color} stroke="none" />
     </svg>
   );
 }

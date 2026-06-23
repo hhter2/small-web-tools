@@ -129,6 +129,8 @@ npm run preview
 - **Color Converter Category Move**: Moved the Color Converter tool from the Developer group to the Media group.
 - **Heading and Branding Font Update**: Replaced the previous "Outfit" headings font and branding font (as well as specific "Inter" branding/header fonts) with the premium "TASA Orbiter" font from Google Fonts. Imported the font stylesheet in `index.html`, defined a global heading CSS rule for `h1-h6` using `TASA Orbiter`, updated all specific style rules in `styles.css` that declared font-family, and synced the font family of the canvas rendering on the **Random Wheel**.
 - **Top Header Dropdowns & Footer Centering**: Replaced the desktop vertical sidebar layout with a top-aligned, sticky horizontal navigation header (`desktop-header`) on screens above 768px. The header features main groups (categories) with triangle chevron icons that rotate smoothly by 180 degrees using CSS transitions when the dropdown menus are hovered or active. Dropdown menus list and navigate to all sub-groups (tools). Integrated a compact search input and theme toggle inside the desktop header. Centered the footer copyright and brand info using a grid-based layout on desktop, while retaining standard flex/column layouts on mobile.
+- **Main Group Header Navigation**: Enabled category redirection and filtering. Clicking the main group category button in the desktop header redirects the user to the Home dashboard pre-filtered to show only the tools inside that selected category. Clicking any brand logo resets the Home dashboard filter to display "All" categories.
+
 
 
 

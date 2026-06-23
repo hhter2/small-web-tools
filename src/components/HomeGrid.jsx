@@ -62,11 +62,19 @@ const categories = [
     name: 'Bioinfo',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
-        <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
-        <line x1="8" y1="7" x2="8" y2="14"></line>
-        <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
-        <line x1="16" y1="7" x2="16" y2="14"></line>
+        <path d="M8 2l4 5-4 5 4 5-4 5" />
+        <path d="M16 2l-4 5 4 5-4 5 4 5" />
+        <line x1="8" y1="2" x2="16" y2="2" strokeDasharray="2 2" />
+        <line x1="8" y1="12" x2="16" y2="12" strokeDasharray="2 2" />
+        <line x1="8" y1="22" x2="16" y2="22" strokeDasharray="2 2" />
+        <circle cx="8" cy="2" r="2" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="2" r="2" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="7" r="2" fill="currentColor" stroke="none" />
+        <circle cx="8" cy="12" r="2" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="12" r="2" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="17" r="2" fill="currentColor" stroke="none" />
+        <circle cx="8" cy="22" r="2" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="22" r="2" fill="currentColor" stroke="none" />
       </svg>
     )
   },
@@ -217,12 +225,13 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'bioinfo',
       desc: "Complements, reverses, and swaps 5'/3' strand sequence orientations.",
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
-          <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
-          <line x1="8" y1="7" x2="8" y2="14"></line>
-          <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
-          <line x1="16" y1="7" x2="16" y2="14"></line>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8 2c4 0 4 10 0 10s-4 10 0 10" />
+          <path d="M16 2c-4 0 -4 10 0 10s4 10 0 10" />
+          <line x1="9" y1="4.5" x2="15" y2="4.5" />
+          <line x1="9" y1="9.5" x2="15" y2="9.5" />
+          <line x1="9" y1="14.5" x2="15" y2="14.5" />
+          <line x1="9" y1="19.5" x2="15" y2="19.5" />
         </svg>
       )
     },

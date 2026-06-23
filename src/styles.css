@@ -7969,3 +7969,383 @@ html[data-theme="dark"] .warning-note {
 .officemeta-groups-layout .imgmeta-table td:first-child {
   width: 40%;
 }
+
+/* ==========================================================================
+   Header and Footer Modification Overrides
+   ========================================================================== */
+
+/* Media query rules for Header & Sidebar layout */
+@media (min-width: 769px) {
+  /* Hide sidebar on desktop */
+  .sidebar {
+    display: none !important;
+  }
+  
+  /* Hide mobile top-bar on desktop */
+  .top-bar.mobile-top-bar {
+    display: none !important;
+  }
+
+  /* Make main content fit top header spacing */
+  .main-content {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop header on mobile */
+  .desktop-header {
+    display: none !important;
+  }
+  
+  /* Show mobile top bar */
+  .top-bar.mobile-top-bar {
+    display: flex !important;
+  }
+}
+
+/* Premium Desktop Header Styling */
+.desktop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 48px;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 64px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-app);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Brand Area */
+.desktop-header-left .brand-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  transition: opacity 0.2s ease;
+}
+.desktop-header-left .brand-logo-container:hover {
+  opacity: 0.85;
+}
+.desktop-header-left .brand-text {
+  font-family: "TASA Orbiter", sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+/* Navigation Area */
+.desktop-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Nav Dropdown container */
+.nav-dropdown {
+  position: relative;
+}
+
+/* Trigger Button */
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.nav-dropdown-trigger:hover,
+.nav-dropdown-trigger.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.nav-dropdown-trigger .cat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+.nav-dropdown-trigger .cat-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.nav-dropdown-trigger .cat-name {
+  font-family: "TASA Orbiter", sans-serif;
+  font-weight: 600;
+}
+
+/* Triangle icon style and animation */
+.triangle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-muted);
+}
+.triangle-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Rotate when hover or open */
+.nav-dropdown:hover .triangle-icon,
+.nav-dropdown-trigger.active .triangle-icon {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* Dropdown Menu block */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Show on Hover or trigger active (via JS show class) */
+.nav-dropdown:hover .dropdown-menu,
+.dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(4px);
+}
+
+/* Dropdown Menu Item */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.dropdown-item:hover,
+.dropdown-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.dropdown-item .item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}
+.dropdown-item .item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dropdown-item .item-name {
+  font-weight: 500;
+}
+
+/* Desktop Header Right Controls */
+.desktop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Search Box inside Header */
+.header-search-container {
+  position: relative;
+  width: 180px;
+  transition: width 0.3s ease;
+}
+.header-search-container:focus-within {
+  width: 240px;
+}
+
+.header-search-container .search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.header-search-container .search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.header-search-container input {
+  width: 100%;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+.header-search-container input:focus {
+  border-color: var(--accent);
+}
+
+/* Search results dropdown */
+.header-search-results {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s ease;
+}
+.search-result-item:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.search-result-item .item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+.search-result-item:hover .item-icon {
+  color: var(--accent);
+}
+
+.header-search-results .no-results {
+  padding: 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Theme switch button overrides */
+.desktop-header-right .theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.desktop-header-right .theme-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* Footer layout centering modifications */
+.shiny-footer-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.footer-left-placeholder {
+  /* Empty spacer to align center items */
+  content: "";
+}
+
+.footer-brand-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-social-row {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .shiny-footer-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    text-align: center;
+  }
+  .footer-left-placeholder {
+    display: none !important;
+  }
+  .footer-brand-container {
+    justify-content: center !important;
+  }
+  .footer-social-row {
+    margin: 0 auto !important;
+    justify-content: center !important;
+  }
+}
+

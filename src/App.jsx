@@ -460,6 +460,18 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  // Close dropdowns on clicking outside
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setOpenDropdown(null);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
 
   // Sync theme to document element and localStorage
   useEffect(() => {
@@ -715,8 +727,137 @@ export default function App() {
       {/* Main Content Area */}
       <main className={`main-content ${activeTool !== 'tool-home' ? 'no-header' : ''}`}>
 
-        {/* Top Bar */}
-        <div className="top-bar">
+        {/* Desktop Top Header (Hidden on Mobile) */}
+        <header className="desktop-header">
+          <div className="desktop-header-left">
+            <div
+              className="brand-logo-container"
+              title="Go to Home"
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+              onClick={() => handleNavClick('tool-home')}
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span className="brand-text">Small Web Tools</span>
+            </div>
+          </div>
+
+          <nav className="desktop-header-nav">
+            {categories.map(cat => {
+              const catItems = navItems.filter(item => item.category === cat.id);
+              if (catItems.length === 0) return null;
+              const isOpen = openDropdown === cat.id;
+              return (
+                <div
+                  key={cat.id}
+                  className="nav-dropdown"
+                  onMouseEnter={() => setOpenDropdown(cat.id)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
+                  <button
+                    className={`nav-dropdown-trigger ${isOpen ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(prev => prev === cat.id ? null : cat.id);
+                    }}
+                  >
+                    <span className="cat-icon">{cat.icon}</span>
+                    <span className="cat-name">{cat.name}</span>
+                    <span className={`triangle-icon ${isOpen ? 'open' : ''}`}>
+                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </button>
+
+                  <div className={`dropdown-menu ${isOpen ? 'show' : ''}`}>
+                    {catItems.map(item => (
+                      <button
+                        key={item.id}
+                        className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
+                        onClick={() => {
+                          handleNavClick(item.id);
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        <span className="item-icon">{item.icon}</span>
+                        <span className="item-name">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+
+          <div className="desktop-header-right">
+            <div className="header-search-container" onClick={(e) => e.stopPropagation()}>
+              <div className="search-wrapper">
+                <svg className="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search tools..."
+                  aria-label="Search tools"
+                  autoComplete="off"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              {searchQuery.trim() !== '' && (
+                <div className="header-search-results">
+                  {filteredNavItems.length > 0 ? (
+                    filteredNavItems.map(item => (
+                      <button
+                        key={item.id}
+                        className="search-result-item"
+                        onClick={() => {
+                          handleNavClick(item.id);
+                          setSearchQuery('');
+                        }}
+                      >
+                        <span className="item-icon">{item.icon}</span>
+                        <span>{item.name}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="no-results">No tools found</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              className="theme-toggle-btn"
+              aria-label="Toggle dark/light mode"
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? (
+                <svg className="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              ) : (
+                <svg className="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile Top Bar (Hidden on Desktop) */}
+        <div className="top-bar mobile-top-bar">
           <div className="top-bar-left">
             <div
               className="brand-logo"
@@ -778,6 +919,7 @@ export default function App() {
             })}
           </div>
           <div className="shiny-footer-content">
+            <div className="footer-left-placeholder"></div>
             <div className="footer-brand-container">
               <span className="footer-brand-name">Small Web Tools</span>
               <span className="footer-sep">&nbsp;·&nbsp;</span>

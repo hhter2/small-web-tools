@@ -461,6 +461,7 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [selectedHomeTab, setSelectedHomeTab] = useState('all');
 
   // Close dropdowns on clicking outside
   useEffect(() => {
@@ -534,7 +535,7 @@ export default function App() {
   const renderActiveTool = () => {
     switch (activeTool) {
       case 'tool-home':
-        return <HomeGrid onSelectTool={handleNavClick} />;
+        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
       case 'tool-slash':
         return <SlashesConverter />;
       case 'tool-wc':
@@ -572,7 +573,7 @@ export default function App() {
       case 'tool-password':
         return <PasswordGenerator />;
       default:
-        return <HomeGrid onSelectTool={handleNavClick} />;
+        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
   };
 
@@ -606,7 +607,10 @@ export default function App() {
             id="brand-logo-btn"
             title="Go to Home"
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-            onClick={() => handleNavClick('tool-home')}
+            onClick={() => {
+              handleNavClick('tool-home');
+              setSelectedHomeTab('all');
+            }}
           >
             <span className="brand-text">Small Web Tools</span>
           </div>
@@ -734,7 +738,10 @@ export default function App() {
               className="brand-logo-container"
               title="Go to Home"
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-              onClick={() => handleNavClick('tool-home')}
+              onClick={() => {
+                handleNavClick('tool-home');
+                setSelectedHomeTab('all');
+              }}
             >
               <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -759,7 +766,9 @@ export default function App() {
                     className={`nav-dropdown-trigger ${isOpen ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenDropdown(prev => prev === cat.id ? null : cat.id);
+                      setActiveTool('tool-home');
+                      setSelectedHomeTab(cat.id);
+                      setOpenDropdown(null);
                     }}
                   >
                     <span className="cat-icon">{cat.icon}</span>
@@ -864,7 +873,10 @@ export default function App() {
               id="top-brand-logo"
               title="Go to Home"
               style={{ cursor: 'pointer' }}
-              onClick={() => handleNavClick('tool-home')}
+              onClick={() => {
+                handleNavClick('tool-home');
+                setSelectedHomeTab('all');
+              }}
             >
               <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>

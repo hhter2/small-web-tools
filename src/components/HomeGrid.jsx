@@ -85,8 +85,7 @@ const categories = [
   }
 ];
 
-export default function HomeGrid({ onSelectTool }) {
-  const [activeTab, setActiveTab] = useState('all');
+export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab }) {
 
   const tools = [
     {

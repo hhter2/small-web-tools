@@ -8011,11 +8011,9 @@ html[data-theme="dark"] .warning-note {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 48px;
+  padding: 6px 48px;
   border-bottom: 1px solid var(--border-color);
-  min-height: 64px;
-  position: sticky;
-  top: 0;
+  min-height: 48px;
   background: var(--bg-header);
   backdrop-filter: blur(10px);
   z-index: 1000;
@@ -8027,7 +8025,7 @@ html[data-theme="dark"] .warning-note {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--accent);
+  color: var(--text-muted);
   transition: opacity 0.2s ease;
 }
 .desktop-header-left .brand-logo-container:hover {
@@ -8036,8 +8034,9 @@ html[data-theme="dark"] .warning-note {
 .desktop-header-left .brand-text {
   font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   letter-spacing: -0.02em;
+  color: var(--text-muted);
 }
 
 /* Navigation Area */
@@ -8059,11 +8058,11 @@ html[data-theme="dark"] .warning-note {
   gap: 8px;
   background: none;
   border: none;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  color: var(--text-main);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;

@@ -485,7 +485,7 @@ html[data-theme="dark"] .moon-icon {
     width: 78px;
   }
 
-  .collapsed-sidebar .brand-text,
+  .collapsed-sidebar .sidebar .brand-text,
   .collapsed-sidebar .sidebar-search-container,
   .collapsed-sidebar .nav-item span,
   .collapsed-sidebar .theme-label {

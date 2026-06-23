@@ -324,31 +324,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     <article id="tool-home" className="tool-card tool-card--wide active">
       <h2>Select a Utility Tool</h2>
 
-      {/* Category filter tabs */}
-      <div className="home-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          All
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            className={`tab-btn ${activeTab === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(cat.id)}
-          >
-            {cat.icon}
-            {cat.name}
-          </button>
-        ))}
-      </div>
+
 
       {activeTab === 'all' ? (
         /* Render sections grouped by category */

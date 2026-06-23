@@ -8025,7 +8025,7 @@ html[data-theme="dark"] .warning-note {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-muted);
+  color: var(--accent);
   transition: opacity 0.2s ease;
 }
 .desktop-header-left .brand-logo-container:hover {
@@ -8036,7 +8036,7 @@ html[data-theme="dark"] .warning-note {
   font-weight: 700;
   font-size: 0.95rem;
   letter-spacing: -0.02em;
-  color: var(--text-muted);
+  color: var(--accent);
 }
 
 /* Navigation Area */

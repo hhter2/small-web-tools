@@ -139,7 +139,7 @@ export default function RandomWheel() {
       else if (activeItems.length > 12) fontSize = 12;
       else if (activeItems.length > 8) fontSize = 14;
 
-      ctx.font = `bold ${fontSize}px "Outfit", "Inter", sans-serif`;
+      ctx.font = `bold ${fontSize}px "TASA Orbiter", "Inter", sans-serif`;
       ctx.textBaseline = "middle";
 
       ctx.shadowColor = "rgba(15, 23, 42, 0.35)";

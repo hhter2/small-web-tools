@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import BioinfoIcon from './BioinfoIcon.jsx';
+import DnaRnaIcon from './DnaRnaIcon.jsx';
 
 const categories = [
   {
@@ -11,17 +13,6 @@ const categories = [
         <line x1="16" y1="13" x2="8" y2="13"></line>
         <line x1="16" y1="17" x2="8" y2="17"></line>
         <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-    )
-  },
-  {
-    id: 'calculation',
-    name: 'Calculation',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-        <line x1="9" y1="9" x2="15" y2="15"></line>
-        <line x1="15" y1="9" x2="9" y2="15"></line>
       </svg>
     )
   },
@@ -60,15 +51,7 @@ const categories = [
   {
     id: 'bioinfo',
     name: 'Bioinfo',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
-        <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
-        <line x1="8" y1="7" x2="8" y2="14"></line>
-        <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
-        <line x1="16" y1="7" x2="16" y2="14"></line>
-      </svg>
-    )
+    icon: <BioinfoIcon />
   },
   {
     id: 'utilities',
@@ -85,8 +68,7 @@ const categories = [
   }
 ];
 
-export default function HomeGrid({ onSelectTool }) {
-  const [activeTab, setActiveTab] = useState('all');
+export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab }) {
 
   const tools = [
     {
@@ -129,32 +111,6 @@ export default function HomeGrid({ onSelectTool }) {
           <line x1="14" y1="12" x2="14.01" y2="12"></line>
           <line x1="18" y1="12" x2="18.01" y2="12"></line>
           <line x1="7" y1="16" x2="17" y2="16"></line>
-        </svg>
-      )
-    },
-    {
-      id: 'tool-date',
-      title: 'Date Counter',
-      category: 'calculation',
-      desc: 'Calculate the exact number of days between two specified dates.',
-      icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-      )
-    },
-    {
-      id: 'tool-currency',
-      title: 'Currency Converter & Counter',
-      category: 'calculation',
-      desc: 'Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists.',
-      icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
         </svg>
       )
     },
@@ -217,15 +173,7 @@ export default function HomeGrid({ onSelectTool }) {
       title: 'DNA/RNA Converter',
       category: 'bioinfo',
       desc: "Complements, reverses, and swaps 5'/3' strand sequence orientations.",
-      icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"></path>
-          <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"></path>
-          <line x1="8" y1="7" x2="8" y2="14"></line>
-          <line x1="12" y1="5.5" x2="12" y2="15.5"></line>
-          <line x1="16" y1="7" x2="16" y2="14"></line>
-        </svg>
-      )
+      icon: <DnaRnaIcon />
     },
     {
       id: 'tool-codon',
@@ -277,11 +225,92 @@ export default function HomeGrid({ onSelectTool }) {
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
       )
+    },    {
+      id: 'tool-barcode',
+      title: 'Barcode Generator',
+      category: 'utilities',
+      subGroup: 'Utilities',
+      desc: 'Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF, Codabar) with live validation.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
+        </svg>
+      )
+    },
+    {
+      id: 'tool-currency',
+      title: 'Currency Converter & Counter',
+      category: 'utilities',
+      subGroup: 'Calculation',
+      desc: 'Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-date',
+      title: 'Date Counter',
+      category: 'utilities',
+      subGroup: 'Calculation',
+      desc: 'Calculate the exact number of days between two specified dates.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-password',
+      title: 'Secure Password Generator',
+      category: 'utilities',
+      subGroup: 'Utilities',
+      desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-pwstrength',
+      title: 'Password Strength Checker',
+      category: 'utilities',
+      subGroup: 'Utilities',
+      desc: 'Analyze password complexity, calculate entropy, estimate cracking time, and verify character rules.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 11 2 2 4-4"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-qrcode',
+      title: 'QR Code Generator',
+      category: 'utilities',
+      subGroup: 'Utilities',
+      desc: 'Generate styled QR codes with custom dots, eyes, colors, gradients, and embedded logos.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      )
     },
     {
       id: 'tool-wheel',
       title: 'Random Wheel',
       category: 'utilities',
+      subGroup: 'Utilities',
       desc: 'Spin the customizable wheel to draw random items with elimination.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -292,32 +321,6 @@ export default function HomeGrid({ onSelectTool }) {
           <path d="M7.76 7.76l8.48 8.48"></path>
         </svg>
       )
-    },
-    {
-      id: 'tool-qrbarcode',
-      title: 'QR & Barcode Generator',
-      category: 'utilities',
-      desc: 'Generate styled QR codes with embedded logos and standardized barcodes.',
-      icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <rect x="7" y="7" width="3" height="3"></rect>
-          <rect x="14" y="7" width="3" height="3"></rect>
-          <rect x="7" y="14" width="3" height="3"></rect>
-        </svg>
-      )
-    },
-    {
-      id: 'tool-password',
-      title: 'Secure Password Generator',
-      category: 'utilities',
-      desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
-      icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-      )
     }
   ];
 
@@ -325,37 +328,47 @@ export default function HomeGrid({ onSelectTool }) {
     <article id="tool-home" className="tool-card tool-card--wide active">
       <h2>Select a Utility Tool</h2>
 
-      {/* Category filter tabs */}
-      <div className="home-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          All
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            className={`tab-btn ${activeTab === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(cat.id)}
-          >
-            {cat.icon}
-            {cat.name}
-          </button>
-        ))}
-      </div>
+
 
       {activeTab === 'all' ? (
         /* Render sections grouped by category */
         categories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;
+          
+          if (cat.id === 'utilities') {
+            const subGroups = {};
+            catTools.forEach(tool => {
+              const sg = tool.subGroup || 'Utilities';
+              if (!subGroups[sg]) subGroups[sg] = [];
+              subGroups[sg].push(tool);
+            });
+            const sortedSubGroupNames = Object.keys(subGroups).sort();
+            
+            return (
+              <div key={cat.id} className="home-category-section">
+                <h3 className="home-category-heading">
+                  {cat.icon}
+                  {cat.name}
+                </h3>
+                {sortedSubGroupNames.map(sgName => (
+                  <div key={sgName} className="home-subcategory-section">
+                    <h4 className="home-subcategory-heading">{sgName}</h4>
+                    <div className="home-grid">
+                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
+                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-icon">{tool.icon}</div>
+                          <h3>{tool.title}</h3>
+                          <p>{tool.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          
           return (
             <div key={cat.id} className="home-category-section">
               <h3 className="home-category-heading">
@@ -376,17 +389,49 @@ export default function HomeGrid({ onSelectTool }) {
         })
       ) : (
         /* Render filtered grid for active category */
-        <div className="home-grid">
-          {tools
-            .filter(t => t.category === activeTab)
-            .map(tool => (
-              <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                <div className="home-card-icon">{tool.icon}</div>
-                <h3>{tool.title}</h3>
-                <p>{tool.desc}</p>
+        activeTab === 'utilities' ? (
+          (() => {
+            const catTools = tools.filter(t => t.category === 'utilities');
+            const subGroups = {};
+            catTools.forEach(tool => {
+              const sg = tool.subGroup || 'Utilities';
+              if (!subGroups[sg]) subGroups[sg] = [];
+              subGroups[sg].push(tool);
+            });
+            const sortedSubGroupNames = Object.keys(subGroups).sort();
+            
+            return (
+              <div className="home-category-section" style={{ marginTop: 0 }}>
+                {sortedSubGroupNames.map(sgName => (
+                  <div key={sgName} className="home-subcategory-section" style={{ marginBottom: '24px' }}>
+                    <h4 className="home-subcategory-heading">{sgName}</h4>
+                    <div className="home-grid">
+                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
+                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-icon">{tool.icon}</div>
+                          <h3>{tool.title}</h3>
+                          <p>{tool.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-        </div>
+            );
+          })()
+        ) : (
+          <div className="home-grid">
+            {tools
+              .filter(t => t.category === activeTab)
+              .map(tool => (
+                <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
+                  <div className="home-card-icon">{tool.icon}</div>
+                  <h3>{tool.title}</h3>
+                  <p>{tool.desc}</p>
+                </div>
+              ))}
+          </div>
+        )
       )}
     </article>
   );

@@ -450,8 +450,8 @@ const generateQRSVG = (text, options) => {
   return `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">\n${svgContent}</svg>`;
 };
 
-export default function QrBarcodeGenerator() {
-  const [activeTab, setActiveTab] = useState('qr'); // 'qr' | 'barcode'
+export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // ================= QR State =================
   const [qrType, setQrType] = useState('url'); // 'text' | 'url' | 'wifi' | 'email' | 'phone' | 'sms'

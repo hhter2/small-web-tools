@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { generateSecurePassword } from '../utils/passwordGenerator.js';
 
-export default function PasswordGenerator() {
-  const [activeTab, setActiveTab] = useState('generate'); // 'generate' | 'check'
+export default function PasswordGenerator({ initialTab = 'generate' }) {
+  const [activeTab, setActiveTab] = useState(initialTab); // 'generate' | 'check'
   const [length, setLength] = useState(16);
   const [includeCommonSpecial, setIncludeCommonSpecial] = useState(true);
   const [includeRareSpecial, setIncludeRareSpecial] = useState(true);

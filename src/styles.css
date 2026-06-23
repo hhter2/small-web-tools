@@ -27,6 +27,7 @@
   --nav-active-text: #369731;
   --nav-hover-bg: rgba(79, 185, 73, 0.06);
   --bg-search-sidebar: #f3f4f6;
+  --bg-header: #f3f4f6;
 }
 
 html[data-theme="dark"] {
@@ -56,6 +57,7 @@ html[data-theme="dark"] {
   --nav-active-text: #88E384;
   --nav-hover-bg: rgba(255,255,255,0.05);
   --bg-search-sidebar: rgba(0,0,0,0.2);
+  --bg-header: #151820;
 }
 
 * {
@@ -70,6 +72,10 @@ body {
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "TASA Orbiter", sans-serif;
 }
 
 /* App Layout Structure */
@@ -97,7 +103,7 @@ body {
 }
 
 .mobile-logo-text {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--accent);
@@ -166,7 +172,7 @@ body {
 }
 
 .brand-text {
-  font-family: 'Inter', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -479,7 +485,7 @@ html[data-theme="dark"] .moon-icon {
     width: 78px;
   }
 
-  .collapsed-sidebar .brand-text,
+  .collapsed-sidebar .sidebar .brand-text,
   .collapsed-sidebar .sidebar-search-container,
   .collapsed-sidebar .nav-item span,
   .collapsed-sidebar .theme-label {
@@ -533,7 +539,7 @@ html[data-theme="dark"] .moon-icon {
 }
 
 .main-header h1 {
-  font-family: 'Inter', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.85rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -599,7 +605,7 @@ html[data-theme="dark"] .moon-icon {
 }
 
 .tool-card h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -778,7 +784,7 @@ input[type="date"][readonly]:focus {
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--accent);
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
 }
 
 .result-banner {
@@ -1465,7 +1471,7 @@ html[data-theme="dark"] .tool-tabs .tab-btn.active {
 }
 
 .currency-result-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 2rem;
   font-weight: 700;
   color: var(--accent);
@@ -1712,7 +1718,7 @@ html[data-theme="dark"] .currency-bulk-item {
   color: var(--text-main);
   white-space: normal;
   word-break: break-word;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
 }
 
 .imgmeta-stat-value.not-available {
@@ -1780,7 +1786,7 @@ html[data-theme="dark"] .currency-bulk-item {
   color: #ffffff;
   padding: 10px 36px;
   border-radius: 28px;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
   font-size: 1.25rem;
   margin-bottom: 24px;
@@ -1847,7 +1853,7 @@ html[data-theme="dark"] .currency-bulk-item {
   align-items: center;
   justify-content: center;
   z-index: 8;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 800;
   font-size: 0.95rem;
   color: var(--accent);
@@ -1905,7 +1911,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .wheel-result-banner strong {
   font-size: 1.35rem;
   color: var(--accent);
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   flex-grow: 1;
   text-align: center;
   word-break: break-all;
@@ -2169,7 +2175,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .modal-content h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-main);
@@ -2354,6 +2360,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .footer-brand-name {
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -2557,7 +2564,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .home-category-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-main);
@@ -2618,7 +2625,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .home-card h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
@@ -3152,7 +3159,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .coords-text {
-  font-family: 'Outfit', monospace;
+  font-family: "TASA Orbiter", monospace;
   font-size: 0.85rem;
   color: var(--text-main);
   margin: 0 0 8px 0;
@@ -3315,7 +3322,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .green-region-gps .coords-text {
   margin: 0;
   font-size: 0.9rem;
-  font-family: 'Outfit', monospace;
+  font-family: "TASA Orbiter", monospace;
   font-weight: 600;
 }
 
@@ -4113,7 +4120,7 @@ html[data-theme="dark"] .codon-toggle-btn.active {
 }
 
 .live-timer-container {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
 }
 
@@ -7527,5 +7534,932 @@ html[data-theme="dark"] .warning-note {
   outline: none;
 }
 
+/* ==========================================
+   Office Metadata Reader Upgraded Styles
+   ========================================== */
 
+.officemeta-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  position: relative;
+}
+
+.officemeta-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  border: 2px dashed var(--border-color);
+  border-radius: 16px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 30px;
+  text-align: center;
+}
+
+.officemeta-dropzone:hover,
+.officemeta-dropzone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08);
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.dropzone-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.dropzone-or {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 8px 0;
+}
+
+.dropzone-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+.officemeta-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(79, 70, 229, 0.15);
+  backdrop-filter: blur(4px);
+  border: 2.5px dashed var(--accent);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.officemeta-top-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .officemeta-top-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.officemeta-thumbnails-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  flex: 1;
+}
+
+.officemeta-thumbnails-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.officemeta-thumbnails-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.officemeta-thumbnails-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.officemeta-thumb-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  max-width: 240px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.officemeta-thumb-card:hover {
+  border-color: var(--accent);
+}
+
+.officemeta-thumb-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.thumb-file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.badge-docx {
+  background: rgba(37, 99, 235, 0.15);
+  color: #2563eb;
+}
+.badge-xlsx {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+.badge-pptx {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+.badge-unknown {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.officemeta-add-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1.5px dashed var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.officemeta-add-card:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.officemeta-add-card .add-icon {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.officemeta-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.status-text {
+  color: var(--text-main);
+}
+
+.officemeta-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.officemeta-file-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+@media (min-width: 768px) {
+  .officemeta-file-summary {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary-type-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.summary-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.summary-details p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.officemeta-search-input {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-app);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 280px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.officemeta-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.officemeta-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px;
+  color: var(--text-muted);
+}
+
+.officemeta-groups-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.officemeta-excel-specific {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.officemeta-group-card {
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.officemeta-group-title {
+  margin: 0;
+  font-family: "TASA Orbiter", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid var(--border-color);
+}
+
+.officemeta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 16px;
+}
+
+@media (min-width: 640px) {
+  .officemeta-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.officemeta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.officemeta-cell-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.officemeta-cell-value {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  word-break: break-all;
+  font-weight: 500;
+}
+
+.officemeta-cell-value.not-available {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+/* Excel Sheet list specific styles */
+.officemeta-sheets-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.officemeta-sheet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--text-main);
+  max-width: 100%;
+}
+
+.sheet-icon {
+  opacity: 0.8;
+}
+
+.sheet-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.sheet-state-hidden {
+  font-size: 0.65rem;
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.officemeta-empty-message {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Table column overrides for OfficeMeta to prevent truncating metadata values/descriptions */
+#tool-officemeta .imgmeta-table td {
+  white-space: normal;
+  max-width: none;
+  word-break: break-all;
+}
+
+/* Make columns in the 2-column Overview tables align perfectly */
+.officemeta-groups-layout .imgmeta-table td:first-child {
+  width: 40%;
+}
+
+/* ==========================================================================
+   Header and Footer Modification Overrides
+   ========================================================================== */
+
+/* Media query rules for Header & Sidebar layout */
+@media (min-width: 769px) {
+  /* Hide sidebar on desktop */
+  .sidebar {
+    display: none !important;
+  }
+  
+  /* Hide mobile top-bar on desktop */
+  .top-bar.mobile-top-bar {
+    display: none !important;
+  }
+
+  /* Make main content fit top header spacing */
+  .main-content {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop header on mobile */
+  .desktop-header {
+    display: none !important;
+  }
+  
+  /* Show mobile top bar */
+  .top-bar.mobile-top-bar {
+    display: flex !important;
+  }
+}
+
+/* Premium Desktop Header Styling */
+.desktop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 48px;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 48px;
+  background: var(--bg-header);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Brand Area */
+.desktop-header-left .brand-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  transition: opacity 0.2s ease;
+}
+.desktop-header-left .brand-logo-container:hover {
+  opacity: 0.85;
+}
+.desktop-header-left .brand-text {
+  font-family: "TASA Orbiter", sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+/* Navigation Area */
+.desktop-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Nav Dropdown container */
+.nav-dropdown {
+  position: relative;
+}
+
+/* Trigger Button */
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.nav-dropdown-trigger:hover,
+.nav-dropdown-trigger.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.nav-dropdown-trigger .cat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+.nav-dropdown-trigger .cat-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.nav-dropdown-trigger .cat-name {
+  font-family: "TASA Orbiter", sans-serif;
+  font-weight: 600;
+}
+
+/* Triangle icon style and animation */
+.triangle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-muted);
+}
+.triangle-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Rotate when hover or open */
+.nav-dropdown:hover .triangle-icon,
+.nav-dropdown-trigger.active .triangle-icon {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* Dropdown Menu block */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Show on Hover or trigger active (via JS show class) */
+.nav-dropdown:hover .dropdown-menu,
+.dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(4px);
+}
+
+/* Dropdown Menu Item */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.dropdown-item:hover,
+.dropdown-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.dropdown-item .item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}
+.dropdown-item .item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dropdown-item .item-name {
+  font-weight: 500;
+}
+
+/* Desktop Header Right Controls */
+.desktop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Search Box inside Header */
+.header-search-container {
+  position: relative;
+  width: 180px;
+  transition: width 0.3s ease;
+}
+.header-search-container:focus-within {
+  width: 240px;
+}
+
+.header-search-container .search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.header-search-container .search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.header-search-container input {
+  width: 100%;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+.header-search-container input:focus {
+  border-color: var(--accent);
+}
+
+/* Search results dropdown */
+.header-search-results {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s ease;
+}
+.search-result-item:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.search-result-item .item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+.search-result-item:hover .item-icon {
+  color: var(--accent);
+}
+
+.header-search-results .no-results {
+  padding: 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Theme switch button overrides */
+.desktop-header-right .theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.desktop-header-right .theme-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* Footer layout centering modifications */
+.shiny-footer-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.footer-left-placeholder {
+  /* Empty spacer to align center items */
+  content: "";
+}
+
+.footer-brand-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-social-row {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .shiny-footer-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    text-align: center;
+  }
+  .footer-left-placeholder {
+    display: none !important;
+  }
+  .footer-brand-container {
+    justify-content: center !important;
+  }
+  .footer-social-row {
+    margin: 0 auto !important;
+    justify-content: center !important;
+  }
+}
+
+/* Utilities Sub-grouping Styles */
+.sidebar-subcategory-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.sidebar-subcategory-header {
+  padding: 4px 12px 2px 12px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.sidebar-subcategory-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-sidebar-muted);
+  opacity: 0.55;
+}
+
+.sidebar-subcategory-group .nav-item {
+  padding-left: 20px;
+}
+
+.collapsed-sidebar .sidebar-subcategory-header {
+  display: none !important;
+}
+
+.collapsed-sidebar .sidebar-subcategory-group .nav-item {
+  padding-left: 10px !important;
+}
+
+.dropdown-subcategory-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.dropdown-subcategory-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.dropdown-subcategory-header {
+  padding: 4px 12px 2px 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.dropdown-subcategory-section .dropdown-item {
+  padding-left: 18px;
+}
+
+.footer-subcategory-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.footer-subcategory-group:last-child {
+  margin-bottom: 0;
+}
+
+.footer-subcategory-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin-bottom: 2px;
+}
+
+.footer-subcategory-group .footer-col-link {
+  padding-left: 8px;
+}
+
+.home-subcategory-section {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.home-subcategory-heading {
+  font-family: "TASA Orbiter", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-left: 6px;
+  border-left: 2px solid var(--accent);
+  line-height: 1;
+}
+
+.home-subcategory-section .home-grid {
+  margin-top: 12px;
+}
 

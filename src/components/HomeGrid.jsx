@@ -65,15 +65,6 @@ const categories = [
     icon: <BioinfoIcon />
   },
   {
-    id: 'security',
-    name: 'Security',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-      </svg>
-    )
-  },
-  {
     id: 'utilities',
     name: 'Utilities',
     icon: (
@@ -288,28 +279,51 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
-      id: 'tool-qrbarcode',
-      title: 'QR & Barcode Generator',
-      category: 'security',
-      desc: 'Generate styled QR codes with embedded logos and standardized barcodes.',
+      id: 'tool-qrcode',
+      title: 'QR Code Generator',
+      category: 'utilities',
+      desc: 'Generate styled QR codes with custom dots, eyes, colors, gradients, and embedded logos.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <rect x="7" y="7" width="3" height="3"></rect>
-          <rect x="14" y="7" width="3" height="3"></rect>
-          <rect x="7" y="14" width="3" height="3"></rect>
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-barcode',
+      title: 'Barcode Generator',
+      category: 'utilities',
+      desc: 'Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF, Codabar) with live validation.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
         </svg>
       )
     },
     {
       id: 'tool-password',
       title: 'Secure Password Generator',
-      category: 'security',
+      category: 'utilities',
       desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-pwstrength',
+      title: 'Password Strength Checker',
+      category: 'utilities',
+      desc: 'Analyze password complexity, calculate entropy, estimate cracking time, and verify character rules.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 11 2 2 4-4"></path>
         </svg>
       )
     }

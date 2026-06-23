@@ -107,7 +107,6 @@ const toolDetails = {
     desc: "Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally."
   }
 };
-
 const categories = [
   {
     id: 'text',
@@ -119,17 +118,6 @@ const categories = [
         <line x1="16" y1="13" x2="8" y2="13"></line>
         <line x1="16" y1="17" x2="8" y2="17"></line>
         <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-    )
-  },
-  {
-    id: 'calculation',
-    name: 'Calculation',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-        <line x1="9" y1="9" x2="15" y2="15"></line>
-        <line x1="15" y1="9" x2="9" y2="15"></line>
       </svg>
     )
   },
@@ -226,32 +214,6 @@ const navItems = [
         <line x1="14" y1="12" x2="14.01" y2="12"></line>
         <line x1="18" y1="12" x2="18.01" y2="12"></line>
         <line x1="7" y1="16" x2="17" y2="16"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-date',
-    name: 'Date Counter',
-    tooltip: 'Date Counter',
-    category: 'calculation',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-currency',
-    name: 'Currency Converter',
-    tooltip: 'Currency Converter & Counter',
-    category: 'calculation',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"></line>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
       </svg>
     )
   },
@@ -384,35 +346,6 @@ const navItems = [
     )
   },
   {
-    id: 'tool-wheel',
-    name: 'Random Wheel',
-    tooltip: 'Random Wheel',
-    category: 'utilities',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="2" x2="12" y2="22"></line>
-        <line x1="2" y1="12" x2="22" y2="12"></line>
-        <path d="M16.24 7.76l-8.48 8.48"></path>
-        <path d="M7.76 7.76l8.48 8.48"></path>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-qrcode',
-    name: 'QR Code Generator',
-    tooltip: 'QR Code Generator',
-    category: 'utilities',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-      </svg>
-    )
-  },
-  {
     id: 'tool-barcode',
     name: 'Barcode Generator',
     tooltip: 'Barcode Generator',
@@ -420,6 +353,32 @@ const navItems = [
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
+      </svg>
+    )
+  },
+  {
+    id: 'tool-currency',
+    name: 'Currency Converter',
+    tooltip: 'Currency Converter & Counter',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"></line>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-date',
+    name: 'Date Counter',
+    tooltip: 'Date Counter',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
       </svg>
     )
   },
@@ -444,6 +403,35 @@ const navItems = [
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         <path d="m9 11 2 2 4-4"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-qrcode',
+    name: 'QR Code Generator',
+    tooltip: 'QR Code Generator',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-wheel',
+    name: 'Random Wheel',
+    tooltip: 'Random Wheel',
+    category: 'utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="2" x2="12" y2="22"></line>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M16.24 7.76l-8.48 8.48"></path>
+        <path d="M7.76 7.76l8.48 8.48"></path>
       </svg>
     )
   }

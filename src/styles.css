@@ -72,6 +72,10 @@ body {
   min-height: 100vh;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: "TASA Orbiter", sans-serif;
+}
+
 /* App Layout Structure */
 .app-layout {
   display: flex;
@@ -97,7 +101,7 @@ body {
 }
 
 .mobile-logo-text {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--accent);
@@ -166,7 +170,7 @@ body {
 }
 
 .brand-text {
-  font-family: 'Inter', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -533,7 +537,7 @@ html[data-theme="dark"] .moon-icon {
 }
 
 .main-header h1 {
-  font-family: 'Inter', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.85rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -599,7 +603,7 @@ html[data-theme="dark"] .moon-icon {
 }
 
 .tool-card h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -778,7 +782,7 @@ input[type="date"][readonly]:focus {
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--accent);
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
 }
 
 .result-banner {
@@ -1465,7 +1469,7 @@ html[data-theme="dark"] .tool-tabs .tab-btn.active {
 }
 
 .currency-result-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 2rem;
   font-weight: 700;
   color: var(--accent);
@@ -1712,7 +1716,7 @@ html[data-theme="dark"] .currency-bulk-item {
   color: var(--text-main);
   white-space: normal;
   word-break: break-word;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
 }
 
 .imgmeta-stat-value.not-available {
@@ -1780,7 +1784,7 @@ html[data-theme="dark"] .currency-bulk-item {
   color: #ffffff;
   padding: 10px 36px;
   border-radius: 28px;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
   font-size: 1.25rem;
   margin-bottom: 24px;
@@ -1847,7 +1851,7 @@ html[data-theme="dark"] .currency-bulk-item {
   align-items: center;
   justify-content: center;
   z-index: 8;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 800;
   font-size: 0.95rem;
   color: var(--accent);
@@ -1905,7 +1909,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .wheel-result-banner strong {
   font-size: 1.35rem;
   color: var(--accent);
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   flex-grow: 1;
   text-align: center;
   word-break: break-all;
@@ -2169,7 +2173,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .modal-content h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-main);
@@ -2354,6 +2358,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .footer-brand-name {
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -2557,7 +2562,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .home-category-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-main);
@@ -2618,7 +2623,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .home-card h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
@@ -3152,7 +3157,7 @@ html[data-theme="dark"] .currency-bulk-item {
 }
 
 .coords-text {
-  font-family: 'Outfit', monospace;
+  font-family: "TASA Orbiter", monospace;
   font-size: 0.85rem;
   color: var(--text-main);
   margin: 0 0 8px 0;
@@ -3315,7 +3320,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .green-region-gps .coords-text {
   margin: 0;
   font-size: 0.9rem;
-  font-family: 'Outfit', monospace;
+  font-family: "TASA Orbiter", monospace;
   font-weight: 600;
 }
 
@@ -4113,7 +4118,7 @@ html[data-theme="dark"] .codon-toggle-btn.active {
 }
 
 .live-timer-container {
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-weight: 700;
 }
 
@@ -7854,7 +7859,7 @@ html[data-theme="dark"] .warning-note {
 
 .officemeta-group-title {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: "TASA Orbiter", sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-main);

@@ -609,7 +609,7 @@ export default function App() {
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           <span className="banner-text-desktop">
-            This site is running on a {APP_CHANNEL} version ({APP_VERSION}). The site may provide wrong information.
+            This site is running on a {APP_CHANNEL} version ({APP_VERSION}). May provide wrong information. Check before using.
           </span>
           <span className="banner-text-mobile">
             {APP_CHANNEL} version ({APP_VERSION}) - Site may provide wrong info.

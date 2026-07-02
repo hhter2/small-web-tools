@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 // Automatically obtain current version from git tags
 let version = 'v1.0.0';
 try {
-  version = execSync('git describe --tags --always').toString().trim();
+  version = execSync('git describe --tags --abbrev=0').toString().trim();
 } catch (e) {
   try {
     const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));

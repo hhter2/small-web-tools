@@ -1,5 +1,7 @@
 # Small Web Tools - Premium Dashboard
 
+**Current Version: v0.2.0-alpha**
+
 A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
 
 This project is built using **React** and **Vite** for a fast local development server and optimized production builds.

@@ -6,6 +6,13 @@ import { execSync } from 'child_process';
 // Automatically obtain current version from git tags
 let version = 'v1.0.0';
 try {
+  try {
+    execSync('git fetch --unshallow --tags', { stdio: 'ignore' });
+  } catch (fetchErr) {
+    try {
+      execSync('git fetch --tags', { stdio: 'ignore' });
+    } catch (ignore) {}
+  }
   version = execSync('git describe --tags --abbrev=0').toString().trim();
 } catch (e) {
   try {

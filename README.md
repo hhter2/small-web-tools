@@ -1,6 +1,6 @@
 # Small Web Tools - Premium Dashboard
 
-**Current Version: v0.2.0-alpha**
+**Current Version: v0.2.1-alpha**
 
 A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
 

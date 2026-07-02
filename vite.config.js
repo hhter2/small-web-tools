@@ -1,6 +1,24 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
+import { execSync } from 'child_process';
+
+// Automatically obtain current version from git tags
+let version = 'v1.0.0';
+try {
+  version = execSync('git describe --tags --always').toString().trim();
+} catch (e) {
+  try {
+    const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+    version = `v${pkg.version}`;
+  } catch (err) {
+    version = 'v1.0.0';
+  }
+}
+
+const showChannelAlert = version.includes('alpha') || version.includes('beta');
+const appChannel = version.includes('alpha') ? 'alpha' : version.includes('beta') ? 'beta' : '';
+
 
 // Server-side geo lookup — runs in Node.js, bypasses browser network restrictions
 async function geoLookup(ip) {
@@ -73,6 +91,11 @@ async function geoLookup(ip) {
 }
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+    __SHOW_CHANNEL_ALERT__: showChannelAlert,
+    __APP_CHANNEL__: JSON.stringify(appChannel),
+  },
   server: {
     port: 3000,
     host: '127.0.0.1',

@@ -21,6 +21,10 @@ import OfficeMeta from './components/OfficeMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
+const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
+const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '';
+
 const toolDetails = {
   "tool-home": {
     title: "Dashboard",
@@ -596,7 +600,23 @@ export default function App() {
   const activeDetails = toolDetails[activeTool] || toolDetails['tool-home'];
 
   return (
-    <div className={`app-layout ${isSidebarCollapsed ? 'collapsed-sidebar' : ''}`}>
+    <div className={`app-container ${SHOW_CHANNEL_ALERT ? 'has-banner' : ''}`}>
+      {SHOW_CHANNEL_ALERT && (
+        <div className="channel-alert-banner" id="channel-alert-banner">
+          <svg className="alert-banner-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span className="banner-text-desktop">
+            This site is running on a {APP_CHANNEL} version ({APP_VERSION}). The site may provide wrong information.
+          </span>
+          <span className="banner-text-mobile">
+            {APP_CHANNEL} version ({APP_VERSION}) - Site may provide wrong info.
+          </span>
+        </div>
+      )}
+      <div className={`app-layout ${isSidebarCollapsed ? 'collapsed-sidebar' : ''}`}>
       
       {/* Mobile Header */}
       <header className="mobile-header">
@@ -1047,7 +1067,7 @@ export default function App() {
             <div className="footer-brand-container">
               <span className="footer-brand-name">Small Web Tools</span>
               <span className="footer-sep">&nbsp;·&nbsp;</span>
-              <span className="footer-copyright">Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()}</span>
+              <span className="footer-copyright">Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()} · {APP_VERSION}</span>
             </div>
             <div className="footer-social-row">
               <button className="footer-social-btn" title="GitHub" aria-label="GitHub">
@@ -1068,5 +1088,6 @@ export default function App() {
         </div>
       )}
     </div>
+  </div>
   );
 }

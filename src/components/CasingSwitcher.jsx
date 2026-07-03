@@ -80,6 +80,10 @@ export default function CasingSwitcher() {
   const [specificTerms, setSpecificTerms] = useState('react, javascript, node js');
   const [specificTermsMode, setSpecificTermsMode] = useState('all'); // 'first', 'all'
 
+  // Exclude Specific Words state
+  const [enableExcludeWords, setEnableExcludeWords] = useState(false);
+  const [excludeWords, setExcludeWords] = useState('and, or, but, to, the, a, an, in, of, for, with, I');
+
   // Run pipeline whenever input or options change
   useEffect(() => {
     let result = input;
@@ -110,6 +114,36 @@ export default function CasingSwitcher() {
       result = capitalizeSpecificTerms(result, specificTerms, specificTermsMode);
     }
 
+    // Post-processing: Restore original case for excluded words globally
+    if (enableExcludeWords && excludeWords.trim()) {
+      const excludedSet = new Set(
+        excludeWords
+          .split(/,|\n/)
+          .map((w) => w.trim().toLowerCase())
+          .filter(Boolean)
+      );
+
+      if (excludedSet.size > 0) {
+        const tokensInput = input.split(/(\p{L}+(?:['’]\p{L}+)*)/gu);
+        const tokensDraft = result.split(/(\p{L}+(?:['’]\p{L}+)*)/gu);
+
+        const finalTokens = tokensDraft.map((token, index) => {
+          const originalToken = tokensInput[index];
+          if (!token || !originalToken) return token;
+
+          // Check if it's a word token
+          if (/\p{L}/u.test(token)) {
+            if (excludedSet.has(originalToken.toLowerCase())) {
+              return originalToken; // Keep the original casing
+            }
+          }
+          return token;
+        });
+
+        result = finalTokens.join('');
+      }
+    }
+
     setOutput(result);
   }, [
     input,
@@ -121,12 +155,12 @@ export default function CasingSwitcher() {
     enableSpecificTerms,
     specificTerms,
     specificTermsMode,
+    enableExcludeWords,
+    excludeWords,
   ]);
 
-  const loadSampleText = () => {
-    setInput(
-      "hello world! this is an example sentence. react and node js are awesome. let's test the casing switcher tool."
-    );
+  const handleClear = () => {
+    setInput('');
   };
 
   const handleCopy = () => {
@@ -135,10 +169,6 @@ export default function CasingSwitcher() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  };
-
-  const handleClear = () => {
-    setInput('');
   };
 
   return (
@@ -154,7 +184,7 @@ export default function CasingSwitcher() {
               <textarea
                 id="casing-input"
                 rows="6"
-                placeholder="Type, paste, or load sample text to convert..."
+                placeholder="Type or paste text to convert..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
@@ -166,22 +196,6 @@ export default function CasingSwitcher() {
           </div>
 
           <div className="casing-input-actions">
-            <button
-              type="button"
-              className="action-btn"
-              onClick={loadSampleText}
-              title="Load sample demonstration text"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              <span>Load Sample</span>
-            </button>
-
             <button
               type="button"
               className="action-btn"
@@ -249,6 +263,38 @@ export default function CasingSwitcher() {
           <div className="casing-options-panel">
             <h3 className="section-title-compact" style={{ marginTop: 0, marginBottom: '4px' }}>Casing Controls</h3>
             
+            {/* Global Setting: Exclude Specific Words */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-exclude-words"
+                  checked={enableExcludeWords}
+                  onChange={(e) => setEnableExcludeWords(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label" style={{ fontWeight: 600, color: 'var(--accent)' }}>Exclude Specific Words</span>
+              </label>
+
+              {enableExcludeWords && (
+                <div className="casing-sub-options">
+                  <div className="form-group" style={{ marginBottom: '0' }}>
+                    <label htmlFor="exclude-words-input" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>
+                      Words to preserve case (comma-separated)
+                    </label>
+                    <textarea
+                      id="exclude-words-input"
+                      value={excludeWords}
+                      onChange={(e) => setExcludeWords(e.target.value)}
+                      placeholder="e.g. and, or, but, I"
+                      rows="2"
+                      style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Mode 1: Case Change */}
             <div className="casing-option-section">
               <label className="toggle-switch">

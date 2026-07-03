@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HomeGrid from './components/HomeGrid.jsx';
 import SlashesConverter from './components/SlashesConverter.jsx';
+import CasingSwitcher from './components/CasingSwitcher.jsx';
 import WordCounter from './components/WordCounter.jsx';
 import DateCounter from './components/DateCounter.jsx';
 import CurrencyCounter from './components/CurrencyCounter.jsx';
@@ -33,6 +34,10 @@ const toolDetails = {
   "tool-slash": {
     title: "Slashes Converter",
     desc: "Normalize Windows paths to web-friendly forward slashes."
+  },
+  "tool-casing": {
+    title: "Casing Switcher",
+    desc: "Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case."
   },
   "tool-wc": {
     title: "Word & Character Counter",
@@ -198,6 +203,20 @@ const navItems = [
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-casing',
+    name: 'Casing Switcher',
+    tooltip: 'Casing Switcher',
+    category: 'text',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 20L9 5l5 15" />
+        <path d="M6.5 14h5" />
+        <circle cx="17.5" cy="15.5" r="3.5" />
+        <path d="M21 12v7" />
       </svg>
     )
   },
@@ -556,6 +575,8 @@ export default function App() {
         return <SlashesConverter />;
       case 'tool-wc':
         return <WordCounter />;
+      case 'tool-casing':
+        return <CasingSwitcher />;
       case 'tool-date':
         return <DateCounter />;
       case 'tool-currency':

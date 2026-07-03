@@ -95,6 +95,20 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
+      id: 'tool-casing',
+      title: 'Casing Switcher',
+      category: 'text',
+      desc: 'Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 20L9 5l5 15" />
+          <path d="M6.5 14h5" />
+          <circle cx="17.5" cy="15.5" r="3.5" />
+          <path d="M21 12v7" />
+        </svg>
+      )
+    },
+    {
       id: 'tool-typing',
       title: 'Typing Speed Test',
       category: 'text',

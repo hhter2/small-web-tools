@@ -8521,3 +8521,72 @@ html[data-theme="dark"] .warning-note {
   }
 }
 
+/* Casing Switcher Styles */
+.casing-main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 992px) {
+  .casing-main-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.casing-card-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.casing-options-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.casing-option-section {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+
+.casing-option-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.casing-sub-options {
+  margin-top: 10px;
+  padding-left: 56px; /* indent past toggle-switch slider and label gap */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.casing-input-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.casing-textarea-wrapper {
+  position: relative;
+}
+
+.casing-textarea-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+

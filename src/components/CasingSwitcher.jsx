@@ -1,0 +1,452 @@
+import React, { useState, useEffect } from 'react';
+
+function countWords(text) {
+  if (!text) return 0;
+  const regex = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]|[^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\s\p{P}\p{S}]+(?:[-'’][^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\s\p{P}\p{S}]+)*/gu;
+  const matches = text.match(regex);
+  return matches ? matches.length : 0;
+}
+
+function swapCase(str) {
+  return str
+    .split('')
+    .map((c) => {
+      const low = c.toLowerCase();
+      const up = c.toUpperCase();
+      return c === low ? up : low;
+    })
+    .join('');
+}
+
+function toTitleCase(str) {
+  return str.replace(/\b\p{L}/gu, (char) => char.toUpperCase());
+}
+
+function toSentenceCase(str, preserveCapitals) {
+  let targetStr = str;
+  if (!preserveCapitals) {
+    targetStr = str.toLowerCase();
+  }
+  return targetStr.replace(/(?:^|[.!?]\s+)(\p{L})/gu, (match, p1) => {
+    return match.replace(p1, p1.toUpperCase());
+  });
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function capitalizeSpecificTerms(str, specificTerms, specificTermsMode) {
+  const terms = specificTerms
+    .split(/,|\n/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  if (terms.length === 0) return str;
+
+  let result = str;
+  for (const term of terms) {
+    const escaped = escapeRegExp(term);
+    const startBoundary = /^\w/.test(term) ? '\\b' : '';
+    const endBoundary = /\w$/.test(term) ? '\\b' : '';
+    const regex = new RegExp(`${startBoundary}${escaped}${endBoundary}`, 'giu');
+
+    result = result.replace(regex, (match) => {
+      const lowerMatch = match.toLowerCase();
+      if (specificTermsMode === 'first') {
+        return lowerMatch.replace(/\p{L}/u, (c) => c.toUpperCase());
+      } else {
+        return lowerMatch.replace(/\b\p{L}/gu, (char) => char.toUpperCase());
+      }
+    });
+  }
+  return result;
+}
+
+export default function CasingSwitcher() {
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  // Switch states
+  const [enableCaseChange, setEnableCaseChange] = useState(false);
+  const [caseChangeMode, setCaseChangeMode] = useState('invert'); // 'invert', 'upper', 'lower'
+
+  const [enableSentenceCase, setEnableSentenceCase] = useState(false);
+  const [preserveCapitals, setPreserveCapitals] = useState(true);
+
+  const [enableTitleCase, setEnableTitleCase] = useState(false);
+
+  const [enableSpecificTerms, setEnableSpecificTerms] = useState(false);
+  const [specificTerms, setSpecificTerms] = useState('react, javascript, node js');
+  const [specificTermsMode, setSpecificTermsMode] = useState('all'); // 'first', 'all'
+
+  // Exclude Specific Words state
+  const [enableExcludeWords, setEnableExcludeWords] = useState(false);
+  const [excludeWords, setExcludeWords] = useState('and, or, but, to, the, a, an, in, of, for, with, I');
+
+  // Run pipeline whenever input or options change
+  useEffect(() => {
+    let result = input;
+
+    // 1. All Case Change (if enabled)
+    if (enableCaseChange) {
+      if (caseChangeMode === 'invert') {
+        result = swapCase(result);
+      } else if (caseChangeMode === 'upper') {
+        result = result.toUpperCase();
+      } else if (caseChangeMode === 'lower') {
+        result = result.toLowerCase();
+      }
+    }
+
+    // 2. Title Case / Capitalize Each Word (if enabled)
+    if (enableTitleCase) {
+      result = toTitleCase(result);
+    }
+
+    // 3. Sentence Case (if enabled)
+    if (enableSentenceCase) {
+      result = toSentenceCase(result, preserveCapitals);
+    }
+
+    // 4. Specific Terms (if enabled)
+    if (enableSpecificTerms) {
+      result = capitalizeSpecificTerms(result, specificTerms, specificTermsMode);
+    }
+
+    // Post-processing: Restore original case for excluded words globally
+    if (enableExcludeWords && excludeWords.trim()) {
+      const excludedSet = new Set(
+        excludeWords
+          .split(/,|\n/)
+          .map((w) => w.trim().toLowerCase())
+          .filter(Boolean)
+      );
+
+      if (excludedSet.size > 0) {
+        const tokensInput = input.split(/(\p{L}+(?:['’]\p{L}+)*)/gu);
+        const tokensDraft = result.split(/(\p{L}+(?:['’]\p{L}+)*)/gu);
+
+        const finalTokens = tokensDraft.map((token, index) => {
+          const originalToken = tokensInput[index];
+          if (!token || !originalToken) return token;
+
+          // Check if it's a word token
+          if (/\p{L}/u.test(token)) {
+            if (excludedSet.has(originalToken.toLowerCase())) {
+              return originalToken; // Keep the original casing
+            }
+          }
+          return token;
+        });
+
+        result = finalTokens.join('');
+      }
+    }
+
+    setOutput(result);
+  }, [
+    input,
+    enableCaseChange,
+    caseChangeMode,
+    enableSentenceCase,
+    preserveCapitals,
+    enableTitleCase,
+    enableSpecificTerms,
+    specificTerms,
+    specificTermsMode,
+    enableExcludeWords,
+    excludeWords,
+  ]);
+
+  const handleClear = () => {
+    setInput('');
+  };
+
+  const handleCopy = () => {
+    if (!output) return;
+    navigator.clipboard.writeText(output).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <article id="tool-casing" className="tool-card tool-card--wide active">
+      <h2>Lowercase &amp; Capital Switcher</h2>
+      
+      <div className="casing-main-grid">
+        {/* Left Column: Text Areas */}
+        <div className="casing-card-col">
+          <div className="form-group">
+            <label htmlFor="casing-input">Input Text</label>
+            <div className="casing-textarea-wrapper">
+              <textarea
+                id="casing-input"
+                rows="6"
+                placeholder="Type or paste text to convert..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
+            </div>
+            <div className="casing-textarea-info">
+              <span>Words: {countWords(input)}</span>
+              <span>Characters: {input.length}</span>
+            </div>
+          </div>
+
+          <div className="casing-input-actions">
+            <button
+              type="button"
+              className="action-btn"
+              onClick={handleClear}
+              disabled={!input}
+              title="Clear input text"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span>Clear</span>
+            </button>
+          </div>
+
+          <div className="form-group" style={{ marginTop: '12px' }}>
+            <label htmlFor="casing-output">Output Preview</label>
+            <div className="casing-textarea-wrapper">
+              <textarea
+                id="casing-output"
+                rows="6"
+                readOnly
+                placeholder="Converted text will appear here in real time..."
+                value={output}
+              />
+            </div>
+            <div className="casing-textarea-info">
+              <span>Words: {countWords(output)}</span>
+              <span>Characters: {output.length}</span>
+            </div>
+          </div>
+
+          <div className="casing-input-actions">
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!output}
+              className={`action-btn copy-btn ${copied ? 'copied' : ''}`}
+              title="Copy output to clipboard"
+            >
+              {copied ? (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="copied-icon">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Copied</span>
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Copy Output</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column: Options Panel */}
+        <div className="casing-card-col">
+          <div className="casing-options-panel">
+            <h3 className="section-title-compact" style={{ marginTop: 0, marginBottom: '4px' }}>Casing Controls</h3>
+            
+            {/* Global Setting: Exclude Specific Words */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-exclude-words"
+                  checked={enableExcludeWords}
+                  onChange={(e) => setEnableExcludeWords(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label" style={{ fontWeight: 600, color: 'var(--accent)' }}>Exclude Specific Words</span>
+              </label>
+
+              {enableExcludeWords && (
+                <div className="casing-sub-options">
+                  <div className="form-group" style={{ marginBottom: '0' }}>
+                    <label htmlFor="exclude-words-input" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>
+                      Words to preserve case (comma-separated)
+                    </label>
+                    <textarea
+                      id="exclude-words-input"
+                      value={excludeWords}
+                      onChange={(e) => setExcludeWords(e.target.value)}
+                      placeholder="e.g. and, or, but, I"
+                      rows="2"
+                      style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mode 1: Case Change */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-case-change"
+                  checked={enableCaseChange}
+                  onChange={(e) => setEnableCaseChange(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">1. All Case Conversion</span>
+              </label>
+
+              {enableCaseChange && (
+                <div className="casing-sub-options">
+                  <div className="radio-group" style={{ flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="caseMode"
+                        value="invert"
+                        checked={caseChangeMode === 'invert'}
+                        onChange={() => setCaseChangeMode('invert')}
+                      />
+                      Invert Case (Capital ⇄ Lowercase)
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="caseMode"
+                        value="upper"
+                        checked={caseChangeMode === 'upper'}
+                        onChange={() => setCaseChangeMode('upper')}
+                      />
+                      Convert to UPPERCASE
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="caseMode"
+                        value="lower"
+                        checked={caseChangeMode === 'lower'}
+                        onChange={() => setCaseChangeMode('lower')}
+                      />
+                      Convert to lowercase
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mode 4: Title Case */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-title-case"
+                  checked={enableTitleCase}
+                  onChange={(e) => setEnableTitleCase(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">2. Make Each Word Capital</span>
+              </label>
+            </div>
+
+            {/* Mode 2: Sentence Case */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-sentence-case"
+                  checked={enableSentenceCase}
+                  onChange={(e) => setEnableSentenceCase(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">3. Sentence First Word Capital</span>
+              </label>
+
+              {enableSentenceCase && (
+                <div className="casing-sub-options">
+                  <div className="checkbox-wrapper">
+                    <label htmlFor="preserve-capitals" className="checkbox-label" style={{ fontSize: '0.85rem' }}>
+                      <input
+                        id="preserve-capitals"
+                        type="checkbox"
+                        checked={preserveCapitals}
+                        onChange={(e) => setPreserveCapitals(e.target.checked)}
+                      />
+                      Preserve other capitalized words
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mode 3: Specific Terms */}
+            <div className="casing-option-section">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="enable-specific-terms"
+                  checked={enableSpecificTerms}
+                  onChange={(e) => setEnableSpecificTerms(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+                <span className="toggle-label">4. Specific Terms Capitalization</span>
+              </label>
+
+              {enableSpecificTerms && (
+                <div className="casing-sub-options">
+                  <div className="form-group" style={{ marginBottom: '8px' }}>
+                    <label htmlFor="specific-terms-input" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>
+                      Target Terms (comma/newline separated)
+                    </label>
+                    <input
+                      type="text"
+                      id="specific-terms-input"
+                      value={specificTerms}
+                      onChange={(e) => setSpecificTerms(e.target.value)}
+                      placeholder="e.g. react, javascript, node js"
+                      style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+                    />
+                  </div>
+                  <div className="radio-group" style={{ flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                    <label className="radio-label" style={{ fontSize: '0.85rem' }}>
+                      <input
+                        type="radio"
+                        name="termsMode"
+                        value="first"
+                        checked={specificTermsMode === 'first'}
+                        onChange={() => setSpecificTermsMode('first')}
+                      />
+                      Capitalize first word of term (e.g. Node js)
+                    </label>
+                    <label className="radio-label" style={{ fontSize: '0.85rem' }}>
+                      <input
+                        type="radio"
+                        name="termsMode"
+                        value="all"
+                        checked={specificTermsMode === 'all'}
+                        onChange={() => setSpecificTermsMode('all')}
+                      />
+                      Capitalize all words of term (e.g. Node Js)
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}

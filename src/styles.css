@@ -1423,7 +1423,7 @@ html[data-theme="dark"] .font-badge--svg  { background: rgba(16,185,129,0.15); c
 
 /* Download Hover Dropdown Menu */
 .font-ext-download-dropdown {
-  display: none;
+  display: block;
   position: absolute;
   top: 100%;
   left: 0;
@@ -1437,10 +1437,6 @@ html[data-theme="dark"] .font-badge--svg  { background: rgba(16,185,129,0.15); c
   margin-top: 6px;
   overflow: hidden;
   animation: fontDropdownFadeIn 0.15s ease-out;
-}
-
-.font-ext-download-wrapper:hover .font-ext-download-dropdown {
-  display: block;
 }
 
 @keyframes fontDropdownFadeIn {

@@ -19,6 +19,27 @@ function FontCard({ font, index, previewText }) {
   const [fontLoaded, setFontLoaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [showSimilar, setShowSimilar] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  
+  const handleTriggerClick = (e) => {
+    e.preventDefault();
+    setIsLocked(!isLocked);
+  };
+
+  const handleMouseEnter = () => {
+    if (!isLocked) setShowDropdown(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isLocked) setShowDropdown(false);
+  };
+
+  const handleOptionClick = () => {
+    setIsLocked(false);
+    setShowDropdown(false);
+  };
+
   const fontId = `font-ext-preview-${index}`;
 
   const isDataUrl = font.url.startsWith('data:');
@@ -126,12 +147,17 @@ function FontCard({ font, index, previewText }) {
 
       {/* Action row */}
       <div className="font-ext-actions">
-        <div className="font-ext-download-wrapper">
+        <div
+          className="font-ext-download-wrapper"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <button
             className="btn-primary font-ext-btn-download"
             disabled={downloading}
             id={`font-ext-download-${index}`}
             type="button"
+            onClick={handleTriggerClick}
           >
             {downloading ? (
               <>
@@ -153,12 +179,15 @@ function FontCard({ font, index, previewText }) {
             )}
           </button>
 
-          {!downloading && (
+          {(showDropdown || isLocked) && !downloading && (
             <div className="font-ext-download-dropdown">
               <button
                 type="button"
                 className="font-ext-download-item"
-                onClick={handleDownload}
+                onClick={() => {
+                  handleDownload();
+                  handleOptionClick();
+                }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -172,6 +201,7 @@ function FontCard({ font, index, previewText }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-ext-download-item font-ext-download-item-link"
+                onClick={handleOptionClick}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />

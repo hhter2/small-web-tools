@@ -21,6 +21,7 @@ import PasswordGenerator from './components/PasswordGenerator.jsx';
 import OfficeMeta from './components/OfficeMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
+import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -114,6 +115,10 @@ const toolDetails = {
   "tool-officemeta": {
     title: "Office Metadata Reader",
     desc: "Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally."
+  },
+  "tool-fontextractor": {
+    title: "Website Font Extractor",
+    desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
   }
 };
 const categories = [
@@ -277,6 +282,21 @@ const navItems = [
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="2" y1="12" x2="22" y2="12"></line>
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-fontextractor',
+    name: 'Font Extractor',
+    tooltip: 'Website Font Extractor',
+    category: 'developer',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+        <line x1="9" y1="20" x2="15" y2="20"></line>
+        <line x1="12" y1="4" x2="12" y2="20"></line>
+        <circle cx="19" cy="19" r="3"></circle>
+        <line x1="21.5" y1="21.5" x2="23" y2="23"></line>
       </svg>
     )
   },
@@ -613,6 +633,8 @@ export default function App() {
         return <PasswordGenerator initialTab="generate" key="password" />;
       case 'tool-pwstrength':
         return <PasswordGenerator initialTab="check" key="pwstrength" />;
+      case 'tool-fontextractor':
+        return <WebsiteFontExtractor />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }

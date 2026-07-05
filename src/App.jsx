@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HomeGrid from './components/HomeGrid.jsx';
 import SlashesConverter from './components/SlashesConverter.jsx';
+import CasingSwitcher from './components/CasingSwitcher.jsx';
 import WordCounter from './components/WordCounter.jsx';
 import DateCounter from './components/DateCounter.jsx';
 import CurrencyCounter from './components/CurrencyCounter.jsx';
@@ -20,6 +21,7 @@ import PasswordGenerator from './components/PasswordGenerator.jsx';
 import OfficeMeta from './components/OfficeMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
+import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -33,6 +35,10 @@ const toolDetails = {
   "tool-slash": {
     title: "Slashes Converter",
     desc: "Normalize Windows paths to web-friendly forward slashes."
+  },
+  "tool-casing": {
+    title: "Casing Switcher",
+    desc: "Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case."
   },
   "tool-wc": {
     title: "Word & Character Counter",
@@ -109,6 +115,10 @@ const toolDetails = {
   "tool-officemeta": {
     title: "Office Metadata Reader",
     desc: "Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally."
+  },
+  "tool-fontextractor": {
+    title: "Website Font Extractor",
+    desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
   }
 };
 const categories = [
@@ -202,6 +212,20 @@ const navItems = [
     )
   },
   {
+    id: 'tool-casing',
+    name: 'Casing Switcher',
+    tooltip: 'Casing Switcher',
+    category: 'text',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 20L9 5l5 15" />
+        <path d="M6.5 14h5" />
+        <circle cx="17.5" cy="15.5" r="3.5" />
+        <path d="M21 12v7" />
+      </svg>
+    )
+  },
+  {
     id: 'tool-typing',
     name: 'Typing Speed Test',
     tooltip: 'Typing Speed Test',
@@ -258,6 +282,21 @@ const navItems = [
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="2" y1="12" x2="22" y2="12"></line>
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-fontextractor',
+    name: 'Font Extractor',
+    tooltip: 'Website Font Extractor',
+    category: 'developer',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+        <line x1="9" y1="20" x2="15" y2="20"></line>
+        <line x1="12" y1="4" x2="12" y2="20"></line>
+        <circle cx="19" cy="19" r="3"></circle>
+        <line x1="21.5" y1="21.5" x2="23" y2="23"></line>
       </svg>
     )
   },
@@ -556,6 +595,8 @@ export default function App() {
         return <SlashesConverter />;
       case 'tool-wc':
         return <WordCounter />;
+      case 'tool-casing':
+        return <CasingSwitcher />;
       case 'tool-date':
         return <DateCounter />;
       case 'tool-currency':
@@ -592,6 +633,8 @@ export default function App() {
         return <PasswordGenerator initialTab="generate" key="password" />;
       case 'tool-pwstrength':
         return <PasswordGenerator initialTab="check" key="pwstrength" />;
+      case 'tool-fontextractor':
+        return <WebsiteFontExtractor />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
@@ -1022,7 +1065,15 @@ export default function App() {
               if (catItems.length === 0) return null;
               return (
                 <div key={cat.id} className="footer-col">
-                  <span className="footer-col-title">{cat.name}</span>
+                  <button
+                    className="footer-col-title"
+                    onClick={() => {
+                      setActiveTool('tool-home');
+                      setSelectedHomeTab(cat.id);
+                    }}
+                  >
+                    {cat.name}
+                  </button>
                   {cat.id === 'utilities' ? (
                     (() => {
                       const subGroups = {};

@@ -20,23 +20,21 @@ function FontCard({ font, index, previewText }) {
   const [downloading, setDownloading] = useState(false);
   const [showSimilar, setShowSimilar] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
   
   const handleTriggerClick = (e) => {
     e.preventDefault();
-    setIsLocked(!isLocked);
+    setShowDropdown(!showDropdown);
   };
 
   const handleMouseEnter = () => {
-    if (!isLocked) setShowDropdown(true);
+    setShowDropdown(true);
   };
 
   const handleMouseLeave = () => {
-    if (!isLocked) setShowDropdown(false);
+    setShowDropdown(false);
   };
 
   const handleOptionClick = () => {
-    setIsLocked(false);
     setShowDropdown(false);
   };
 
@@ -179,7 +177,7 @@ function FontCard({ font, index, previewText }) {
             )}
           </button>
 
-          {(showDropdown || isLocked) && !downloading && (
+          {showDropdown && !downloading && (
             <div className="font-ext-download-dropdown">
               <div className="font-ext-download-dropdown-inner">
                 <button

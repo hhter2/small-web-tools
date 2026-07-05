@@ -155,6 +155,21 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
+      id: 'tool-fontextractor',
+      title: 'Font Extractor',
+      category: 'developer',
+      desc: 'Scan any website to extract web fonts, preview them live, download font files, and find Google Fonts alternatives.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="4 7 4 4 20 4 20 7"></polyline>
+          <line x1="9" y1="20" x2="15" y2="20"></line>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <circle cx="19" cy="19" r="3"></circle>
+          <line x1="21.5" y1="21.5" x2="23" y2="23"></line>
+        </svg>
+      )
+    },
+    {
       id: 'tool-base',
       title: 'Base Converter',
       category: 'developer',

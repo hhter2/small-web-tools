@@ -1065,7 +1065,15 @@ export default function App() {
               if (catItems.length === 0) return null;
               return (
                 <div key={cat.id} className="footer-col">
-                  <span className="footer-col-title">{cat.name}</span>
+                  <button
+                    className="footer-col-title"
+                    onClick={() => {
+                      setActiveTool('tool-home');
+                      setSelectedHomeTab(cat.id);
+                    }}
+                  >
+                    {cat.name}
+                  </button>
                   {cat.id === 'utilities' ? (
                     (() => {
                       const subGroups = {};

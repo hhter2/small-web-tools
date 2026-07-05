@@ -56,6 +56,7 @@ small-web-tools/
 │       ├── TypingSpeedTest.jsx  # Typing speed test (English & Chinese, custom templates)
 │       ├── NetworkSpeedTest.jsx # Network latency (ping) & download speed test
 │       ├── QrBarcodeGenerator.jsx # QR code & barcode generator with customization
+│       ├── QrBarcodeScanner.jsx   # QR & barcode scanner (camera + file upload, 14+ formats)
 │       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
@@ -139,6 +140,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-officemeta` | `OfficeMeta.jsx` | File | Word / Excel / PPT metadata reader |
 | `tool-qrcode` | `QrBarcodeGenerator.jsx` | Developer | QR code generator |
 | `tool-barcode` | `QrBarcodeGenerator.jsx` | Developer | Barcode generator (same component, tab-switched) |
+| `tool-qrbarcodescan` | `QrBarcodeScanner.jsx` | Utilities | QR & barcode scanner (camera + file upload, 14+ formats) |
 | `tool-password` | `PasswordGenerator.jsx` | Developer | Secure password generator |
 | `tool-pwstrength` | `PasswordGenerator.jsx` | Developer | Password strength checker (same component, tab-switched) |
 | `tool-wheel` | `RandomWheel.jsx` | Game | Spin-the-wheel random picker |
@@ -160,6 +162,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `jsbarcode` | ^3.11.6 | Barcode rendering (`QrBarcodeGenerator`) |
 | `jszip` | ^3.10.1 | Unzip `.docx`/`.xlsx`/`.pptx` files (`OfficeMeta`) |
 | `qrcode` | ^1.5.3 | QR code generation (`QrBarcodeGenerator`) |
+| `html5-qrcode` | ^2.3.8 | QR & barcode scanning via camera or file upload (`QrBarcodeScanner`) |
 | `vite` | ^5.2.11 | Build tool & dev server |
 | `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
 

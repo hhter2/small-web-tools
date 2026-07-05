@@ -22,6 +22,7 @@ import OfficeMeta from './components/OfficeMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
+import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -119,6 +120,10 @@ const toolDetails = {
   "tool-fontextractor": {
     title: "Website Font Extractor",
     desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
+  },
+  "tool-qrbarcodescan": {
+    title: "QR & Barcode Scanner",
+    desc: "Scan QR codes and barcodes instantly using your camera or by uploading an image. Supports 14+ formats including QR Code, Code 128, EAN, UPC, Data Matrix, and more."
   }
 };
 const categories = [
@@ -470,6 +475,19 @@ const navItems = [
     )
   },
   {
+    id: 'tool-qrbarcodescan',
+    name: 'QR & Barcode Scanner',
+    tooltip: 'QR & Barcode Scanner',
+    category: 'utilities',
+    subGroup: 'Utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+    )
+  },
+  {
     id: 'tool-wheel',
     name: 'Random Wheel',
     tooltip: 'Random Wheel',
@@ -629,6 +647,8 @@ export default function App() {
         return <QrBarcodeGenerator initialTab="qr" key="qrcode" />;
       case 'tool-barcode':
         return <QrBarcodeGenerator initialTab="barcode" key="barcode" />;
+      case 'tool-qrbarcodescan':
+        return <QrBarcodeScanner key="qrbarcodescan" />;
       case 'tool-password':
         return <PasswordGenerator initialTab="generate" key="password" />;
       case 'tool-pwstrength':

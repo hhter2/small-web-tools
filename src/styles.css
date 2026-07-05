@@ -9059,3 +9059,894 @@ html[data-theme="dark"] .warning-note {
 }
 
 
+/* ================================================================
+   QR & Barcode Scanner Styles
+   ================================================================ */
+
+.qrscan-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .qrscan-main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Scanner Column ── */
+.qrscan-scanner-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Results Column ── */
+.qrscan-results-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 80px;
+}
+
+/* ── Permission Prompt ── */
+.qrscan-permission-prompt {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.qrscan-perm-icon {
+  color: var(--accent);
+  background: var(--nav-active-bg);
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.qrscan-perm-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.qrscan-perm-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Camera Controls Bar ── */
+.qrscan-camera-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.qrscan-select {
+  flex: 1;
+  min-width: 140px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.qrscan-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ── Viewfinder / Reader Container ── */
+.qrscan-viewfinder-wrapper {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+}
+
+.qrscan-reader-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Override html5-qrcode default styles */
+.qrscan-reader-container > * {
+  border: none !important;
+}
+
+#qrscan-camera-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+#qrscan-camera-reader img {
+  display: none !important;
+}
+
+/* ── Camera Overlay Frame (corner brackets + laser) ── */
+.qrscan-overlay-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrscan-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.qrscan-corner-tl {
+  top: 16px;
+  left: 16px;
+  border-width: 3px 0 0 3px;
+  border-top-left-radius: 4px;
+}
+
+.qrscan-corner-tr {
+  top: 16px;
+  right: 16px;
+  border-width: 3px 3px 0 0;
+  border-top-right-radius: 4px;
+}
+
+.qrscan-corner-bl {
+  bottom: 16px;
+  left: 16px;
+  border-width: 0 0 3px 3px;
+  border-bottom-left-radius: 4px;
+}
+
+.qrscan-corner-br {
+  bottom: 16px;
+  right: 16px;
+  border-width: 0 3px 3px 0;
+  border-bottom-right-radius: 4px;
+}
+
+/* ── Scanning Laser Line ── */
+.qrscan-laser {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, #a3f07a 50%, var(--accent) 70%, transparent 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 8px 2px var(--accent), 0 0 16px 4px rgba(79, 185, 73, 0.4);
+  animation: qrscan-laser-sweep 2.2s ease-in-out infinite;
+}
+
+@keyframes qrscan-laser-sweep {
+  0% { top: 15%; opacity: 0.6; }
+  10% { opacity: 1; }
+  45% { top: 85%; opacity: 1; }
+  55% { top: 85%; opacity: 1; }
+  90% { top: 15%; opacity: 1; }
+  100% { top: 15%; opacity: 0.6; }
+}
+
+/* ── Hint / Status Text ── */
+.qrscan-hint-text {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.qrscan-scanning-hint {
+  color: var(--accent);
+}
+
+.qrscan-pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: qrscan-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes qrscan-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+/* ── Error Message ── */
+.qrscan-error-msg {
+  font-size: 0.84rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 4px 0 0;
+}
+
+.qrscan-error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  line-height: 1.4;
+}
+
+/* ── File Upload / Drop Zone ── */
+.qrscan-file-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qrscan-dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--bg-card);
+  position: relative;
+}
+
+.qrscan-dropzone:hover,
+.qrscan-dropzone-active {
+  border-color: var(--accent);
+  background: var(--nav-active-bg);
+}
+
+.qrscan-hidden-input {
+  display: none;
+}
+
+.qrscan-dropzone-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.qrscan-dropzone-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.qrscan-dropzone-sub {
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+.qrscan-dropzone-formats {
+  font-size: 0.76rem;
+  margin: 0;
+  opacity: 0.7;
+}
+
+.qrscan-preview-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrscan-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.qrscan-file-scanning-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.qrscan-file-laser {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 40%, #a3f07a 50%, var(--accent) 60%, transparent);
+  box-shadow: 0 0 8px 2px var(--accent);
+  animation: qrscan-laser-sweep 1.5s ease-in-out infinite;
+}
+
+.qrscan-file-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.qrscan-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.qrscan-primary-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.qrscan-small-btn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.qrscan-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qrscan-stop-btn:hover {
+  background: #dc2626;
+}
+
+.qrscan-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qrscan-secondary-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.qrscan-ghost-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qrscan-ghost-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.qrscan-ghost-sm {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.qrscan-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.qrscan-icon-btn:hover {
+  color: var(--accent);
+}
+
+/* ── Result Card ── */
+.qrscan-result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.qrscan-result-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.qrscan-result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(79, 185, 73, 0.12);
+  border: 1px solid rgba(79, 185, 73, 0.3);
+  color: var(--accent);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.qrscan-format-badge {
+  background: var(--nav-active-bg);
+  color: var(--text-muted);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.qrscan-clear-result-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.qrscan-clear-result-btn:hover {
+  color: #ef4444;
+}
+
+/* ── Result Widgets ── */
+.qrscan-result-widget {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.qrscan-widget-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--nav-active-bg);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qrscan-wifi-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.qrscan-email-icon { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.qrscan-phone-icon { background: rgba(79, 185, 73, 0.1); color: var(--accent); }
+.qrscan-sms-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+
+.qrscan-widget-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.qrscan-widget-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.qrscan-widget-value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.qrscan-url-text {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.qrscan-widget-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.qrscan-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.qrscan-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.qrscan-action-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.qrscan-action-primary:hover {
+  filter: brightness(1.1);
+  color: #fff;
+}
+
+/* Wi-Fi table */
+.qrscan-wifi-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.qrscan-wifi-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.qrscan-wifi-key {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.qrscan-wifi-val {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.qrscan-wifi-pass-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qrscan-wifi-password {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+/* Email table */
+.qrscan-email-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.qrscan-email-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.qrscan-email-key {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 60px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.qrscan-email-val {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* Text widget */
+.qrscan-text-pre {
+  font-family: 'Courier New', monospace;
+  font-size: 0.84rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 10px;
+  max-height: 160px;
+  overflow-y: auto;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ── Empty Result State ── */
+.qrscan-empty-result {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: 14px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.qrscan-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.qrscan-empty-desc {
+  font-size: 0.83rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Supported Formats Card ── */
+.qrscan-formats-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.qrscan-formats-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.qrscan-formats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.qrscan-format-chip {
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.qrscan-chip-2d {
+  background: rgba(79, 185, 73, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(79, 185, 73, 0.25);
+}
+
+.qrscan-chip-1d {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.qrscan-formats-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.qrscan-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.qrscan-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.qrscan-dot-2d { background: var(--accent); }
+.qrscan-dot-1d { background: #6366f1; }
+
+/* ── Scan History ── */
+.qrscan-history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.qrscan-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.qrscan-history-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.qrscan-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qrscan-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.qrscan-history-item:hover {
+  background: var(--nav-hover-bg);
+  border-color: var(--border-color);
+}
+
+.qrscan-history-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.qrscan-history-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Camera Panel wrapper ── */
+.qrscan-camera-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .qrscan-viewfinder-wrapper {
+    aspect-ratio: 4 / 3;
+  }
+
+  .qrscan-dropzone {
+    aspect-ratio: 4 / 3;
+  }
+
+  .qrscan-results-col {
+    position: static;
+  }
+
+  .qrscan-widget-icon {
+    display: none;
+  }
+}
+
+
+
+

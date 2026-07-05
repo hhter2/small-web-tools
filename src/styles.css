@@ -1425,15 +1425,15 @@ html[data-theme="dark"] .font-badge--svg  { background: rgba(16,185,129,0.15); c
 .font-ext-download-dropdown {
   display: none;
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   right: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   z-index: 100;
-  margin-bottom: 6px;
+  margin-top: 6px;
   overflow: hidden;
   animation: fontDropdownFadeIn 0.15s ease-out;
 }
@@ -1445,7 +1445,7 @@ html[data-theme="dark"] .font-badge--svg  { background: rgba(16,185,129,0.15); c
 @keyframes fontDropdownFadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;

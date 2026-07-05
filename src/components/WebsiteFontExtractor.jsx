@@ -181,34 +181,36 @@ function FontCard({ font, index, previewText }) {
 
           {(showDropdown || isLocked) && !downloading && (
             <div className="font-ext-download-dropdown">
-              <button
-                type="button"
-                className="font-ext-download-item"
-                onClick={() => {
-                  handleDownload();
-                  handleOptionClick();
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Download Directly
-              </button>
-              <a
-                href={`https://fonts.google.com/?query=${encodeURIComponent(font.family)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-ext-download-item font-ext-download-item-link"
-                onClick={handleOptionClick}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-                Find on Google Fonts
-              </a>
+              <div className="font-ext-download-dropdown-inner">
+                <button
+                  type="button"
+                  className="font-ext-download-item"
+                  onClick={() => {
+                    handleDownload();
+                    handleOptionClick();
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download Directly
+                </button>
+                <a
+                  href={`https://fonts.google.com/?query=${encodeURIComponent(font.family)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-ext-download-item font-ext-download-item-link"
+                  onClick={handleOptionClick}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Find on Google Fonts
+                </a>
+              </div>
             </div>
           )}
         </div>

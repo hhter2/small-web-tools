@@ -19,6 +19,25 @@ function FontCard({ font, index, previewText }) {
   const [fontLoaded, setFontLoaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [showSimilar, setShowSimilar] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  const handleTriggerClick = (e) => {
+    e.preventDefault();
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleMouseEnter = () => {
+    setShowDropdown(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowDropdown(false);
+  };
+
+  const handleOptionClick = () => {
+    setShowDropdown(false);
+  };
+
   const fontId = `font-ext-preview-${index}`;
 
   const isDataUrl = font.url.startsWith('data:');
@@ -126,28 +145,73 @@ function FontCard({ font, index, previewText }) {
 
       {/* Action row */}
       <div className="font-ext-actions">
-        <button
-          className="btn-primary font-ext-btn-download"
-          onClick={handleDownload}
-          disabled={downloading}
-          id={`font-ext-download-${index}`}
+        <div
+          className="font-ext-download-wrapper"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          {downloading ? (
-            <>
-              <div className="spinner spinner--small" />
-              Downloading…
-            </>
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download
-            </>
+          <button
+            className="btn-primary font-ext-btn-download"
+            disabled={downloading}
+            id={`font-ext-download-${index}`}
+            type="button"
+            onClick={handleTriggerClick}
+          >
+            {downloading ? (
+              <>
+                <div className="spinner spinner--small" />
+                Downloading…
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: '4px', flexShrink: 0 }}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </>
+            )}
+          </button>
+
+          {showDropdown && !downloading && (
+            <div className="font-ext-download-dropdown">
+              <div className="font-ext-download-dropdown-inner">
+                <button
+                  type="button"
+                  className="font-ext-download-item"
+                  onClick={() => {
+                    handleDownload();
+                    handleOptionClick();
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download Directly
+                </button>
+                <a
+                  href={`https://fonts.google.com/?query=${encodeURIComponent(font.family)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-ext-download-item font-ext-download-item-link"
+                  onClick={handleOptionClick}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Find on Google Fonts
+                </a>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
         <button
           className={`btn-secondary font-ext-btn-similar ${showSimilar ? 'active' : ''}`}
           onClick={() => setShowSimilar(v => !v)}

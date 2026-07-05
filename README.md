@@ -1,6 +1,6 @@
 # Small Web Tools - Premium Dashboard
 
-**Current Version: v0.2.1-alpha**
+**Current Version: v0.3.0-alpha**
 
 A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
 
@@ -143,14 +143,6 @@ npm run preview
 - **Split QR/Barcode and Password/Strength Tools**: Separated the single `QR & Barcode` button into two distinct tools (`QR Code Generator` and `Barcode Generator`), and separated the `Password Generator` into `Password Generator` and `Password Strength Checker`. Both pairs continue to use their respective self-contained pages, but automatically open with the correct tab selected on navigation.
 - **Bioinformatics & DNA/RNA SVG Icons**: Created high-quality, modern, and production-ready custom SVG React component icons for the Bioinformatics category (`BioinfoIcon`) and the DNA/RNA Converter tool (`DnaRnaIcon`). The `BioinfoIcon` merges organic biology (a vertical DNA double helix) with programming/informatics motifs (framing code brackets `<` and `>` and circular data nodes at helix intersections) to ensure explicit representation and visual distinction. The `DnaRnaIcon` features two smooth sinusoidal intertwining curves connected by 4 horizontal base pair rungs. Both icons are self-contained with zero dependencies, pixel-perfect layout inside a 24x24 viewBox, and accept standard SVG props like `size`, `color`, and `className`. Imported and integrated them across the top header category list and home dashboard grid.
 - **Utilities Sub-Grouping and Sorting**: Grouped all tools in the `Utilities` category into two sub-groups: `Calculation` (containing `Currency Converter` and `Date Counter`) and `Utilities` (containing `Barcode Generator`, `Password Generator`, `Password Strength`, `QR Code Generator`, and `Random Wheel`). Both the sub-groups themselves and the tools inside them are sorted alphabetically. Implemented this grouped layout with custom styled headers, spacing, and indentations across the sidebar navigation, desktop header dropdown, home dashboard grid (in both main and filtered views), and footer links.
-
-
-
-
-
-
-
-
-
+- **Cloudflare Pages Functions integration (v0.3.0-alpha)**: Added Cloudflare Pages serverless functions (Workers) under the `/functions/api/` directory to serve `/api/iplookup`, `/api/extract-fonts`, and `/api/font-proxy` in production, eliminating CORS and JSON parsing errors on the deployed website.
 
 

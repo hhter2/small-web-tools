@@ -49,50 +49,28 @@ function latin1ToString(bytes) {
   return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
 }
 
-function utf16leToString(bytes) {
-  let str = '';
-  for (let i = 0; i + 1 < bytes.length; i += 2) {
-    const code = bytes[i] | (bytes[i + 1] << 8);
-    if (code === 0) break;
-    str += String.fromCharCode(code);
-  }
-  return str;
-}
 
-function utf16beToString(bytes) {
-  let str = '';
-  for (let i = 0; i + 1 < bytes.length; i += 2) {
-    const code = (bytes[i] << 8) | bytes[i + 1];
-    if (code === 0) break;
-    str += String.fromCharCode(code);
-  }
-  return str;
-}
 
 function decodeTextFrame(encoding, data) {
   try {
     if (encoding === 0) {
-      // ISO-8859-1 / Latin-1
-      const nullIdx = data.indexOf(0);
-      const slice = nullIdx >= 0 ? data.slice(0, nullIdx) : data;
-      return latin1ToString(slice).trim();
+      // ISO-8859-1 / Latin-1 (windows-1252 is a compatible superset)
+      const td = new TextDecoder('windows-1252');
+      return td.decode(data).replace(/\0+$/, '').trim();
     } else if (encoding === 1) {
-      // UTF-16 with BOM
-      if (data.length >= 2) {
-        if (data[0] === 0xFF && data[1] === 0xFE) return utf16leToString(data.slice(2)).trim();
-        if (data[0] === 0xFE && data[1] === 0xFF) return utf16beToString(data.slice(2)).trim();
-      }
-      return utf16leToString(data).trim();
+      // UTF-16 with BOM (detected automatically by TextDecoder)
+      const td = new TextDecoder('utf-16');
+      return td.decode(data).replace(/\0+$/, '').trim();
     } else if (encoding === 2) {
-      return utf16beToString(data).trim();
+      // UTF-16BE without BOM
+      const td = new TextDecoder('utf-16be');
+      return td.decode(data).replace(/\0+$/, '').trim();
     } else if (encoding === 3) {
       // UTF-8
       const td = new TextDecoder('utf-8');
-      const nullIdx = data.indexOf(0);
-      const slice = nullIdx >= 0 ? data.slice(0, nullIdx) : data;
-      return td.decode(slice).trim();
+      return td.decode(data).replace(/\0+$/, '').trim();
     }
-    return latin1ToString(data).trim();
+    return new TextDecoder('utf-8').decode(data).replace(/\0+$/, '').trim();
   } catch {
     return '';
   }
@@ -107,26 +85,43 @@ function parseID3v2(uint8) {
   let coverArt = null;
 
   if (uint8.length < 10) return { tags, coverArt };
-  if (uint8[0] !== 0x49 || uint8[1] !== 0x44 || uint8[2] !== 0x33) return { tags, coverArt };
 
-  const majorVersion = uint8[3];
-  // const minorVersion = uint8[4];
-  const flags = uint8[5];
+  // Scan first 1024 bytes for 'ID3' identifier to handle prepended junk/headers
+  let startOffset = -1;
+  const scanLimit = Math.min(uint8.length - 10, 1024);
+  for (let i = 0; i < scanLimit; i++) {
+    if (uint8[i] === 0x49 && uint8[i+1] === 0x44 && uint8[i+2] === 0x33) {
+      startOffset = i;
+      break;
+    }
+  }
+
+  if (startOffset === -1) return { tags, coverArt };
+
+  const majorVersion = uint8[startOffset + 3];
+  // const minorVersion = uint8[startOffset + 4];
+  const flags = uint8[startOffset + 5];
   const hasExtHeader = (flags & 0x40) !== 0;
-  let tagSize = readSyncsafeInt(uint8, 6);
-  let pos = 10;
+  let tagSize = ((uint8[startOffset + 6] & 0x7f) << 21) |
+                 ((uint8[startOffset + 7] & 0x7f) << 14) |
+                 ((uint8[startOffset + 8] & 0x7f) << 7) |
+                 (uint8[startOffset + 9] & 0x7f);
+  let pos = startOffset + 10;
 
   if (hasExtHeader) {
     if (majorVersion === 4) {
-      const extSize = readSyncsafeInt(uint8, pos);
+      const extSize = ((uint8[pos] & 0x7f) << 21) |
+                      ((uint8[pos + 1] & 0x7f) << 14) |
+                      ((uint8[pos + 2] & 0x7f) << 7) |
+                      (uint8[pos + 3] & 0x7f);
       pos += extSize;
     } else {
-      const extSize = readUint32BE(uint8, pos);
+      const extSize = ((uint8[pos] << 24) | (uint8[pos + 1] << 16) | (uint8[pos + 2] << 8) | uint8[pos + 3]) >>> 0;
       pos += 4 + extSize;
     }
   }
 
-  const end = Math.min(10 + tagSize, uint8.length);
+  const end = Math.min(startOffset + 10 + tagSize, uint8.length);
 
   while (pos < end - 10) {
     let frameId, frameSize, frameFlags;
@@ -915,9 +910,9 @@ function DefaultCoverArt({ format, size = 120 }) {
     DEFAULT: ['#94a3b8', '#475569'],
   };
   const [c1, c2] = colors[format] || colors.DEFAULT;
-  const id = `grad-${format}-${size}`;
+  const id = `grad-${format}-${size}-${Math.random().toString(36).slice(2, 6)}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style={{ width: size, height: size, display: 'block' }}>
       <defs>
         <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={c1}/>
@@ -925,10 +920,15 @@ function DefaultCoverArt({ format, size = 120 }) {
         </linearGradient>
       </defs>
       <rect width="120" height="120" rx="12" fill={`url(#${id})`}/>
-      <circle cx="60" cy="60" r="28" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
-      <circle cx="60" cy="60" r="8" fill="rgba(255,255,255,0.5)"/>
-      <path d="M52,42 L52,62 L68,52 Z" fill="rgba(255,255,255,0.8)"/>
-      <text x="60" y="98" textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="11" fontWeight="600" fontFamily="system-ui">
+      {/* Vinyl grooves */}
+      <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6"/>
+      <circle cx="60" cy="60" r="32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2"/>
+      <circle cx="60" cy="60" r="22" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+      {/* Center label */}
+      <circle cx="60" cy="60" r="14" fill="rgba(255,255,255,0.25)"/>
+      <circle cx="60" cy="60" r="5" fill="rgba(255,255,255,0.7)"/>
+      {/* Format label */}
+      <text x="60" y="102" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="11" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.05em">
         {format}
       </text>
     </svg>

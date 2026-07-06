@@ -58,6 +58,7 @@ small-web-tools/
 │       ├── QrBarcodeGenerator.jsx # QR code & barcode generator with customization
 │       ├── QrBarcodeScanner.jsx   # QR & barcode scanner (camera + file upload, 14+ formats)
 │       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
+│       ├── AudioMeta.jsx          # Audio metadata reader (MP3/WAV/FLAC/M4A/OGG/AIFF — fully local)
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
 ├── functions/                   # Cloudflare Pages serverless functions
@@ -148,6 +149,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-dna` | `DnaConverter.jsx` | Bio | DNA/RNA strand tools |
 | `tool-codon` | `CodonTable.jsx` | Bio | RNA codon / amino acid table |
 | `tool-fontextractor` | `WebsiteFontExtractor.jsx` | Developer | Web font extractor & downloader |
+| `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
 
 ---
 

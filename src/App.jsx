@@ -23,6 +23,7 @@ import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
 import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
+import AudioMeta from './components/AudioMeta.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -124,6 +125,10 @@ const toolDetails = {
   "tool-qrbarcodescan": {
     title: "QR & Barcode Scanner",
     desc: "Scan QR codes and barcodes instantly using your camera or by uploading an image. Supports 14+ formats including QR Code, Code 128, EAN, UPC, Data Matrix, and more."
+  },
+  "tool-audiometa": {
+    title: "Audio Metadata Reader",
+    desc: "Extract and analyze metadata tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA files entirely in-browser with full privacy."
   }
 };
 const categories = [
@@ -394,6 +399,19 @@ const navItems = [
     )
   },
   {
+    id: 'tool-audiometa',
+    name: 'Audio Metadata',
+    tooltip: 'Audio Metadata Reader',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+      </svg>
+    )
+  },
+  {
     id: 'tool-barcode',
     name: 'Barcode Generator',
     tooltip: 'Barcode Generator',
@@ -637,6 +655,8 @@ export default function App() {
         return <ImgMeta />;
       case 'tool-officemeta':
         return <OfficeMeta />;
+      case 'tool-audiometa':
+        return <AudioMeta />;
       case 'tool-wheel':
         return <RandomWheel />;
       case 'tool-typing':

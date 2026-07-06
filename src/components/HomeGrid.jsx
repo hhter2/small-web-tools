@@ -254,7 +254,21 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
       )
-    },    {
+    },
+    {
+      id: 'tool-audiometa',
+      title: 'Audio Metadata Reader',
+      category: 'media',
+      desc: 'Extract tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, OGG, AIFF and more — fully private, in-browser.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="16" r="3"/>
+        </svg>
+      )
+    },
+    {
       id: 'tool-barcode',
       title: 'Barcode Generator',
       category: 'utilities',

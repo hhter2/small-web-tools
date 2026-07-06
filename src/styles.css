@@ -9962,7 +9962,29 @@ html[data-theme="dark"] .warning-note {
   gap: 20px;
   width: 100%;
   margin-top: 8px;
+  position: relative;
 }
+
+.audiometa-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(79, 184, 73, 0.15);
+  backdrop-filter: blur(4px);
+  border: 2.5px dashed var(--accent);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
 
 /* ── Drop zone ── */
 .audiometa-dropzone {

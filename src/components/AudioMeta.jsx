@@ -1196,40 +1196,59 @@ export default function AudioMeta() {
   };
 
   return (
-    <div className="audiometa-container">
-      {/* Drop zone */}
-      <div
-        className={`audiometa-dropzone${dragOver ? ' dragover' : ''}`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-        aria-label="Upload audio files"
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={ACCEPTED}
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-          id="audiometa-file-input"
-        />
-        <div className="dropzone-content">
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18V5l12-2v13"/>
-            <circle cx="6" cy="18" r="3"/>
-            <circle cx="18" cy="16" r="3"/>
-          </svg>
-          <p className="dropzone-title">Drop audio files here</p>
-          <p className="dropzone-or">or</p>
-          <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</button>
-          <p className="dropzone-note">Supports MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA and more</p>
+    <div
+      className="audiometa-container"
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED}
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+        id="audiometa-file-input"
+      />
+
+      {/* Full-width drag over overlay when files are already present */}
+      {dragOver && files.length > 0 && (
+        <div className="audiometa-drag-overlay">
+          <div className="overlay-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <p>Drop audio files to add to list</p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Drop zone shown only when empty */}
+      {files.length === 0 && (
+        <div
+          className={`audiometa-dropzone${dragOver ? ' dragover' : ''}`}
+          onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+          aria-label="Upload audio files"
+        >
+          <div className="dropzone-content">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <p className="dropzone-title">Drop audio files here</p>
+            <p className="dropzone-or">or</p>
+            <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</button>
+            <p className="dropzone-note">Supports MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA and more</p>
+          </div>
+        </div>
+      )}
 
       {status && (
         <p className={`audiometa-status${status.startsWith('Failed') || status.startsWith('Error') ? ' error' : ''}`}>
@@ -1243,15 +1262,23 @@ export default function AudioMeta() {
           <aside className="audiometa-sidebar">
             <div className="audiometa-sidebar-header">
               <span className="audiometa-sidebar-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
-              <button className="audiometa-clear-btn" onClick={handleClearAll} title="Clear all">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14H6L5 6"/>
-                  <path d="M10 11v6M14 11v6"/>
-                  <path d="M9 6V4h6v2"/>
-                </svg>
-                Clear All
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="audiometa-clear-btn" onClick={() => fileInputRef.current?.click()} title="Add audio files">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add
+                </button>
+                <button className="audiometa-clear-btn" onClick={handleClearAll} title="Clear all">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4h6v2"/>
+                  </svg>
+                  Clear All
+                </button>
+              </div>
             </div>
             <ul className="audiometa-file-list">
               {files.map(f => (

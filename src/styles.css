@@ -12638,7 +12638,7 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 
 .analyzer-table th {
   background: var(--bg-header);
-  padding: 14px 20px;
+  padding: 10px 16px;
   font-weight: 700;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
@@ -12648,7 +12648,7 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 }
 
 .analyzer-table td {
-  padding: 12px 20px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
@@ -12659,6 +12659,10 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 
 .analyzer-table tbody tr:hover {
   background: var(--nav-hover-bg);
+}
+
+.analyzer-table tbody tr.is-ignored {
+  opacity: 0.45;
 }
 
 .table-cell-name {

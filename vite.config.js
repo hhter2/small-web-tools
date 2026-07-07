@@ -273,9 +273,17 @@ export default defineConfig({
               return results;
             }
 
+            let gitignoreText = '';
+            const gitignorePath = path.join(targetPath, '.gitignore');
+            if (fs.existsSync(gitignorePath)) {
+              try {
+                gitignoreText = fs.readFileSync(gitignorePath, 'utf8');
+              } catch {}
+            }
+
             const files = scanDir(targetPath);
             res.statusCode = 200;
-            res.end(JSON.stringify({ ok: true, files }));
+            res.end(JSON.stringify({ ok: true, files, gitignoreText }));
           } catch (e) {
             console.error('[scan-local-dir] failed:', e.message);
             res.statusCode = 500;

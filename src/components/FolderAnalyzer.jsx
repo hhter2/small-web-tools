@@ -15,6 +15,76 @@ const BINARY_EXTENSIONS = new Set([
   'class', 'jar', 'war', 'eot', 'ttf', 'woff', 'woff2'
 ]);
 
+function createGitignoreMatcher(gitignoreText) {
+  if (!gitignoreText) return () => false;
+
+  const rules = [];
+  const lines = gitignoreText.split(/\r?\n/);
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    let isNegated = false;
+    if (line.startsWith('!')) {
+      isNegated = true;
+      line = line.slice(1);
+    }
+
+    let isDirOnly = false;
+    if (line.endsWith('/')) {
+      isDirOnly = true;
+      line = line.slice(0, -1);
+    }
+
+    // Convert glob pattern to regular expression
+    let regexStr = line
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, (ch) => {
+        if (ch === '*' || ch === '?') return ch;
+        return '\\' + ch;
+      })
+      .replace(/\*\*/g, '.*')
+      .replace(/\*/g, '[^\\/]*')
+      .replace(/\?/g, '[^\\/]');
+
+    if (line.startsWith('/')) {
+      regexStr = '^' + regexStr.slice(1);
+    } else {
+      regexStr = '(^|\\/)' + regexStr;
+    }
+
+    regexStr += '(\\/|$)';
+
+    try {
+      rules.push({
+        regex: new RegExp(regexStr),
+        isNegated,
+        isDirOnly
+      });
+    } catch (e) {
+      // ignore invalid regexes
+    }
+  }
+
+  return (filePath, isDir) => {
+    let ignored = false;
+    // Normalize path by stripping the root folder part, or check the relative path
+    const parts = filePath.split('/');
+    const relPath = parts.slice(1).join('/'); // strip root directory name
+
+    if (!relPath) return false;
+
+    for (const rule of rules) {
+      if (rule.isDirOnly && !isDir) continue;
+
+      if (rule.regex.test(relPath)) {
+        ignored = !rule.isNegated;
+      }
+    }
+    return ignored;
+  };
+}
+
 export default function FolderAnalyzer() {
   const [customPath, setCustomPath] = useState('');
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
@@ -28,6 +98,7 @@ export default function FolderAnalyzer() {
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [gitignoreText, setGitignoreText] = useState('');
 
   const folderInputRef = useRef(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
@@ -108,14 +179,21 @@ export default function FolderAnalyzer() {
       const data = await response.json();
       
       if (data.ok) {
+        const gitText = data.gitignoreText || '';
+        setGitignoreText(gitText);
+        const isIgnoredFile = createGitignoreMatcher(gitText);
+
         let tempTotalLines = 0;
         let tempTotalSize = 0;
         for (const file of data.files) {
-          tempTotalSize += file.size;
-          tempTotalLines += file.lineCount;
+          const ignored = isIgnoredFile(file.path, false);
+          if (!ignored) {
+            tempTotalSize += file.size;
+            tempTotalLines += file.lineCount;
+          }
         }
 
-        const root = buildTree(data.files, customPath.trim());
+        const root = buildTree(data.files, customPath.trim(), gitText);
         setTreeData(root);
         setTotalLines(tempTotalLines);
         setTotalFiles(data.files.length);
@@ -140,16 +218,34 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: fileList.length, phase: 'Reading folder contents...' });
 
     try {
+      // Look for a root .gitignore file
+      const gitignoreFile = fileList.find(
+        f => f.name === '.gitignore' && (f.webkitRelativePath || '').split('/').length === 2
+      );
+      let gitText = '';
+      if (gitignoreFile) {
+        gitText = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result || '');
+          reader.onerror = () => resolve('');
+          reader.readAsText(gitignoreFile);
+        });
+      }
+      setGitignoreText(gitText);
+      const isIgnoredFile = createGitignoreMatcher(gitText);
+
       const processedFiles = [];
       let tempTotalLines = 0;
       let tempTotalSize = 0;
 
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
-        tempTotalSize += file.size;
+        const path = (file.webkitRelativePath || file.name).replace(/\\/g, '/');
+        const ignored = isIgnoredFile(path, false);
 
-        // Determine relative path (use webkitRelativePath if available)
-        const path = file.webkitRelativePath || file.name;
+        if (!ignored) {
+          tempTotalSize += file.size;
+        }
 
         setProgress({
           current: i + 1,
@@ -159,21 +255,23 @@ export default function FolderAnalyzer() {
 
         let lineCount = 0;
         const isText = await isTextFile(file);
-        if (isText && file.size < 5 * 1024 * 1024) { // only process lines if text & < 5MB
+        if (isText && file.size < 5 * 1024 * 1024) {
           lineCount = await countFileLines(file);
-          tempTotalLines += lineCount;
+          if (!ignored) {
+            tempTotalLines += lineCount;
+          }
         }
 
         processedFiles.push({
           name: file.name,
-          path: path.replace(/\\/g, '/'),
+          path: path,
           size: file.size,
           lineCount: lineCount,
           isText
         });
       }
 
-      const root = buildTree(processedFiles, customPath);
+      const root = buildTree(processedFiles, customPath, gitText);
       setTreeData(root);
       setTotalLines(tempTotalLines);
       setTotalFiles(processedFiles.length);
@@ -207,14 +305,21 @@ export default function FolderAnalyzer() {
         const scanData = await scanRes.json();
         
         if (scanData.ok) {
+          const gitText = scanData.gitignoreText || '';
+          setGitignoreText(gitText);
+          const isIgnoredFile = createGitignoreMatcher(gitText);
+
           let tempTotalLines = 0;
           let tempTotalSize = 0;
           for (const file of scanData.files) {
-            tempTotalSize += file.size;
-            tempTotalLines += file.lineCount;
+            const ignored = isIgnoredFile(file.path, false);
+            if (!ignored) {
+              tempTotalSize += file.size;
+              tempTotalLines += file.lineCount;
+            }
           }
 
-          const root = buildTree(scanData.files, data.path);
+          const root = buildTree(scanData.files, data.path, gitText);
           setTreeData(root);
           setTotalLines(tempTotalLines);
           setTotalFiles(scanData.files.length);
@@ -332,7 +437,9 @@ export default function FolderAnalyzer() {
   };
 
   // Reconstruct tree hierarchy
-  function buildTree(files, pathPrefix) {
+  function buildTree(files, pathPrefix, gitignoreContent = '') {
+    const isIgnoredFile = createGitignoreMatcher(gitignoreContent);
+
     // Determine root directory name
     let rootName = 'root';
     if (files.length > 0) {
@@ -353,7 +460,8 @@ export default function FolderAnalyzer() {
       type: 'directory',
       children: [],
       lineCount: 0,
-      size: 0
+      size: 0,
+      isIgnored: false
     };
 
     for (const file of files) {
@@ -382,6 +490,7 @@ export default function FolderAnalyzer() {
             type: isFile ? 'file' : 'directory',
             lineCount: 0,
             size: 0,
+            isIgnored: currentNode.isIgnored || isIgnoredFile(currentPath, !isFile),
             children: isFile ? undefined : []
           };
           currentNode.children.push(childNode);
@@ -815,7 +924,7 @@ export default function FolderAnalyzer() {
                 className={`tab-btn ${viewMode === 'figure' ? 'active' : ''}`}
                 onClick={() => setViewMode('figure')}
               >
-                Modern Figure
+                Figure
               </button>
               <button 
                 className={`tab-btn ${viewMode === 'text' ? 'active' : ''}`}
@@ -891,7 +1000,7 @@ export default function FolderAnalyzer() {
                     const isCollapsed = collapsedPaths[row.path];
 
                     return (
-                      <tr key={row.path} className={`table-row-${row.type}`}>
+                      <tr key={row.path} className={`table-row-${row.type} ${row.isIgnored ? 'is-ignored' : ''}`}>
                         <td>
                           <div 
                             className="table-cell-name" 

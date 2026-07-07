@@ -41,11 +41,14 @@ export async function ensureFFmpegLoaded(onLog) {
         if (onLog) {
           ffmpeg.on('log', ({ message }) => onLog(message));
         }
-        // Fetch local files and convert to Blob URLs to enable worker-compatibility
-        const [coreURL, wasmURL] = await Promise.all([
-          getBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-          getBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
-        ]);
+        
+        // Fetch core.js as a Blob URL for inline worker injection compatibility
+        const coreURL = await getBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript');
+        
+        // Pass core.wasm as a direct absolute HTTP same-origin URL.
+        // This avoids fetch('blob:...') same-origin credentials exceptions inside worker global scopes.
+        const wasmURL = window.location.origin + '/ffmpeg/ffmpeg-core.wasm';
+        
         await ffmpeg.load({ coreURL, wasmURL });
       } catch (e) {
         loadingPromise = null; // Clear failed promise reference on error

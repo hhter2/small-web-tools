@@ -8,7 +8,7 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
   const sourcePreviewURL = useMemo(() => URL.createObjectURL(item.file), [item.file]);
 
   const isBusy = item.status === 'processing';
-  const canEdit = item.status === 'pending' || item.status === 'error';
+  const canEdit = item.status === 'ready' || item.status === 'error';
 
   return (
     <li className="mediasplit-queue-item">
@@ -46,7 +46,7 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
       </div>
 
       <div className="mediasplit-queue-item-status">
-        {item.status === 'pending' && <span>Pending</span>}
+        {item.status === 'ready' && <span>Ready</span>}
         {isBusy && (
           <div className="mediasplit-queue-item-progress">
             <progress value={item.progress} max={100} />

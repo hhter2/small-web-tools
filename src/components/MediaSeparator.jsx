@@ -42,7 +42,7 @@ export default function MediaSeparator() {
     [handleFiles],
   );
 
-  const hasPending = items.some((it) => it.status === 'pending');
+  const hasPending = items.some((it) => it.status === 'ready');
   const hasDone = items.some((it) => it.status === 'done');
 
   return (

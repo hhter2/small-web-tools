@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, useMemo } from 'react';
 import { ensureFFmpegLoaded, terminateFFmpeg, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
 
 export const STATUS = {
-  PENDING: 'pending',
+  PENDING: 'ready', // Renamed internal value to 'ready' to improve UX before starting
   PROCESSING: 'processing',
   DONE: 'done',
   ERROR: 'error',
@@ -152,9 +152,10 @@ export function useMediaSeparator() {
       setItems((prev) => {
         const firstPending = prev.find((it) => it.status === STATUS.PENDING);
         if (firstPending) {
+          const detail = err?.stack || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
           return prev.map((it) =>
             it.id === firstPending.id
-              ? { ...it, status: STATUS.ERROR, error: `Engine load failed: ${err.message}` }
+              ? { ...it, status: STATUS.ERROR, error: `Engine load failed: ${detail}` }
               : it
           );
         }

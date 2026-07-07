@@ -110,7 +110,7 @@ export default function FolderAnalyzer() {
 
     function traverse(n, isRoot = false) {
       if (!isRoot && !showSystemExclude && n.isSystemExclude) return;
-      if (!isRoot && !showGitignored && n.isIgnored) return;
+      if (!isRoot && !showGitignored && n.isIgnored && !n.isSystemExclude) return;
 
       if (n.type === 'file') {
         filesCount++;
@@ -537,22 +537,30 @@ export default function FolderAnalyzer() {
   function generateAsciiTree(node, prefix = '', isLast = true, isRoot = true) {
     if (!isRoot) {
       if (!showSystemExclude && node.isSystemExclude) return '';
-      if (!showGitignored && node.isIgnored) return '';
+      if (!showGitignored && node.isIgnored && !node.isSystemExclude) return '';
     }
 
     let result = '';
     const suffix = node.type === 'directory' ? '/' : '';
     const linesInfo = (node.type === 'file' && node.isText) ? ` (${node.lineCount} lines)` : '';
+    
+    // Add a visual tag for ignored files so text mode reflects the gitignore state clearly
+    let dimTag = '';
+    if (node.name === '.gitignore') {
+      dimTag = ' (gitignore)';
+    } else if (node.isIgnored) {
+      dimTag = ' (ignored)';
+    }
 
     if (isRoot) {
       result += node.name + suffix + '\n';
     } else {
-      result += prefix + (isLast ? '└── ' : '├── ') + node.name + suffix + linesInfo + '\n';
+      result += prefix + (isLast ? '└── ' : '├── ') + node.name + suffix + linesInfo + dimTag + '\n';
     }
 
     const visibleChildren = (node.children || []).filter(c => {
       if (!showSystemExclude && c.isSystemExclude) return false;
-      if (!showGitignored && c.isIgnored) return false;
+      if (!showGitignored && c.isIgnored && !c.isSystemExclude) return false;
       return true;
     });
 
@@ -749,7 +757,7 @@ export default function FolderAnalyzer() {
     // Filters
     if (!isRoot) {
       if (!showSystemExclude && node.isSystemExclude) return list;
-      if (!showGitignored && node.isIgnored) return list;
+      if (!showGitignored && node.isIgnored && !node.isSystemExclude) return list;
     }
 
     list.push({ ...node, depth });
@@ -1190,8 +1198,10 @@ export default function FolderAnalyzer() {
                     const hasChildren = row.children && row.children.length > 0;
                     const isCollapsed = collapsedPaths[row.path];
 
+                    const isDimmed = row.isIgnored || row.name === '.gitignore';
+
                     return (
-                      <tr key={row.path} className={`table-row-${row.type} ${row.isIgnored ? 'is-ignored' : ''}`}>
+                      <tr key={row.path} className={`table-row-${row.type} ${isDimmed ? 'is-ignored' : ''}`}>
                         <td>
                           <div 
                             className="table-cell-name" 

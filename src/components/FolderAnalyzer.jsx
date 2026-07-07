@@ -192,6 +192,14 @@ export default function FolderAnalyzer() {
     });
   }
 
+  const handleClear = () => {
+    setCustomPath('');
+    setTreeData(null);
+    setCollapsedPaths({});
+    setStatus('idle');
+    setProgress({ current: 0, total: 0, phase: '' });
+  };
+
   const handleLocalPathScan = async () => {
     const cleanPath = customPath.trim().replace(/^["']|["']$/g, '');
     if (!cleanPath) return;
@@ -906,74 +914,107 @@ export default function FolderAnalyzer() {
   const flattenedRows = treeData ? getFlattenedRows(treeData) : [];
 
   return (
-    <article id="tool-folder-analyzer" className="tool-card tool-card--wide active">
-      <h2>Folder Structure Analyzer</h2>
-      <p className="tool-description">
-        Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side.
-      </p>
-
-      {/* Input Options */}
-      <div className="folder-analyzer-inputs">
-        <div className="form-group flex-1">
-          <label htmlFor="custom-root-path">Folder Path / Custom Root Name</label>
-          <div className="path-input-group">
-            <input
-              type="text"
-              id="custom-root-path"
-              placeholder="e.g. D:/01_Programs/07_Small_Web_Tools or my-vite-react-app"
-              value={customPath}
-              onChange={(e) => setCustomPath(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && customPath.trim()) {
-                  handleLocalPathScan();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={handleLocalPathScan}
-              disabled={!customPath.trim()}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="button-icon">
+    <article 
+      id="tool-folder-analyzer" 
+      className={`tool-card tool-card--wide active ${dragOver ? 'dragover-active' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="folder-analyzer-header">
+        <div className="header-title-group">
+          <h2>Folder Structure Analyzer</h2>
+          {status === 'success' && treeData && (
+            <div className="scanned-path-subtitle">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="subtitle-icon">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                <line x1="12" y1="11" x2="12" y2="17"></line>
-                <line x1="9" y1="14" x2="15" y2="14"></line>
               </svg>
-              Analyze Path
-            </button>
-          </div>
-          <span className="path-help-text">
-            * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
-          </span>
+              <span>{customPath || treeData.name}</span>
+            </div>
+          )}
         </div>
+        {status === 'success' && (
+          <button className="btn-secondary btn-clear" onClick={handleClear}>
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" className="button-icon">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Clear
+          </button>
+        )}
       </div>
 
-      {/* Selection Areas */}
-      <div 
-        className={`folder-analyzer-dropzone ${dragOver ? 'dragover' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => folderInputRef.current && folderInputRef.current.click()}
-      >
-        <input
-          type="file"
-          ref={folderInputRef}
-          webkitdirectory="true"
-          directory="true"
-          multiple
-          style={{ display: 'none' }}
-          onChange={handleFolderSelect}
-        />
-        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <h3>Drag &amp; Drop Folder here</h3>
-        <p>or click to select folder from your computer</p>
-      </div>
+      {status !== 'success' && (
+        <p className="tool-description">
+          Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side.
+        </p>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={folderInputRef}
+        webkitdirectory="true"
+        directory="true"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleFolderSelect}
+      />
+
+      {/* Input Options (only visible when not showing results) */}
+      {status !== 'success' && (
+        <div className="folder-analyzer-inputs">
+          <div className="form-group flex-1">
+            <label htmlFor="custom-root-path">Folder Path / Custom Root Name</label>
+            <div className="path-input-group">
+              <input
+                type="text"
+                id="custom-root-path"
+                placeholder="e.g. D:/01_Programs/07_Small_Web_Tools or my-vite-react-app"
+                value={customPath}
+                onChange={(e) => setCustomPath(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && customPath.trim()) {
+                    handleLocalPathScan();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleLocalPathScan}
+                disabled={!customPath.trim()}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="button-icon">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  <line x1="12" y1="11" x2="12" y2="17"></line>
+                  <line x1="9" y1="14" x2="15" y2="14"></line>
+                </svg>
+                Analyze Path
+              </button>
+            </div>
+            <span className="path-help-text">
+              * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Selection Areas (only visible when not showing results) */}
+      {status !== 'success' && (
+        <div 
+          className="folder-analyzer-dropzone"
+          onClick={() => folderInputRef.current && folderInputRef.current.click()}
+        >
+          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <h3>Drag &amp; Drop Folder here</h3>
+          <p>or click to select folder from your computer</p>
+        </div>
+      )}
 
       {/* Scanning status */}
       {status === 'scanning' && (

@@ -12261,6 +12261,83 @@ html[data-theme="dark"] .videometa-tab-btn.active {
    Folder Structure Analyzer Tool Styles
    ========================================================================== */
 
+.folder-analyzer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-title-group h2 {
+  margin-bottom: 0 !important;
+}
+
+.scanned-path-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  background: var(--accent-light);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  align-self: flex-start;
+}
+
+html[data-theme="dark"] .scanned-path-subtitle {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.scanned-path-subtitle .subtitle-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.btn-clear {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.btn-clear:hover {
+  background: #fdf2f2;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+html[data-theme="dark"] .btn-clear:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dragover-active {
+  border: 2px dashed var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--focus-ring) !important;
+  transform: scale(1.005);
+}
+
 .folder-analyzer-inputs {
   display: flex;
   gap: 16px;

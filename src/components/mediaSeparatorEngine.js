@@ -41,7 +41,7 @@ export async function ensureFFmpegLoaded(onLog) {
 export const AUDIO_FORMATS = [
   {
     value: 'source',
-    label: '保留原始編碼（無損、最快）',
+    label: 'Keep Original Codec (Lossless, Fastest)',
     outputExt: 'mka', // Packaging arbitrary codecs in Matroska avoids guessing compatibility
     buildArgs: () => ['-vn', '-acodec', 'copy'],
   },
@@ -53,7 +53,7 @@ export const AUDIO_FORMATS = [
   },
   {
     value: 'wav',
-    label: 'WAV（未壓縮）',
+    label: 'WAV (Uncompressed)',
     outputExt: 'wav',
     buildArgs: () => ['-vn', '-acodec', 'pcm_s16le'],
   },
@@ -75,19 +75,19 @@ export const AUDIO_FORMATS = [
 export const VIDEO_FORMATS = [
   {
     value: 'source',
-    label: '保留原始編碼（無損、最快）',
+    label: 'Keep Original Codec (Lossless, Fastest)',
     outputExt: null, // null means use original extension
     buildArgs: () => ['-an', '-vcodec', 'copy'],
   },
   {
     value: 'mp4',
-    label: 'MP4（H.264 重新編碼）',
+    label: 'MP4 (H.264 Re-encode)',
     outputExt: 'mp4',
     buildArgs: () => ['-an', '-vcodec', 'libx264', '-preset', 'veryfast', '-crf', '23'],
   },
   {
     value: 'webm',
-    label: 'WebM（VP9 重新編碼）',
+    label: 'WebM (VP9 Re-encode)',
     outputExt: 'webm',
     buildArgs: () => ['-an', '-vcodec', 'libvpx-vp9', '-crf', '32', '-b:v', '0'],
   },

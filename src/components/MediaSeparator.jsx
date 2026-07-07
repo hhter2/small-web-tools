@@ -1,10 +1,10 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useMediaSeparator } from './useMediaSeparator';
 import MediaSeparatorQueueItem from './MediaSeparatorQueueItem';
 
 /**
- * 影片音軌 / 視訊拆分工具主元件。
- * 純結構化 className，不含品牌配色，方便套用既有設計系統。
+ * Local Media Splitter Tool Component.
+ * Runs client-side using ffmpeg.wasm to separate audio & silent video tracks.
  */
 export default function MediaSeparator() {
   const {
@@ -20,6 +20,7 @@ export default function MediaSeparator() {
   } = useMediaSeparator();
 
   const inputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleFiles = useCallback(
     (fileList) => {
@@ -32,6 +33,7 @@ export default function MediaSeparator() {
   const handleDrop = useCallback(
     (event) => {
       event.preventDefault();
+      setDragOver(false);
       handleFiles(event.dataTransfer.files);
     },
     [handleFiles],
@@ -41,66 +43,105 @@ export default function MediaSeparator() {
   const hasDone = items.some((it) => it.status === 'done');
 
   return (
-    <section className="media-separator">
-      <div
-        className="media-separator__dropzone"
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-      >
-        <p>拖曳影片到這裡，或點擊選擇檔案（可多選、批次處理）</p>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="video/*"
-          multiple
-          hidden
-          onChange={(e) => {
-            handleFiles(e.target.files);
-            e.target.value = '';
-          }}
-        />
-      </div>
+    <div
+      className="mediasplit-container"
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="video/*"
+        multiple
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = '';
+        }}
+      />
 
-      <div className="media-separator__actions">
-        <button
-          type="button"
-          onClick={runQueue}
-          disabled={!hasPending && !engineLoading}
-          className="media-separator-btn media-separator-btn--primary"
-        >
-          {engineLoading ? '載入處理引擎中…' : '開始處理佇列'}
-        </button>
-        {hasDone && (
-          <button
-            type="button"
-            onClick={clearDone}
-            className="media-separator-btn media-separator-btn--secondary"
-          >
-            清除已完成項目
-          </button>
-        )}
-        <span className="media-separator__count">共 {items.length} 個檔案</span>
-      </div>
-
-      {items.length === 0 ? (
-        <p className="media-separator__empty">尚未加入任何檔案。</p>
-      ) : (
-        <ul className="media-separator__queue">
-          {items.map((item) => (
-            <MediaSeparatorQueueItem
-              key={item.id}
-              item={item}
-              onAudioFormatChange={setAudioFormat}
-              onVideoFormatChange={setVideoFormat}
-              onRemove={removeItem}
-              onRetry={retryItem}
-            />
-          ))}
-        </ul>
+      {dragOver && items.length > 0 && (
+        <div className="mediasplit-drag-overlay">
+          <div className="overlay-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+            <p>Drop video files to add to queue</p>
+          </div>
+        </div>
       )}
-    </section>
+
+      {items.length === 0 && (
+        <div
+          className={`mediasplit-dropzone${dragOver ? ' dragover' : ''}`}
+          onClick={() => inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
+          aria-label="Upload video files"
+        >
+          <div className="dropzone-content">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+            <p className="dropzone-title">Drag & drop video files here</p>
+            <p className="dropzone-or">or</p>
+            <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>Browse Files</button>
+            <p className="dropzone-note">Supports MP4, MOV, WebM, MKV, AVI, and other common video formats</p>
+          </div>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="mediasplit-workspace">
+          <div className="mediasplit-actions">
+            <button
+              type="button"
+              onClick={runQueue}
+              disabled={!hasPending && !engineLoading}
+              className="mediasplit-btn-primary"
+            >
+              {engineLoading ? 'Loading Engine...' : 'Start Processing Queue'}
+            </button>
+            {hasDone && (
+              <button
+                type="button"
+                onClick={clearDone}
+                className="mediasplit-btn-secondary"
+              >
+                Clear Completed
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="mediasplit-btn-secondary"
+            >
+              Add Files
+            </button>
+            <span className="mediasplit-count">{items.length} file{items.length !== 1 ? 's' : ''}</span>
+          </div>
+
+          <ul className="mediasplit-queue">
+            {items.map((item) => (
+              <MediaSeparatorQueueItem
+                key={item.id}
+                item={item}
+                onAudioFormatChange={setAudioFormat}
+                onVideoFormatChange={setVideoFormat}
+                onRemove={removeItem}
+                onRetry={retryItem}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

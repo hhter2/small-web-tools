@@ -4,40 +4,40 @@ import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import { AUDIO_FORMATS, VIDEO_FORMATS } from './mediaSeparatorEngine';
 
 export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onVideoFormatChange, onRemove, onRetry }) {
-  // 用於原始檔的預覽播放（不影響 ffmpeg 處理，純粹是瀏覽器原生解碼播放）
+  // For raw video preview playback (native browser decoding, unrelated to ffmpeg processing)
   const sourcePreviewURL = useMemo(() => URL.createObjectURL(item.file), [item.file]);
 
   const isBusy = item.status === 'processing';
   const canEdit = item.status === 'pending' || item.status === 'error';
 
   return (
-    <li className="media-separator-queue-item">
-      <div className="media-separator-queue-item__header">
-        <video src={sourcePreviewURL} controls muted className="media-separator-queue-item__preview" />
-        <div className="media-separator-queue-item__meta">
-          <p className="media-separator-queue-item__filename">{item.file.name}</p>
-          <p className="media-separator-queue-item__size">{formatBytes(item.file.size)}</p>
+    <li className="mediasplit-queue-item">
+      <div className="mediasplit-queue-item-header">
+        <video src={sourcePreviewURL} controls muted className="mediasplit-queue-item-preview" />
+        <div className="mediasplit-queue-item-meta">
+          <p className="mediasplit-queue-item-filename">{item.file.name}</p>
+          <p className="mediasplit-queue-item-size">{formatBytes(item.file.size)}</p>
         </div>
         <button
           type="button"
           onClick={() => onRemove(item.id)}
           disabled={isBusy}
-          className="media-separator-btn media-separator-btn--danger"
+          className="mediasplit-btn-danger"
         >
-          移除
+          Remove
         </button>
       </div>
 
-      <div className="media-separator-queue-item__formats">
+      <div className="mediasplit-queue-item-formats">
         <MediaSeparatorFormatSelect
-          label="音軌輸出格式"
+          label="Audio Output Format"
           value={item.audioFormat}
           options={AUDIO_FORMATS}
           onChange={(v) => onAudioFormatChange(item.id, v)}
           disabled={!canEdit}
         />
         <MediaSeparatorFormatSelect
-          label="視訊輸出格式"
+          label="Video Output Format"
           value={item.videoFormat}
           options={VIDEO_FORMATS}
           onChange={(v) => onVideoFormatChange(item.id, v)}
@@ -45,42 +45,42 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
         />
       </div>
 
-      <div className="media-separator-queue-item__status">
-        {item.status === 'pending' && <span>等待處理</span>}
+      <div className="mediasplit-queue-item-status">
+        {item.status === 'pending' && <span>Pending</span>}
         {isBusy && (
-          <div className="media-separator-queue-item__progress">
+          <div className="mediasplit-queue-item-progress">
             <progress value={item.progress} max={100} />
-            <span>處理中 {item.progress}%</span>
+            <span>Processing {item.progress}%</span>
           </div>
         )}
         {item.status === 'error' && (
-          <div className="media-separator-queue-item__error">
-            <span>發生錯誤：{item.error}</span>
+          <div className="mediasplit-queue-item-error">
+            <span>Error: {item.error}</span>
             <button
               type="button"
               onClick={() => onRetry(item.id)}
-              className="media-separator-btn media-separator-btn--retry"
+              className="mediasplit-btn-secondary"
             >
-              重試
+              Retry
             </button>
           </div>
         )}
       </div>
 
       {item.status === 'done' && (
-        <div className="media-separator-queue-item__results">
-          <div className="media-separator-queue-item__result">
-            <p className="media-separator-queue-item__result-title">音軌</p>
-            <MediaSeparatorWaveform audioURL={item.audioURL} className="media-separator-waveform-container" />
-            <a href={item.audioURL} download={buildDownloadName(item, 'audio')} className="media-separator-download-link">
-              下載音軌
+        <div className="mediasplit-queue-item-results">
+          <div className="mediasplit-queue-item-result">
+            <p className="mediasplit-queue-item-result-title">Audio Track</p>
+            <MediaSeparatorWaveform audioURL={item.audioURL} className="mediasplit-waveform-container" />
+            <a href={item.audioURL} download={buildDownloadName(item, 'audio')} className="mediasplit-download-link">
+              Download Audio
             </a>
           </div>
-          <div className="media-separator-queue-item__result">
-            <p className="media-separator-queue-item__result-title">無聲視訊</p>
-            <video src={item.videoURL} controls className="media-separator-queue-item__preview" />
-            <a href={item.videoURL} download={buildDownloadName(item, 'video')} className="media-separator-download-link">
-              下載視訊
+          <div className="mediasplit-queue-item-result">
+            <p className="mediasplit-queue-item-result-title">Silent Video</p>
+            <video src={item.videoURL} controls className="mediasplit-queue-item-preview" />
+            <a href={item.videoURL} download={buildDownloadName(item, 'video')} className="mediasplit-download-link">
+              Download Video
             </a>
           </div>
         </div>

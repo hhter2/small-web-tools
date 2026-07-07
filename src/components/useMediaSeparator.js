@@ -15,8 +15,8 @@ function nextId() {
 }
 
 /**
- * 管理多檔案的音軌/視訊拆分佇列。
- * 檔案會依序（非平行）送進同一個 ffmpeg.wasm 實例處理，避免記憶體爆量與 worker 衝突。
+ * Manage multi-file audio/video splitter queue.
+ * Files are processed sequentially to avoid memory overload and worker conflicts.
  */
 export function useMediaSeparator() {
   const [items, setItems] = useState([]);
@@ -93,8 +93,7 @@ export function useMediaSeparator() {
       const audioOutName = `audio-${item.id}.${audioExt}`;
       const videoOutName = `video-${item.id}.${videoExt}`;
 
-      // ffmpeg 的整體 progress 事件會在多次 exec 呼叫間持續觸發，
-      // 這裡簡化為：音軌處理佔 0-50%，視訊處理佔 50-100%。
+      // Split overall progress between audio stage (0-50%) and video stage (50-100%).
       let stage = 0;
       const onProgress = ({ progress }) => {
         const clamped = Math.min(1, Math.max(0, progress || 0));
@@ -147,7 +146,6 @@ export function useMediaSeparator() {
     }
     setEngineLoading(false);
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       let next;
       setItems((prev) => {
@@ -160,13 +158,12 @@ export function useMediaSeparator() {
         return prev;
       });
 
-      // 等待 state 真正更新後再讀取（避免拿到過期的 next 參照）
       if (!next) break;
 
       try {
         await processOne(next);
       } catch (err) {
-        updateItem(next.id, { status: STATUS.ERROR, error: err?.message || '處理失敗，請重試' });
+        updateItem(next.id, { status: STATUS.ERROR, error: err?.message || 'Processing failed, please retry' });
       }
     }
 
@@ -198,6 +195,6 @@ async function safeDelete(ffmpeg, name) {
   try {
     await ffmpeg.deleteFile(name);
   } catch (e) {
-    // 檔案本來就不存在時 ffmpeg 會丟錯，這裡可以安全忽略
+    // File not found, safe to ignore
   }
 }

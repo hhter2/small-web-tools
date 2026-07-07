@@ -3,14 +3,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 const BAR_COUNT = 160;
 
 /**
- * 顯示音訊波形，並提供播放/暫停與點擊拖曳的時間軸。
- * 顏色使用 currentColor / rgba(128,128,128,x)，方便沿用外部設計系統的文字顏色。
+ * Displays audio waveform with play/pause controls and a seekable timeline.
+ * Uses currentColor/rgba(128, 128, 128, 0.5) to inherit colors from the design system.
  */
 export default function MediaSeparatorWaveform({ audioURL, className }) {
   const canvasRef = useRef(null);
   const audioRef = useRef(null);
   const rafRef = useRef(null);
-  const [peaks, setPeaks] = useState(null); // null = 解析中, [] = 無法解碼
+  const [peaks, setPeaks] = useState(null); // null = analyzing, [] = decode failed
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -101,7 +101,7 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
       <audio ref={audioRef} src={audioURL} onEnded={() => setIsPlaying(false)} />
       <div className="media-separator-waveform-row">
         <button type="button" onClick={togglePlay} disabled={!peaks || !peaks.length}>
-          {isPlaying ? '暫停' : '播放'}
+          {isPlaying ? 'Pause' : 'Play'}
         </button>
         <canvas
           ref={canvasRef}
@@ -115,9 +115,9 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
           {formatTime(duration * progress)} / {formatTime(duration)}
         </span>
       </div>
-      {peaks === null && <p className="media-separator-waveform-status">正在解析音訊波形…</p>}
+      {peaks === null && <p className="media-separator-waveform-status">Analyzing audio waveform...</p>}
       {peaks && peaks.length === 0 && (
-        <p className="media-separator-waveform-status">此瀏覽器無法解碼此格式以顯示波形，但不影響下載檔案。</p>
+        <p className="media-separator-waveform-status">This browser cannot decode this format to display the waveform, but downloads are unaffected.</p>
       )}
     </div>
   );

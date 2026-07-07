@@ -107,12 +107,32 @@ export function useMediaSeparator() {
       };
       ffmpeg.on('progress', onProgress);
 
+      const audioLogs = [];
+      const logCollector = ({ message }) => {
+        audioLogs.push(message);
+      };
+      ffmpeg.on('log', logCollector);
+
       try {
         stage = 0;
-        await ffmpeg.exec(['-i', inputName, ...audioFormat.buildArgs(), audioOutName]);
+        const audioExitCode = await ffmpeg.exec(['-i', inputName, ...audioFormat.buildArgs(), audioOutName]);
+        if (audioExitCode !== 0) {
+          const logSummary = audioLogs.join('\n');
+          if (
+            logSummary.includes("matches no streams") ||
+            logSummary.includes("does not contain any stream") ||
+            logSummary.includes("does not contain any audio stream")
+          ) {
+            throw new Error("No audio track detected in the video");
+          }
+          throw new Error("Audio extraction failed (check video format)");
+        }
         
         stage = 1;
-        await ffmpeg.exec(['-i', inputName, ...videoFormat.buildArgs(), videoOutName]);
+        const videoExitCode = await ffmpeg.exec(['-i', inputName, ...videoFormat.buildArgs(), videoOutName]);
+        if (videoExitCode !== 0) {
+          throw new Error("Video extraction failed");
+        }
 
         const audioData = await ffmpeg.readFile(audioOutName);
         const videoData = await ffmpeg.readFile(videoOutName);
@@ -130,6 +150,7 @@ export function useMediaSeparator() {
         });
       } finally {
         ffmpeg.off('progress', onProgress);
+        ffmpeg.off('log', logCollector);
         await safeDelete(ffmpeg, inputName);
         await safeDelete(ffmpeg, audioOutName);
         await safeDelete(ffmpeg, videoOutName);

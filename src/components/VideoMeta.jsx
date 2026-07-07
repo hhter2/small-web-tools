@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ensureFFmpegLoaded, guessMime } from './mediaSeparatorEngine';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -82,6 +83,20 @@ const AUDIO_CODEC_MAP = {
 };
 
 const SUBTITLE_HANDLER_TYPES = ['sbtl', 'text', 'subt', 'clcp', 'subp'];
+
+const getAudioExtension = (codecFourCC, codecName) => {
+  const codecc = (codecFourCC || '').toLowerCase();
+  const name = (codecName || '').toLowerCase();
+  if (codecc === 'mp4a' || name.includes('aac')) return 'm4a';
+  if (codecc === 'ac-3' || name.includes('ac-3') || name.includes('dolby digital')) return 'ac3';
+  if (codecc === 'ec-3' || name.includes('e-ac-3')) return 'eac3';
+  if (codecc === 'flac' || name.includes('flac')) return 'flac';
+  if (codecc === 'opus' || name.includes('opus')) return 'opus';
+  if (codecc === 'vorbis' || name.includes('vorbis')) return 'ogg';
+  if (codecc === 'mp3' || name.includes('mp3')) return 'mp3';
+  if (codecc === 'alac' || name.includes('alac')) return 'm4a';
+  return 'mka';
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SMPTE Timecode conversion
@@ -470,6 +485,75 @@ export default function VideoMeta() {
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const fileInputRef = useRef(null);
 
+  const [extractingTrack, setExtractingTrack] = useState(null); // { fileId, trackIndex }
+  const [extractProgress, setExtractProgress] = useState(0);
+
+  const downloadAudioTrack = async (file, trackIndex, trackInfo) => {
+    if (extractingTrack) return;
+    setExtractingTrack({ fileId: file.id, trackIndex });
+    setExtractProgress(0);
+    setStatus('Loading engine...');
+
+    let ffmpeg = null;
+    const sourceExt = file.ext || 'mp4';
+    const inputName = `input-${file.id}-${trackIndex}.${sourceExt}`;
+    const targetExt = getAudioExtension(trackInfo.codecFourCC, trackInfo.codec);
+    const outputName = `audio-${file.id}-${trackIndex}.${targetExt}`;
+
+    try {
+      ffmpeg = await ensureFFmpegLoaded();
+      setStatus('Extracting audio track...');
+
+      const fileBuffer = new Uint8Array(await file.file.arrayBuffer());
+      await ffmpeg.writeFile(inputName, fileBuffer);
+
+      const onProgress = ({ progress }) => {
+        const clamped = Math.min(1, Math.max(0, progress || 0));
+        setExtractProgress(Math.round(clamped * 100));
+      };
+      ffmpeg.on('progress', onProgress);
+
+      try {
+        const exitCode = await ffmpeg.exec([
+          '-i', inputName,
+          '-map', `0:a:${trackIndex}`,
+          '-c:a', 'copy',
+          outputName
+        ]);
+
+        if (exitCode !== 0) {
+          throw new Error('FFmpeg execution failed');
+        }
+
+        const audioData = await ffmpeg.readFile(outputName);
+        const mimeType = guessMime(targetExt, 'audio');
+        const audioBlob = new Blob([audioData.buffer], { type: mimeType });
+
+        const downloadUrl = URL.createObjectURL(audioBlob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        const baseName = file.name.replace(/\.[^/.]+$/, '');
+        const codecLabel = (trackInfo.codec || 'audio').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        a.download = `${baseName}_track_${trackIndex + 1}_${codecLabel}.${targetExt}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+        setStatus(`Successfully downloaded audio track ${trackIndex + 1}.`);
+      } finally {
+        ffmpeg.off('progress', onProgress);
+        try { await ffmpeg.deleteFile(inputName); } catch (e) {}
+        try { await ffmpeg.deleteFile(outputName); } catch (e) {}
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(`Failed to extract audio track: ${err.message}`);
+    } finally {
+      setExtractingTrack(null);
+      setExtractProgress(0);
+    }
+  };
+
   const ACCEPTED = '.mp4,.mov,.m4v,.f4v,.3gp,.3g2,.avi,.mkv,.webm,.wmv,.flv,.ts,.mts,.m2ts,.mxf,.log,.txt';
   const activeFile = files.find(f => f.id === selectedId) || null;
 
@@ -485,6 +569,7 @@ export default function VideoMeta() {
       if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(`Already loaded: ${file.name}`); continue; }
       try {
         const parsed = await parseMediaFile(file);
+        parsed.file = file;
         if (parsed.type === 'video') parsed.objectUrl = URL.createObjectURL(file);
         newFiles.push(parsed);
       } catch (err) { console.error('Error parsing', file.name, err); setStatus(`Failed to parse ${file.name}: ${err.message}`); }
@@ -661,7 +746,39 @@ export default function VideoMeta() {
                     {activeFile.audioTracks.length > 0 && (
                       <div className="videometa-info-card">
                         <h3 className="videometa-card-title"><span className="videometa-card-icon">{'\ud83d\udd0a'}</span> Audio</h3>
-                        <div className="videometa-track-list">{activeFile.audioTracks.map((t, i) => { const cl = t.channels === 1 ? 'Mono' : t.channels === 2 ? 'Stereo' : t.channels === 6 ? '5.1' : t.channels === 8 ? '7.1' : `${t.channels}ch`; return <div className="videometa-track-entry" key={i}><span className="track-icon">{'\ud83c\udfb5'}</span><span className="track-label">Track {i + 1}</span><span className="track-detail">{[t.codec, t.channels ? cl : null, t.sampleRate ? `${t.sampleRate.toLocaleString()} Hz` : null, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' \u00b7 ')}</span></div>; })}</div>
+                        <div className="videometa-track-list">
+                          {activeFile.audioTracks.map((t, i) => {
+                            const cl = t.channels === 1 ? 'Mono' : t.channels === 2 ? 'Stereo' : t.channels === 6 ? '5.1' : t.channels === 8 ? '7.1' : `${t.channels}ch`;
+                            const isExtracting = extractingTrack && extractingTrack.fileId === activeFile.id && extractingTrack.trackIndex === i;
+                            return (
+                              <div className="videometa-track-entry" key={i}>
+                                <span className="track-icon">{'\ud83c\udfb5'}</span>
+                                <span className="track-label">Track {i + 1}</span>
+                                <span className="track-detail">
+                                  {[t.codec, t.channels ? cl : null, t.sampleRate ? `${t.sampleRate.toLocaleString()} Hz` : null, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' \u00b7 ')}
+                                </span>
+                                <button
+                                  className="videometa-download-btn"
+                                  disabled={!!extractingTrack}
+                                  onClick={() => downloadAudioTrack(activeFile, i, t)}
+                                  title="Download audio track"
+                                >
+                                  {isExtracting ? (
+                                    <>
+                                      <span className="spinner" />
+                                      <span>{extractProgress}%</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span>{'\u2b07\ufe0f'}</span>
+                                      <span>Download</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 

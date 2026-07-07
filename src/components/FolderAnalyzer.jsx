@@ -87,12 +87,16 @@ export default function FolderAnalyzer() {
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
-  const [treeData, setTreeData] = useState(null);
+  const [scannedProjects, setScannedProjects] = useState([]);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [viewMode, setViewMode] = useState('figure'); // figure, text
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [gitignoreText, setGitignoreText] = useState('');
+
+  const activeProject = scannedProjects[activeProjectIndex] || null;
+  const treeData = activeProject ? activeProject.treeData : null;
+  const gitignoreText = activeProject ? activeProject.gitignoreText : '';
 
   // Filters & Sorting States
   const [showSystemExclude, setShowSystemExclude] = useState(false);
@@ -194,7 +198,8 @@ export default function FolderAnalyzer() {
 
   const handleClear = () => {
     setCustomPath('');
-    setTreeData(null);
+    setScannedProjects([]);
+    setActiveProjectIndex(0);
     setCollapsedPaths({});
     setStatus('idle');
     setProgress({ current: 0, total: 0, phase: '' });
@@ -219,34 +224,21 @@ export default function FolderAnalyzer() {
         return;
       }
 
-      let combinedFiles = [];
-      const isBatch = paths.length > 1;
-      let gitTexts = [];
-
-      for (const res of scanResults) {
+      const projects = scanResults.map(res => {
         const p = res.path;
         const data = res.data;
-        const files = data.files || [];
-        
-        if (data.gitignoreText) {
-          gitTexts.push(`### Gitignore for ${p}\n${data.gitignoreText}`);
-        }
+        const name = p.replace(/\\/g, '/').split('/').pop() || 'folder';
+        const rootNode = buildTree(data.files, p);
+        return {
+          name,
+          path: p,
+          treeData: rootNode,
+          gitignoreText: data.gitignoreText || ''
+        };
+      });
 
-        if (isBatch) {
-          const parts = p.replace(/\\/g, '/').split('/');
-          const rootFolder = parts[parts.length - 1] || 'folder';
-          files.forEach(f => {
-            const fParts = f.path.split('/');
-            const relPath = fParts.slice(1).join('/');
-            f.path = `Batch Analysis||${p}||${relPath}`;
-          });
-        }
-        combinedFiles.push(...files);
-      }
-
-      setGitignoreText(gitTexts.join('\n\n'));
-      const root = buildTree(combinedFiles, isBatch ? 'Batch Analysis' : paths[0]);
-      setTreeData(root);
+      setScannedProjects(projects);
+      setActiveProjectIndex(0);
       setCollapsedPaths({});
       setStatus('success');
     } catch (err) {
@@ -269,13 +261,10 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: fileList.length, phase: 'Reading folder contents...' });
 
     try {
-      // Look for root .gitignore files inside dropped folder roots
+      const gitignoresByRoot = {};
       const gitignoreFiles = fileList.filter(
         f => f.name === '.gitignore' && (f.customPath || f.webkitRelativePath || '').replace(/\\/g, '/').split('/').length === 2
       );
-
-      let combinedGitignoreText = '';
-      const gitMatchers = {};
 
       for (const gitfile of gitignoreFiles) {
         const text = await new Promise((resolve) => {
@@ -286,55 +275,79 @@ export default function FolderAnalyzer() {
         });
         const folderName = (gitfile.customPath || gitfile.webkitRelativePath || '').replace(/\\/g, '/').split('/')[0];
         if (folderName) {
-          gitMatchers[folderName] = createGitignoreMatcher(text);
-          combinedGitignoreText += `### Gitignore for ${folderName}\n${text}\n\n`;
+          gitignoresByRoot[folderName] = {
+            text,
+            matcher: createGitignoreMatcher(text)
+          };
         }
       }
-      setGitignoreText(combinedGitignoreText);
 
-      const processedFiles = [];
-      const isBatch = rootFolderNames && rootFolderNames.length > 1;
+      // Group files by their top-level folder
+      const filesByRoot = {};
+      for (const name of rootFolderNames) {
+        filesByRoot[name] = [];
+      }
 
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         const fullPath = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
+        const firstPart = fullPath.split('/')[0] || 'root';
+        if (filesByRoot[firstPart]) {
+          filesByRoot[firstPart].push(file);
+        } else {
+          const rootName = rootFolderNames[0] || 'root';
+          if (!filesByRoot[rootName]) filesByRoot[rootName] = [];
+          filesByRoot[rootName].push(file);
+        }
+      }
 
-        setProgress({
-          current: i + 1,
-          total: fileList.length,
-          phase: `Analyzing ${file.name}...`
-        });
+      const projects = [];
+      let totalFilesProcessed = 0;
 
-        const firstPart = fullPath.split('/')[0];
-        const matcher = gitMatchers[firstPart];
-        const isIgnored = matcher ? matcher(fullPath, false) : false;
+      for (const rootName of rootFolderNames) {
+        const rootFiles = filesByRoot[rootName] || [];
+        const gitInfo = gitignoresByRoot[rootName];
+        const matcher = gitInfo ? gitInfo.matcher : () => false;
+        const processedFiles = [];
 
-        let lineCount = 0;
-        const isText = await isTextFile(file);
-        if (isText && file.size < 5 * 1024 * 1024 && !isIgnored) {
-          lineCount = await countFileLines(file);
+        for (const file of rootFiles) {
+          const fullPath = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
+          totalFilesProcessed++;
+
+          setProgress({
+            current: totalFilesProcessed,
+            total: fileList.length,
+            phase: `Analyzing ${file.name}...`
+          });
+
+          const isIgnored = matcher(fullPath, false);
+          let lineCount = 0;
+          const isText = await isTextFile(file);
+          if (isText && file.size < 5 * 1024 * 1024 && !isIgnored) {
+            lineCount = await countFileLines(file);
+          }
+
+          processedFiles.push({
+            name: file.name,
+            path: fullPath,
+            size: file.size,
+            lineCount: lineCount,
+            isText,
+            isIgnored
+          });
         }
 
-        let path = fullPath;
-        if (isBatch) {
-          const parts = fullPath.split('/');
-          const rootFolder = parts[0];
-          const relPath = parts.slice(1).join('/');
-          path = `Batch Analysis||${rootFolder}||${relPath}`;
-        }
-
-        processedFiles.push({
-          name: file.name,
-          path: path,
-          size: file.size,
-          lineCount: lineCount,
-          isText,
-          isIgnored
+        const rootNode = buildTree(processedFiles, rootName);
+        projects.push({
+          name: rootName,
+          path: rootName,
+          treeData: rootNode,
+          gitignoreText: gitInfo ? gitInfo.text : ''
         });
       }
 
-      const root = buildTree(processedFiles, isBatch ? 'Batch Analysis' : (rootFolderNames ? rootFolderNames[0] : 'root'));
-      setTreeData(root);
+      setScannedProjects(projects);
+      setActiveProjectIndex(0);
       setCollapsedPaths({});
       setStatus('success');
     } catch (err) {
@@ -982,12 +995,12 @@ export default function FolderAnalyzer() {
       <div className="folder-analyzer-header">
         <div className="header-title-group">
           <h2>Folder Structure Analyzer</h2>
-          {status === 'success' && treeData && (
+          {status === 'success' && activeProject && scannedProjects.length === 1 && (
             <div className="scanned-path-subtitle">
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="subtitle-icon">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
               </svg>
-              <span>{customPath || treeData.name}</span>
+              <span>{activeProject.path || activeProject.name}</span>
             </div>
           )}
         </div>
@@ -1001,6 +1014,25 @@ export default function FolderAnalyzer() {
           </button>
         )}
       </div>
+
+      {/* Batch project tabs (only shown when multiple projects scanned) */}
+      {status === 'success' && scannedProjects.length > 1 && (
+        <div className="batch-project-tabs">
+          {scannedProjects.map((proj, idx) => (
+            <button
+              key={proj.path + idx}
+              className={`batch-tab-btn ${idx === activeProjectIndex ? 'active' : ''}`}
+              onClick={() => { setActiveProjectIndex(idx); setCollapsedPaths({}); }}
+              title={proj.path}
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              {proj.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {status !== 'success' && (
         <p className="tool-description">

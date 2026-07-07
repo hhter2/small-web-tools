@@ -12338,6 +12338,51 @@ html[data-theme="dark"] .btn-clear:hover {
   transform: scale(1.005);
 }
 
+.batch-project-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.batch-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-app);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-tab-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+  background: var(--nav-hover-bg);
+}
+
+.batch-tab-btn.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .batch-tab-btn.active {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
 .folder-analyzer-inputs {
   display: flex;
   gap: 16px;

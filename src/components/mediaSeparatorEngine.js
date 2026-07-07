@@ -11,9 +11,24 @@ export function getFFmpeg() {
 }
 
 /**
+ * Custom fetch helper to convert local relative assets to Blob URLs.
+ * Resolves against window.location.origin to ensure absolute resolution inside worker contexts.
+ */
+async function getBlobURL(path, mimeType) {
+  const url = window.location.origin + path;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to load local engine asset ${path}: HTTP status ${res.status}`);
+  }
+  const blob = await res.blob();
+  const blobWithMime = new Blob([blob], { type: mimeType });
+  return URL.createObjectURL(blobWithMime);
+}
+
+/**
  * Ensure the ffmpeg core is loaded, returning the FFmpeg instance.
  * Shares the load promise across calls to prevent redundant downloads.
- * Uses direct same-origin URLs for local self-hosting.
+ * Resets the loadingPromise on failure so subsequent retries can reload.
  * @param {(message: string) => void} [onLog]
  */
 export async function ensureFFmpegLoaded(onLog) {
@@ -22,15 +37,20 @@ export async function ensureFFmpegLoaded(onLog) {
 
   if (!loadingPromise) {
     loadingPromise = (async () => {
-      if (onLog) {
-        ffmpeg.on('log', ({ message }) => onLog(message));
+      try {
+        if (onLog) {
+          ffmpeg.on('log', ({ message }) => onLog(message));
+        }
+        // Fetch local files and convert to Blob URLs to enable worker-compatibility
+        const [coreURL, wasmURL] = await Promise.all([
+          getBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
+          getBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
+        ]);
+        await ffmpeg.load({ coreURL, wasmURL });
+      } catch (e) {
+        loadingPromise = null; // Clear failed promise reference on error
+        throw e;
       }
-      // Pass direct same-origin URLs to save memory and avoid toBlobURL fetch issues
-      const baseURL = window.location.origin;
-      await ffmpeg.load({
-        coreURL: `${baseURL}/ffmpeg/ffmpeg-core.js`,
-        wasmURL: `${baseURL}/ffmpeg/ffmpeg-core.wasm`,
-      });
     })();
   }
 

@@ -147,7 +147,20 @@ export function useMediaSeparator() {
       processingRef.current = false;
       setIsProcessing(false);
       setEngineLoading(false);
-      throw err;
+
+      // Report engine load failure on the first pending item
+      setItems((prev) => {
+        const firstPending = prev.find((it) => it.status === STATUS.PENDING);
+        if (firstPending) {
+          return prev.map((it) =>
+            it.id === firstPending.id
+              ? { ...it, status: STATUS.ERROR, error: `Engine load failed: ${err.message}` }
+              : it
+          );
+        }
+        return prev;
+      });
+      return;
     }
     setEngineLoading(false);
 
@@ -170,7 +183,6 @@ export function useMediaSeparator() {
       try {
         await processOne(next);
       } catch (err) {
-        // If stopped mid-process, it was cancelled by user
         if (stopRef.current) {
           updateItem(next.id, { status: STATUS.PENDING, progress: 0 });
         } else {

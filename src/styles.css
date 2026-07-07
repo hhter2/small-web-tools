@@ -11668,58 +11668,51 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   gap: 1.5rem;
   position: relative;
   width: 100%;
-  max-width: 1000px;
 }
 
-/* Drag overlay */
 .mediasplit-drag-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(var(--bg-app), 0.9);
-  border: 2px dashed var(--accent);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+  background: rgba(79, 185, 73, 0.15);
   backdrop-filter: blur(4px);
-}
-
-.mediasplit-drag-overlay p {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0;
-}
-
-/* Dropzone styling matching videometa */
-.mediasplit-dropzone {
+  border: 2.5px dashed var(--accent);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 18rem;
-  padding: 2rem;
+  z-index: 100;
+  pointer-events: none;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.mediasplit-dropzone {
   border: 2px dashed var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-card);
-  cursor: pointer;
+  border-radius: 14px;
+  padding: 40px 20px;
   text-align: center;
-  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(79, 185, 73, 0.02);
 }
 
 .mediasplit-dropzone:hover,
 .mediasplit-dropzone.dragover {
   border-color: var(--accent);
-  background: var(--accent-light);
+  background: rgba(79, 185, 73, 0.06);
 }
 
 .mediasplit-dropzone svg {
   color: var(--text-muted);
   margin-bottom: 16px;
-  transition: color 0.2s;
+  transition: color 0.25s;
 }
 
 .mediasplit-dropzone:hover svg,

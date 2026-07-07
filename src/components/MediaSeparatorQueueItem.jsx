@@ -75,16 +75,16 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
 
       {item.status === 'done' && (
         <div className="mediasplit-queue-item-results">
-          <div className="mediasplit-queue-item-result">
+          <div className="mediasplit-queue-item-result result-audio">
             <p className="mediasplit-queue-item-result-title">Audio Track</p>
             <MediaSeparatorWaveform audioURL={item.audioURL} className="mediasplit-waveform-container" />
             <a href={item.audioURL} download={buildDownloadName(item, 'audio')} className="mediasplit-download-link">
               Download Audio
             </a>
           </div>
-          <div className="mediasplit-queue-item-result">
+          <div className="mediasplit-queue-item-result result-video">
             <p className="mediasplit-queue-item-result-title">Silent Video</p>
-            <video src={item.videoURL} controls className="mediasplit-queue-item-preview" />
+            <video src={item.videoURL} controls className="mediasplit-result-video" />
             <a href={item.videoURL} download={buildDownloadName(item, 'video')} className="mediasplit-download-link">
               Download Video
             </a>

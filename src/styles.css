@@ -12049,9 +12049,9 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 }
 
 .mediasplit-queue-item-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   padding-top: 1rem;
   border-top: 1px dashed var(--border-color);
 }
@@ -12060,6 +12060,28 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+}
+
+.mediasplit-queue-item-result.result-video {
+  max-width: 560px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.mediasplit-result-video {
+  width: 100%;
+  height: 315px;
+  background: #000000;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  object-fit: contain;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mediasplit-queue-item-result.result-video .mediasplit-download-link {
+  width: 100%;
+  max-width: 240px;
 }
 
 .mediasplit-queue-item-result-title {
@@ -12105,6 +12127,7 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   flex: 1;
   background: transparent;
   color: var(--accent);
+  min-width: 0;
 }
 
 .media-separator-waveform-time {

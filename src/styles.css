@@ -12772,22 +12772,29 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 .path-input-group {
   display: flex;
   gap: 12px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .path-input-group input {
   flex: 1;
+  height: 48px !important;
+  box-sizing: border-box;
+  border-radius: 10px !important;
 }
 
 .path-input-group button {
   white-space: nowrap;
   padding: 0 24px;
-  border-radius: 10px;
+  border-radius: 10px !important;
   font-size: 0.95rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  height: 48px !important;
+  box-sizing: border-box;
+  align-self: auto !important;
+  gap: 8px;
 }
 
 .path-help-text {

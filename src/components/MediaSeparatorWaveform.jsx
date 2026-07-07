@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-const BAR_COUNT = 160;
+const BAR_COUNT = 240;
 
 /**
  * Displays audio waveform with play/pause controls and a seekable timeline.
@@ -105,8 +105,8 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
         </button>
         <canvas
           ref={canvasRef}
-          width={640}
-          height={64}
+          width={1000}
+          height={80}
           onClick={seekTo}
           className="media-separator-waveform-canvas"
           style={{ cursor: peaks && peaks.length ? 'pointer' : 'default' }}
@@ -143,7 +143,17 @@ function computePeaks(audioBuffer, bucketCount) {
       peaks.push([0, 0]);
     }
   }
-  return peaks;
+
+  // Normalize peaks so the loudest peak is 1.0 (or close to it)
+  // This makes quiet audio track peaks show up clearly instead of looking flat.
+  let maxVal = 0.01;
+  for (let i = 0; i < peaks.length; i++) {
+    const absVal = Math.max(Math.abs(peaks[i][0]), Math.abs(peaks[i][1]));
+    if (absVal > maxVal) {
+      maxVal = absVal;
+    }
+  }
+  return peaks.map(([min, max]) => [min / maxVal, max / maxVal]);
 }
 
 function draw(canvas, peaks, progress) {

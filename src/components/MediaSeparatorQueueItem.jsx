@@ -12,12 +12,13 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
 
   return (
     <li className="mediasplit-queue-item">
-      <div className="mediasplit-queue-item-header">
-        <video src={sourcePreviewURL} controls muted className="mediasplit-queue-item-preview" />
-        <div className="mediasplit-queue-item-meta">
-          <p className="mediasplit-queue-item-filename">{item.file.name}</p>
-          <p className="mediasplit-queue-item-size">{formatBytes(item.file.size)}</p>
-        </div>
+      {/* Top right actions & status */}
+      <div className="mediasplit-queue-item-actions">
+        {item.status === 'ready' && <span className="mediasplit-status-badge status-ready">Ready</span>}
+        {isBusy && <span className="mediasplit-status-badge status-processing">Processing {item.progress}%</span>}
+        {item.status === 'done' && <span className="mediasplit-status-badge status-done">Done</span>}
+        {item.status === 'error' && <span className="mediasplit-status-badge status-error">Error</span>}
+        
         <button
           type="button"
           onClick={() => onRemove(item.id)}
@@ -26,6 +27,14 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
         >
           Remove
         </button>
+      </div>
+
+      <div className="mediasplit-queue-item-header">
+        <video src={sourcePreviewURL} controls muted className="mediasplit-queue-item-preview" />
+        <div className="mediasplit-queue-item-meta">
+          <p className="mediasplit-queue-item-filename">{item.file.name}</p>
+          <p className="mediasplit-queue-item-size">{formatBytes(item.file.size)}</p>
+        </div>
       </div>
 
       <div className="mediasplit-queue-item-formats">
@@ -45,27 +54,24 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
         />
       </div>
 
-      <div className="mediasplit-queue-item-status">
-        {item.status === 'ready' && <span>Ready</span>}
-        {isBusy && (
-          <div className="mediasplit-queue-item-progress">
-            <progress value={item.progress} max={100} />
-            <span>Processing {item.progress}%</span>
-          </div>
-        )}
-        {item.status === 'error' && (
-          <div className="mediasplit-queue-item-error">
-            <span>Error: {item.error}</span>
-            <button
-              type="button"
-              onClick={() => onRetry(item.id)}
-              className="mediasplit-btn-secondary"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-      </div>
+      {isBusy && (
+        <div className="mediasplit-queue-item-progress">
+          <progress value={item.progress} max={100} />
+        </div>
+      )}
+
+      {item.status === 'error' && (
+        <div className="mediasplit-queue-item-error">
+          <span>Error: {item.error}</span>
+          <button
+            type="button"
+            onClick={() => onRetry(item.id)}
+            className="mediasplit-btn-secondary"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {item.status === 'done' && (
         <div className="mediasplit-queue-item-results">

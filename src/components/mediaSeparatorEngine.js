@@ -10,20 +10,7 @@ export function getFFmpeg() {
   return ffmpegInstance;
 }
 
-/**
- * Custom fetch helper to convert local relative assets to Blob URLs.
- * Resolves against window.location.origin to ensure absolute resolution inside worker contexts.
- */
-async function getBlobURL(path, mimeType) {
-  const url = window.location.origin + path;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to load local engine asset ${path}: HTTP status ${res.status}`);
-  }
-  const blob = await res.blob();
-  const blobWithMime = new Blob([blob], { type: mimeType });
-  return URL.createObjectURL(blobWithMime);
-}
+
 
 /**
  * Ensure the ffmpeg core is loaded, returning the FFmpeg instance.
@@ -42,11 +29,10 @@ export async function ensureFFmpegLoaded(onLog) {
           ffmpeg.on('log', ({ message }) => onLog(message));
         }
         
-        // Fetch core.js as a Blob URL for inline worker injection compatibility
-        const coreURL = await getBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript');
-        
-        // Pass core.wasm as a direct absolute HTTP same-origin URL.
-        // This avoids fetch('blob:...') same-origin credentials exceptions inside worker global scopes.
+        // Since we are self-hosting on the same origin, we don't need Blob URLs 
+        // to bypass cross-origin worker restrictions. Blob URLs can break dynamic import()
+        // in some browser environments. We pass absolute HTTP URLs directly.
+        const coreURL = window.location.origin + '/ffmpeg/ffmpeg-core.js';
         const wasmURL = window.location.origin + '/ffmpeg/ffmpeg-core.wasm';
         
         await ffmpeg.load({ coreURL, wasmURL });

@@ -497,56 +497,67 @@ export default function VideoMeta() {
     audioURLsRef.current = audioURLs;
   }, [audioURLs]);
 
-  const loadWaveform = async (file, trackIndex, trackInfo) => {
-    const key = `${file.id}-${trackIndex}`;
-    if (loadingURLs[key] || extractingTrack) return;
+  useEffect(() => {
+    if (!activeFile || activeFile.type !== 'video' || activeFile.audioTracks.length === 0) return;
 
-    setLoadingURLs(prev => ({ ...prev, [key]: true }));
-    setStatus('Loading engine...');
+    let cancelled = false;
 
-    let ffmpeg = null;
-    const sourceExt = file.ext || 'mp4';
-    const inputName = `input-wave-${file.id}-${trackIndex}.${sourceExt}`;
-    const targetExt = getAudioExtension(trackInfo.codecFourCC, trackInfo.codec);
-    const outputName = `audio-wave-${file.id}-${trackIndex}.${targetExt}`;
+    const extractAll = async () => {
+      for (let i = 0; i < activeFile.audioTracks.length; i++) {
+        const key = `${activeFile.id}-${i}`;
+        
+        if (audioURLsRef.current[key]) continue;
+        if (cancelled) break;
 
-    try {
-      ffmpeg = await ensureFFmpegLoaded();
-      setStatus('Extracting audio for waveform...');
+        setLoadingURLs(prev => ({ ...prev, [key]: true }));
 
-      const fileBuffer = new Uint8Array(await file.file.arrayBuffer());
-      await ffmpeg.writeFile(inputName, fileBuffer);
+        let ffmpeg = null;
+        const trackInfo = activeFile.audioTracks[i];
+        const sourceExt = activeFile.ext || 'mp4';
+        const inputName = `input-wave-${activeFile.id}-${i}.${sourceExt}`;
+        const targetExt = getAudioExtension(trackInfo.codecFourCC, trackInfo.codec);
+        const outputName = `audio-wave-${activeFile.id}-${i}.${targetExt}`;
 
-      try {
-        const exitCode = await ffmpeg.exec([
-          '-i', inputName,
-          '-map', `0:a:${trackIndex}`,
-          '-c:a', 'copy',
-          outputName
-        ]);
+        try {
+          ffmpeg = await ensureFFmpegLoaded();
+          if (cancelled) break;
 
-        if (exitCode !== 0) {
-          throw new Error('FFmpeg execution failed');
+          const fileBuffer = new Uint8Array(await activeFile.file.arrayBuffer());
+          await ffmpeg.writeFile(inputName, fileBuffer);
+
+          const exitCode = await ffmpeg.exec([
+            '-i', inputName,
+            '-map', `0:a:${i}`,
+            '-c:a', 'copy',
+            outputName
+          ]);
+
+          if (exitCode === 0 && !cancelled) {
+            const audioData = await ffmpeg.readFile(outputName);
+            const mimeType = guessMime(targetExt, 'audio');
+            const audioBlob = new Blob([audioData.buffer], { type: mimeType });
+            const url = URL.createObjectURL(audioBlob);
+            setAudioURLs(prev => ({ ...prev, [key]: url }));
+          }
+
+          try { await ffmpeg.deleteFile(inputName); } catch (e) {}
+          try { await ffmpeg.deleteFile(outputName); } catch (e) {}
+        } catch (err) {
+          console.error(`Failed to extract audio track ${i} automatically:`, err);
+        } finally {
+          if (!cancelled) {
+            setLoadingURLs(prev => ({ ...prev, [key]: false }));
+          }
         }
-
-        const audioData = await ffmpeg.readFile(outputName);
-        const mimeType = guessMime(targetExt, 'audio');
-        const audioBlob = new Blob([audioData.buffer], { type: mimeType });
-        const url = URL.createObjectURL(audioBlob);
-
-        setAudioURLs(prev => ({ ...prev, [key]: url }));
-        setStatus('Waveform loaded successfully.');
-      } finally {
-        try { await ffmpeg.deleteFile(inputName); } catch (e) {}
-        try { await ffmpeg.deleteFile(outputName); } catch (e) {}
       }
-    } catch (err) {
-      console.error(err);
-      setStatus(`Failed to load waveform: ${err.message}`);
-    } finally {
-      setLoadingURLs(prev => ({ ...prev, [key]: false }));
-    }
-  };
+    };
+
+    extractAll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
 
   const downloadAudioTrack = async (file, trackIndex, trackInfo) => {
     if (extractingTrack) return;
@@ -855,7 +866,11 @@ export default function VideoMeta() {
                                       </>
                                     ) : (
                                       <>
-                                        <span>{'\u2b07\ufe0f'}</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                          <polyline points="7 10 12 15 17 10" />
+                                          <line x1="12" y1="15" x2="12" y2="3" />
+                                        </svg>
                                         <span>Download</span>
                                       </>
                                     )}
@@ -866,14 +881,8 @@ export default function VideoMeta() {
                                     <MediaSeparatorWaveform audioURL={audioURLs[key]} className="videometa-waveform-player" />
                                   ) : (
                                     <div className="videometa-waveform-placeholder">
-                                      <button
-                                        type="button"
-                                        className="btn-secondary btn-sm"
-                                        disabled={loadingURLs[key] || !!extractingTrack}
-                                        onClick={() => loadWaveform(activeFile, i, t)}
-                                      >
-                                        {loadingURLs[key] ? 'Extracting audio...' : 'Load Waveform & Player'}
-                                      </button>
+                                      <span className="spinner" style={{ marginRight: '8px' }} />
+                                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Generating waveform...</span>
                                     </div>
                                   )}
                                 </div>

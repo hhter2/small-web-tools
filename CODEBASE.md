@@ -146,7 +146,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-iplookup` | `IpLookup.jsx` | Network | IP geolocation (via `/api/iplookup`) |
 | `tool-speedtest` | `NetworkSpeedTest.jsx` | Network | Ping & download speed test |
 | `tool-imgmeta` | `ImgMeta.jsx` | Media | EXIF / ICC / GPS image metadata |
-| `tool-officemeta` | `OfficeMeta.jsx` | File | Word / Excel / PPT metadata reader |
+| `tool-officemeta` | `OfficeMeta.jsx` | Media | Word / Excel / PPT metadata reader |
 | `tool-qrcode` | `QrBarcodeGenerator.jsx` | Developer | QR code generator |
 | `tool-barcode` | `QrBarcodeGenerator.jsx` | Developer | Barcode generator (same component, tab-switched) |
 | `tool-qrbarcodescan` | `QrBarcodeScanner.jsx` | Utilities | QR & barcode scanner (camera + file upload, 14+ formats) |

@@ -28,8 +28,7 @@ small-web-tools/
 ├── index.html                   # SPA entry point (Vite root)
 │
 ├── public/                      # Static assets copied verbatim to dist/
-│   ├── favicon.svg              # Site favicon
-│   └── ffmpeg/                  # Local ffmpeg-core engine files (js/wasm)
+│   └── favicon.svg              # Site favicon
 │
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)

@@ -1,4 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { toBlobURL } from '@ffmpeg/util';
 
 let ffmpegInstance = null;
 let loadingPromise = null;
@@ -30,11 +31,11 @@ export async function ensureFFmpegLoaded(onLog) {
           if (onLog) onLog(message);
         });
         
-        // Since we are self-hosting on the same origin, we don't need Blob URLs 
-        // to bypass cross-origin worker restrictions. Blob URLs can break dynamic import()
-        // in some browser environments. We pass absolute HTTP URLs directly.
-        const coreURL = window.location.origin + '/ffmpeg/ffmpeg-core.js';
-        const wasmURL = window.location.origin + '/ffmpeg/ffmpeg-core.wasm';
+        // Load FFmpeg-core from CDN to bypass the 25MB file limit on Cloudflare Pages.
+        // We use toBlobURL to fetch cross-origin worker resources and load them locally.
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+        const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
         
         await ffmpeg.load({ coreURL, wasmURL });
       } catch (e) {

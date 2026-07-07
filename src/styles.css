@@ -12562,11 +12562,22 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   display: none;
   flex-direction: column;
   z-index: 20;
-  overflow: hidden;
+  overflow: visible;
   min-width: 170px;
 }
 
-.download-dropdown-wrapper:hover .download-options {
+.download-options::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: transparent;
+}
+
+.download-dropdown-wrapper:hover .download-options,
+.download-options.show {
   display: flex;
 }
 
@@ -12761,7 +12772,22 @@ html[data-theme="dark"] .videometa-tab-btn.active {
 .path-input-group {
   display: flex;
   gap: 12px;
+  align-items: stretch;
+}
+
+.path-input-group input {
+  flex: 1;
+}
+
+.path-input-group button {
+  white-space: nowrap;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
 .path-help-text {

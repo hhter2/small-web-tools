@@ -98,6 +98,34 @@ async function geoLookup(ip) {
   throw new Error(lastErr);
 }
 
+function resolvePathByName(folderName) {
+  const currentDir = process.cwd();
+  if (path.basename(currentDir).toLowerCase() === folderName.toLowerCase()) {
+    return currentDir;
+  }
+  
+  const childPath = path.join(currentDir, folderName);
+  if (fs.existsSync(childPath) && fs.statSync(childPath).isDirectory()) {
+    return childPath;
+  }
+  
+  let parent = path.dirname(currentDir);
+  while (parent && parent !== currentDir) {
+    if (path.basename(parent).toLowerCase() === folderName.toLowerCase()) {
+      return parent;
+    }
+    const siblingPath = path.join(parent, folderName);
+    if (fs.existsSync(siblingPath) && fs.statSync(siblingPath).isDirectory()) {
+      return siblingPath;
+    }
+    const nextParent = path.dirname(parent);
+    if (nextParent === parent) break;
+    parent = nextParent;
+  }
+  
+  return null;
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
@@ -117,6 +145,29 @@ export default defineConfig({
       name: 'scan-local-dir-api',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
+          if (req.url?.startsWith('/api/resolve-local-path')) {
+            const urlObj = new URL(req.url, 'http://localhost');
+            const name = urlObj.searchParams.get('name') || '';
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            
+            if (!name) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: 'Name parameter is required' }));
+              return;
+            }
+            
+            const resolved = resolvePathByName(name);
+            if (resolved) {
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, path: resolved }));
+            } else {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ ok: false, error: 'Path could not be resolved locally' }));
+            }
+            return;
+          }
+
           if (!req.url?.startsWith('/api/scan-local-dir')) return next();
 
           const urlObj = new URL(req.url, 'http://localhost');

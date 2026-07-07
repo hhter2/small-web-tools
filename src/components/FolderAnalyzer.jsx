@@ -30,6 +30,21 @@ export default function FolderAnalyzer() {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const folderInputRef = useRef(null);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const downloadWrapperRef = useRef(null);
+
+  // Close download dropdown on clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (downloadWrapperRef.current && !downloadWrapperRef.current.contains(e.target)) {
+        setDownloadOpen(false);
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
 
   // Reset copy success tooltip after a delay
   useEffect(() => {
@@ -172,11 +187,58 @@ export default function FolderAnalyzer() {
     }
   }
 
+  const resolveAndScanLocalPath = async (rootFolderName, fallbackFiles) => {
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalDev) {
+      processFiles(fallbackFiles);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/resolve-local-path?name=${encodeURIComponent(rootFolderName)}`);
+      const data = await res.json();
+      if (data.ok && data.path) {
+        setCustomPath(data.path);
+        
+        setStatus('scanning');
+        setProgress({ current: 0, total: 100, phase: 'Scanning resolved local directory...' });
+        
+        const scanRes = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(data.path)}`);
+        const scanData = await scanRes.json();
+        
+        if (scanData.ok) {
+          let tempTotalLines = 0;
+          let tempTotalSize = 0;
+          for (const file of scanData.files) {
+            tempTotalSize += file.size;
+            tempTotalLines += file.lineCount;
+          }
+
+          const root = buildTree(scanData.files, data.path);
+          setTreeData(root);
+          setTotalLines(tempTotalLines);
+          setTotalFiles(scanData.files.length);
+          setTotalSize(tempTotalSize);
+          setCollapsedPaths({});
+          setStatus('success');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Local path resolution failed, falling back to browser scan:', e);
+    }
+
+    processFiles(fallbackFiles);
+  };
+
   // Handle standard <input type="file" webkitdirectory /> selection
   const handleFolderSelect = (e) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      processFiles(Array.from(files));
+      const filesArray = Array.from(files);
+      const firstPath = filesArray[0].webkitRelativePath || '';
+      const rootFolderName = firstPath.split('/')[0] || '';
+      resolveAndScanLocalPath(rootFolderName, filesArray);
     }
   };
 
@@ -242,18 +304,22 @@ export default function FolderAnalyzer() {
 
     try {
       const allFiles = [];
+      let rootFolderName = '';
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.kind === 'file') {
           const entry = item.webkitGetAsEntry();
           if (entry) {
+            if (entry.isDirectory && !rootFolderName) {
+              rootFolderName = entry.name;
+            }
             const files = await traverseEntry(entry);
             allFiles.push(...files);
           }
         }
       }
       if (allFiles.length > 0) {
-        processFiles(allFiles);
+        resolveAndScanLocalPath(rootFolderName, allFiles);
       } else {
         setErrorMsg('No files detected in the dropped selection.');
         setStatus('error');
@@ -767,11 +833,19 @@ export default function FolderAnalyzer() {
                 {copySuccess && <span className="action-tooltip">Copied!</span>}
               </button>
 
-              <div className="download-dropdown-wrapper">
+              <div 
+                className="download-dropdown-wrapper"
+                ref={downloadWrapperRef}
+                onMouseEnter={() => setDownloadOpen(true)}
+                onMouseLeave={() => setDownloadOpen(false)}
+              >
                 <button 
-                  className="action-icon-btn" 
+                  className={`action-icon-btn ${downloadOpen ? 'active' : ''}`}
                   title="Download structure file"
-                  onClick={() => handleDownload('txt')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDownloadOpen(!downloadOpen);
+                  }}
                 >
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -779,9 +853,9 @@ export default function FolderAnalyzer() {
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
                 </button>
-                <div className="download-options">
-                  <button onClick={() => handleDownload('txt')}>As Plaintext (.txt)</button>
-                  <button onClick={() => handleDownload('svg')}>As SVG Diagram (.svg)</button>
+                <div className={`download-options ${downloadOpen ? 'show' : ''}`}>
+                  <button onClick={() => { handleDownload('txt'); setDownloadOpen(false); }}>As Plaintext (.txt)</button>
+                  <button onClick={() => { handleDownload('svg'); setDownloadOpen(false); }}>As SVG Diagram (.svg)</button>
                 </div>
               </div>
             </div>

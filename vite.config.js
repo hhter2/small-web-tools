@@ -126,6 +126,70 @@ function resolvePathByName(folderName) {
   return null;
 }
 
+function createGitignoreMatcher(gitignoreContent) {
+  if (!gitignoreContent) return () => false;
+
+  const lines = gitignoreContent.split(/\r?\n/);
+  const rules = [];
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    let isNegated = false;
+    if (line.startsWith('!')) {
+      isNegated = true;
+      line = line.slice(1);
+    }
+
+    let isDirOnly = false;
+    if (line.endsWith('/')) {
+      isDirOnly = true;
+      line = line.slice(0, -1);
+    }
+
+    let regexStr = line
+      .replace(/\./g, '\\.')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+
+    if (line.startsWith('/')) {
+      regexStr = '^' + regexStr.slice(1);
+    } else {
+      regexStr = '(^|\\/)' + regexStr;
+    }
+
+    regexStr += '(\\/|$)';
+
+    try {
+      rules.push({
+        regex: new RegExp(regexStr),
+        isNegated,
+        isDirOnly
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  return (filePath, isDir) => {
+    let ignored = false;
+    const parts = filePath.split('/');
+    const relPath = parts.slice(1).join('/');
+
+    if (!relPath) return false;
+
+    for (const rule of rules) {
+      if (rule.isDirOnly && !isDir) continue;
+
+      if (rule.regex.test(relPath)) {
+        ignored = !rule.isNegated;
+      }
+    }
+    return ignored;
+  };
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
@@ -213,52 +277,71 @@ export default defineConfig({
               'class', 'jar', 'war', 'eot', 'ttf', 'woff', 'woff2'
             ]);
 
-            function scanDir(dir, prefix = '') {
+            let gitignoreText = '';
+            const gitignorePath = path.join(targetPath, '.gitignore');
+            if (fs.existsSync(gitignorePath)) {
+              try {
+                gitignoreText = fs.readFileSync(gitignorePath, 'utf8');
+              } catch {}
+            }
+
+            const isIgnoredFile = createGitignoreMatcher(gitignoreText);
+
+            function scanDir(dir, prefix = '', parentIgnored = false) {
               const results = [];
               const items = fs.readdirSync(dir);
               for (const item of items) {
-                if (item === 'node_modules' || item === '.git' || item === 'dist' || item === '.next' || item === 'build') {
+                if (item === '.git') {
                   continue;
                 }
                 const full = path.join(dir, item);
                 const rel = prefix ? `${prefix}/${item}` : `${rootFolderName}/${item}`;
                 const itemStat = fs.statSync(full);
-                if (itemStat.isDirectory()) {
-                  results.push(...scanDir(full, rel));
+                const isDir = itemStat.isDirectory();
+                
+                const selfIgnored = isIgnoredFile(rel, isDir);
+                const itemIgnored = parentIgnored || selfIgnored;
+
+                if (isDir) {
+                  results.push(...scanDir(full, rel, itemIgnored));
                 } else if (itemStat.isFile()) {
                   const ext = item.split('.').pop().toLowerCase();
                   let isText = false;
                   let lines = 0;
 
-                  if (!BINARY_EXTENSIONS.has(ext)) {
-                    if (TEXT_EXTENSIONS.has(ext)) {
-                      isText = true;
-                    } else {
-                      try {
-                        const fd = fs.openSync(full, 'r');
-                        const buf = Buffer.alloc(1024);
-                        const read = fs.readSync(fd, buf, 0, 1024, 0);
-                        fs.closeSync(fd);
+                  if (!itemIgnored) {
+                    if (!BINARY_EXTENSIONS.has(ext)) {
+                      if (TEXT_EXTENSIONS.has(ext)) {
                         isText = true;
-                        for (let j = 0; j < read; j++) {
-                          if (buf[j] === 0) {
-                            isText = false;
-                            break;
+                      } else {
+                        try {
+                          const fd = fs.openSync(full, 'r');
+                          const buf = Buffer.alloc(1024);
+                          const read = fs.readSync(fd, buf, 0, 1024, 0);
+                          fs.closeSync(fd);
+                          isText = true;
+                          for (let j = 0; j < read; j++) {
+                            if (buf[j] === 0) {
+                              isText = false;
+                              break;
+                            }
                           }
+                        } catch {
+                          isText = false;
                         }
-                      } catch {
-                        isText = false;
                       }
                     }
-                  }
 
-                  if (isText && itemStat.size < 5 * 1024 * 1024) {
-                    try {
-                      const content = fs.readFileSync(full, 'utf8');
-                      lines = content.split(/\r?\n/).length;
-                    } catch {
-                      lines = 0;
+                    if (isText && itemStat.size < 5 * 1024 * 1024) {
+                      try {
+                        const content = fs.readFileSync(full, 'utf8');
+                        lines = content.split(/\r?\n/).length;
+                      } catch {
+                        lines = 0;
+                      }
                     }
+                  } else {
+                    isText = !BINARY_EXTENSIONS.has(ext) && TEXT_EXTENSIONS.has(ext);
                   }
 
                   results.push({
@@ -271,14 +354,6 @@ export default defineConfig({
                 }
               }
               return results;
-            }
-
-            let gitignoreText = '';
-            const gitignorePath = path.join(targetPath, '.gitignore');
-            if (fs.existsSync(gitignorePath)) {
-              try {
-                gitignoreText = fs.readFileSync(gitignorePath, 'utf8');
-              } catch {}
             }
 
             const files = scanDir(targetPath);

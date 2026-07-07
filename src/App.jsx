@@ -26,6 +26,7 @@ import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
 import AudioMeta from './components/AudioMeta.jsx';
 import VideoMeta from './components/VideoMeta.jsx';
 import MediaSeparator from './components/MediaSeparator';
+import FolderAnalyzer from './components/FolderAnalyzer.jsx';
 
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
@@ -140,6 +141,10 @@ const toolDetails = {
   "tool-mediasplit": {
     title: "Media Splitter",
     desc: "Split a video's audio track and silent video track locally."
+  },
+  "tool-folder-analyzer": {
+    title: "Folder Structure Analyzer",
+    desc: "Scan and map folder structures, calculate file metrics, and count code lines entirely client-side."
   }
 };
 const categories = [
@@ -332,6 +337,19 @@ const navItems = [
         <line x1="4" y1="15" x2="20" y2="15"></line>
         <line x1="9" y1="4" x2="9" y2="20"></line>
         <line x1="15" y1="4" x2="15" y2="20"></line>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-folder-analyzer',
+    name: 'Folder Analyzer',
+    tooltip: 'Folder Structure Analyzer',
+    category: 'developer',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        <line x1="12" y1="11" x2="12" y2="17"></line>
+        <line x1="9" y1="14" x2="15" y2="14"></line>
       </svg>
     )
   },
@@ -739,6 +757,8 @@ export default function App() {
         return <PasswordGenerator initialTab="check" key="pwstrength" />;
       case 'tool-fontextractor':
         return <WebsiteFontExtractor />;
+      case 'tool-folder-analyzer':
+        return <FolderAnalyzer />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }

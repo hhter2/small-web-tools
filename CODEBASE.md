@@ -67,6 +67,7 @@ small-web-tools/
 │       ├── MediaSeparatorFormatSelect.jsx # Dropdown select component for format options
 │       ├── mediaSeparatorEngine.js # Merged ffmpeg load client + output format configs
 │       ├── useMediaSeparator.js   # Batch processing queue and states hook
+│       ├── FolderAnalyzer.jsx     # Folder-structure analyzer with dual visualizer & line counts
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
 ├── functions/                   # Cloudflare Pages serverless functions
@@ -160,6 +161,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
 | `tool-videometa` | `VideoMeta.jsx` | Media | Video metadata reader (MP4, MOV, Log) |
 | `tool-mediasplit` | `MediaSeparator.jsx` | Media | Split a video's audio track and silent video track locally |
+| `tool-folder-analyzer` | `FolderAnalyzer.jsx` | Developer | Folder-structure analyzer with dual visualizer & line counts |
 
 ---
 

@@ -11389,6 +11389,7 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px;
+  max-width: 500px;
 }
 
 .videometa-waveform-placeholder {

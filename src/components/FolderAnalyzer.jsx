@@ -93,6 +93,8 @@ export default function FolderAnalyzer() {
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showAddPathInput, setShowAddPathInput] = useState(false);
+  const [inlinePath, setInlinePath] = useState('');
 
   const activeProject = scannedProjects[activeProjectIndex] || null;
   const treeData = activeProject ? activeProject.treeData : null;
@@ -205,12 +207,20 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: 0, phase: '' });
   };
 
-  const scanPaths = async (paths) => {
+  const scanPaths = async (paths, shouldAppend = false) => {
     setStatus('scanning');
     setProgress({ current: 0, total: 100, phase: 'Scanning local directories...' });
 
     try {
-      const scanPromises = paths.map(async (p) => {
+      const existingPaths = new Set(scannedProjects.map(p => p.path));
+      const newPathsToScan = shouldAppend ? paths.filter(p => !existingPaths.has(p)) : paths;
+      
+      if (newPathsToScan.length === 0) {
+        setStatus('success');
+        return;
+      }
+
+      const scanPromises = newPathsToScan.map(async (p) => {
         const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(p)}`);
         const data = await response.json();
         return { path: p, data };
@@ -237,8 +247,18 @@ export default function FolderAnalyzer() {
         };
       });
 
-      setScannedProjects(projects);
-      setActiveProjectIndex(0);
+      if (shouldAppend) {
+        setScannedProjects(prev => {
+          const next = [...prev, ...projects];
+          setActiveProjectIndex(prev.length);
+          const allPaths = next.map(p => p.path).filter(Boolean);
+          setCustomPath(allPaths.join(', '));
+          return next;
+        });
+      } else {
+        setScannedProjects(projects);
+        setActiveProjectIndex(0);
+      }
       setCollapsedPaths({});
       setStatus('success');
     } catch (err) {
@@ -251,16 +271,24 @@ export default function FolderAnalyzer() {
   const handleLocalPathScan = async () => {
     const paths = customPath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
     if (paths.length === 0) return;
-    scanPaths(paths);
+    scanPaths(paths, scannedProjects.length > 0);
   };
 
   // Parse items from directory selection or drag-and-drop
-  async function processFiles(fileList, rootFolderNames) {
+  async function processFiles(fileList, rootFolderNames, shouldAppend = false) {
     if (!fileList || fileList.length === 0) return;
     setStatus('scanning');
     setProgress({ current: 0, total: fileList.length, phase: 'Reading folder contents...' });
 
     try {
+      const existingNames = new Set(scannedProjects.map(p => p.name));
+      const newRoots = shouldAppend ? rootFolderNames.filter(name => !existingNames.has(name)) : rootFolderNames;
+      
+      if (newRoots.length === 0) {
+        setStatus('success');
+        return;
+      }
+
       const gitignoresByRoot = {};
       const gitignoreFiles = fileList.filter(
         f => f.name === '.gitignore' && (f.customPath || f.webkitRelativePath || '').replace(/\\/g, '/').split('/').length === 2
@@ -284,7 +312,7 @@ export default function FolderAnalyzer() {
 
       // Group files by their top-level folder
       const filesByRoot = {};
-      for (const name of rootFolderNames) {
+      for (const name of newRoots) {
         filesByRoot[name] = [];
       }
 
@@ -295,16 +323,17 @@ export default function FolderAnalyzer() {
         if (filesByRoot[firstPart]) {
           filesByRoot[firstPart].push(file);
         } else {
-          const rootName = rootFolderNames[0] || 'root';
-          if (!filesByRoot[rootName]) filesByRoot[rootName] = [];
-          filesByRoot[rootName].push(file);
+          const rootName = newRoots[0];
+          if (rootName && filesByRoot[rootName]) {
+            filesByRoot[rootName].push(file);
+          }
         }
       }
 
       const projects = [];
       let totalFilesProcessed = 0;
 
-      for (const rootName of rootFolderNames) {
+      for (const rootName of newRoots) {
         const rootFiles = filesByRoot[rootName] || [];
         const gitInfo = gitignoresByRoot[rootName];
         const matcher = gitInfo ? gitInfo.matcher : () => false;
@@ -346,8 +375,18 @@ export default function FolderAnalyzer() {
         });
       }
 
-      setScannedProjects(projects);
-      setActiveProjectIndex(0);
+      if (shouldAppend) {
+        setScannedProjects(prev => {
+          const next = [...prev, ...projects];
+          setActiveProjectIndex(prev.length);
+          const allNames = next.map(p => p.name).filter(Boolean);
+          setCustomPath(allNames.join(', '));
+          return next;
+        });
+      } else {
+        setScannedProjects(projects);
+        setActiveProjectIndex(0);
+      }
       setCollapsedPaths({});
       setStatus('success');
     } catch (err) {
@@ -357,10 +396,10 @@ export default function FolderAnalyzer() {
     }
   }
 
-  const resolveAndScanLocalPaths = async (rootFolderNames, fallbackFiles) => {
+  const resolveAndScanLocalPaths = async (rootFolderNames, fallbackFiles, shouldAppend = false) => {
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isLocalDev) {
-      processFiles(fallbackFiles, rootFolderNames);
+      processFiles(fallbackFiles, rootFolderNames, shouldAppend);
       return;
     }
 
@@ -374,15 +413,14 @@ export default function FolderAnalyzer() {
       const validPaths = resolved.filter(Boolean);
 
       if (validPaths.length === rootFolderNames.length) {
-        setCustomPath(validPaths.join(', '));
-        scanPaths(validPaths);
+        scanPaths(validPaths, shouldAppend);
         return;
       }
     } catch (e) {
       console.warn('Local path resolution failed, falling back to browser scan:', e);
     }
 
-    processFiles(fallbackFiles, rootFolderNames);
+    processFiles(fallbackFiles, rootFolderNames, shouldAppend);
   };
 
   // Handle standard <input type="file" webkitdirectory /> selection
@@ -392,7 +430,7 @@ export default function FolderAnalyzer() {
       const filesArray = Array.from(files);
       const firstPath = filesArray[0].webkitRelativePath || '';
       const rootFolderName = firstPath.split('/')[0] || '';
-      resolveAndScanLocalPaths([rootFolderName], filesArray);
+      resolveAndScanLocalPaths([rootFolderName], filesArray, scannedProjects.length > 0);
     }
   };
 
@@ -481,7 +519,7 @@ export default function FolderAnalyzer() {
         if (uniqueRoots.length === 0) {
           uniqueRoots.push('files');
         }
-        resolveAndScanLocalPaths(uniqueRoots, allFiles);
+        resolveAndScanLocalPaths(uniqueRoots, allFiles, scannedProjects.length > 0);
       } else {
         setErrorMsg('No files detected in the dropped selection.');
         setStatus('error');
@@ -491,6 +529,37 @@ export default function FolderAnalyzer() {
       setErrorMsg('Drag & Drop scanning failed: ' + err.message);
       setStatus('error');
     }
+  };
+
+  const handleRemoveProject = (idx) => {
+    setScannedProjects(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      if (next.length === 0) {
+        setStatus('idle');
+        setCustomPath('');
+        setActiveProjectIndex(0);
+      } else {
+        if (activeProjectIndex >= next.length) {
+          setActiveProjectIndex(next.length - 1);
+        } else if (activeProjectIndex === idx && idx > 0) {
+          setActiveProjectIndex(idx - 1);
+        }
+        const remainingPaths = next.map(p => p.path || p.name).filter(Boolean);
+        setCustomPath(remainingPaths.join(', '));
+      }
+      return next;
+    });
+    setCollapsedPaths({});
+  };
+
+  const handleInlineAddPath = (e) => {
+    e.preventDefault();
+    const paths = inlinePath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+    if (paths.length > 0) {
+      scanPaths(paths, true);
+    }
+    setInlinePath('');
+    setShowAddPathInput(false);
   };
 
   // Reconstruct tree hierarchy
@@ -996,11 +1065,39 @@ export default function FolderAnalyzer() {
         <div className="header-title-group">
           <h2>Folder Structure Analyzer</h2>
           {status === 'success' && activeProject && scannedProjects.length === 1 && (
-            <div className="scanned-path-subtitle">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="subtitle-icon">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>{activeProject.path || activeProject.name}</span>
+            <div className="scanned-path-subtitle-wrapper">
+              <div className="scanned-path-subtitle">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="subtitle-icon">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>{activeProject.path || activeProject.name}</span>
+              </div>
+              
+              <div className="single-add-path-inline">
+                {showAddPathInput ? (
+                  <form onSubmit={handleInlineAddPath} className="inline-add-path-form">
+                    <input
+                      type="text"
+                      placeholder="Type path to add..."
+                      value={inlinePath}
+                      onChange={(e) => setInlinePath(e.target.value)}
+                      className="inline-add-input"
+                      autoFocus
+                      onBlur={() => {
+                        setTimeout(() => {
+                          if (!inlinePath.trim()) setShowAddPathInput(false);
+                        }, 200);
+                      }}
+                    />
+                    <button type="submit" className="btn-primary btn-xs">Add</button>
+                    <button type="button" className="btn-secondary btn-xs" onClick={() => setShowAddPathInput(false)}>Cancel</button>
+                  </form>
+                ) : (
+                  <button className="batch-tab-btn-add" onClick={() => setShowAddPathInput(true)}>
+                    + Add Path
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -1010,27 +1107,64 @@ export default function FolderAnalyzer() {
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
-            Clear
+            Clear All
           </button>
         )}
       </div>
 
-      {/* Batch project tabs (only shown when multiple projects scanned) */}
+      {/* Batch project tabs */}
       {status === 'success' && scannedProjects.length > 1 && (
         <div className="batch-project-tabs">
           {scannedProjects.map((proj, idx) => (
-            <button
-              key={proj.path + idx}
-              className={`batch-tab-btn ${idx === activeProjectIndex ? 'active' : ''}`}
-              onClick={() => { setActiveProjectIndex(idx); setCollapsedPaths({}); }}
-              title={proj.path}
-            >
-              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-              {proj.name}
-            </button>
+            <div key={proj.path + idx} className={`batch-tab-wrapper ${idx === activeProjectIndex ? 'active' : ''}`}>
+              <button
+                className={`batch-tab-btn ${idx === activeProjectIndex ? 'active' : ''}`}
+                onClick={() => { setActiveProjectIndex(idx); setCollapsedPaths({}); }}
+                title={proj.path}
+              >
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                {proj.name}
+              </button>
+              <button 
+                className="batch-tab-remove-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveProject(idx);
+                }}
+                title="Remove path"
+              >
+                &times;
+              </button>
+            </div>
           ))}
+          
+          <div className="batch-tab-add-wrapper">
+            {showAddPathInput ? (
+              <form onSubmit={handleInlineAddPath} className="inline-add-path-form">
+                <input
+                  type="text"
+                  placeholder="Type path to add..."
+                  value={inlinePath}
+                  onChange={(e) => setInlinePath(e.target.value)}
+                  className="inline-add-input"
+                  autoFocus
+                  onBlur={() => {
+                    setTimeout(() => {
+                      if (!inlinePath.trim()) setShowAddPathInput(false);
+                    }, 200);
+                  }}
+                />
+                <button type="submit" className="btn-primary btn-xs">Add</button>
+                <button type="button" className="btn-secondary btn-xs" onClick={() => setShowAddPathInput(false)}>Cancel</button>
+              </form>
+            ) : (
+              <button className="batch-tab-btn-add" onClick={() => setShowAddPathInput(true)}>
+                + Add Path
+              </button>
+            )}
+          </div>
         </div>
       )}
 

@@ -12377,10 +12377,146 @@ html[data-theme="dark"] .btn-clear:hover {
   border-color: var(--accent);
   font-weight: 700;
 }
-
 html[data-theme="dark"] .batch-tab-btn.active {
   background: rgba(99, 102, 241, 0.18);
   border-color: rgba(99, 102, 241, 0.5);
+}
+
+.batch-tab-wrapper {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-app);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.batch-tab-wrapper:hover {
+  border-color: var(--accent);
+}
+
+.batch-tab-wrapper.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+html[data-theme="dark"] .batch-tab-wrapper.active {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.batch-tab-wrapper .batch-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 8px 7px 12px;
+  max-width: 200px;
+  border-radius: 0;
+}
+
+.batch-tab-wrapper.active .batch-tab-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.batch-tab-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 7px 10px 7px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.batch-tab-remove-btn:hover {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+html[data-theme="dark"] .batch-tab-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.18);
+}
+
+.batch-tab-btn-add {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.batch-tab-btn-add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--nav-hover-bg);
+}
+
+.scanned-path-subtitle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.single-add-path-inline {
+  display: flex;
+  align-items: center;
+}
+
+.inline-add-path-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 3px 6px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+}
+
+.inline-add-input {
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  outline: none;
+  width: 180px;
+}
+
+.btn-xs {
+  padding: 4px 8px !important;
+  font-size: 0.75rem !important;
+  border-radius: 4px !important;
+}
+
+.btn-primary.btn-xs {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-secondary.btn-xs {
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .folder-analyzer-inputs {

@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { ensureFFmpegLoaded, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
+import { useCallback, useRef, useState, useMemo } from 'react';
+import { ensureFFmpegLoaded, terminateFFmpeg, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
 
 export const STATUS = {
   PENDING: 'pending',
@@ -21,7 +21,9 @@ function nextId() {
 export function useMediaSeparator() {
   const [items, setItems] = useState([]);
   const [engineLoading, setEngineLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const processingRef = useRef(false);
+  const stopRef = useRef(false);
 
   const updateItem = useCallback((id, patch) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -135,18 +137,23 @@ export function useMediaSeparator() {
   const runQueue = useCallback(async () => {
     if (processingRef.current) return;
     processingRef.current = true;
+    setIsProcessing(true);
+    stopRef.current = false;
 
     try {
       setEngineLoading(true);
       await ensureFFmpegLoaded();
     } catch (err) {
       processingRef.current = false;
+      setIsProcessing(false);
       setEngineLoading(false);
       throw err;
     }
     setEngineLoading(false);
 
     while (true) {
+      if (stopRef.current) break;
+
       let next;
       setItems((prev) => {
         next = prev.find((it) => it.status === STATUS.PENDING);
@@ -163,12 +170,34 @@ export function useMediaSeparator() {
       try {
         await processOne(next);
       } catch (err) {
-        updateItem(next.id, { status: STATUS.ERROR, error: err?.message || 'Processing failed, please retry' });
+        // If stopped mid-process, it was cancelled by user
+        if (stopRef.current) {
+          updateItem(next.id, { status: STATUS.PENDING, progress: 0 });
+        } else {
+          updateItem(next.id, { status: STATUS.ERROR, error: err?.message || 'Processing failed, please retry' });
+        }
       }
     }
 
     processingRef.current = false;
+    setIsProcessing(false);
   }, [processOne, updateItem]);
+
+  const stopQueue = useCallback(() => {
+    stopRef.current = true;
+    terminateFFmpeg();
+
+    setItems((prev) =>
+      prev.map((it) =>
+        it.status === STATUS.PROCESSING
+          ? { ...it, status: STATUS.PENDING, progress: 0 }
+          : it
+      )
+    );
+
+    processingRef.current = false;
+    setIsProcessing(false);
+  }, []);
 
   const retryItem = useCallback(
     (id) => {
@@ -178,15 +207,26 @@ export function useMediaSeparator() {
     [updateItem, runQueue],
   );
 
+  const globalProgress = useMemo(() => {
+    if (items.length === 0) return 0;
+    const doneCount = items.filter((it) => it.status === STATUS.DONE).length;
+    const processingItem = items.find((it) => it.status === STATUS.PROCESSING);
+    const activeProgress = processingItem ? processingItem.progress : 0;
+    return Math.round(((doneCount + activeProgress / 100) / items.length) * 100);
+  }, [items]);
+
   return {
     items,
     engineLoading,
+    isProcessing,
+    globalProgress,
     addFiles,
     removeItem,
     clearDone,
     setAudioFormat,
     setVideoFormat,
     runQueue,
+    stopQueue,
     retryItem,
   };
 }

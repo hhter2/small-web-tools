@@ -10,12 +10,15 @@ export default function MediaSeparator() {
   const {
     items,
     engineLoading,
+    isProcessing,
+    globalProgress,
     addFiles,
     removeItem,
     clearDone,
     setAudioFormat,
     setVideoFormat,
     runQueue,
+    stopQueue,
     retryItem,
   } = useMediaSeparator();
 
@@ -101,15 +104,26 @@ export default function MediaSeparator() {
       {items.length > 0 && (
         <div className="mediasplit-workspace">
           <div className="mediasplit-actions">
-            <button
-              type="button"
-              onClick={runQueue}
-              disabled={!hasPending && !engineLoading}
-              className="mediasplit-btn-primary"
-            >
-              {engineLoading ? 'Loading Engine...' : 'Start Processing Queue'}
-            </button>
-            {hasDone && (
+            {isProcessing ? (
+              <button
+                type="button"
+                onClick={stopQueue}
+                className="mediasplit-btn-secondary mediasplit-btn-stop"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+              >
+                Stop Processing
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={runQueue}
+                disabled={!hasPending && !engineLoading}
+                className="mediasplit-btn-primary"
+              >
+                {engineLoading ? 'Loading Engine...' : 'Start Processing Queue'}
+              </button>
+            )}
+            {hasDone && !isProcessing && (
               <button
                 type="button"
                 onClick={clearDone}
@@ -121,12 +135,20 @@ export default function MediaSeparator() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
+              disabled={isProcessing}
               className="mediasplit-btn-secondary"
             >
               Add Files
             </button>
             <span className="mediasplit-count">{items.length} file{items.length !== 1 ? 's' : ''}</span>
           </div>
+
+          {isProcessing && (
+            <div className="mediasplit-global-progress">
+              <progress value={globalProgress} max={100} />
+              <span>Overall Queue Progress: {globalProgress}%</span>
+            </div>
+          )}
 
           <ul className="mediasplit-queue">
             {items.map((item) => (

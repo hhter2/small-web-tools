@@ -1,5 +1,4 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
 
 let ffmpegInstance = null;
 let loadingPromise = null;
@@ -14,6 +13,7 @@ export function getFFmpeg() {
 /**
  * Ensure the ffmpeg core is loaded, returning the FFmpeg instance.
  * Shares the load promise across calls to prevent redundant downloads.
+ * Uses direct same-origin URLs for local self-hosting.
  * @param {(message: string) => void} [onLog]
  */
 export async function ensureFFmpegLoaded(onLog) {
@@ -25,16 +25,32 @@ export async function ensureFFmpegLoaded(onLog) {
       if (onLog) {
         ffmpeg.on('log', ({ message }) => onLog(message));
       }
-      const [coreURL, wasmURL] = await Promise.all([
-        toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-        toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
-      ]);
-      await ffmpeg.load({ coreURL, wasmURL });
+      // Pass direct same-origin URLs to save memory and avoid toBlobURL fetch issues
+      const baseURL = window.location.origin;
+      await ffmpeg.load({
+        coreURL: `${baseURL}/ffmpeg/ffmpeg-core.js`,
+        wasmURL: `${baseURL}/ffmpeg/ffmpeg-core.wasm`,
+      });
     })();
   }
 
   await loadingPromise;
   return ffmpeg;
+}
+
+/**
+ * Force terminates the active FFmpeg instance and clears reference states.
+ */
+export function terminateFFmpeg() {
+  if (ffmpegInstance) {
+    try {
+      ffmpegInstance.terminate();
+    } catch (e) {
+      console.warn('FFmpeg terminate failed:', e);
+    }
+    ffmpegInstance = null;
+    loadingPromise = null;
+  }
 }
 
 // Audio output formats. buildArgs returns ffmpeg parameters (excluding -i input and output filename).

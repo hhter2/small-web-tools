@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
+import path from 'path';
 import { execSync } from 'child_process';
 
 // Automatically obtain current version from git tags
@@ -112,6 +113,126 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    {
+      name: 'scan-local-dir-api',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (!req.url?.startsWith('/api/scan-local-dir')) return next();
+
+          const urlObj = new URL(req.url, 'http://localhost');
+          const targetPath = urlObj.searchParams.get('path') || '';
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+
+          if (!targetPath) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ ok: false, error: 'Path parameter is required' }));
+            return;
+          }
+
+          try {
+            if (!fs.existsSync(targetPath)) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ ok: false, error: 'Directory does not exist' }));
+              return;
+            }
+
+            const stat = fs.statSync(targetPath);
+            if (!stat.isDirectory()) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: 'Path is not a directory' }));
+              return;
+            }
+
+            const rootFolderName = path.basename(targetPath) || 'root';
+
+            const TEXT_EXTENSIONS = new Set([
+              'txt', 'md', 'markdown', 'json', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 
+              'scss', 'sass', 'less', 'svg', 'xml', 'yaml', 'yml', 'py', 'java', 'c', 
+              'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'php', 'rb', 'pl', 'sh', 'bat', 
+              'ps1', 'sql', 'ini', 'conf', 'cfg', 'env', 'gitignore', 'gitattributes', 
+              'editorconfig', 'toml', 'csv', 'jsonl', 'graphql', 'prisma'
+            ]);
+
+            const BINARY_EXTENSIONS = new Set([
+              'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'pdf', 'zip', 'rar', 'tar', 
+              'gz', '7z', 'mp3', 'mp4', 'wav', 'flac', 'avi', 'mov', 'wmv', 'ogg', 
+              'm4a', 'webm', 'exe', 'dll', 'so', 'dylib', 'bin', 'dat', 'db', 'sqlite', 
+              'class', 'jar', 'war', 'eot', 'ttf', 'woff', 'woff2'
+            ]);
+
+            function scanDir(dir, prefix = '') {
+              const results = [];
+              const items = fs.readdirSync(dir);
+              for (const item of items) {
+                if (item === 'node_modules' || item === '.git' || item === 'dist' || item === '.next' || item === 'build') {
+                  continue;
+                }
+                const full = path.join(dir, item);
+                const rel = prefix ? `${prefix}/${item}` : `${rootFolderName}/${item}`;
+                const itemStat = fs.statSync(full);
+                if (itemStat.isDirectory()) {
+                  results.push(...scanDir(full, rel));
+                } else if (itemStat.isFile()) {
+                  const ext = item.split('.').pop().toLowerCase();
+                  let isText = false;
+                  let lines = 0;
+
+                  if (!BINARY_EXTENSIONS.has(ext)) {
+                    if (TEXT_EXTENSIONS.has(ext)) {
+                      isText = true;
+                    } else {
+                      try {
+                        const fd = fs.openSync(full, 'r');
+                        const buf = Buffer.alloc(1024);
+                        const read = fs.readSync(fd, buf, 0, 1024, 0);
+                        fs.closeSync(fd);
+                        isText = true;
+                        for (let j = 0; j < read; j++) {
+                          if (buf[j] === 0) {
+                            isText = false;
+                            break;
+                          }
+                        }
+                      } catch {
+                        isText = false;
+                      }
+                    }
+                  }
+
+                  if (isText && itemStat.size < 5 * 1024 * 1024) {
+                    try {
+                      const content = fs.readFileSync(full, 'utf8');
+                      lines = content.split(/\r?\n/).length;
+                    } catch {
+                      lines = 0;
+                    }
+                  }
+
+                  results.push({
+                    name: item,
+                    path: rel.replace(/\\/g, '/'),
+                    size: itemStat.size,
+                    lineCount: lines,
+                    isText
+                  });
+                }
+              }
+              return results;
+            }
+
+            const files = scanDir(targetPath);
+            res.statusCode = 200;
+            res.end(JSON.stringify({ ok: true, files }));
+          } catch (e) {
+            console.error('[scan-local-dir] failed:', e.message);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ ok: false, error: e.message }));
+          }
+        });
+      }
+    },
     {
       name: 'ip-lookup-api',
       configureServer(server) {

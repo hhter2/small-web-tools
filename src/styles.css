@@ -12758,5 +12758,18 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.path-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.path-help-text {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
 
 

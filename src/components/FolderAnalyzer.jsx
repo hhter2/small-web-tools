@@ -76,6 +76,48 @@ export default function FolderAnalyzer() {
     });
   }
 
+  const handleLocalPathScan = async () => {
+    if (!customPath.trim()) return;
+
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalDev) {
+      alert('Scanning directories by typing local paths is only supported when running the app locally. On the web version, please drag & drop the folder or click the area below to select a folder.');
+      return;
+    }
+
+    setStatus('scanning');
+    setProgress({ current: 0, total: 100, phase: 'Scanning local directory...' });
+
+    try {
+      const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(customPath.trim())}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        let tempTotalLines = 0;
+        let tempTotalSize = 0;
+        for (const file of data.files) {
+          tempTotalSize += file.size;
+          tempTotalLines += file.lineCount;
+        }
+
+        const root = buildTree(data.files, customPath.trim());
+        setTreeData(root);
+        setTotalLines(tempTotalLines);
+        setTotalFiles(data.files.length);
+        setTotalSize(tempTotalSize);
+        setCollapsedPaths({});
+        setStatus('success');
+      } else {
+        setErrorMsg(data.error || 'Failed to scan local path');
+        setStatus('error');
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('API scan failed: ' + err.message);
+      setStatus('error');
+    }
+  };
+
   // Parse items from directory selection or drag-and-drop
   async function processFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
@@ -588,14 +630,32 @@ export default function FolderAnalyzer() {
       {/* Input Options */}
       <div className="folder-analyzer-inputs">
         <div className="form-group flex-1">
-          <label htmlFor="custom-root-path">Folder Path / Custom Root Name (Optional)</label>
-          <input
-            type="text"
-            id="custom-root-path"
-            placeholder="e.g. C:/projects/my-web-app or customize the root folder display name"
-            value={customPath}
-            onChange={(e) => setCustomPath(e.target.value)}
-          />
+          <label htmlFor="custom-root-path">Folder Path / Custom Root Name</label>
+          <div className="path-input-group">
+            <input
+              type="text"
+              id="custom-root-path"
+              placeholder="e.g. D:/01_Programs/07_Small_Web_Tools or my-vite-react-app"
+              value={customPath}
+              onChange={(e) => setCustomPath(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && customPath.trim()) {
+                  handleLocalPathScan();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleLocalPathScan}
+              disabled={!customPath.trim()}
+            >
+              Analyze Path
+            </button>
+          </div>
+          <span className="path-help-text">
+            * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
+          </span>
         </div>
       </div>
 

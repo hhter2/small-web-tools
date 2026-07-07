@@ -11383,6 +11383,25 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   }
 }
 
+.videometa-track-player-container {
+  margin-top: 4px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.videometa-waveform-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 48px;
+}
+
+.videometa-waveform-player {
+  width: 100%;
+}
+
 /* ── Log file preview ── */
 .videometa-log-preview {
   background: var(--bg-secondary);

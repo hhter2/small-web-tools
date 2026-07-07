@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ensureFFmpegLoaded, guessMime } from './mediaSeparatorEngine';
+import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -488,6 +489,65 @@ export default function VideoMeta() {
   const [extractingTrack, setExtractingTrack] = useState(null); // { fileId, trackIndex }
   const [extractProgress, setExtractProgress] = useState(0);
 
+  const [audioURLs, setAudioURLs] = useState({}); // { 'fileId-trackIndex': blobUrl }
+  const [loadingURLs, setLoadingURLs] = useState({}); // { 'fileId-trackIndex': boolean }
+
+  const audioURLsRef = useRef({});
+  useEffect(() => {
+    audioURLsRef.current = audioURLs;
+  }, [audioURLs]);
+
+  const loadWaveform = async (file, trackIndex, trackInfo) => {
+    const key = `${file.id}-${trackIndex}`;
+    if (loadingURLs[key] || extractingTrack) return;
+
+    setLoadingURLs(prev => ({ ...prev, [key]: true }));
+    setStatus('Loading engine...');
+
+    let ffmpeg = null;
+    const sourceExt = file.ext || 'mp4';
+    const inputName = `input-wave-${file.id}-${trackIndex}.${sourceExt}`;
+    const targetExt = getAudioExtension(trackInfo.codecFourCC, trackInfo.codec);
+    const outputName = `audio-wave-${file.id}-${trackIndex}.${targetExt}`;
+
+    try {
+      ffmpeg = await ensureFFmpegLoaded();
+      setStatus('Extracting audio for waveform...');
+
+      const fileBuffer = new Uint8Array(await file.file.arrayBuffer());
+      await ffmpeg.writeFile(inputName, fileBuffer);
+
+      try {
+        const exitCode = await ffmpeg.exec([
+          '-i', inputName,
+          '-map', `0:a:${trackIndex}`,
+          '-c:a', 'copy',
+          outputName
+        ]);
+
+        if (exitCode !== 0) {
+          throw new Error('FFmpeg execution failed');
+        }
+
+        const audioData = await ffmpeg.readFile(outputName);
+        const mimeType = guessMime(targetExt, 'audio');
+        const audioBlob = new Blob([audioData.buffer], { type: mimeType });
+        const url = URL.createObjectURL(audioBlob);
+
+        setAudioURLs(prev => ({ ...prev, [key]: url }));
+        setStatus('Waveform loaded successfully.');
+      } finally {
+        try { await ffmpeg.deleteFile(inputName); } catch (e) {}
+        try { await ffmpeg.deleteFile(outputName); } catch (e) {}
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(`Failed to load waveform: ${err.message}`);
+    } finally {
+      setLoadingURLs(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
   const downloadAudioTrack = async (file, trackIndex, trackInfo) => {
     if (extractingTrack) return;
     setExtractingTrack({ fileId: file.id, trackIndex });
@@ -557,7 +617,12 @@ export default function VideoMeta() {
   const ACCEPTED = '.mp4,.mov,.m4v,.f4v,.3gp,.3g2,.avi,.mkv,.webm,.wmv,.flv,.ts,.mts,.m2ts,.mxf,.log,.txt';
   const activeFile = files.find(f => f.id === selectedId) || null;
 
-  useEffect(() => { return () => { files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); }); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    return () => {
+      files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
+      Object.values(audioURLsRef.current).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const processFiles = async (fileList) => {
     setLoading(true); setStatus('Parsing files...');
@@ -587,9 +652,27 @@ export default function VideoMeta() {
   const handleRemove = (id) => {
     setFiles(prev => { const rm = prev.find(f => f.id === id); if (rm?.objectUrl) URL.revokeObjectURL(rm.objectUrl); const up = prev.filter(f => f.id !== id); if (selectedId === id) setSelectedId(up.length > 0 ? up[0].id : null); return up; });
     setCompareSelectedIds(prev => prev.filter(x => x !== id));
+    setAudioURLs(prev => {
+      const copy = { ...prev };
+      Object.keys(copy).forEach(key => {
+        if (key.startsWith(`${id}-`)) {
+          URL.revokeObjectURL(copy[key]);
+          delete copy[key];
+        }
+      });
+      return copy;
+    });
   };
 
-  const handleClearAll = () => { files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); }); setFiles([]); setSelectedId(null); setCompareSelectedIds([]); setStatus('Cleared all files.'); };
+  const handleClearAll = () => {
+    files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
+    Object.values(audioURLs).forEach(url => URL.revokeObjectURL(url));
+    setAudioURLs({});
+    setFiles([]);
+    setSelectedId(null);
+    setCompareSelectedIds([]);
+    setStatus('Cleared all files.');
+  };
 
   const handleExportJson = () => {
     if (!activeFile) return;
@@ -750,31 +833,50 @@ export default function VideoMeta() {
                           {activeFile.audioTracks.map((t, i) => {
                             const cl = t.channels === 1 ? 'Mono' : t.channels === 2 ? 'Stereo' : t.channels === 6 ? '5.1' : t.channels === 8 ? '7.1' : `${t.channels}ch`;
                             const isExtracting = extractingTrack && extractingTrack.fileId === activeFile.id && extractingTrack.trackIndex === i;
+                            const key = `${activeFile.id}-${i}`;
                             return (
-                              <div className="videometa-track-entry" key={i}>
-                                <span className="track-icon">{'\ud83c\udfb5'}</span>
-                                <span className="track-label">Track {i + 1}</span>
-                                <span className="track-detail">
-                                  {[t.codec, t.channels ? cl : null, t.sampleRate ? `${t.sampleRate.toLocaleString()} Hz` : null, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' \u00b7 ')}
-                                </span>
-                                <button
-                                  className="videometa-download-btn"
-                                  disabled={!!extractingTrack}
-                                  onClick={() => downloadAudioTrack(activeFile, i, t)}
-                                  title="Download audio track"
-                                >
-                                  {isExtracting ? (
-                                    <>
-                                      <span className="spinner" />
-                                      <span>{extractProgress}%</span>
-                                    </>
+                              <div className="videometa-track-wrapper" key={i} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div className="videometa-track-entry">
+                                  <span className="track-icon">{'\ud83c\udfb5'}</span>
+                                  <span className="track-label">Track {i + 1}</span>
+                                  <span className="track-detail">
+                                    {[t.codec, t.channels ? cl : null, t.sampleRate ? `${t.sampleRate.toLocaleString()} Hz` : null, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' \u00b7 ')}
+                                  </span>
+                                  <button
+                                    className="videometa-download-btn"
+                                    disabled={!!extractingTrack || loadingURLs[key]}
+                                    onClick={() => downloadAudioTrack(activeFile, i, t)}
+                                    title="Download audio track"
+                                  >
+                                    {isExtracting ? (
+                                      <>
+                                        <span className="spinner" />
+                                        <span>{extractProgress}%</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>{'\u2b07\ufe0f'}</span>
+                                        <span>Download</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                                <div className="videometa-track-player-container">
+                                  {audioURLs[key] ? (
+                                    <MediaSeparatorWaveform audioURL={audioURLs[key]} className="videometa-waveform-player" />
                                   ) : (
-                                    <>
-                                      <span>{'\u2b07\ufe0f'}</span>
-                                      <span>Download</span>
-                                    </>
+                                    <div className="videometa-waveform-placeholder">
+                                      <button
+                                        type="button"
+                                        className="btn-secondary btn-sm"
+                                        disabled={loadingURLs[key] || !!extractingTrack}
+                                        onClick={() => loadWaveform(activeFile, i, t)}
+                                      >
+                                        {loadingURLs[key] ? 'Extracting audio...' : 'Load Waveform & Player'}
+                                      </button>
+                                    </div>
                                   )}
-                                </button>
+                                </div>
                               </div>
                             );
                           })}

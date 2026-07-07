@@ -276,9 +276,9 @@ export default function FolderAnalyzer() {
 
   // Parse items from directory selection or drag-and-drop
   async function processFiles(fileList, rootFolderNames, shouldAppend = false) {
-    if (!fileList || fileList.length === 0) return;
+    if ((!fileList || fileList.length === 0) && (!rootFolderNames || rootFolderNames.length === 0)) return;
     setStatus('scanning');
-    setProgress({ current: 0, total: fileList.length, phase: 'Reading folder contents...' });
+    setProgress({ current: 0, total: fileList ? fileList.length : 0, phase: 'Reading folder contents...' });
 
     try {
       const existingNames = new Set(scannedProjects.map(p => p.name));
@@ -290,42 +290,44 @@ export default function FolderAnalyzer() {
       }
 
       const gitignoresByRoot = {};
-      const gitignoreFiles = fileList.filter(
-        f => f.name === '.gitignore' && (f.customPath || f.webkitRelativePath || '').replace(/\\/g, '/').split('/').length === 2
-      );
-
-      for (const gitfile of gitignoreFiles) {
-        const text = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result || '');
-          reader.onerror = () => resolve('');
-          reader.readAsText(gitfile);
-        });
-        const folderName = (gitfile.customPath || gitfile.webkitRelativePath || '').replace(/\\/g, '/').split('/')[0];
-        if (folderName) {
-          gitignoresByRoot[folderName] = {
-            text,
-            matcher: createGitignoreMatcher(text)
-          };
-        }
-      }
-
-      // Group files by their top-level folder
       const filesByRoot = {};
       for (const name of newRoots) {
         filesByRoot[name] = [];
       }
 
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        const fullPath = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
-        const firstPart = fullPath.split('/')[0] || 'root';
-        if (filesByRoot[firstPart]) {
-          filesByRoot[firstPart].push(file);
-        } else {
-          const rootName = newRoots[0];
-          if (rootName && filesByRoot[rootName]) {
-            filesByRoot[rootName].push(file);
+      if (fileList && fileList.length > 0) {
+        const gitignoreFiles = fileList.filter(
+          f => f.name === '.gitignore' && (f.customPath || f.webkitRelativePath || '').replace(/\\/g, '/').split('/').length === 2
+        );
+
+        for (const gitfile of gitignoreFiles) {
+          const text = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsText(gitfile);
+          });
+          const folderName = (gitfile.customPath || gitfile.webkitRelativePath || '').replace(/\\/g, '/').split('/')[0];
+          if (folderName) {
+            gitignoresByRoot[folderName] = {
+              text,
+              matcher: createGitignoreMatcher(text)
+            };
+          }
+        }
+
+        // Group files by their top-level folder
+        for (let i = 0; i < fileList.length; i++) {
+          const file = fileList[i];
+          const fullPath = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
+          const firstPart = fullPath.split('/')[0] || 'root';
+          if (filesByRoot[firstPart]) {
+            filesByRoot[firstPart].push(file);
+          } else {
+            const rootName = newRoots[0];
+            if (rootName && filesByRoot[rootName]) {
+              filesByRoot[rootName].push(file);
+            }
           }
         }
       }
@@ -345,7 +347,7 @@ export default function FolderAnalyzer() {
 
           setProgress({
             current: totalFilesProcessed,
-            total: fileList.length,
+            total: fileList ? fileList.length : 0,
             phase: `Analyzing ${file.name}...`
           });
 
@@ -513,15 +515,15 @@ export default function FolderAnalyzer() {
         }
       }
       
-      if (allFiles.length > 0) {
-        const uniqueRoots = Array.from(rootFolders);
-        // If they dragged raw files without directories, we can fallback to file name
-        if (uniqueRoots.length === 0) {
-          uniqueRoots.push('files');
-        }
+      const uniqueRoots = Array.from(rootFolders);
+      if (uniqueRoots.length === 0 && allFiles.length > 0) {
+        uniqueRoots.push('files');
+      }
+
+      if (uniqueRoots.length > 0 || allFiles.length > 0) {
         resolveAndScanLocalPaths(uniqueRoots, allFiles, scannedProjects.length > 0);
       } else {
-        setErrorMsg('No files detected in the dropped selection.');
+        setErrorMsg('No files or folders detected in the dropped selection.');
         setStatus('error');
       }
     } catch (err) {

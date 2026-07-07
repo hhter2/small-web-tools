@@ -535,10 +535,14 @@ export default function FolderAnalyzer() {
 
   // ASCII plain text tree generator
   function generateAsciiTree(node, prefix = '', isLast = true, isRoot = true) {
+    if (!isRoot) {
+      if (!showSystemExclude && node.isSystemExclude) return '';
+      if (!showGitignored && node.isIgnored) return '';
+    }
+
     let result = '';
-    const hasChildren = node.children && node.children.length > 0;
     const suffix = node.type === 'directory' ? '/' : '';
-    const linesInfo = node.type === 'file' ? ` (${node.lineCount} lines)` : '';
+    const linesInfo = (node.type === 'file' && node.isText) ? ` (${node.lineCount} lines)` : '';
 
     if (isRoot) {
       result += node.name + suffix + '\n';
@@ -546,10 +550,39 @@ export default function FolderAnalyzer() {
       result += prefix + (isLast ? '└── ' : '├── ') + node.name + suffix + linesInfo + '\n';
     }
 
-    if (hasChildren) {
-      const sortedChildren = [...node.children].sort((a, b) => {
+    const visibleChildren = (node.children || []).filter(c => {
+      if (!showSystemExclude && c.isSystemExclude) return false;
+      if (!showGitignored && c.isIgnored) return false;
+      return true;
+    });
+
+    if (visibleChildren.length > 0) {
+      const sortedChildren = [...visibleChildren].sort((a, b) => {
         if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
-        return a.name.localeCompare(b.name);
+
+        let valA, valB;
+        if (sortBy === 'name') {
+          valA = a.name;
+          valB = b.name;
+        } else if (sortBy === 'type') {
+          valA = a.type === 'directory' ? 'folder' : (a.name.split('.').pop() || '').toLowerCase();
+          valB = b.type === 'directory' ? 'folder' : (b.name.split('.').pop() || '').toLowerCase();
+        } else if (sortBy === 'lines') {
+          valA = a.lineCount;
+          valB = b.lineCount;
+        } else if (sortBy === 'size') {
+          valA = a.size;
+          valB = b.size;
+        }
+
+        let compare = 0;
+        if (typeof valA === 'string') {
+          compare = valA.localeCompare(valB);
+        } else {
+          compare = valA - valB;
+        }
+
+        return sortOrder === 'asc' ? compare : -compare;
       });
 
       const nextPrefix = isRoot ? '' : prefix + (isLast ? '    ' : '│   ');
@@ -683,7 +716,9 @@ export default function FolderAnalyzer() {
     const paths = {};
     const traverse = (node) => {
       if (node.type === 'directory') {
-        paths[node.path] = true;
+        if (node.path !== treeData.path) {
+          paths[node.path] = true;
+        }
         if (node.children) {
           node.children.forEach(traverse);
         }
@@ -695,6 +730,16 @@ export default function FolderAnalyzer() {
 
   const handleExpandAll = () => {
     setCollapsedPaths({});
+  };
+
+  const hasCollapsedSubfolders = Object.keys(collapsedPaths).length > 0;
+
+  const toggleExpandCollapseAll = () => {
+    if (hasCollapsedSubfolders) {
+      handleExpandAll();
+    } else {
+      handleCollapseAll();
+    }
   };
 
   // Flatten active visible nodes to a list for table rendering
@@ -1027,18 +1072,19 @@ export default function FolderAnalyzer() {
             {/* Tree Collapse/Expand Actions */}
             {viewMode === 'figure' && (
               <div className="tree-expansion-controls">
-                <button className="btn-secondary btn-sm" onClick={handleExpandAll} title="Expand all folders">
-                  Expand All
-                </button>
-                <button className="btn-secondary btn-sm" onClick={handleCollapseAll} title="Collapse all folders">
-                  Collapse All
+                <button 
+                  className="btn-secondary btn-sm" 
+                  onClick={toggleExpandCollapseAll} 
+                  title={hasCollapsedSubfolders ? "Expand all folders" : "Collapse all folders"}
+                >
+                  {hasCollapsedSubfolders ? "Expand All" : "Collapse All"}
                 </button>
               </div>
             )}
 
             {/* Filters Toggles */}
             <div className="filter-switches-group">
-              <label className="switch-toggle" htmlFor="toggle-system-exclude">
+              <label className="switch-toggle">
                 <input 
                   type="checkbox" 
                   id="toggle-system-exclude"
@@ -1050,7 +1096,7 @@ export default function FolderAnalyzer() {
               </label>
               
               {gitignoreText && (
-                <label className="switch-toggle" htmlFor="toggle-gitignore">
+                <label className="switch-toggle">
                   <input 
                     type="checkbox" 
                     id="toggle-gitignore"

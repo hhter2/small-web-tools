@@ -103,10 +103,8 @@ export default function FolderAnalyzer() {
   // Dynamic Metrics Calculation
   const projectStats = React.useMemo(() => {
     let filesCount = 0;
-    let linesWithGitignore = 0;
-    let linesWithoutGitignore = 0;
-    let sizeWithGitignore = 0;
-    let sizeWithoutGitignore = 0;
+    let totalLines = 0;
+    let totalSize = 0;
 
     function traverse(n, isRoot = false) {
       if (!isRoot && !showSystemExclude && n.isSystemExclude) return;
@@ -114,13 +112,8 @@ export default function FolderAnalyzer() {
 
       if (n.type === 'file') {
         filesCount++;
-        sizeWithoutGitignore += n.size;
-        linesWithoutGitignore += n.lineCount;
-
-        if (!n.isIgnored) {
-          sizeWithGitignore += n.size;
-          linesWithGitignore += n.lineCount;
-        }
+        totalSize += n.size;
+        totalLines += n.lineCount;
       } else if (n.children) {
         n.children.forEach(c => traverse(c, false));
       }
@@ -132,10 +125,8 @@ export default function FolderAnalyzer() {
 
     return {
       filesCount,
-      linesWithGitignore,
-      linesWithoutGitignore,
-      sizeWithGitignore,
-      sizeWithoutGitignore
+      totalLines,
+      totalSize
     };
   }, [treeData, showSystemExclude, showGitignored]);
 
@@ -1037,26 +1028,14 @@ export default function FolderAnalyzer() {
             <div className="summary-badge">
               <span className="badge-label">Total Code Lines</span>
               <span className="badge-value highlight">
-                {projectStats.linesWithGitignore.toLocaleString()}
+                {projectStats.totalLines.toLocaleString()}
               </span>
-              {gitignoreText && (
-                <div className="badge-sub-metrics">
-                  <span>With gitignore: <strong>{projectStats.linesWithGitignore.toLocaleString()}</strong></span>
-                  <span>Without gitignore: <strong>{projectStats.linesWithoutGitignore.toLocaleString()}</strong></span>
-                </div>
-              )}
             </div>
             <div className="summary-badge">
               <span className="badge-label">Project Size</span>
               <span className="badge-value">
-                {formatSize(projectStats.sizeWithGitignore)}
+                {formatSize(projectStats.totalSize)}
               </span>
-              {gitignoreText && (
-                <div className="badge-sub-metrics">
-                  <span>With gitignore: <strong>{formatSize(projectStats.sizeWithGitignore)}</strong></span>
-                  <span>Without gitignore: <strong>{formatSize(projectStats.sizeWithoutGitignore)}</strong></span>
-                </div>
-              )}
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
+import path from 'path';
 import { execSync } from 'child_process';
 
 // Automatically obtain current version from git tags
@@ -97,6 +98,98 @@ async function geoLookup(ip) {
   throw new Error(lastErr);
 }
 
+function resolvePathByName(folderName) {
+  const currentDir = process.cwd();
+  if (path.basename(currentDir).toLowerCase() === folderName.toLowerCase()) {
+    return currentDir;
+  }
+  
+  const childPath = path.join(currentDir, folderName);
+  if (fs.existsSync(childPath) && fs.statSync(childPath).isDirectory()) {
+    return childPath;
+  }
+  
+  let parent = path.dirname(currentDir);
+  while (parent && parent !== currentDir) {
+    if (path.basename(parent).toLowerCase() === folderName.toLowerCase()) {
+      return parent;
+    }
+    const siblingPath = path.join(parent, folderName);
+    if (fs.existsSync(siblingPath) && fs.statSync(siblingPath).isDirectory()) {
+      return siblingPath;
+    }
+    const nextParent = path.dirname(parent);
+    if (nextParent === parent) break;
+    parent = nextParent;
+  }
+  
+  return null;
+}
+
+function createGitignoreMatcher(gitignoreContent) {
+  if (!gitignoreContent) return () => false;
+
+  const lines = gitignoreContent.split(/\r?\n/);
+  const rules = [];
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    let isNegated = false;
+    if (line.startsWith('!')) {
+      isNegated = true;
+      line = line.slice(1);
+    }
+
+    let isDirOnly = false;
+    if (line.endsWith('/')) {
+      isDirOnly = true;
+      line = line.slice(0, -1);
+    }
+
+    let regexStr = line
+      .replace(/\./g, '\\.')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+
+    if (line.startsWith('/')) {
+      regexStr = '^' + regexStr.slice(1);
+    } else {
+      regexStr = '(^|\\/)' + regexStr;
+    }
+
+    regexStr += '(\\/|$)';
+
+    try {
+      rules.push({
+        regex: new RegExp(regexStr),
+        isNegated,
+        isDirOnly
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  return (filePath, isDir) => {
+    let ignored = false;
+    const parts = filePath.split('/');
+    const relPath = parts.slice(1).join('/');
+
+    if (!relPath) return false;
+
+    for (const rule of rules) {
+      if (rule.isDirOnly && !isDir) continue;
+
+      if (rule.regex.test(relPath)) {
+        ignored = !rule.isNegated;
+      }
+    }
+    return ignored;
+  };
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
@@ -107,8 +200,173 @@ export default defineConfig({
     port: 3000,
     host: '127.0.0.1',
   },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
   plugins: [
     react(),
+    {
+      name: 'scan-local-dir-api',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url?.startsWith('/api/resolve-local-path')) {
+            const urlObj = new URL(req.url, 'http://localhost');
+            const name = urlObj.searchParams.get('name') || '';
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            
+            if (!name) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: 'Name parameter is required' }));
+              return;
+            }
+            
+            const resolved = resolvePathByName(name);
+            if (resolved) {
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, path: resolved }));
+            } else {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ ok: false, error: 'Path could not be resolved locally' }));
+            }
+            return;
+          }
+
+          if (!req.url?.startsWith('/api/scan-local-dir')) return next();
+
+          const urlObj = new URL(req.url, 'http://localhost');
+          const targetPath = urlObj.searchParams.get('path') || '';
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+
+          if (!targetPath) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ ok: false, error: 'Path parameter is required' }));
+            return;
+          }
+
+          try {
+            if (!fs.existsSync(targetPath)) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ ok: false, error: 'Directory does not exist' }));
+              return;
+            }
+
+            const stat = fs.statSync(targetPath);
+            if (!stat.isDirectory()) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: 'Path is not a directory' }));
+              return;
+            }
+
+            const rootFolderName = path.basename(targetPath) || 'root';
+
+            const TEXT_EXTENSIONS = new Set([
+              'txt', 'md', 'markdown', 'json', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 
+              'scss', 'sass', 'less', 'svg', 'xml', 'yaml', 'yml', 'py', 'java', 'c', 
+              'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'php', 'rb', 'pl', 'sh', 'bat', 
+              'ps1', 'sql', 'ini', 'conf', 'cfg', 'env', 'gitignore', 'gitattributes', 
+              'editorconfig', 'toml', 'csv', 'jsonl', 'graphql', 'prisma'
+            ]);
+
+            const BINARY_EXTENSIONS = new Set([
+              'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'pdf', 'zip', 'rar', 'tar', 
+              'gz', '7z', 'mp3', 'mp4', 'wav', 'flac', 'avi', 'mov', 'wmv', 'ogg', 
+              'm4a', 'webm', 'exe', 'dll', 'so', 'dylib', 'bin', 'dat', 'db', 'sqlite', 
+              'class', 'jar', 'war', 'eot', 'ttf', 'woff', 'woff2'
+            ]);
+
+            let gitignoreText = '';
+            const gitignorePath = path.join(targetPath, '.gitignore');
+            if (fs.existsSync(gitignorePath)) {
+              try {
+                gitignoreText = fs.readFileSync(gitignorePath, 'utf8');
+              } catch {}
+            }
+
+            const isIgnoredFile = createGitignoreMatcher(gitignoreText);
+
+            function scanDir(dir, prefix = '', parentIgnored = false) {
+              const results = [];
+              const items = fs.readdirSync(dir);
+              for (const item of items) {
+                if (item === '.git') {
+                  continue;
+                }
+                const full = path.join(dir, item);
+                const rel = prefix ? `${prefix}/${item}` : `${rootFolderName}/${item}`;
+                const itemStat = fs.statSync(full);
+                const isDir = itemStat.isDirectory();
+                
+                const selfIgnored = isIgnoredFile(rel, isDir);
+                const itemIgnored = parentIgnored || selfIgnored;
+
+                if (isDir) {
+                  results.push(...scanDir(full, rel, itemIgnored));
+                } else if (itemStat.isFile()) {
+                  const ext = item.split('.').pop().toLowerCase();
+                  let isText = false;
+                  let lines = 0;
+
+                  if (!itemIgnored) {
+                    if (!BINARY_EXTENSIONS.has(ext)) {
+                      if (TEXT_EXTENSIONS.has(ext)) {
+                        isText = true;
+                      } else {
+                        try {
+                          const fd = fs.openSync(full, 'r');
+                          const buf = Buffer.alloc(1024);
+                          const read = fs.readSync(fd, buf, 0, 1024, 0);
+                          fs.closeSync(fd);
+                          isText = true;
+                          for (let j = 0; j < read; j++) {
+                            if (buf[j] === 0) {
+                              isText = false;
+                              break;
+                            }
+                          }
+                        } catch {
+                          isText = false;
+                        }
+                      }
+                    }
+
+                    if (isText && itemStat.size < 5 * 1024 * 1024) {
+                      try {
+                        const content = fs.readFileSync(full, 'utf8');
+                        lines = content.split(/\r?\n/).length;
+                      } catch {
+                        lines = 0;
+                      }
+                    }
+                  } else {
+                    isText = !BINARY_EXTENSIONS.has(ext) && TEXT_EXTENSIONS.has(ext);
+                  }
+
+                  results.push({
+                    name: item,
+                    path: rel.replace(/\\/g, '/'),
+                    size: itemStat.size,
+                    lineCount: lines,
+                    isText
+                  });
+                }
+              }
+              return results;
+            }
+
+            const files = scanDir(targetPath);
+            res.statusCode = 200;
+            res.end(JSON.stringify({ ok: true, files, gitignoreText }));
+          } catch (e) {
+            console.error('[scan-local-dir] failed:', e.message);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ ok: false, error: e.message }));
+          }
+        });
+      }
+    },
     {
       name: 'ip-lookup-api',
       configureServer(server) {

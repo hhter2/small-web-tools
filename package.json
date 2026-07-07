@@ -13,8 +13,11 @@
     "vite": "^5.2.11"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "exifreader": "^4.41.0",
     "fast-xml-parser": "^4.4.0",
+    "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.11.6",
     "jszip": "^3.10.1",
     "qrcode": "^1.5.3",

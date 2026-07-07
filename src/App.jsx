@@ -22,6 +22,12 @@ import OfficeMeta from './components/OfficeMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
+import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
+import AudioMeta from './components/AudioMeta.jsx';
+import VideoMeta from './components/VideoMeta.jsx';
+import MediaSeparator from './components/MediaSeparator';
+import FolderAnalyzer from './components/FolderAnalyzer.jsx';
+
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -119,6 +125,26 @@ const toolDetails = {
   "tool-fontextractor": {
     title: "Website Font Extractor",
     desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
+  },
+  "tool-qrbarcodescan": {
+    title: "QR & Barcode Scanner",
+    desc: "Scan QR codes and barcodes instantly using your camera or by uploading an image. Supports 14+ formats including QR Code, Code 128, EAN, UPC, Data Matrix, and more."
+  },
+  "tool-audiometa": {
+    title: "Audio Metadata Reader",
+    desc: "Extract and analyze metadata tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA files entirely in-browser with full privacy."
+  },
+  "tool-videometa": {
+    title: "Video Metadata Reader",
+    desc: "Extract and analyze encoding format, resolution, frame rate, audio tracks, timecode, color primaries, and subtitle information from MP4, MOV, and log files entirely in-browser with full privacy."
+  },
+  "tool-mediasplit": {
+    title: "Media Splitter",
+    desc: "Split a video's audio track and silent video track locally."
+  },
+  "tool-folder-analyzer": {
+    title: "Folder Structure Analyzer",
+    desc: "Scan and map folder structures, calculate file metrics, and count code lines entirely client-side."
   }
 };
 const categories = [
@@ -315,6 +341,19 @@ const navItems = [
     )
   },
   {
+    id: 'tool-folder-analyzer',
+    name: 'Folder Analyzer',
+    tooltip: 'Folder Structure Analyzer',
+    category: 'developer',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        <line x1="12" y1="11" x2="12" y2="17"></line>
+        <line x1="9" y1="14" x2="15" y2="14"></line>
+      </svg>
+    )
+  },
+  {
     id: 'tool-dna',
     name: 'DNA/RNA Converter',
     tooltip: 'DNA/RNA Converter',
@@ -385,6 +424,43 @@ const navItems = [
         <line x1="16" y1="13" x2="8" y2="13"></line>
         <line x1="16" y1="17" x2="8" y2="17"></line>
         <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-audiometa',
+    name: 'Audio Metadata',
+    tooltip: 'Audio Metadata Reader',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-videometa',
+    name: 'Video Metadata',
+    tooltip: 'Video Metadata Reader',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+      </svg>
+    )
+  },
+  {
+    id: 'tool-mediasplit',
+    name: 'Media Splitter',
+    tooltip: 'Media Splitter',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
+        <path d="M12 7l-3 3 3 3M12 11l3 3-3 3" />
       </svg>
     )
   },
@@ -470,6 +546,19 @@ const navItems = [
     )
   },
   {
+    id: 'tool-qrbarcodescan',
+    name: 'QR & Barcode Scanner',
+    tooltip: 'QR & Barcode Scanner',
+    category: 'utilities',
+    subGroup: 'Utilities',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+    )
+  },
+  {
     id: 'tool-wheel',
     name: 'Random Wheel',
     tooltip: 'Random Wheel',
@@ -490,6 +579,10 @@ const navItems = [
 export default function App() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash.startsWith('tool-')) {
+        return hash;
+      }
       return sessionStorage.getItem("activeTool") || "tool-home";
     } catch (e) {
       return "tool-home";
@@ -537,10 +630,31 @@ export default function App() {
     } catch (e) {}
   }, [theme]);
 
-  // Sync activeTool to sessionStorage
+  // Listen for hashchange events to sync to activeTool
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash.startsWith('tool-')) {
+        setActiveTool(hash);
+      } else if (!hash) {
+        setActiveTool('tool-home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Sync activeTool to sessionStorage and window.location.hash
   useEffect(() => {
     try {
       sessionStorage.setItem("activeTool", activeTool);
+      if (activeTool === 'tool-home') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        window.location.hash = activeTool;
+      }
     } catch (e) {}
   }, [activeTool]);
 
@@ -619,6 +733,12 @@ export default function App() {
         return <ImgMeta />;
       case 'tool-officemeta':
         return <OfficeMeta />;
+      case 'tool-audiometa':
+        return <AudioMeta />;
+      case 'tool-videometa':
+        return <VideoMeta />;
+      case 'tool-mediasplit':
+        return <MediaSeparator />;
       case 'tool-wheel':
         return <RandomWheel />;
       case 'tool-typing':
@@ -629,12 +749,16 @@ export default function App() {
         return <QrBarcodeGenerator initialTab="qr" key="qrcode" />;
       case 'tool-barcode':
         return <QrBarcodeGenerator initialTab="barcode" key="barcode" />;
+      case 'tool-qrbarcodescan':
+        return <QrBarcodeScanner key="qrbarcodescan" />;
       case 'tool-password':
         return <PasswordGenerator initialTab="generate" key="password" />;
       case 'tool-pwstrength':
         return <PasswordGenerator initialTab="check" key="pwstrength" />;
       case 'tool-fontextractor':
         return <WebsiteFontExtractor />;
+      case 'tool-folder-analyzer':
+        return <FolderAnalyzer />;
       default:
         return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }

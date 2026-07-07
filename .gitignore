@@ -44,6 +44,7 @@ sample.cr3
 thumbnail.jpg
 *.tmp
 temp/
+_incoming/
 
 # Private environment variables
 .env

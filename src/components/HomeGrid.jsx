@@ -198,6 +198,19 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
+      id: 'tool-folder-analyzer',
+      title: 'Folder Analyzer',
+      category: 'developer',
+      desc: 'Recursively scan directories, map project structure, count lines of code, and export to text or SVG diagrams.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <line x1="12" y1="11" x2="12" y2="17"></line>
+          <line x1="9" y1="14" x2="15" y2="14"></line>
+        </svg>
+      )
+    },
+    {
       id: 'tool-dna',
       title: 'DNA/RNA Converter',
       category: 'bioinfo',
@@ -254,7 +267,60 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
       )
-    },    {
+    },
+    {
+      id: 'tool-officemeta',
+      title: 'Office Metadata Reader',
+      category: 'media',
+      desc: 'Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-audiometa',
+      title: 'Audio Metadata Reader',
+      category: 'media',
+      desc: 'Extract tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, OGG, AIFF and more — fully private, in-browser.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="16" r="3"/>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-videometa',
+      title: 'Video Metadata Reader',
+      category: 'media',
+      desc: 'Extract encoding, resolution, FPS, audio tracks, timecodes, color primaries, and subtitles from MP4, MOV, and log files — fully private, in-browser.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-mediasplit',
+      title: 'Media Splitter',
+      category: 'media',
+      desc: "Split a video's audio track and silent video track locally.",
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
+          <path d="M12 7l-3 3 3 3M12 11l3 3-3 3" />
+        </svg>
+      )
+    },
+    {
       id: 'tool-barcode',
       title: 'Barcode Generator',
       category: 'utilities',
@@ -332,6 +398,19 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
           <rect x="14" y="3" width="7" height="7" rx="1"></rect>
           <rect x="3" y="14" width="7" height="7" rx="1"></rect>
           <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      )
+    },
+    {
+      id: 'tool-qrbarcodescan',
+      title: 'QR & Barcode Scanner',
+      category: 'utilities',
+      subGroup: 'Utilities',
+      desc: 'Scan QR codes and barcodes instantly with your camera or by uploading an image. Supports 14+ formats.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
         </svg>
       )
     },

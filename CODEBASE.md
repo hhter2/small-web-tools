@@ -28,7 +28,8 @@ small-web-tools/
 ├── index.html                   # SPA entry point (Vite root)
 │
 ├── public/                      # Static assets copied verbatim to dist/
-│   └── favicon.svg              # Site favicon
+│   ├── favicon.svg              # Site favicon
+│   └── ffmpeg/                  # Local ffmpeg-core engine files (js/wasm)
 │
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)
@@ -56,7 +57,17 @@ small-web-tools/
 │       ├── TypingSpeedTest.jsx  # Typing speed test (English & Chinese, custom templates)
 │       ├── NetworkSpeedTest.jsx # Network latency (ping) & download speed test
 │       ├── QrBarcodeGenerator.jsx # QR code & barcode generator with customization
+│       ├── QrBarcodeScanner.jsx   # QR & barcode scanner (camera + file upload, 14+ formats)
 │       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
+│       ├── AudioMeta.jsx          # Audio metadata reader (MP3/WAV/FLAC/M4A/OGG/AIFF — fully local)
+│       ├── VideoMeta.jsx          # Video metadata reader (MP4/MOV/Log — fully local)
+│       ├── MediaSeparator.jsx     # Main Media Separator / Splitter tool component
+│       ├── MediaSeparatorQueueItem.jsx # Queue item component for Media Separator
+│       ├── MediaSeparatorWaveform.jsx  # Waveform visualization component
+│       ├── MediaSeparatorFormatSelect.jsx # Dropdown select component for format options
+│       ├── mediaSeparatorEngine.js # Merged ffmpeg load client + output format configs
+│       ├── useMediaSeparator.js   # Batch processing queue and states hook
+│       ├── FolderAnalyzer.jsx     # Folder-structure analyzer with dual visualizer & line counts
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
 ├── functions/                   # Cloudflare Pages serverless functions
@@ -136,9 +147,10 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-iplookup` | `IpLookup.jsx` | Network | IP geolocation (via `/api/iplookup`) |
 | `tool-speedtest` | `NetworkSpeedTest.jsx` | Network | Ping & download speed test |
 | `tool-imgmeta` | `ImgMeta.jsx` | Media | EXIF / ICC / GPS image metadata |
-| `tool-officemeta` | `OfficeMeta.jsx` | File | Word / Excel / PPT metadata reader |
+| `tool-officemeta` | `OfficeMeta.jsx` | Media | Word / Excel / PPT metadata reader |
 | `tool-qrcode` | `QrBarcodeGenerator.jsx` | Developer | QR code generator |
 | `tool-barcode` | `QrBarcodeGenerator.jsx` | Developer | Barcode generator (same component, tab-switched) |
+| `tool-qrbarcodescan` | `QrBarcodeScanner.jsx` | Utilities | QR & barcode scanner (camera + file upload, 14+ formats) |
 | `tool-password` | `PasswordGenerator.jsx` | Developer | Secure password generator |
 | `tool-pwstrength` | `PasswordGenerator.jsx` | Developer | Password strength checker (same component, tab-switched) |
 | `tool-wheel` | `RandomWheel.jsx` | Game | Spin-the-wheel random picker |
@@ -146,6 +158,10 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-dna` | `DnaConverter.jsx` | Bio | DNA/RNA strand tools |
 | `tool-codon` | `CodonTable.jsx` | Bio | RNA codon / amino acid table |
 | `tool-fontextractor` | `WebsiteFontExtractor.jsx` | Developer | Web font extractor & downloader |
+| `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
+| `tool-videometa` | `VideoMeta.jsx` | Media | Video metadata reader (MP4, MOV, Log) |
+| `tool-mediasplit` | `MediaSeparator.jsx` | Media | Split a video's audio track and silent video track locally |
+| `tool-folder-analyzer` | `FolderAnalyzer.jsx` | Developer | Folder-structure analyzer with dual visualizer & line counts |
 
 ---
 
@@ -160,8 +176,11 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `jsbarcode` | ^3.11.6 | Barcode rendering (`QrBarcodeGenerator`) |
 | `jszip` | ^3.10.1 | Unzip `.docx`/`.xlsx`/`.pptx` files (`OfficeMeta`) |
 | `qrcode` | ^1.5.3 | QR code generation (`QrBarcodeGenerator`) |
+| `html5-qrcode` | ^2.3.8 | QR & barcode scanning via camera or file upload (`QrBarcodeScanner`) |
 | `vite` | ^5.2.11 | Build tool & dev server |
 | `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
+| `@ffmpeg/ffmpeg` | ^0.12.15 | Client-side ffmpeg runner |
+| `@ffmpeg/util` | ^0.12.2 | Utilities for loading and handling ffmpeg.wasm |
 
 ---
 

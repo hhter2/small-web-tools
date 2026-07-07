@@ -53,6 +53,7 @@ This project is built using **React** and **Vite** for a fast local development 
 - **Lowercase & Capital Switcher (New)**: Convert text casing with 4 switchable and combine-able modes: all case conversion (invert case/uppercase/lowercase), sentence case (with toggleable preservation of existing capitals), title case (capitalize each word), and specific terms capitalization (with first word vs all words options). Features live preview, character and word counters, clear function, sample text loader, and fully responsive layout.
 - **QR & Barcode Scanner (New)**: Real-time camera scanner and file upload decoder supporting 14+ formats (QR Code, Code 128, EAN-13, EAN-8, UPC-A, UPC-E, Data Matrix, Aztec, PDF417, Codabar, ITF, RSS). Implements custom sweeping laser animations, native Web Audio API audio confirmation beeps, content-aware action widgets (Wi-Fi, URL, Email, Phone, SMS), and historical logs.
 - **Video Metadata Reader (New)**: Extract and inspect technical parameters (resolution, frame rate, video codec, audio codec, audio channels, sample rate, timecodes, color primaries, and subtitles) from video files (`.mp4`, `.mov`, `.m4v`, `.f4v`, `.3gp`, `.3g2`) and line-based log files client-side. Supports multi-file upload, side-by-side comparison, searchable parameters grouped by type, metadata JSON export, and an integrated HTML5 video preview player.
+- **Media Splitter (New)**: Extract the audio track and silent video track from video files client-side using `ffmpeg.wasm`. Features batch queue processing, format configuration (source-copy/MP3/WAV/AAC/OGG for audio, source-copy/MP4/WebM for video), waveform rendering with playback using Web Audio API, and local downloads.
 
 
 ## Included Tools
@@ -78,6 +79,7 @@ This project is built using **React** and **Vite** for a fast local development 
 19. **Audio Metadata Reader**: Local audio file metadata extractor and inspector. Extract parameters and tags from formats like MP3, WAV, FLAC, M4A, OGG, and AIFF. Supports side-by-side audio property comparisons, JSON export, inline audio playback, and lossless MP3 metadata stripping.
 20. **QR & Barcode Scanner**: Client-side QR code and barcode scanner using camera capture or drag-and-drop image files. Decodes 14+ 1D/2D formats, plays a beep chime on match, and displays context-aware controls (e.g. WiFi configuration cards, clickable links, mail/SMS pre-fills).
 21. **Video Metadata Reader**: Local video file metadata extractor and inspector. Extract parameters and tracks (video codec, resolution, frame rate, audio codec, channels, sample rate, subtitles, timecodes, color primaries) from video files (`.mp4`, `.mov`, `.m4v`, `.f4v`, `.3gp`, `.3g2`) and line-based log files client-side. Supports multi-file upload, side-by-side comparison, searchable parameters, JSON export, and an integrated video preview player.
+22. **Media Splitter**: Extract the audio track and silent video track from video files client-side using `ffmpeg.wasm`. Features batch queue processing, format configuration (source-copy/MP3/WAV/AAC/OGG for audio, source-copy/MP4/WebM for video), waveform rendering with playback, and local downloads.
 
 ---
 

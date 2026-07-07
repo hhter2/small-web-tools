@@ -25,6 +25,8 @@ import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
 import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
 import AudioMeta from './components/AudioMeta.jsx';
 import VideoMeta from './components/VideoMeta.jsx';
+import MediaSeparator from './components/MediaSeparator';
+
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -134,6 +136,10 @@ const toolDetails = {
   "tool-videometa": {
     title: "Video Metadata Reader",
     desc: "Extract and analyze encoding format, resolution, frame rate, audio tracks, timecode, color primaries, and subtitle information from MP4, MOV, and log files entirely in-browser with full privacy."
+  },
+  "tool-mediasplit": {
+    title: "Media Splitter",
+    desc: "Split a video's audio track and silent video track locally."
   }
 };
 const categories = [
@@ -429,6 +435,18 @@ const navItems = [
     )
   },
   {
+    id: 'tool-mediasplit',
+    name: 'Media Splitter',
+    tooltip: 'Media Splitter',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
+        <path d="M12 7l-3 3 3 3M12 11l3 3-3 3" />
+      </svg>
+    )
+  },
+  {
     id: 'tool-barcode',
     name: 'Barcode Generator',
     tooltip: 'Barcode Generator',
@@ -543,6 +561,10 @@ const navItems = [
 export default function App() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash.startsWith('tool-')) {
+        return hash;
+      }
       return sessionStorage.getItem("activeTool") || "tool-home";
     } catch (e) {
       return "tool-home";
@@ -590,10 +612,31 @@ export default function App() {
     } catch (e) {}
   }, [theme]);
 
-  // Sync activeTool to sessionStorage
+  // Listen for hashchange events to sync to activeTool
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash.startsWith('tool-')) {
+        setActiveTool(hash);
+      } else if (!hash) {
+        setActiveTool('tool-home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Sync activeTool to sessionStorage and window.location.hash
   useEffect(() => {
     try {
       sessionStorage.setItem("activeTool", activeTool);
+      if (activeTool === 'tool-home') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        window.location.hash = activeTool;
+      }
     } catch (e) {}
   }, [activeTool]);
 
@@ -676,6 +719,8 @@ export default function App() {
         return <AudioMeta />;
       case 'tool-videometa':
         return <VideoMeta />;
+      case 'tool-mediasplit':
+        return <MediaSeparator />;
       case 'tool-wheel':
         return <RandomWheel />;
       case 'tool-typing':

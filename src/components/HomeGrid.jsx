@@ -281,6 +281,18 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
+      id: 'tool-mediasplit',
+      title: 'Media Splitter',
+      category: 'media',
+      desc: "Split a video's audio track and silent video track locally.",
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
+          <path d="M12 7l-3 3 3 3M12 11l3 3-3 3" />
+        </svg>
+      )
+    },
+    {
       id: 'tool-barcode',
       title: 'Barcode Generator',
       category: 'utilities',

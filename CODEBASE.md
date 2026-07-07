@@ -28,7 +28,8 @@ small-web-tools/
 ├── index.html                   # SPA entry point (Vite root)
 │
 ├── public/                      # Static assets copied verbatim to dist/
-│   └── favicon.svg              # Site favicon
+│   ├── favicon.svg              # Site favicon
+│   └── ffmpeg/                  # Local ffmpeg-core engine files (js/wasm)
 │
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)
@@ -60,6 +61,12 @@ small-web-tools/
 │       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
 │       ├── AudioMeta.jsx          # Audio metadata reader (MP3/WAV/FLAC/M4A/OGG/AIFF — fully local)
 │       ├── VideoMeta.jsx          # Video metadata reader (MP4/MOV/Log — fully local)
+│       ├── MediaSeparator.jsx     # Main Media Separator / Splitter tool component
+│       ├── MediaSeparatorQueueItem.jsx # Queue item component for Media Separator
+│       ├── MediaSeparatorWaveform.jsx  # Waveform visualization component
+│       ├── MediaSeparatorFormatSelect.jsx # Dropdown select component for format options
+│       ├── mediaSeparatorEngine.js # Merged ffmpeg load client + output format configs
+│       ├── useMediaSeparator.js   # Batch processing queue and states hook
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
 ├── functions/                   # Cloudflare Pages serverless functions
@@ -152,6 +159,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-fontextractor` | `WebsiteFontExtractor.jsx` | Developer | Web font extractor & downloader |
 | `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
 | `tool-videometa` | `VideoMeta.jsx` | Media | Video metadata reader (MP4, MOV, Log) |
+| `tool-mediasplit` | `MediaSeparator.jsx` | Media | Split a video's audio track and silent video track locally |
 
 ---
 
@@ -169,6 +177,8 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `html5-qrcode` | ^2.3.8 | QR & barcode scanning via camera or file upload (`QrBarcodeScanner`) |
 | `vite` | ^5.2.11 | Build tool & dev server |
 | `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
+| `@ffmpeg/ffmpeg` | ^0.12.15 | Client-side ffmpeg runner |
+| `@ffmpeg/util` | ^0.12.2 | Utilities for loading and handling ffmpeg.wasm |
 
 ---
 

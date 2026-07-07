@@ -534,19 +534,11 @@ export default function FolderAnalyzer() {
     let result = '';
     const suffix = node.type === 'directory' ? '/' : '';
     const linesInfo = (node.type === 'file' && node.isText) ? ` (${node.lineCount} lines)` : '';
-    
-    // Add a visual tag for ignored files so text mode reflects the gitignore state clearly
-    let dimTag = '';
-    if (node.name === '.gitignore') {
-      dimTag = ' (gitignore)';
-    } else if (node.isIgnored) {
-      dimTag = ' (ignore)';
-    }
 
     if (isRoot) {
       result += node.name + suffix + '\n';
     } else {
-      result += prefix + (isLast ? '└── ' : '├── ') + node.name + suffix + linesInfo + dimTag + '\n';
+      result += prefix + (isLast ? '└── ' : '├── ') + node.name + suffix + linesInfo + '\n';
     }
 
     const visibleChildren = (node.children || []).filter(c => {

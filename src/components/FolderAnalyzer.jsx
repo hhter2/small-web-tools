@@ -200,36 +200,55 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: 0, phase: '' });
   };
 
-  const handleLocalPathScan = async () => {
-    const cleanPath = customPath.trim().replace(/^["']|["']$/g, '');
-    if (!cleanPath) return;
-
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalDev) {
-      alert('Scanning directories by typing local paths is only supported when running the app locally. On the web version, please drag & drop the folder or click the area below to select a folder.');
-      return;
-    }
-
+  const scanPaths = async (paths) => {
     setStatus('scanning');
-    setProgress({ current: 0, total: 100, phase: 'Scanning local directory...' });
+    setProgress({ current: 0, total: 100, phase: 'Scanning local directories...' });
 
     try {
-      const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(cleanPath)}`);
-      const data = await response.json();
-      
-      if (data.ok) {
-        const gitText = data.gitignoreText || '';
-        setGitignoreText(gitText);
-        const isIgnoredFile = createGitignoreMatcher(gitText);
+      const scanPromises = paths.map(async (p) => {
+        const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(p)}`);
+        const data = await response.json();
+        return { path: p, data };
+      });
 
-        const root = buildTree(data.files, cleanPath, gitText);
-        setTreeData(root);
-        setCollapsedPaths({});
-        setStatus('success');
-      } else {
-        setErrorMsg(data.error || 'Failed to scan local path');
+      const scanResults = await Promise.all(scanPromises);
+      const failed = scanResults.find(r => !r.data.ok);
+      if (failed) {
+        setErrorMsg(failed.data.error || `Failed to scan path: ${failed.path}`);
         setStatus('error');
+        return;
       }
+
+      let combinedFiles = [];
+      const isBatch = paths.length > 1;
+      let gitTexts = [];
+
+      for (const res of scanResults) {
+        const p = res.path;
+        const data = res.data;
+        const files = data.files || [];
+        
+        if (data.gitignoreText) {
+          gitTexts.push(`### Gitignore for ${p}\n${data.gitignoreText}`);
+        }
+
+        if (isBatch) {
+          const parts = p.replace(/\\/g, '/').split('/');
+          const rootFolder = parts[parts.length - 1] || 'folder';
+          files.forEach(f => {
+            const fParts = f.path.split('/');
+            const relPath = fParts.slice(1).join('/');
+            f.path = `Batch Analysis||${p}||${relPath}`;
+          });
+        }
+        combinedFiles.push(...files);
+      }
+
+      setGitignoreText(gitTexts.join('\n\n'));
+      const root = buildTree(combinedFiles, isBatch ? 'Batch Analysis' : paths[0]);
+      setTreeData(root);
+      setCollapsedPaths({});
+      setStatus('success');
     } catch (err) {
       console.error(err);
       setErrorMsg('API scan failed: ' + err.message);
@@ -237,33 +256,48 @@ export default function FolderAnalyzer() {
     }
   };
 
+  const handleLocalPathScan = async () => {
+    const paths = customPath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+    if (paths.length === 0) return;
+    scanPaths(paths);
+  };
+
   // Parse items from directory selection or drag-and-drop
-  async function processFiles(fileList) {
+  async function processFiles(fileList, rootFolderNames) {
     if (!fileList || fileList.length === 0) return;
     setStatus('scanning');
     setProgress({ current: 0, total: fileList.length, phase: 'Reading folder contents...' });
 
     try {
-      // Look for a root .gitignore file
-      const gitignoreFile = fileList.find(
-        f => f.name === '.gitignore' && (f.webkitRelativePath || '').split('/').length === 2
+      // Look for root .gitignore files inside dropped folder roots
+      const gitignoreFiles = fileList.filter(
+        f => f.name === '.gitignore' && (f.customPath || f.webkitRelativePath || '').replace(/\\/g, '/').split('/').length === 2
       );
-      let gitText = '';
-      if (gitignoreFile) {
-        gitText = await new Promise((resolve) => {
+
+      let combinedGitignoreText = '';
+      const gitMatchers = {};
+
+      for (const gitfile of gitignoreFiles) {
+        const text = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target.result || '');
           reader.onerror = () => resolve('');
-          reader.readAsText(gitignoreFile);
+          reader.readAsText(gitfile);
         });
+        const folderName = (gitfile.customPath || gitfile.webkitRelativePath || '').replace(/\\/g, '/').split('/')[0];
+        if (folderName) {
+          gitMatchers[folderName] = createGitignoreMatcher(text);
+          combinedGitignoreText += `### Gitignore for ${folderName}\n${text}\n\n`;
+        }
       }
-      setGitignoreText(gitText);
-      const isIgnoredFile = createGitignoreMatcher(gitText);
+      setGitignoreText(combinedGitignoreText);
 
       const processedFiles = [];
+      const isBatch = rootFolderNames && rootFolderNames.length > 1;
+
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
-        const path = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
+        const fullPath = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
 
         setProgress({
           current: i + 1,
@@ -271,10 +305,22 @@ export default function FolderAnalyzer() {
           phase: `Analyzing ${file.name}...`
         });
 
+        const firstPart = fullPath.split('/')[0];
+        const matcher = gitMatchers[firstPart];
+        const isIgnored = matcher ? matcher(fullPath, false) : false;
+
         let lineCount = 0;
         const isText = await isTextFile(file);
-        if (isText && file.size < 5 * 1024 * 1024) {
+        if (isText && file.size < 5 * 1024 * 1024 && !isIgnored) {
           lineCount = await countFileLines(file);
+        }
+
+        let path = fullPath;
+        if (isBatch) {
+          const parts = fullPath.split('/');
+          const rootFolder = parts[0];
+          const relPath = parts.slice(1).join('/');
+          path = `Batch Analysis||${rootFolder}||${relPath}`;
         }
 
         processedFiles.push({
@@ -282,11 +328,12 @@ export default function FolderAnalyzer() {
           path: path,
           size: file.size,
           lineCount: lineCount,
-          isText
+          isText,
+          isIgnored
         });
       }
 
-      const root = buildTree(processedFiles, customPath, gitText);
+      const root = buildTree(processedFiles, isBatch ? 'Batch Analysis' : (rootFolderNames ? rootFolderNames[0] : 'root'));
       setTreeData(root);
       setCollapsedPaths({});
       setStatus('success');
@@ -297,42 +344,32 @@ export default function FolderAnalyzer() {
     }
   }
 
-  const resolveAndScanLocalPath = async (rootFolderName, fallbackFiles) => {
+  const resolveAndScanLocalPaths = async (rootFolderNames, fallbackFiles) => {
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isLocalDev) {
-      processFiles(fallbackFiles);
+      processFiles(fallbackFiles, rootFolderNames);
       return;
     }
 
     try {
-      const res = await fetch(`/api/resolve-local-path?name=${encodeURIComponent(rootFolderName)}`);
-      const data = await res.json();
-      if (data.ok && data.path) {
-        setCustomPath(data.path);
-        
-        setStatus('scanning');
-        setProgress({ current: 0, total: 100, phase: 'Scanning resolved local directory...' });
-        
-        const scanRes = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(data.path)}`);
-        const scanData = await scanRes.json();
-        
-        if (scanData.ok) {
-          const gitText = scanData.gitignoreText || '';
-          setGitignoreText(gitText);
-          const isIgnoredFile = createGitignoreMatcher(gitText);
+      const resolvePromises = rootFolderNames.map(async (name) => {
+        const res = await fetch(`/api/resolve-local-path?name=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        return data.ok ? data.path : null;
+      });
+      const resolved = await Promise.all(resolvePromises);
+      const validPaths = resolved.filter(Boolean);
 
-          const root = buildTree(scanData.files, data.path, gitText);
-          setTreeData(root);
-          setCollapsedPaths({});
-          setStatus('success');
-          return;
-        }
+      if (validPaths.length === rootFolderNames.length) {
+        setCustomPath(validPaths.join(', '));
+        scanPaths(validPaths);
+        return;
       }
     } catch (e) {
       console.warn('Local path resolution failed, falling back to browser scan:', e);
     }
 
-    processFiles(fallbackFiles);
+    processFiles(fallbackFiles, rootFolderNames);
   };
 
   // Handle standard <input type="file" webkitdirectory /> selection
@@ -342,7 +379,7 @@ export default function FolderAnalyzer() {
       const filesArray = Array.from(files);
       const firstPath = filesArray[0].webkitRelativePath || '';
       const rootFolderName = firstPath.split('/')[0] || '';
-      resolveAndScanLocalPath(rootFolderName, filesArray);
+      resolveAndScanLocalPaths([rootFolderName], filesArray);
     }
   };
 
@@ -361,9 +398,7 @@ export default function FolderAnalyzer() {
     if (entry.isFile) {
       return new Promise((resolve) => {
         entry.file((file) => {
-          // File.webkitRelativePath is often read-only, use a custom property for fallback logic
           file.customPath = path ? `${path}/${entry.name}` : entry.name;
-          // Also try to set webkitRelativePath just in case it's allowed
           try { file.webkitRelativePath = file.customPath; } catch (e) {}
           resolve([file]);
         }, () => resolve([]));
@@ -411,22 +446,29 @@ export default function FolderAnalyzer() {
 
     try {
       const allFiles = [];
-      let rootFolderName = '';
+      const rootFolders = new Set();
+      
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.kind === 'file') {
           const entry = item.webkitGetAsEntry();
           if (entry) {
-            if (entry.isDirectory && !rootFolderName) {
-              rootFolderName = entry.name;
+            if (entry.isDirectory) {
+              rootFolders.add(entry.name);
             }
             const files = await traverseEntry(entry);
             allFiles.push(...files);
           }
         }
       }
+      
       if (allFiles.length > 0) {
-        resolveAndScanLocalPath(rootFolderName, allFiles);
+        const uniqueRoots = Array.from(rootFolders);
+        // If they dragged raw files without directories, we can fallback to file name
+        if (uniqueRoots.length === 0) {
+          uniqueRoots.push('files');
+        }
+        resolveAndScanLocalPaths(uniqueRoots, allFiles);
       } else {
         setErrorMsg('No files detected in the dropped selection.');
         setStatus('error');
@@ -439,16 +481,18 @@ export default function FolderAnalyzer() {
   };
 
   // Reconstruct tree hierarchy
-  function buildTree(files, pathPrefix, gitignoreContent = '') {
-    const isIgnoredFile = createGitignoreMatcher(gitignoreContent);
-
+  function buildTree(files, pathPrefix) {
     // Determine root directory name
     let rootName = 'root';
     if (files.length > 0) {
       const firstPath = files[0].path;
-      const firstPart = firstPath.split('/')[0];
-      if (firstPart) {
-        rootName = firstPart;
+      if (firstPath.startsWith('Batch Analysis||')) {
+        rootName = 'Batch Analysis';
+      } else {
+        const firstPart = firstPath.split('/')[0];
+        if (firstPart) {
+          rootName = firstPart;
+        }
       }
     }
 
@@ -468,14 +512,19 @@ export default function FolderAnalyzer() {
     };
 
     for (const file of files) {
-      const parts = file.path.split('/');
-      // Override first path element with custom root path if typed
-      if (pathPrefix) {
-        parts[0] = rootName;
+      let parts;
+      if (file.path.startsWith('Batch Analysis||')) {
+        const batchParts = file.path.split('||'); // ['Batch Analysis', 'D:/path/A', 'src/App.jsx']
+        parts = [batchParts[0], batchParts[1], ...batchParts[2].split('/')];
+      } else {
+        parts = file.path.split('/');
+        if (pathPrefix) {
+          parts[0] = rootName;
+        }
       }
 
       let currentNode = rootNode;
-      let currentPath = rootName;
+      let currentPath = parts[0];
 
       for (let i = 1; i < parts.length; i++) {
         const part = parts[i];
@@ -494,7 +543,7 @@ export default function FolderAnalyzer() {
             type: isFile ? 'file' : 'directory',
             lineCount: 0,
             size: 0,
-            isIgnored: currentNode.isIgnored || isIgnoredFile(currentPath, !isFile),
+            isIgnored: isFile ? file.isIgnored : false,
             isSystemExclude: isSystem,
             children: isFile ? undefined : []
           };
@@ -505,27 +554,36 @@ export default function FolderAnalyzer() {
           childNode.lineCount = file.lineCount;
           childNode.size = file.size;
           childNode.isText = file.isText;
+          childNode.isIgnored = file.isIgnored;
         }
 
         currentNode = childNode;
       }
     }
 
-    // Recursively count folder lines & sizes
+    // Recursively count folder lines & sizes and determine if folder is ignored
     function calculateFolderStats(node) {
       if (node.type === 'file') {
-        return { lines: node.lineCount, size: node.size };
+        return { lines: node.lineCount, size: node.size, isIgnored: node.isIgnored };
       }
       let linesSum = 0;
       let sizeSum = 0;
+      let allChildrenIgnored = node.children.length > 0;
+
       for (const child of node.children) {
         const stats = calculateFolderStats(child);
         linesSum += stats.lines;
         sizeSum += stats.size;
+        if (!stats.isIgnored) {
+          allChildrenIgnored = false;
+        }
       }
       node.lineCount = linesSum;
       node.size = sizeSum;
-      return { lines: linesSum, size: sizeSum };
+      if (node.children.length > 0) {
+        node.isIgnored = allChildrenIgnored;
+      }
+      return { lines: linesSum, size: sizeSum, isIgnored: node.isIgnored };
     }
 
     calculateFolderStats(rootNode);

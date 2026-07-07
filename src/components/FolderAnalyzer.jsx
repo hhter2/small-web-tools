@@ -15,6 +15,8 @@ const BINARY_EXTENSIONS = new Set([
   'class', 'jar', 'war', 'eot', 'ttf', 'woff', 'woff2'
 ]);
 
+const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
+
 function createGitignoreMatcher(gitignoreText) {
   if (!gitignoreText) return () => false;
 
@@ -39,13 +41,9 @@ function createGitignoreMatcher(gitignoreText) {
 
     // Convert glob pattern to regular expression
     let regexStr = line
-      .replace(/[-\/\\^$*+?.()|[\]{}]/g, (ch) => {
-        if (ch === '*' || ch === '?') return ch;
-        return '\\' + ch;
-      })
-      .replace(/\*\*/g, '.*')
-      .replace(/\*/g, '[^\\/]*')
-      .replace(/\?/g, '[^\\/]');
+      .replace(/\./g, '\\.')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
 
     if (line.startsWith('/')) {
       regexStr = '^' + regexStr.slice(1);
@@ -62,15 +60,14 @@ function createGitignoreMatcher(gitignoreText) {
         isDirOnly
       });
     } catch (e) {
-      // ignore invalid regexes
+      // ignore
     }
   }
 
   return (filePath, isDir) => {
     let ignored = false;
-    // Normalize path by stripping the root folder part, or check the relative path
     const parts = filePath.split('/');
-    const relPath = parts.slice(1).join('/'); // strip root directory name
+    const relPath = parts.slice(1).join('/');
 
     if (!relPath) return false;
 
@@ -91,14 +88,56 @@ export default function FolderAnalyzer() {
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
   const [treeData, setTreeData] = useState(null);
-  const [totalLines, setTotalLines] = useState(0);
-  const [totalFiles, setTotalFiles] = useState(0);
-  const [totalSize, setTotalSize] = useState(0);
   const [viewMode, setViewMode] = useState('figure'); // figure, text
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [gitignoreText, setGitignoreText] = useState('');
+
+  // Filters & Sorting States
+  const [showSystemExclude, setShowSystemExclude] = useState(false);
+  const [showGitignored, setShowGitignored] = useState(true);
+  const [sortBy, setSortBy] = useState('name'); // name, type, lines, size
+  const [sortOrder, setSortOrder] = useState('asc'); // asc, desc
+
+  // Dynamic Metrics Calculation
+  const projectStats = React.useMemo(() => {
+    let filesCount = 0;
+    let linesWithGitignore = 0;
+    let linesWithoutGitignore = 0;
+    let sizeWithGitignore = 0;
+    let sizeWithoutGitignore = 0;
+
+    function traverse(n, isRoot = false) {
+      if (!isRoot && !showSystemExclude && n.isSystemExclude) return;
+      if (!isRoot && !showGitignored && n.isIgnored) return;
+
+      if (n.type === 'file') {
+        filesCount++;
+        sizeWithoutGitignore += n.size;
+        linesWithoutGitignore += n.lineCount;
+
+        if (!n.isIgnored) {
+          sizeWithGitignore += n.size;
+          linesWithGitignore += n.lineCount;
+        }
+      } else if (n.children) {
+        n.children.forEach(c => traverse(c, false));
+      }
+    }
+
+    if (treeData) {
+      traverse(treeData, true);
+    }
+
+    return {
+      filesCount,
+      linesWithGitignore,
+      linesWithoutGitignore,
+      sizeWithGitignore,
+      sizeWithoutGitignore
+    };
+  }, [treeData, showSystemExclude, showGitignored]);
 
   const folderInputRef = useRef(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
@@ -184,21 +223,8 @@ export default function FolderAnalyzer() {
         setGitignoreText(gitText);
         const isIgnoredFile = createGitignoreMatcher(gitText);
 
-        let tempTotalLines = 0;
-        let tempTotalSize = 0;
-        for (const file of data.files) {
-          const ignored = isIgnoredFile(file.path, false);
-          if (!ignored) {
-            tempTotalSize += file.size;
-            tempTotalLines += file.lineCount;
-          }
-        }
-
         const root = buildTree(data.files, cleanPath, gitText);
         setTreeData(root);
-        setTotalLines(tempTotalLines);
-        setTotalFiles(data.files.length);
-        setTotalSize(tempTotalSize);
         setCollapsedPaths({});
         setStatus('success');
       } else {
@@ -236,17 +262,9 @@ export default function FolderAnalyzer() {
       const isIgnoredFile = createGitignoreMatcher(gitText);
 
       const processedFiles = [];
-      let tempTotalLines = 0;
-      let tempTotalSize = 0;
-
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         const path = (file.customPath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
-        const ignored = isIgnoredFile(path, false);
-
-        if (!ignored) {
-          tempTotalSize += file.size;
-        }
 
         setProgress({
           current: i + 1,
@@ -258,9 +276,6 @@ export default function FolderAnalyzer() {
         const isText = await isTextFile(file);
         if (isText && file.size < 5 * 1024 * 1024) {
           lineCount = await countFileLines(file);
-          if (!ignored) {
-            tempTotalLines += lineCount;
-          }
         }
 
         processedFiles.push({
@@ -274,9 +289,6 @@ export default function FolderAnalyzer() {
 
       const root = buildTree(processedFiles, customPath, gitText);
       setTreeData(root);
-      setTotalLines(tempTotalLines);
-      setTotalFiles(processedFiles.length);
-      setTotalSize(tempTotalSize);
       setCollapsedPaths({});
       setStatus('success');
     } catch (err) {
@@ -310,21 +322,8 @@ export default function FolderAnalyzer() {
           setGitignoreText(gitText);
           const isIgnoredFile = createGitignoreMatcher(gitText);
 
-          let tempTotalLines = 0;
-          let tempTotalSize = 0;
-          for (const file of scanData.files) {
-            const ignored = isIgnoredFile(file.path, false);
-            if (!ignored) {
-              tempTotalSize += file.size;
-              tempTotalLines += file.lineCount;
-            }
-          }
-
           const root = buildTree(scanData.files, data.path, gitText);
           setTreeData(root);
-          setTotalLines(tempTotalLines);
-          setTotalFiles(scanData.files.length);
-          setTotalSize(tempTotalSize);
           setCollapsedPaths({});
           setStatus('success');
           return;
@@ -465,7 +464,8 @@ export default function FolderAnalyzer() {
       children: [],
       lineCount: 0,
       size: 0,
-      isIgnored: false
+      isIgnored: false,
+      isSystemExclude: SYSTEM_EXCLUDES.has(rootName)
     };
 
     for (const file of files) {
@@ -488,6 +488,7 @@ export default function FolderAnalyzer() {
         );
 
         if (!childNode) {
+          const isSystem = SYSTEM_EXCLUDES.has(part) || currentNode.isSystemExclude;
           childNode = {
             name: part,
             path: currentPath,
@@ -495,6 +496,7 @@ export default function FolderAnalyzer() {
             lineCount: 0,
             size: 0,
             isIgnored: currentNode.isIgnored || isIgnoredFile(currentPath, !isFile),
+            isSystemExclude: isSystem,
             children: isFile ? undefined : []
           };
           currentNode.children.push(childNode);
@@ -676,18 +678,68 @@ export default function FolderAnalyzer() {
     }));
   };
 
+  const handleCollapseAll = () => {
+    if (!treeData) return;
+    const paths = {};
+    const traverse = (node) => {
+      if (node.type === 'directory') {
+        paths[node.path] = true;
+        if (node.children) {
+          node.children.forEach(traverse);
+        }
+      }
+    };
+    traverse(treeData);
+    setCollapsedPaths(paths);
+  };
+
+  const handleExpandAll = () => {
+    setCollapsedPaths({});
+  };
+
   // Flatten active visible nodes to a list for table rendering
-  function getFlattenedRows(node, depth = 0, isVisible = true, list = []) {
+  function getFlattenedRows(node, depth = 0, isVisible = true, list = [], isRoot = true) {
     if (!isVisible) return list;
+
+    // Filters
+    if (!isRoot) {
+      if (!showSystemExclude && node.isSystemExclude) return list;
+      if (!showGitignored && node.isIgnored) return list;
+    }
+
     list.push({ ...node, depth });
     const isCollapsed = collapsedPaths[node.path];
     if (node.children && node.children.length > 0) {
       const sorted = [...node.children].sort((a, b) => {
+        // Group directories first
         if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
-        return a.name.localeCompare(b.name);
+
+        let valA, valB;
+        if (sortBy === 'name') {
+          valA = a.name;
+          valB = b.name;
+        } else if (sortBy === 'type') {
+          valA = a.type === 'directory' ? 'folder' : (a.name.split('.').pop() || '').toLowerCase();
+          valB = b.type === 'directory' ? 'folder' : (b.name.split('.').pop() || '').toLowerCase();
+        } else if (sortBy === 'lines') {
+          valA = a.lineCount;
+          valB = b.lineCount;
+        } else if (sortBy === 'size') {
+          valA = a.size;
+          valB = b.size;
+        }
+
+        let compare = 0;
+        if (typeof valA === 'string') {
+          compare = valA.localeCompare(valB);
+        } else {
+          compare = valA - valB;
+        }
+
+        return sortOrder === 'asc' ? compare : -compare;
       });
       for (const child of sorted) {
-        getFlattenedRows(child, depth + 1, !isCollapsed, list);
+        getFlattenedRows(child, depth + 1, !isCollapsed, list, false);
       }
     }
     return list;
@@ -796,6 +848,24 @@ export default function FolderAnalyzer() {
       </svg>
     );
   }
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const renderSortIcon = (field) => {
+    if (sortBy !== field) return null;
+    return (
+      <svg className={`sort-arrow-icon ${sortOrder}`} viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none">
+        <polyline points={sortOrder === 'asc' ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}></polyline>
+      </svg>
+    );
+  };
 
   const flattenedRows = treeData ? getFlattenedRows(treeData) : [];
 
@@ -909,15 +979,31 @@ export default function FolderAnalyzer() {
           <div className="folder-analyzer-summary">
             <div className="summary-badge">
               <span className="badge-label">Total Files</span>
-              <span className="badge-value">{totalFiles}</span>
+              <span className="badge-value">{projectStats.filesCount}</span>
             </div>
             <div className="summary-badge">
               <span className="badge-label">Total Code Lines</span>
-              <span className="badge-value highlight">{totalLines.toLocaleString()}</span>
+              <span className="badge-value highlight">
+                {projectStats.linesWithGitignore.toLocaleString()}
+              </span>
+              {gitignoreText && (
+                <div className="badge-sub-metrics">
+                  <span>With gitignore: <strong>{projectStats.linesWithGitignore.toLocaleString()}</strong></span>
+                  <span>Without gitignore: <strong>{projectStats.linesWithoutGitignore.toLocaleString()}</strong></span>
+                </div>
+              )}
             </div>
             <div className="summary-badge">
               <span className="badge-label">Project Size</span>
-              <span className="badge-value">{formatSize(totalSize)}</span>
+              <span className="badge-value">
+                {formatSize(projectStats.sizeWithGitignore)}
+              </span>
+              {gitignoreText && (
+                <div className="badge-sub-metrics">
+                  <span>With gitignore: <strong>{formatSize(projectStats.sizeWithGitignore)}</strong></span>
+                  <span>Without gitignore: <strong>{formatSize(projectStats.sizeWithoutGitignore)}</strong></span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -936,6 +1022,45 @@ export default function FolderAnalyzer() {
               >
                 Plaintext
               </button>
+            </div>
+
+            {/* Tree Collapse/Expand Actions */}
+            {viewMode === 'figure' && (
+              <div className="tree-expansion-controls">
+                <button className="btn-secondary btn-sm" onClick={handleExpandAll} title="Expand all folders">
+                  Expand All
+                </button>
+                <button className="btn-secondary btn-sm" onClick={handleCollapseAll} title="Collapse all folders">
+                  Collapse All
+                </button>
+              </div>
+            )}
+
+            {/* Filters Toggles */}
+            <div className="filter-switches-group">
+              <label className="switch-toggle" htmlFor="toggle-system-exclude">
+                <input 
+                  type="checkbox" 
+                  id="toggle-system-exclude"
+                  checked={showSystemExclude}
+                  onChange={(e) => setShowSystemExclude(e.target.checked)}
+                />
+                <span className="switch-slider"></span>
+                <span className="switch-label">Excluded Folders</span>
+              </label>
+              
+              {gitignoreText && (
+                <label className="switch-toggle" htmlFor="toggle-gitignore">
+                  <input 
+                    type="checkbox" 
+                    id="toggle-gitignore"
+                    checked={showGitignored}
+                    onChange={(e) => setShowGitignored(e.target.checked)}
+                  />
+                  <span className="switch-slider"></span>
+                  <span className="switch-label">Gitignored Files</span>
+                </label>
+              )}
             </div>
 
             <div className="action-buttons-group">
@@ -991,10 +1116,26 @@ export default function FolderAnalyzer() {
               <table className="analyzer-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Lines</th>
-                    <th>Size</th>
+                    <th onClick={() => handleSort('name')} className="sortable-header">
+                      <div className="header-sort-wrapper">
+                        Name {renderSortIcon('name')}
+                      </div>
+                    </th>
+                    <th onClick={() => handleSort('type')} className="sortable-header">
+                      <div className="header-sort-wrapper">
+                        Type {renderSortIcon('type')}
+                      </div>
+                    </th>
+                    <th onClick={() => handleSort('lines')} className="sortable-header">
+                      <div className="header-sort-wrapper">
+                        Lines {renderSortIcon('lines')}
+                      </div>
+                    </th>
+                    <th onClick={() => handleSort('size')} className="sortable-header">
+                      <div className="header-sort-wrapper">
+                        Size {renderSortIcon('size')}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

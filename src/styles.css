@@ -12808,5 +12808,96 @@ html[data-theme="dark"] .videometa-tab-btn.active {
   margin-top: 6px;
 }
 
+/* Enhancements for Folder Structure Analyzer */
+.badge-sub-metrics {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px dashed var(--border-color);
+  padding-top: 6px;
+  width: 100%;
+}
+.badge-sub-metrics span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tree-expansion-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tree-expansion-controls .btn-sm {
+  padding: 6px 12px !important;
+  font-size: 0.8rem !important;
+  border-radius: 6px !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+}
+
+.filter-switches-group {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.switch-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  user-select: none;
+}
+.switch-toggle input {
+  display: none;
+}
+.switch-slider {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 18px;
+  background-color: var(--border-color);
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.switch-toggle input:checked + .switch-slider {
+  background-color: var(--accent);
+}
+.switch-toggle input:checked + .switch-slider::before {
+  transform: translateX(16px);
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+.sortable-header:hover {
+  background-color: var(--nav-hover-bg) !important;
+}
+.header-sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sort-arrow-icon {
+  color: var(--accent);
+}
+
 
 

@@ -540,7 +540,7 @@ export default function FolderAnalyzer() {
     if (node.name === '.gitignore') {
       dimTag = ' (gitignore)';
     } else if (node.isIgnored) {
-      dimTag = ' (ignored)';
+      dimTag = ' (ignore)';
     }
 
     if (isRoot) {

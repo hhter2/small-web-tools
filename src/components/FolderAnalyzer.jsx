@@ -163,7 +163,8 @@ export default function FolderAnalyzer() {
   }
 
   const handleLocalPathScan = async () => {
-    if (!customPath.trim()) return;
+    const cleanPath = customPath.trim().replace(/^["']|["']$/g, '');
+    if (!cleanPath) return;
 
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isLocalDev) {
@@ -175,7 +176,7 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: 100, phase: 'Scanning local directory...' });
 
     try {
-      const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(customPath.trim())}`);
+      const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(cleanPath)}`);
       const data = await response.json();
       
       if (data.ok) {
@@ -193,7 +194,7 @@ export default function FolderAnalyzer() {
           }
         }
 
-        const root = buildTree(data.files, customPath.trim(), gitText);
+        const root = buildTree(data.files, cleanPath, gitText);
         setTreeData(root);
         setTotalLines(tempTotalLines);
         setTotalFiles(data.files.length);

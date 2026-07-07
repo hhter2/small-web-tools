@@ -66,6 +66,8 @@ Follow this sequence exactly — do not skip or reorder steps:
 - **CSS class names**: Use descriptive, tool-specific class names to avoid collisions (e.g., `.mytool-container`, `.mytool-input`).
 - **No inline styles** unless absolutely necessary for dynamic values.
 - Keep components self-contained — one component per file, one file per tool.
+- **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.
+
 
 ---
 

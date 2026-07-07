@@ -269,6 +269,18 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       )
     },
     {
+      id: 'tool-videometa',
+      title: 'Video Metadata Reader',
+      category: 'media',
+      desc: 'Extract encoding, resolution, FPS, audio tracks, timecodes, color primaries, and subtitles from MP4, MOV, and log files — fully private, in-browser.',
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+      )
+    },
+    {
       id: 'tool-barcode',
       title: 'Barcode Generator',
       category: 'utilities',

@@ -24,6 +24,7 @@ import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
 import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
 import AudioMeta from './components/AudioMeta.jsx';
+import VideoMeta from './components/VideoMeta.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -129,6 +130,10 @@ const toolDetails = {
   "tool-audiometa": {
     title: "Audio Metadata Reader",
     desc: "Extract and analyze metadata tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA files entirely in-browser with full privacy."
+  },
+  "tool-videometa": {
+    title: "Video Metadata Reader",
+    desc: "Extract and analyze encoding format, resolution, frame rate, audio tracks, timecode, color primaries, and subtitle information from MP4, MOV, and log files entirely in-browser with full privacy."
   }
 };
 const categories = [
@@ -412,6 +417,18 @@ const navItems = [
     )
   },
   {
+    id: 'tool-videometa',
+    name: 'Video Metadata',
+    tooltip: 'Video Metadata Reader',
+    category: 'media',
+    icon: (
+      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+      </svg>
+    )
+  },
+  {
     id: 'tool-barcode',
     name: 'Barcode Generator',
     tooltip: 'Barcode Generator',
@@ -657,6 +674,8 @@ export default function App() {
         return <OfficeMeta />;
       case 'tool-audiometa':
         return <AudioMeta />;
+      case 'tool-videometa':
+        return <VideoMeta />;
       case 'tool-wheel':
         return <RandomWheel />;
       case 'tool-typing':

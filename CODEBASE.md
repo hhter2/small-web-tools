@@ -59,6 +59,7 @@ small-web-tools/
 │       ├── QrBarcodeScanner.jsx   # QR & barcode scanner (camera + file upload, 14+ formats)
 │       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
 │       ├── AudioMeta.jsx          # Audio metadata reader (MP3/WAV/FLAC/M4A/OGG/AIFF — fully local)
+│       ├── VideoMeta.jsx          # Video metadata reader (MP4/MOV/Log — fully local)
 │       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
 │
 ├── functions/                   # Cloudflare Pages serverless functions
@@ -150,6 +151,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-codon` | `CodonTable.jsx` | Bio | RNA codon / amino acid table |
 | `tool-fontextractor` | `WebsiteFontExtractor.jsx` | Developer | Web font extractor & downloader |
 | `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
+| `tool-videometa` | `VideoMeta.jsx` | Media | Video metadata reader (MP4, MOV, Log) |
 
 ---
 

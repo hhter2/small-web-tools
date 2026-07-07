@@ -25,9 +25,10 @@ export async function ensureFFmpegLoaded(onLog) {
   if (!loadingPromise) {
     loadingPromise = (async () => {
       try {
-        if (onLog) {
-          ffmpeg.on('log', ({ message }) => onLog(message));
-        }
+        ffmpeg.on('log', ({ message }) => {
+          console.log('[FFmpeg Engine]:', message);
+          if (onLog) onLog(message);
+        });
         
         // Since we are self-hosting on the same origin, we don't need Blob URLs 
         // to bypass cross-origin worker restrictions. Blob URLs can break dynamic import()

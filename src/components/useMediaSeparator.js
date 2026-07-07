@@ -20,6 +20,9 @@ function nextId() {
  */
 export function useMediaSeparator() {
   const [items, setItems] = useState([]);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  
   const [engineLoading, setEngineLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const processingRef = useRef(false);
@@ -107,6 +110,7 @@ export function useMediaSeparator() {
       try {
         stage = 0;
         await ffmpeg.exec(['-i', inputName, ...audioFormat.buildArgs(), audioOutName]);
+        
         stage = 1;
         await ffmpeg.exec(['-i', inputName, ...videoFormat.buildArgs(), videoOutName]);
 
@@ -135,11 +139,13 @@ export function useMediaSeparator() {
   );
 
   const runQueue = useCallback(async () => {
-    if (processingRef.current) return;
+    if (processingRef.current) {
+      return;
+    }
     processingRef.current = true;
     setIsProcessing(true);
     stopRef.current = false;
-
+ 
     try {
       setEngineLoading(true);
       await ensureFFmpegLoaded();
@@ -147,7 +153,7 @@ export function useMediaSeparator() {
       processingRef.current = false;
       setIsProcessing(false);
       setEngineLoading(false);
-
+ 
       // Report engine load failure on the first pending item
       setItems((prev) => {
         const firstPending = prev.find((it) => it.status === STATUS.PENDING);
@@ -164,23 +170,22 @@ export function useMediaSeparator() {
       return;
     }
     setEngineLoading(false);
-
+ 
     while (true) {
-      if (stopRef.current) break;
-
-      let next;
-      setItems((prev) => {
-        next = prev.find((it) => it.status === STATUS.PENDING);
-        if (next) {
-          return prev.map((it) =>
-            it.id === next.id ? { ...it, status: STATUS.PROCESSING, progress: 0, error: null } : it,
-          );
-        }
-        return prev;
-      });
-
-      if (!next) break;
-
+      if (stopRef.current) {
+        break;
+      }
+ 
+      // Read queue item synchronously from itemsRef
+      const next = itemsRef.current.find((it) => it.status === STATUS.PENDING);
+ 
+      if (!next) {
+        break;
+      }
+ 
+      // Update state of the item to processing synchronously in state
+      updateItem(next.id, { status: STATUS.PROCESSING, progress: 0, error: null });
+ 
       try {
         await processOne(next);
       } catch (err) {
@@ -191,7 +196,7 @@ export function useMediaSeparator() {
         }
       }
     }
-
+ 
     processingRef.current = false;
     setIsProcessing(false);
   }, [processOne, updateItem]);

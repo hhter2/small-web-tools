@@ -1165,8 +1165,8 @@ export default function App() {
               </svg>
 
               {langDropdownOpen && (
-                <div className="dropdown-menu show" style={{ minWidth: '120px', left: 'auto', right: 0, marginTop: '8px' }}>
-                  <button className="dropdown-item active" style={{ width: '100%' }}>
+                <div className="dropdown-menu show" style={{ marginTop: '8px' }}>
+                  <button className="dropdown-item active">
                     English
                   </button>
                 </div>

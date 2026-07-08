@@ -9196,6 +9196,23 @@ html:not([data-theme="dark"]) .search-badge {
   user-select: none;
 }
 
+.language-selector-container .dropdown-menu {
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 4px;
+}
+
+.language-selector-container .dropdown-item {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 0.8rem;
+}
+
 /* Theme switch button overrides */
 .desktop-header-right .theme-toggle-btn {
   background: none;

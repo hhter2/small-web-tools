@@ -1288,7 +1288,7 @@ export default function App() {
             <div className="footer-brand-container">
               <span className="footer-brand-name">Small Web Tools</span>
               <span className="footer-sep">&nbsp;·&nbsp;</span>
-              <span className="footer-copyright">Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()} · {APP_VERSION}</span>
+              <span className="footer-copyright">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
             </div>
             <div className="footer-social-row">
               <button className="footer-social-btn" title="GitHub" aria-label="GitHub">

@@ -2804,6 +2804,8 @@ html[data-theme="dark"] .currency-bulk-item {
 .footer-links-section {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
   gap: 24px 16px;
   padding: 28px 48px;
   border-bottom: 1px solid var(--border-color);

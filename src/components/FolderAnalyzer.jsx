@@ -1196,7 +1196,7 @@ export default function FolderAnalyzer() {
               <input
                 type="text"
                 id="custom-root-path"
-                placeholder="e.g. D:/01_Programs/07_Small_Web_Tools or my-vite-react-app"
+                placeholder="Enter folder path or custom root name..."
                 value={customPath}
                 onChange={(e) => setCustomPath(e.target.value)}
                 onKeyDown={(e) => {

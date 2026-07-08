@@ -182,6 +182,15 @@ export default function RandomWheel() {
     drawWheel(rotationAngle);
   }, [items, rotationAngle]);
 
+  // Cleanup animation frame only on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
   // Handle key listeners and redraw on theme change
   useEffect(() => {
     // Redraw on theme toggles
@@ -225,9 +234,6 @@ export default function RandomWheel() {
         toggleBtn.removeEventListener("click", handleThemeChange);
       }
       window.removeEventListener("keydown", handleKeyDown);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, [items, isSpinning, allowDuplicate]);
 
@@ -255,11 +261,13 @@ export default function RandomWheel() {
     const targetAngle = 2 * Math.PI * spinsCount - targetSectorCenter;
 
     const startAngleVal = rotationAngleRef.current % (2 * Math.PI);
-    const startTime = performance.now();
+    let startTime = null;
     const duration = 4000; // 4 seconds
 
     const animate = (time) => {
-      const elapsed = time - startTime;
+      const currentTime = time || performance.now();
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
       // quintic ease-out deceleration curve

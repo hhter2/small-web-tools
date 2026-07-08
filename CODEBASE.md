@@ -141,7 +141,7 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `tool-wc` | `WordCounter.jsx` | Text | Word / char / line counter |
 | `tool-date` | `DateCounter.jsx` | Text | Days between two dates |
 | `tool-currency` | `CurrencyCounter.jsx` | Text | Currency converter & bulk list |
-| `tool-color` | `ColorConverter.jsx` | Developer | HEX / RGB / HSL converter |
+| `tool-color` | `ColorConverter.jsx` | Developer | HEX / RGB / HSL / HSB / CMYK / LAB converter |
 | `tool-ascii` | `AsciiConverter.jsx` | Developer | ASCII ↔ text |
 | `tool-unicode` | `UnicodeConverter.jsx` | Developer | Unicode code point en/decoder |
 | `tool-base` | `BaseConverter.jsx` | Developer | Numeral base converter |

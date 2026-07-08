@@ -71,10 +71,28 @@ function createGitignoreMatcher(gitignoreText) {
 
     if (!relPath) return false;
 
-    for (const rule of rules) {
-      if (rule.isDirOnly && !isDir) continue;
+    const pathParts = relPath.split('/');
 
-      if (rule.regex.test(relPath)) {
+    for (const rule of rules) {
+      let matches = false;
+      if (rule.isDirOnly) {
+        if (isDir) {
+          matches = rule.regex.test(relPath);
+        } else {
+          let parentPath = '';
+          for (let i = 0; i < pathParts.length - 1; i++) {
+            parentPath = parentPath ? `${parentPath}/${pathParts[i]}` : pathParts[i];
+            if (rule.regex.test(parentPath)) {
+              matches = true;
+              break;
+            }
+          }
+        }
+      } else {
+        matches = rule.regex.test(relPath);
+      }
+
+      if (matches) {
         ignored = !rule.isNegated;
       }
     }

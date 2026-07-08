@@ -13328,3 +13328,59 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
   background: var(--border);
   color: var(--text-main);
 }
+
+/* Split Layout for Pickers Side-by-Side Content */
+.swatches-split-container,
+.spectrum-split-container {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+}
+
+.swatches-split-container .swatches-block-grid {
+  flex: 1.5;
+  margin-bottom: 0;
+}
+
+.swatches-split-container .standard-palettes-right {
+  flex: 1;
+  margin-top: 0;
+}
+
+.spectrum-split-container .hsl-picker-container {
+  flex: 1.5;
+}
+
+.spectrum-split-container .recent-colors-right {
+  flex: 1;
+  margin-top: 0;
+}
+
+.color-converter-container .outputs-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.color-converter-container .outputs-grid-two .form-group {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.color-converter-container .outputs-grid-two input {
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: 8px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .swatches-split-container,
+  .spectrum-split-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

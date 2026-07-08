@@ -3855,7 +3855,7 @@ html[data-theme="dark"] .currency-bulk-item {
 /* Color Converter & HSL Selector Parallel Layout */
 .color-tool-layout {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 1.15fr;
   gap: 28px;
   width: 100%;
   align-items: start;
@@ -3870,7 +3870,7 @@ html[data-theme="dark"] .currency-bulk-item {
 
 @media (max-width: 1150px) {
   .color-tool-layout {
-    grid-template-columns: 1.25fr 1fr;
+    grid-template-columns: 1fr 1.1fr;
     gap: 20px;
   }
 }
@@ -13212,9 +13212,9 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
 }
 
 .interactive-sliders-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -13238,7 +13238,7 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .slider-value {
@@ -13287,14 +13287,14 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
   justify-content: space-between;
   align-items: center;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-color);
 }
 
 .model-dropdown-wrapper .model-select {
   padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-hover);
-  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
   color: var(--text-main);
   font-family: var(--font-main);
   font-size: 0.9rem;
@@ -13303,7 +13303,12 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
 }
 
 .model-dropdown-wrapper .model-select:hover {
-  background: var(--border);
+  background: var(--border-hover);
+}
+
+.model-dropdown-wrapper .model-select option {
+  background: var(--bg-card);
+  color: var(--text-main);
 }
 
 .footer-actions {
@@ -13312,10 +13317,10 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
 }
 
 .footer-actions .action-btn {
-  background: var(--surface-hover);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
   padding: 6px;
   cursor: pointer;
   display: flex;
@@ -13325,7 +13330,7 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
 }
 
 .footer-actions .action-btn:hover {
-  background: var(--border);
+  background: var(--border-hover);
   color: var(--text-main);
 }
 

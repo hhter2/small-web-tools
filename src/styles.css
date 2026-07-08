@@ -3944,17 +3944,16 @@ html[data-theme="dark"] .currency-bulk-item {
 /* HSL 2D Picker and Slider Container */
 .hsl-picker-container {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   align-items: stretch;
 }
 
-/* HSL 2D board with rainbow gradient */
+/* HSL 2D board with rainbow gradient — matches swatches grid size exactly */
 .hsl-picker-board {
   position: relative;
-  height: 150px;
-  max-width: 240px;
   flex: 1;
+  aspect-ratio: 6 / 5;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   overflow: hidden;
@@ -3991,6 +3990,7 @@ html[data-theme="dark"] .currency-bulk-item {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  align-self: stretch;
 }
 
 .lightness-slider-wrapper .slider-label {
@@ -4004,7 +4004,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .lightness-slider {
   position: relative;
   width: 28px;
-  height: 220px;
+  flex: 1;
   border-radius: 14px;
   border: 1px solid var(--border-color);
   cursor: ns-resize;
@@ -4253,7 +4253,7 @@ html[data-theme="dark"] .currency-bulk-item {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 3px;
-  width: 75%;
+  width: 100%;
   border-radius: 8px;
   border: 1px solid var(--border-color);
   background: var(--bg-app);

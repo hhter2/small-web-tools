@@ -9152,11 +9152,13 @@ html:not([data-theme="dark"]) .search-badge {
   gap: 6px;
   background: var(--bg-app);
   border: 1px solid var(--border-color);
-  padding: 0 10px;
+  padding: 0 8px 0 10px;
   border-radius: 8px;
   height: 32px;
   color: var(--text-muted);
   transition: all 0.15s ease;
+  cursor: pointer;
+  position: relative;
 }
 
 .language-selector-container:hover {
@@ -9175,18 +9177,35 @@ html:not([data-theme="dark"]) .search-badge {
   color: var(--text-muted);
 }
 
+.language-selector-container .lang-chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+  color: var(--text-muted);
+  pointer-events: none;
+  margin-left: 2px;
+}
+
 .language-select {
-  background: transparent;
-  border: none;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
   color: var(--text-main);
   font-size: 0.8rem;
   font-weight: 500;
-  outline: none;
   cursor: pointer;
-  padding-right: 4px;
+  padding: 0;
+  margin: 0;
   font-family: inherit;
   appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.language-select option {
+  background-color: var(--bg-card-solid);
+  color: var(--text-main);
 }
 
 /* Theme switch button overrides */

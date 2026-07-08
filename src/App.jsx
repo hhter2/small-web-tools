@@ -1153,6 +1153,9 @@ export default function App() {
               <select className="language-select" defaultValue="en" aria-label="Select Language">
                 <option value="en">English</option>
               </select>
+              <svg className="lang-chevron" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </div>
 
             <button

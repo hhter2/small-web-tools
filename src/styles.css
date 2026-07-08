@@ -8986,6 +8986,7 @@ html[data-theme="dark"] .warning-note {
   transition: all 0.15s ease;
   text-align: left;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .dropdown-item:hover,

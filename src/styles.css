@@ -8944,7 +8944,7 @@ html[data-theme="dark"] .warning-note {
   top: 100%;
   left: 0;
   transform: translateY(10px);
-  background: var(--bg-card);
+  background: var(--bg-card-solid, var(--bg-card));
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px;

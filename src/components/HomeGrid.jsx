@@ -258,7 +258,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     },
     {
       id: 'tool-imgmeta',
-      title: 'ImgMeta',
+      title: 'Image Metadata',
       category: 'media',
       desc: 'Locally analyze metadata, camera model, and GPS details of images.',
       icon: (

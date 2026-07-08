@@ -83,7 +83,7 @@ const toolDetails = {
     desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
   },
   "tool-imgmeta": {
-    title: "ImgMeta",
+    title: "Image Metadata",
     desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
   },
   "tool-wheel": {
@@ -402,8 +402,8 @@ const navItems = [
   },
   {
     id: 'tool-imgmeta',
-    name: 'ImgMeta',
-    tooltip: 'ImgMeta',
+    name: 'Image Metadata',
+    tooltip: 'Image Metadata',
     category: 'media',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">

@@ -2792,9 +2792,9 @@ html[data-theme="dark"] .currency-bulk-item {
 /* Footer — Coolors-style clean minimal footer */
 .shiny-footer {
   margin-top: auto;
-  width: calc(100% + 96px);
-  margin-left: -48px;
-  margin-right: -48px;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
   margin-bottom: 0;
   background: var(--bg-footer);
   border-top: 1px solid var(--border-color);
@@ -2907,9 +2907,9 @@ html[data-theme="dark"] .currency-bulk-item {
 
 @media (max-width: 900px) {
   .shiny-footer {
-    width: calc(100% + 64px);
-    margin-left: -32px;
-    margin-right: -32px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
   .footer-links-section { padding: 24px 32px; grid-template-columns: repeat(3, 1fr); gap: 24px 16px; }
   .shiny-footer-content { padding: 12px 32px; }
@@ -2917,9 +2917,9 @@ html[data-theme="dark"] .currency-bulk-item {
 
 @media (max-width: 768px) {
   .shiny-footer {
-    width: calc(100% + 32px);
-    margin-left: -16px;
-    margin-right: -16px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
   .footer-links-section { padding: 20px 16px; grid-template-columns: repeat(2, 1fr); gap: 20px 16px; }
   .shiny-footer-content { padding: 10px 16px; flex-direction: column; gap: 8px; text-align: center; }

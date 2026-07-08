@@ -877,6 +877,224 @@ export default function ColorConverter() {
     e.target.value = "";
   };
 
+  const handleSliderValueChange = (newRgb, formattedString) => {
+    const hex = rgbToHex(newRgb);
+    setHslState(rgbToHsl(newRgb));
+    setInput(formattedString);
+    if (isSynced) {
+      setSwatchSelectedHex(hex);
+    }
+  };
+
+  const renderSlider = (label, value, min, max, gradient, onChange) => {
+    return (
+      <div className="slider-item" key={label}>
+        <div className="slider-header-row">
+          <span className="slider-label">{label}</span>
+          <span className="slider-value">{value}</span>
+        </div>
+        <div className="slider-input-container">
+          <input
+            type="range"
+            className="interactive-slider-input"
+            min={min}
+            max={max}
+            value={value}
+            onChange={onChange}
+            style={{
+              '--track-background': gradient,
+              '--thumb-color': `rgb(${activeRgb.r}, ${activeRgb.g}, ${activeRgb.b})`
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderInteractiveSliders = () => {
+    let sliders = [];
+    if (sliderModel === 'HSB') {
+      sliders.push(renderSlider('Hue', activeHsb.h, 0, 360,
+        `linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)`,
+        (e) => {
+          const h = Number(e.target.value);
+          const newHsb = { ...activeHsb, h };
+          handleSliderValueChange(hsbToRgb(newHsb), formatHsb(newHsb));
+        }));
+      const s0Rgb = hsbToRgb({ h: activeHsb.h, s: 0, b: activeHsb.b });
+      const s100Rgb = hsbToRgb({ h: activeHsb.h, s: 100, b: activeHsb.b });
+      sliders.push(renderSlider('Saturation', activeHsb.s, 0, 100,
+        `linear-gradient(to right, rgb(${s0Rgb.r}, ${s0Rgb.g}, ${s0Rgb.b}), rgb(${s100Rgb.r}, ${s100Rgb.g}, ${s100Rgb.b}))`,
+        (e) => {
+          const s = Number(e.target.value);
+          const newHsb = { ...activeHsb, s };
+          handleSliderValueChange(hsbToRgb(newHsb), formatHsb(newHsb));
+        }));
+      const b100Rgb = hsbToRgb({ h: activeHsb.h, s: activeHsb.s, b: 100 });
+      sliders.push(renderSlider('Brightness', activeHsb.b, 0, 100,
+        `linear-gradient(to right, #000000, rgb(${b100Rgb.r}, ${b100Rgb.g}, ${b100Rgb.b}))`,
+        (e) => {
+          const b = Number(e.target.value);
+          const newHsb = { ...activeHsb, b };
+          handleSliderValueChange(hsbToRgb(newHsb), formatHsb(newHsb));
+        }));
+    } else if (sliderModel === 'HSL') {
+      sliders.push(renderSlider('Hue', hslState.h, 0, 360,
+        `linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)`,
+        (e) => {
+          const h = Number(e.target.value);
+          const newHsl = { ...hslState, h };
+          handleSliderValueChange(hslToRgb(newHsl), formatHsl(newHsl));
+        }));
+      const s0Rgb = hslToRgb({ h: hslState.h, s: 0, l: hslState.l });
+      const s100Rgb = hslToRgb({ h: hslState.h, s: 100, l: hslState.l });
+      sliders.push(renderSlider('Saturation', hslState.s, 0, 100,
+        `linear-gradient(to right, rgb(${s0Rgb.r}, ${s0Rgb.g}, ${s0Rgb.b}), rgb(${s100Rgb.r}, ${s100Rgb.g}, ${s100Rgb.b}))`,
+        (e) => {
+          const s = Number(e.target.value);
+          const newHsl = { ...hslState, s };
+          handleSliderValueChange(hslToRgb(newHsl), formatHsl(newHsl));
+        }));
+      const l50Rgb = hslToRgb({ h: hslState.h, s: hslState.s, l: 50 });
+      sliders.push(renderSlider('Luminance', hslState.l, 0, 100,
+        `linear-gradient(to right, #000000, rgb(${l50Rgb.r}, ${l50Rgb.g}, ${l50Rgb.b}) 50%, #ffffff)`,
+        (e) => {
+          const l = Number(e.target.value);
+          const newHsl = { ...hslState, l };
+          handleSliderValueChange(hslToRgb(newHsl), formatHsl(newHsl));
+        }));
+    } else if (sliderModel === 'RGB') {
+      sliders.push(renderSlider('Red', activeRgb.r, 0, 255,
+        `linear-gradient(to right, rgb(0, ${activeRgb.g}, ${activeRgb.b}), rgb(255, ${activeRgb.g}, ${activeRgb.b}))`,
+        (e) => {
+          const r = Number(e.target.value);
+          const newRgb = { ...activeRgb, r };
+          handleSliderValueChange(newRgb, formatRgb(newRgb));
+        }));
+      sliders.push(renderSlider('Green', activeRgb.g, 0, 255,
+        `linear-gradient(to right, rgb(${activeRgb.r}, 0, ${activeRgb.b}), rgb(${activeRgb.r}, 255, ${activeRgb.b}))`,
+        (e) => {
+          const g = Number(e.target.value);
+          const newRgb = { ...activeRgb, g };
+          handleSliderValueChange(newRgb, formatRgb(newRgb));
+        }));
+      sliders.push(renderSlider('Blue', activeRgb.b, 0, 255,
+        `linear-gradient(to right, rgb(${activeRgb.r}, ${activeRgb.g}, 0), rgb(${activeRgb.r}, ${activeRgb.g}, 255))`,
+        (e) => {
+          const b = Number(e.target.value);
+          const newRgb = { ...activeRgb, b };
+          handleSliderValueChange(newRgb, formatRgb(newRgb));
+        }));
+    } else if (sliderModel === 'CMYK') {
+      sliders.push(renderSlider('Cyan', activeCmyk.c, 0, 100,
+        `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, c: 0 }).r}, ${cmykToRgb({ ...activeCmyk, c: 0 }).g}, ${cmykToRgb({ ...activeCmyk, c: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, c: 100 }).r}, ${cmykToRgb({ ...activeCmyk, c: 100 }).g}, ${cmykToRgb({ ...activeCmyk, c: 100 }).b}))`,
+        (e) => {
+          const c = Number(e.target.value);
+          const newCmyk = { ...activeCmyk, c };
+          handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
+        }));
+      sliders.push(renderSlider('Magenta', activeCmyk.m, 0, 100,
+        `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, m: 0 }).r}, ${cmykToRgb({ ...activeCmyk, m: 0 }).g}, ${cmykToRgb({ ...activeCmyk, m: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, m: 100 }).r}, ${cmykToRgb({ ...activeCmyk, m: 100 }).g}, ${cmykToRgb({ ...activeCmyk, m: 100 }).b}))`,
+        (e) => {
+          const m = Number(e.target.value);
+          const newCmyk = { ...activeCmyk, m };
+          handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
+        }));
+      sliders.push(renderSlider('Yellow', activeCmyk.y, 0, 100,
+        `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, y: 0 }).r}, ${cmykToRgb({ ...activeCmyk, y: 0 }).g}, ${cmykToRgb({ ...activeCmyk, y: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, y: 100 }).r}, ${cmykToRgb({ ...activeCmyk, y: 100 }).g}, ${cmykToRgb({ ...activeCmyk, y: 100 }).b}))`,
+        (e) => {
+          const y = Number(e.target.value);
+          const newCmyk = { ...activeCmyk, y };
+          handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
+        }));
+      sliders.push(renderSlider('Key', activeCmyk.k, 0, 100,
+        `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, k: 0 }).r}, ${cmykToRgb({ ...activeCmyk, k: 0 }).g}, ${cmykToRgb({ ...activeCmyk, k: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, k: 100 }).r}, ${cmykToRgb({ ...activeCmyk, k: 100 }).g}, ${cmykToRgb({ ...activeCmyk, k: 100 }).b}))`,
+        (e) => {
+          const k = Number(e.target.value);
+          const newCmyk = { ...activeCmyk, k };
+          handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
+        }));
+    } else if (sliderModel === 'LAB') {
+      sliders.push(renderSlider('Luminance', activeLab.l, 0, 100,
+        `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, l: 0 }).r}, ${labToRgb({ ...activeLab, l: 0 }).g}, ${labToRgb({ ...activeLab, l: 0 }).b}), rgb(${labToRgb({ ...activeLab, l: 100 }).r}, ${labToRgb({ ...activeLab, l: 100 }).g}, ${labToRgb({ ...activeLab, l: 100 }).b}))`,
+        (e) => {
+          const l = Number(e.target.value);
+          const newLab = { ...activeLab, l };
+          handleSliderValueChange(labToRgb(newLab), formatLab(newLab));
+        }));
+      sliders.push(renderSlider('Green-Red', activeLab.a, -128, 127,
+        `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, a: -128 }).r}, ${labToRgb({ ...activeLab, a: -128 }).g}, ${labToRgb({ ...activeLab, a: -128 }).b}), rgb(${labToRgb({ ...activeLab, a: 127 }).r}, ${labToRgb({ ...activeLab, a: 127 }).g}, ${labToRgb({ ...activeLab, a: 127 }).b}))`,
+        (e) => {
+          const a = Number(e.target.value);
+          const newLab = { ...activeLab, a };
+          handleSliderValueChange(labToRgb(newLab), formatLab(newLab));
+        }));
+      sliders.push(renderSlider('Blue-Yellow', activeLab.b, -128, 127,
+        `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, b: -128 }).r}, ${labToRgb({ ...activeLab, b: -128 }).g}, ${labToRgb({ ...activeLab, b: -128 }).b}), rgb(${labToRgb({ ...activeLab, b: 127 }).r}, ${labToRgb({ ...activeLab, b: 127 }).g}, ${labToRgb({ ...activeLab, b: 127 }).b}))`,
+        (e) => {
+          const b = Number(e.target.value);
+          const newLab = { ...activeLab, b };
+          handleSliderValueChange(labToRgb(newLab), formatLab(newLab));
+        }));
+    }
+
+    return (
+      <div className="interactive-sliders-card">
+        <div className="interactive-sliders-body">
+          {sliders}
+        </div>
+        <div className="interactive-sliders-footer">
+          <div className="model-dropdown-wrapper">
+            <select
+              value={sliderModel}
+              onChange={(e) => setSliderModel(e.target.value)}
+              className="model-select"
+            >
+              <option value="HSB">HSB</option>
+              <option value="HSL">HSL</option>
+              <option value="RGB">RGB</option>
+              <option value="CMYK">CMYK</option>
+              <option value="LAB">LAB</option>
+            </select>
+          </div>
+          <div className="footer-actions">
+            {hasEyeDropper && (
+              <button
+                type="button"
+                className="action-btn"
+                onClick={handleEyeDropper}
+                title="Pick color from screen"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 22l6-6M8 16l4 4M19.5 4.5a3.53 3.53 0 0 1 0 5L12 17l-5-5 7.5-7.5a3.53 3.53 0 0 1 5 0z"></path>
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              className="action-btn"
+              onClick={() => {
+                let copyStr = '';
+                if (sliderModel === 'HSB') copyStr = formatHsb(activeHsb);
+                else if (sliderModel === 'HSL') copyStr = formatHsl(hslState);
+                else if (sliderModel === 'RGB') copyStr = formatRgb(activeRgb);
+                else if (sliderModel === 'CMYK') copyStr = formatCmyk(activeCmyk);
+                else if (sliderModel === 'LAB') copyStr = formatLab(activeLab);
+                navigator.clipboard.writeText(copyStr);
+              }}
+              title="Copy color code"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <article id="tool-color" className="tool-card tool-card--wide active">
       <h2>Color Code Converter & HSL Selector</h2>

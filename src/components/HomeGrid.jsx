@@ -457,31 +457,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
         <p className="hero-subtitle">Explore your developer and utility toolkit.</p>
       </div>
 
-      <div className="home-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-          </svg>
-          <span>All Tools</span>
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            className={`tab-btn ${activeTab === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(cat.id)}
-          >
-            {cat.icon}
-            <span>{cat.name}</span>
-          </button>
-        ))}
-      </div>
-
       {activeTab === 'all' ? (
         /* Render sections grouped by category */
         categories.map(cat => {
@@ -516,7 +491,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                               <p>{tool.desc}</p>
                             </div>
                           </div>
-                          <button className="open-tool-btn">Open Tool</button>
                         </div>
                       ))}
                     </div>
@@ -542,7 +516,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                         <p>{tool.desc}</p>
                       </div>
                     </div>
-                    <button className="open-tool-btn">Open Tool</button>
                   </div>
                 ))}
               </div>
@@ -577,7 +550,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                               <p>{tool.desc}</p>
                             </div>
                           </div>
-                          <button className="open-tool-btn">Open Tool</button>
                         </div>
                       ))}
                     </div>
@@ -599,7 +571,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                       <p>{tool.desc}</p>
                     </div>
                   </div>
-                  <button className="open-tool-btn">Open Tool</button>
                 </div>
               ))}
           </div>

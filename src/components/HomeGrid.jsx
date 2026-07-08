@@ -432,34 +432,29 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     }
   ];
 
+  const getThemeClass = (category) => {
+    switch (category) {
+      case 'text':
+        return 'theme-pink';
+      case 'developer':
+        return 'theme-green';
+      case 'network':
+        return 'theme-blue';
+      case 'media':
+        return 'theme-gold';
+      case 'bioinfo':
+        return 'theme-teal';
+      case 'utilities':
+      default:
+        return 'theme-purple';
+    }
+  };
+
   return (
     <div id="tool-home" className="dashboard-container active">
-      <div className="dashboard-hero">
-        <div className="hero-content">
-          <div className="hero-badge">
-            <span className="badge-dot"></span>
-            <span>100% Client-Side & Private</span>
-          </div>
-          <h1>Developer & Utility Toolset</h1>
-          <p className="hero-subtitle">
-            A premium dashboard of handy browser-based utility tools. 
-            All conversion, extraction, and generation processes run entirely locally in your browser.
-          </p>
-        </div>
-        <div className="hero-stats">
-          <div className="stat-card">
-            <span className="stat-num">28</span>
-            <span className="stat-lbl">Utility Tools</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-num">Local</span>
-            <span className="stat-lbl">Execution Engine</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-num">Zero</span>
-            <span className="stat-lbl">Data Uploaded</span>
-          </div>
-        </div>
+      <div className="dashboard-hero-minimal">
+        <h1>Welcome to Small Web Tools! 👋</h1>
+        <p className="hero-subtitle">Explore your developer and utility toolkit.</p>
       </div>
 
       <div className="home-tabs">
@@ -513,10 +508,15 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                     <h4 className="home-subcategory-heading">{sgName}</h4>
                     <div className="home-grid">
                       {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
-                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                          <div className="home-card-icon">{tool.icon}</div>
-                          <h3>{tool.title}</h3>
-                          <p>{tool.desc}</p>
+                        <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-header">
+                            <div className="home-card-icon">{tool.icon}</div>
+                            <div className="home-card-text">
+                              <h3>{tool.title}</h3>
+                              <p>{tool.desc}</p>
+                            </div>
+                          </div>
+                          <button className="open-tool-btn">Open Tool</button>
                         </div>
                       ))}
                     </div>
@@ -534,10 +534,15 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
               </h3>
               <div className="home-grid">
                 {catTools.map(tool => (
-                  <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                    <div className="home-card-icon">{tool.icon}</div>
-                    <h3>{tool.title}</h3>
-                    <p>{tool.desc}</p>
+                  <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
+                    <div className="home-card-header">
+                      <div className="home-card-icon">{tool.icon}</div>
+                      <div className="home-card-text">
+                        <h3>{tool.title}</h3>
+                        <p>{tool.desc}</p>
+                      </div>
+                    </div>
+                    <button className="open-tool-btn">Open Tool</button>
                   </div>
                 ))}
               </div>
@@ -564,10 +569,15 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
                     <h4 className="home-subcategory-heading">{sgName}</h4>
                     <div className="home-grid">
                       {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
-                        <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                          <div className="home-card-icon">{tool.icon}</div>
-                          <h3>{tool.title}</h3>
-                          <p>{tool.desc}</p>
+                        <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
+                          <div className="home-card-header">
+                            <div className="home-card-icon">{tool.icon}</div>
+                            <div className="home-card-text">
+                              <h3>{tool.title}</h3>
+                              <p>{tool.desc}</p>
+                            </div>
+                          </div>
+                          <button className="open-tool-btn">Open Tool</button>
                         </div>
                       ))}
                     </div>
@@ -581,10 +591,15 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
             {tools
               .filter(t => t.category === activeTab)
               .map(tool => (
-                <div key={tool.id} className="home-card" onClick={() => onSelectTool(tool.id)}>
-                  <div className="home-card-icon">{tool.icon}</div>
-                  <h3>{tool.title}</h3>
-                  <p>{tool.desc}</p>
+                <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
+                  <div className="home-card-header">
+                    <div className="home-card-icon">{tool.icon}</div>
+                    <div className="home-card-text">
+                      <h3>{tool.title}</h3>
+                      <p>{tool.desc}</p>
+                    </div>
+                  </div>
+                  <button className="open-tool-btn">Open Tool</button>
                 </div>
               ))}
           </div>

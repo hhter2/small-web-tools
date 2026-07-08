@@ -559,21 +559,34 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
             );
           })()
         ) : (
-          <div className="home-grid">
-            {tools
-              .filter(t => t.category === activeTab)
-              .map(tool => (
-                <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
-                  <div className="home-card-header">
-                    <div className="home-card-icon">{tool.icon}</div>
-                    <div className="home-card-text">
-                      <h3>{tool.title}</h3>
-                      <p>{tool.desc}</p>
-                    </div>
-                  </div>
+          (() => {
+            const cat = categories.find(c => c.id === activeTab);
+            return (
+              <div className="home-category-section" style={{ marginTop: 0 }}>
+                {cat && (
+                  <h3 className="home-category-heading">
+                    {cat.icon}
+                    {cat.name}
+                  </h3>
+                )}
+                <div className="home-grid">
+                  {tools
+                    .filter(t => t.category === activeTab)
+                    .map(tool => (
+                      <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
+                        <div className="home-card-header">
+                          <div className="home-card-icon">{tool.icon}</div>
+                          <div className="home-card-text">
+                            <h3>{tool.title}</h3>
+                            <p>{tool.desc}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              ))}
-          </div>
+              </div>
+            );
+          })()
         )
       )}
     </div>

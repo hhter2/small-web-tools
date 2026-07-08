@@ -14,7 +14,8 @@ try {
       execSync('git fetch --tags', { stdio: 'ignore' });
     } catch (ignore) {}
   }
-  version = execSync('git describe --tags --abbrev=0').toString().trim();
+  const tags = execSync('git tag --sort=-v:refname').toString().trim().split(/\r?\n/);
+  version = tags[0] ? tags[0].trim() : 'v1.0.0';
 } catch (e) {
   try {
     const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));

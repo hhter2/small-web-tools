@@ -433,10 +433,59 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
   ];
 
   return (
-    <article id="tool-home" className="tool-card tool-card--wide active">
-      <h2>Select a Utility Tool</h2>
+    <div id="tool-home" className="dashboard-container active">
+      <div className="dashboard-hero">
+        <div className="hero-content">
+          <div className="hero-badge">
+            <span className="badge-dot"></span>
+            <span>100% Client-Side & Private</span>
+          </div>
+          <h1>Developer & Utility Toolset</h1>
+          <p className="hero-subtitle">
+            A premium dashboard of handy browser-based utility tools. 
+            All conversion, extraction, and generation processes run entirely locally in your browser.
+          </p>
+        </div>
+        <div className="hero-stats">
+          <div className="stat-card">
+            <span className="stat-num">28</span>
+            <span className="stat-lbl">Utility Tools</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-num">Local</span>
+            <span className="stat-lbl">Execution Engine</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-num">Zero</span>
+            <span className="stat-lbl">Data Uploaded</span>
+          </div>
+        </div>
+      </div>
 
-
+      <div className="home-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveTab('all')}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span>All Tools</span>
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat.id}
+            className={`tab-btn ${activeTab === cat.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(cat.id)}
+          >
+            {cat.icon}
+            <span>{cat.name}</span>
+          </button>
+        ))}
+      </div>
 
       {activeTab === 'all' ? (
         /* Render sections grouped by category */
@@ -541,6 +590,6 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
           </div>
         )
       )}
-    </article>
+    </div>
   );
 }

@@ -406,6 +406,7 @@ html[data-theme="dark"] .moon-icon {
   flex-direction: column;
   gap: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   height: calc(100vh - var(--banner-height));
 }
 
@@ -8939,8 +8940,8 @@ html[data-theme="dark"] .warning-note {
 .dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
+  left: 0;
+  transform: translateY(10px);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -8963,7 +8964,7 @@ html[data-theme="dark"] .warning-note {
 .dropdown-menu.show {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(4px);
+  transform: translateY(4px);
 }
 
 /* Dropdown Menu Item */

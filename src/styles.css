@@ -9139,6 +9139,56 @@ html:not([data-theme="dark"]) .search-badge {
   color: var(--text-muted);
 }
 
+/* Language selector dropdown style */
+.desktop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.language-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  padding: 0 10px;
+  border-radius: 8px;
+  height: 32px;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+
+.language-selector-container:hover {
+  border-color: var(--border-hover);
+}
+
+.language-selector-container:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+  color: var(--text-main);
+}
+
+.language-selector-container .lang-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+  color: var(--text-muted);
+}
+
+.language-select {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  padding-right: 4px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /* Theme switch button overrides */
 .desktop-header-right .theme-toggle-btn {
   background: none;

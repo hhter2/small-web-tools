@@ -1166,217 +1166,211 @@ export default function ColorConverter() {
           </div>
         </div>
 
-        <div className="color-picker-group">
-          {/* Panel 2: Visual Swatches Grid Selector */}
-          <div className="color-picker-section">
-            <div className="section-header-row">
-              <h3>HSL Swatches</h3>
-              <button
-                type="button"
-                className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
-                onClick={handleSyncToggle}
-                title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
-              >
-                {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
-              </button>
-            </div>
-            
-            <div className="swatches-split-container">
-              <div className="swatches-block-grid">
-                {SWATCH_GRID.map((row, rIdx) => 
-                  row.map((hex, cIdx) => {
-                    const isSelected = swatchSelectedHex.toUpperCase() === hex.toUpperCase();
-                    return (
-                      <button
-                        key={`${rIdx}-${cIdx}`}
-                        type="button"
-                        className={`swatch-block ${isSelected ? 'selected' : ''}`}
-                        style={{ backgroundColor: hex }}
-                        title={hex}
-                        onClick={() => handleSwatchClick(hex)}
-                      />
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Standard Palette section */}
-              <div className="swatches-section standard-palettes-right">
-                <div className="swatches-header">
-                  <span className="swatches-label">Standard Palettes</span>
-                  <div className="swatches-controls">
-                    {!isEditingPresets ? (
-                      <button
-                        type="button"
-                        className="palette-control-btn"
-                        onClick={() => setIsEditingPresets(true)}
-                      >
-                        Customize
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          className="palette-control-btn primary"
-                          onClick={() => setIsEditingPresets(false)}
-                        >
-                          Done
-                        </button>
-                        <button
-                          type="button"
-                          className="palette-control-btn danger"
-                          onClick={handleResetPresets}
-                          title="Reset to default 12 colors"
-                        >
-                          Reset
-                        </button>
-                        <button
-                          type="button"
-                          className="palette-control-btn"
-                          onClick={handleExportPresets}
-                          title="Export palette as JSON"
-                        >
-                          Export
-                        </button>
-                        <button
-                          type="button"
-                          className="palette-control-btn"
-                          onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                          title="Import palette from JSON"
-                        >
-                          Import
-                        </button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".json"
-                          style={{ display: 'none' }}
-                          onChange={handleImportPresets}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-                
-                <div className={`swatches-grid ${isEditingPresets ? 'editing' : ''}`}>
-                  {presets.map((hex, idx) => (
-                    <div key={`${hex}-${idx}`} className="swatch-wrapper">
-                      <button
-                        type="button"
-                        className="swatch-btn"
-                        style={{ backgroundColor: hex }}
-                        title={hex}
-                        onClick={() => !isEditingPresets && handleSwatchClick(hex)}
-                      />
-                      {isEditingPresets && (
-                        <button
-                          type="button"
-                          className="swatch-delete-btn"
-                          title="Delete color"
-                          onClick={() => handleDeletePreset(idx)}
-                        >
-                          &times;
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {isEditingPresets && swatchBg && swatchBg !== 'transparent' && (
-                    <button
-                      type="button"
-                      className="swatch-add-btn"
-                      title={`Add current color (${swatchBg})`}
-                      onClick={handleAddPreset}
-                    >
-                      +
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+        {/* Panel 2: Visual Swatches Grid Selector */}
+        <div className="color-picker-section">
+          <div className="section-header-row">
+            <h3>HSL Swatches</h3>
+            <button
+              type="button"
+              className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
+              onClick={handleSyncToggle}
+              title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
+            >
+              {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
+            </button>
+          </div>
+          
+          <div className="swatches-block-grid">
+            {SWATCH_GRID.map((row, rIdx) => 
+              row.map((hex, cIdx) => {
+                const isSelected = swatchSelectedHex.toUpperCase() === hex.toUpperCase();
+                return (
+                  <button
+                    key={`${rIdx}-${cIdx}`}
+                    type="button"
+                    className={`swatch-block ${isSelected ? 'selected' : ''}`}
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                    onClick={() => handleSwatchClick(hex)}
+                  />
+                );
+              })
+            )}
           </div>
 
-          {/* Panel 3: Visual HSL Spectrum Selector */}
-          <div className="color-picker-section">
-            <h3>HSL Spectrum</h3>
-            
-            <div className="spectrum-split-container">
-              <div className="hsl-picker-container">
-                {/* 2D Hue-Saturation board */}
-                <div
-                  ref={svRef}
-                  className="hsl-picker-board"
-                  onMouseDown={handleSvMouseDown}
-                  onTouchStart={handleSvTouchStart}
-                >
-                  {/* Rainbow horizontal overlay + gray vertical overlay */}
-                  <div className="hsl-picker-board-rainbow" />
-                  <div className="hsl-picker-board-saturation" />
-                  
-                  {/* Slider marker indicator */}
-                  <div
-                    className="hsl-marker"
-                    style={{
-                      left: `${(hslState.h / 360) * 100}%`,
-                      top: `${100 - hslState.s}%`,
-                      backgroundColor: `hsl(${hslState.h}, ${hslState.s}%, ${hslState.l}%)`
-                    }}
-                  />
-                </div>
-
-                {/* Vertical Lightness slider */}
-                <div className="lightness-slider-wrapper">
-                  <span className="slider-label">Lightness</span>
-                  <div
-                    ref={lRef}
-                    className="lightness-slider"
-                    style={{
-                      background: `linear-gradient(to top, #000 0%, hsl(${hslState.h}, ${hslState.s}%, 50%) 50%, #fff 100%)`
-                    }}
-                    onMouseDown={handleLMouseDown}
-                    onTouchStart={handleLTouchStart}
+          {/* Standard Palette section */}
+          <div className="swatches-section">
+            <div className="swatches-header">
+              <span className="swatches-label">Standard Palettes</span>
+              <div className="swatches-controls">
+                {!isEditingPresets ? (
+                  <button
+                    type="button"
+                    className="palette-control-btn"
+                    onClick={() => setIsEditingPresets(true)}
                   >
-                    {/* Vertical slider handle indicator */}
-                    <div
-                      className="lightness-handle"
-                      style={{
-                        top: `${100 - hslState.l}%`
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Colors section */}
-              {recentColors.length > 0 && (
-                <div className="swatches-section recent-colors-right">
-                  <div className="swatches-header">
-                    <span className="swatches-label">Recent Colors</span>
+                    Customize
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="palette-control-btn primary"
+                      onClick={() => setIsEditingPresets(false)}
+                    >
+                      Done
+                    </button>
                     <button
                       type="button"
                       className="palette-control-btn danger"
-                      onClick={handleClearRecents}
+                      onClick={handleResetPresets}
+                      title="Reset to default 12 colors"
                     >
-                      Clear
+                      Reset
                     </button>
-                  </div>
-                  <div className="swatches-grid">
-                    {recentColors.map((hex, idx) => (
-                      <button
-                        key={`${hex}-${idx}`}
-                        type="button"
-                        className="swatch-btn"
-                        style={{ backgroundColor: hex }}
-                        title={hex}
-                        onClick={() => handleSwatchClick(hex)}
-                      />
-                    ))}
-                  </div>
+                    <button
+                      type="button"
+                      className="palette-control-btn"
+                      onClick={handleExportPresets}
+                      title="Export palette as JSON"
+                    >
+                      Export
+                    </button>
+                    <button
+                      type="button"
+                      className="palette-control-btn"
+                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      title="Import palette from JSON"
+                    >
+                      Import
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      style={{ display: 'none' }}
+                      onChange={handleImportPresets}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className={`swatches-grid ${isEditingPresets ? 'editing' : ''}`}>
+              {presets.map((hex, idx) => (
+                <div key={`${hex}-${idx}`} className="swatch-wrapper">
+                  <button
+                    type="button"
+                    className="swatch-btn"
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                    onClick={() => !isEditingPresets && handleSwatchClick(hex)}
+                  />
+                  {isEditingPresets && (
+                    <button
+                      type="button"
+                      className="swatch-delete-btn"
+                      title="Delete color"
+                      onClick={() => handleDeletePreset(idx)}
+                    >
+                      &times;
+                    </button>
+                  )}
                 </div>
+              ))}
+              {isEditingPresets && swatchBg && swatchBg !== 'transparent' && (
+                <button
+                  type="button"
+                  className="swatch-add-btn"
+                  title={`Add current color (${swatchBg})`}
+                  onClick={handleAddPreset}
+                >
+                  +
+                </button>
               )}
             </div>
           </div>
-
         </div>
+
+        {/* Panel 3: Visual HSL Spectrum Selector */}
+        <div className="color-picker-section">
+          <h3>HSL Spectrum</h3>
+          
+          <div className="hsl-picker-container">
+            {/* 2D Hue-Saturation board */}
+            <div
+              ref={svRef}
+              className="hsl-picker-board"
+              onMouseDown={handleSvMouseDown}
+              onTouchStart={handleSvTouchStart}
+            >
+              {/* Rainbow horizontal overlay + gray vertical overlay */}
+              <div className="hsl-picker-board-rainbow" />
+              <div className="hsl-picker-board-saturation" />
+              
+              {/* Slider marker indicator */}
+              <div
+                className="hsl-marker"
+                style={{
+                  left: `${(hslState.h / 360) * 100}%`,
+                  top: `${100 - hslState.s}%`,
+                  backgroundColor: `hsl(${hslState.h}, ${hslState.s}%, ${hslState.l}%)`
+                }}
+              />
+            </div>
+
+            {/* Vertical Lightness slider */}
+            <div className="lightness-slider-wrapper">
+              <span className="slider-label">Lightness</span>
+              <div
+                ref={lRef}
+                className="lightness-slider"
+                style={{
+                  background: `linear-gradient(to top, #000 0%, hsl(${hslState.h}, ${hslState.s}%, 50%) 50%, #fff 100%)`
+                }}
+                onMouseDown={handleLMouseDown}
+                onTouchStart={handleLTouchStart}
+              >
+                {/* Vertical slider handle indicator */}
+                <div
+                  className="lightness-handle"
+                  style={{
+                    top: `${100 - hslState.l}%`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Colors section */}
+          {recentColors.length > 0 && (
+            <div className="swatches-section recent-colors">
+              <div className="swatches-header">
+                <span className="swatches-label">Recent Colors</span>
+                <button
+                  type="button"
+                  className="palette-control-btn danger"
+                  onClick={handleClearRecents}
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="swatches-grid">
+                {recentColors.map((hex, idx) => (
+                  <button
+                    key={`${hex}-${idx}`}
+                    type="button"
+                    className="swatch-btn"
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                    onClick={() => handleSwatchClick(hex)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
     </article>
   );

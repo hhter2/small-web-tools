@@ -83,7 +83,7 @@ const toolDetails = {
     desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
   },
   "tool-imgmeta": {
-    title: "ImgMeta",
+    title: "Image Metadata",
     desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
   },
   "tool-wheel": {
@@ -402,8 +402,8 @@ const navItems = [
   },
   {
     id: 'tool-imgmeta',
-    name: 'ImgMeta',
-    tooltip: 'ImgMeta',
+    name: 'Image Metadata',
+    tooltip: 'Image Metadata',
     category: 'media',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -610,11 +610,13 @@ export default function App() {
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
   // Close dropdowns on clicking outside
   useEffect(() => {
     const handleOutsideClick = () => {
       setOpenDropdown(null);
+      setLangDropdownOpen(false);
     };
     window.addEventListener('click', handleOutsideClick);
     return () => {
@@ -642,6 +644,22 @@ export default function App() {
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Keyboard shortcut '/' to focus search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        const searchInput = document.querySelector('.header-search-container input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Sync activeTool to sessionStorage and window.location.hash
@@ -815,6 +833,11 @@ export default function App() {
               setSelectedHomeTab('all');
             }}
           >
+            <div className="brand-icon-box">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
             <span className="brand-text">Small Web Tools</span>
           </div>
           
@@ -882,7 +905,11 @@ export default function App() {
                 return (
                   <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
                     <div className="sidebar-category-header">
+                      <span className="cat-header-icon">{cat.icon}</span>
                       <span className="sidebar-category-title">{cat.name}</span>
+                      <svg className="chevron-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
                     </div>
                     {sortedSubGroupNames.map(sgName => (
                       <div key={sgName} className="sidebar-subcategory-group">
@@ -912,7 +939,11 @@ export default function App() {
               return (
                 <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
                   <div className="sidebar-category-header">
+                    <span className="cat-header-icon">{cat.icon}</span>
                     <span className="sidebar-category-title">{cat.name}</span>
+                    <svg className="chevron-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
                   </div>
                   {catItems.map(item => (
                     <button
@@ -986,9 +1017,11 @@ export default function App() {
                 setSelectedHomeTab('all');
               }}
             >
-              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
+              <div className="brand-icon-box">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
               <span className="brand-text">Small Web Tools</span>
             </div>
           </div>
@@ -1088,6 +1121,7 @@ export default function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                <kbd className="search-badge">/</kbd>
               </div>
               {searchQuery.trim() !== '' && (
                 <div className="header-search-results">
@@ -1108,6 +1142,33 @@ export default function App() {
                   ) : (
                     <div className="no-results">No tools found</div>
                   )}
+                </div>
+              )}
+            </div>
+
+            <div 
+              className={`language-selector-container ${langDropdownOpen ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLangDropdownOpen(!langDropdownOpen);
+                setOpenDropdown(null); // Close other dropdowns
+              }}
+            >
+              <svg className="lang-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span className="language-text">English</span>
+              <svg className="lang-chevron" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+
+              {langDropdownOpen && (
+                <div className="dropdown-menu show" style={{ marginTop: '8px' }}>
+                  <button className="dropdown-item active">
+                    English
+                  </button>
                 </div>
               )}
             </div>
@@ -1242,7 +1303,7 @@ export default function App() {
             <div className="footer-brand-container">
               <span className="footer-brand-name">Small Web Tools</span>
               <span className="footer-sep">&nbsp;·&nbsp;</span>
-              <span className="footer-copyright">Run locally without upload. &nbsp;© H. Huang · {new Date().getFullYear()} · {APP_VERSION}</span>
+              <span className="footer-copyright">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
             </div>
             <div className="footer-social-row">
               <button className="footer-social-btn" title="GitHub" aria-label="GitHub">

@@ -1431,7 +1431,7 @@ export default function ImgMeta() {
 
   return (
     <article id="tool-imgmeta" className="tool-card tool-card--wide active">
-      <h2>ImgMeta</h2>
+      <h2>Image Metadata</h2>
       <div 
         className="imgmeta-container"
         onDragOver={handleDragOver}
@@ -1458,7 +1458,7 @@ export default function ImgMeta() {
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <p>Drop files to add to ImgMeta</p>
+              <p>Drop files to add to Image Metadata</p>
             </div>
           </div>
         )}

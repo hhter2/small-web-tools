@@ -3853,10 +3853,14 @@ html[data-theme="dark"] .currency-bulk-item {
 
 
 /* Color Converter & HSL Selector Parallel Layout */
+#tool-color {
+  padding: 24px;
+}
+
 .color-tool-layout {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
-  gap: 28px;
+  gap: 20px;
   width: 100%;
   align-items: start;
 }
@@ -3864,21 +3868,21 @@ html[data-theme="dark"] .currency-bulk-item {
 .color-picker-group {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
   width: 100%;
 }
 
 @media (max-width: 1150px) {
   .color-tool-layout {
     grid-template-columns: 1fr 1.1fr;
-    gap: 20px;
+    gap: 16px;
   }
 }
 
 @media (max-width: 900px) {
   .color-tool-layout {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 24px;
   }
 }
 
@@ -3886,7 +3890,7 @@ html[data-theme="dark"] .currency-bulk-item {
 .color-picker-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -3948,7 +3952,8 @@ html[data-theme="dark"] .currency-bulk-item {
 /* HSL 2D board with rainbow gradient */
 .hsl-picker-board {
   position: relative;
-  height: 220px;
+  height: 150px;
+  max-width: 240px;
   flex: 1;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -13346,6 +13351,8 @@ html[data-theme="dark"] .batch-tab-remove-btn:hover {
 .swatches-split-container .swatches-block-grid {
   flex: 1;
   margin-bottom: 0;
+  max-width: 240px;
+  width: 100%;
 }
 
 .swatches-split-container .standard-palettes-right {

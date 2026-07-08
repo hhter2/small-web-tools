@@ -1171,6 +1171,7 @@ export default function ColorConverter() {
           </div>
         </div>
 
+        <div className="color-picker-group">
         {/* Panel 2: Visual Swatches Grid Selector */}
         <div className="color-picker-section">
           <div className="section-header-row">
@@ -1376,6 +1377,7 @@ export default function ColorConverter() {
           )}
         </div>
 
+      </div>
       </div>
     </article>
   );

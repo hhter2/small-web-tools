@@ -9168,7 +9168,8 @@ html:not([data-theme="dark"]) .search-badge {
   border-color: var(--border-hover);
 }
 
-.language-selector-container:focus-within {
+.language-selector-container:focus-within,
+.language-selector-container.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--focus-ring);
   color: var(--text-main);
@@ -9188,27 +9189,11 @@ html:not([data-theme="dark"]) .search-badge {
   margin-left: 2px;
 }
 
-.language-select {
-  background: none !important;
-  background-color: transparent !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  color: var(--text-main);
+.language-text {
   font-size: 0.8rem;
   font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  font-family: inherit;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.language-select option {
-  background-color: var(--bg-card-solid);
   color: var(--text-main);
+  user-select: none;
 }
 
 /* Theme switch button overrides */

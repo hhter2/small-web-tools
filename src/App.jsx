@@ -610,11 +610,13 @@ export default function App() {
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
   // Close dropdowns on clicking outside
   useEffect(() => {
     const handleOutsideClick = () => {
       setOpenDropdown(null);
+      setLangDropdownOpen(false);
     };
     window.addEventListener('click', handleOutsideClick);
     return () => {
@@ -1144,18 +1146,31 @@ export default function App() {
               )}
             </div>
 
-            <div className="language-selector-container">
+            <div 
+              className={`language-selector-container ${langDropdownOpen ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLangDropdownOpen(!langDropdownOpen);
+                setOpenDropdown(null); // Close other dropdowns
+              }}
+            >
               <svg className="lang-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="2" y1="12" x2="22" y2="12"></line>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-              <select className="language-select" defaultValue="en" aria-label="Select Language">
-                <option value="en">English</option>
-              </select>
+              <span className="language-text">English</span>
               <svg className="lang-chevron" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
+
+              {langDropdownOpen && (
+                <div className="dropdown-menu show" style={{ minWidth: '120px', left: 'auto', right: 0, marginTop: '8px' }}>
+                  <button className="dropdown-item active" style={{ width: '100%' }}>
+                    English
+                  </button>
+                </div>
+              )}
             </div>
 
             <button

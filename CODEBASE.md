@@ -21,7 +21,9 @@
 small-web-tools/
 ├── CODEBASE.md                  # ← This file (AI agent reference)
 ├── README.md                    # User-facing documentation & changelog
+├── TODO.md                      # Human-maintained tasks & issues (do not edit; read only on request)
 ├── package.json                 # Project metadata, scripts, and dependencies
+
 ├── package-lock.json            # Lockfile (auto-generated, do not edit)
 ├── vite.config.js               # Vite build config (also contains dev-server IP lookup proxy)
 ├── .gitignore                   # Git ignore rules

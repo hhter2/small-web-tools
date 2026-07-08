@@ -89,6 +89,8 @@ Unless the task explicitly involves these, **do not read or modify**:
 - `.gitignore` — not relevant to feature work
 - `public/` — static assets, rarely touched
 - `README.md` — maintained manually by the user; **do not update it as part of any task** unless explicitly instructed
+- `TODO.md` — maintained manually by the user. **Never modify this file by yourself**. All operations on it are done by the human. There may be issues or features written in it with a `#` prefix (e.g., `#fix`). Do **not** read this file unless explicitly instructed (e.g. when the user says "detail for #fix" or similar). Otherwise, there is no need to read it.
+
 
 ---
 

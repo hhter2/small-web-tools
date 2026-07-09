@@ -52,7 +52,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 | Constraint | Rule |
 |---|---|
 | Routing | Hash-based (`#tool-id`) via `useState` in `App.jsx`. **Do not introduce React Router or any router library.** |
-| Styling | New and migrated components use Tailwind utility classes plus the shared primitives in `src/components/ui/`. `src/styles.css` is legacy — it stays in place for components not yet migrated, but do not add new rules to it if an equivalent Tailwind-based primitive already exists. **Do not introduce CSS-in-JS.** See `AGENTS.md` for the full migration status. |
+| Styling | Use Tailwind utility classes and the shared primitives in `src/components/ui/`. Do not add new rules to `src/styles.css` (it now contains only @keyframes, scrollbar styles, and global resets). **Do not introduce CSS-in-JS.** |
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Only via `functions/api/` (Cloudflare Pages Functions). **Do not call third-party APIs directly from the browser** unless the tool is fully client-side. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
@@ -66,7 +66,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 - **Components**: Functional components with hooks only. No class components.
 - **Naming**: PascalCase for component files and function names (e.g., `MyTool.jsx`). camelCase for variables and props.
 - **Tool IDs**: kebab-case prefixed with `tool-` (e.g., `tool-mytool`). Must be unique across the entire `tools` array in `App.jsx`.
-- **Styling**: Default to Tailwind utility classes and the shared primitives in `src/components/ui/`. Fall back to a global class in `src/styles.css` only for things not covered by a primitive (rare — e.g. a tool-specific keyframe animation). If you do add a global class, use a descriptive, tool-specific name to avoid collisions (e.g., `.mytool-container`).
+- **Styling**: Use Tailwind utility classes and shared primitives in `src/components/ui/`. If a shared primitive doesn't cover something, extend the primitive rather than writing one-off classes.
 - **No inline styles** unless absolutely necessary for dynamic values.
 - Keep components self-contained — one component per file, one file per tool.
 - **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.

@@ -36,8 +36,7 @@ small-web-tools/
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)
 │   ├── App.jsx                  # Root component: routing, layout, all tool metadata & categories
-│   ├── styles.css               # Global stylesheet — legacy styles for all 31 tool components
-│   │                            # (Tailwind @tailwind directives at top; new tools use Tailwind instead)
+│   ├── styles.css               # Global stylesheet — @tailwind directives, colors, resets, scrollbar, keyframes
 │   └── components/              # Individual tool components (one file per tool)
 │       ├── ui/                  # Shared UI primitives (Phase 1 — Tailwind-based)
 │       │   ├── Card.jsx         # Card wrapper: variant="tool" | "home"
@@ -109,15 +108,12 @@ The central hub of the application:
 - Injects version info via Vite `define` globals (`__APP_VERSION__`, `__SHOW_CHANNEL_ALERT__`, `__APP_CHANNEL__`)
 
 ### `src/styles.css`
-Monolithic legacy stylesheet (~13,800 lines before Phase 1). Contains:
+Global stylesheet (~2,400 lines). Contains:
 - Tailwind CSS directives (`@tailwind base/components/utilities`) at the top
 - CSS custom properties (design tokens: colors, spacing, typography)
 - Base reset and typography
 - Layout styles for sidebar, navbar, content area
-- Per-tool component styles (scoped by class name convention) — legacy, being migrated tool-by-tool
 - Responsive breakpoints and dark-mode support
-
-**Do not add new rules here** if an equivalent Tailwind-based primitive in `src/components/ui/` exists.
 
 ### `vite.config.js`
 Vite configuration with multiple responsibilities:
@@ -224,8 +220,6 @@ npm run preview
    - Add a case inside `renderActiveTool` function to return the component
 3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
 4. Style the tool using Tailwind utility classes and the shared primitives in
-   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`) wherever they
-   fit. Only add new rules to `src/styles.css` for things a shared primitive doesn't
-   cover (e.g. a one-off keyframe animation specific to this tool).
+   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`). Do not add new rules to `src/styles.css`.
 5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
 6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created

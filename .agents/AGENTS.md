@@ -49,7 +49,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 | Constraint | Rule |
 |---|---|
 | Routing | Hash-based (`#tool-id`) via `useState` in `App.jsx`. **Do not introduce React Router or any router library.** |
-| Styling | All styles go in `src/styles.css`. **Do not create component-level CSS files or use CSS-in-JS.** |
+| Styling | Use Tailwind utility classes and the shared primitives in `src/components/ui/`. Do not add new rules to `src/styles.css` (it now contains only @keyframes, scrollbar styles, and global resets). **Do not introduce CSS-in-JS.** |
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Only via `functions/api/` (Cloudflare Pages Functions). **Do not call third-party APIs directly from the browser** unless the tool is fully client-side. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
@@ -63,7 +63,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 - **Components**: Functional components with hooks only. No class components.
 - **Naming**: PascalCase for component files and function names (e.g., `MyTool.jsx`). camelCase for variables and props.
 - **Tool IDs**: kebab-case prefixed with `tool-` (e.g., `tool-mytool`). Must be unique across the entire `tools` array in `App.jsx`.
-- **CSS class names**: Use descriptive, tool-specific class names to avoid collisions (e.g., `.mytool-container`, `.mytool-input`).
+- **Styling**: Use Tailwind utility classes and shared primitives in `src/components/ui/`. If a shared primitive doesn't cover something, extend the primitive rather than writing one-off classes.
 - **No inline styles** unless absolutely necessary for dynamic values.
 - Keep components self-contained — one component per file, one file per tool.
 - **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.

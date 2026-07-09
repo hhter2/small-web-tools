@@ -161,7 +161,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | NetworkSpeedTest | done |
 | QrBarcodeGenerator | pending |
 | QrBarcodeScanner | pending |
-| WebsiteFontExtractor | pending |
+| WebsiteFontExtractor | done |
 | FolderAnalyzer | pending |
 | MediaSeparator | done |
 | MediaSeparatorQueueItem | done |

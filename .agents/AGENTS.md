@@ -150,7 +150,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | UnicodeConverter | done |
 | BaseConverter | done |
 | DnaConverter | done |
-| CodonTable | pending |
+| CodonTable | done |
 | IpLookup | done |
 | ImgMeta | done |
 | OfficeMeta | done |
@@ -160,7 +160,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | TypingSpeedTest | done |
 | NetworkSpeedTest | done |
 | QrBarcodeGenerator | done |
-| QrBarcodeScanner | pending |
+| QrBarcodeScanner | done |
 | WebsiteFontExtractor | done |
 | FolderAnalyzer | done |
 | MediaSeparator | done |

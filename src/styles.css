@@ -1015,15 +1015,7 @@ html[data-theme="dark"] .status-msg {
     gap: 8px;
   }
 
-  /* Currency Converter mobile swap button */
-  .currency-swap-btn {
-    align-self: center;
-    margin: 4px 0;
-  }
 
-  .currency-result-value {
-    font-size: 1.5rem;
-  }
 
   /* Home grid mobile */
   .home-grid {
@@ -1883,109 +1875,7 @@ html[data-theme="dark"] .tool-tabs .tab-btn.active {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* Currency Converter Custom Styles */
-.currency-swap-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  cursor: pointer;
-  align-self: flex-end;
-  margin-bottom: 2px;
-  transition: all 0.2s ease;
-}
 
-.currency-swap-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: rotate(180deg);
-}
-
-.currency-result-display {
-  background: var(--bg-app);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 16px;
-  text-align: center;
-}
-
-.currency-result-value {
-  font-family: "TASA Orbiter", sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 8px;
-  word-break: break-all;
-}
-
-.currency-result-rate {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.currency-manual-rate-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 12px 16px;
-  background: var(--bg-app);
-  border-radius: 8px;
-  border: 1px dashed var(--border-color);
-}
-
-.currency-manual-rate-container input[type="checkbox"] {
-  width: auto;
-  cursor: pointer;
-}
-
-.currency-manual-rate-container label {
-  cursor: pointer;
-  user-select: none;
-  font-size: 0.85rem;
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.currency-manual-rate-input {
-  max-width: 120px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  border-radius: 6px;
-}
-
-.currency-bulk-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 12px;
-  padding: 12px;
-  background: var(--bg-app);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-family: monospace;
-  font-size: 0.85rem;
-}
-
-.currency-bulk-item {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding-bottom: 4px;
-}
-
-html[data-theme="dark"] .currency-bulk-item {
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
 
 
 .imgmeta-search-wrapper {
@@ -7028,16 +6918,7 @@ html[data-theme="dark"] .ct-fisc-side-bond {
     font-size: 0.7rem;
   }
 
-  /* Currency extra small */
-  .currency-result-value {
-    font-size: 1.3rem;
-  }
 
-  .currency-manual-rate-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
 
   /* Color Converter extra small */
   .hsl-picker-container {

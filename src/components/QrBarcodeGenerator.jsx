@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 // Helper to escape WiFi strings for standard encoding format
 const escapeWifiString = (str) => {
@@ -767,62 +771,74 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   };
 
   return (
-    <article id="tool-qrbarcode" className="tool-card tool-card--wide active">
-      <h2>QR Code &amp; Barcode Generator</h2>
-      
-      {/* Primary Generator Tabs */}
-      <div className="generator-tabs">
-        <button 
-          className={`gen-tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
-          onClick={() => setActiveTab('qr')}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <rect x="7" y="7" width="3" height="3"></rect>
-            <rect x="14" y="7" width="3" height="3"></rect>
-            <rect x="7" y="14" width="3" height="3"></rect>
-          </svg>
-          QR Code Generator
-        </button>
-        <button 
-          className={`gen-tab-btn ${activeTab === 'barcode' ? 'active' : ''}`}
-          onClick={() => setActiveTab('barcode')}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="5" x2="3" y2="19"></line>
-            <line x1="6" y1="5" x2="6" y2="19"></line>
-            <line x1="10" y1="5" x2="10" y2="19"></line>
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="15" y1="5" x2="15" y2="19"></line>
-            <line x1="18" y1="5" x2="18" y2="19"></line>
-            <line x1="21" y1="5" x2="21" y2="19"></line>
-          </svg>
-          Barcode Generator
-        </button>
+    <Card id="tool-qrbarcode" variant="tool" size="wide">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
+        <ToolHeader 
+          title="QR Code &amp; Barcode Generator" 
+          description="Generate scannable QR Codes with custom colors, shapes, and logos, or high-fidelity barcodes." 
+        />
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant={activeTab === 'qr' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setActiveTab('qr')}
+            className="flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="3"></rect>
+              <rect x="14" y="7" width="3" height="3"></rect>
+              <rect x="7" y="14" width="3" height="3"></rect>
+            </svg>
+            <span>QR Code</span>
+          </Button>
+          <Button
+            variant={activeTab === 'barcode' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setActiveTab('barcode')}
+            className="flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <line x1="3" y1="5" x2="3" y2="19"></line>
+              <line x1="6" y1="5" x2="6" y2="19"></line>
+              <line x1="10" y1="5" x2="10" y2="19"></line>
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="15" y1="5" x2="15" y2="19"></line>
+              <line x1="18" y1="5" x2="18" y2="19"></line>
+              <line x1="21" y1="5" x2="21" y2="19"></line>
+            </svg>
+            <span>Barcode</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="generator-layout">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         
         {/* ================= LEFT SIDE: CONFIG PANEL ================= */}
-        <div className="config-panel">
+        <div className="lg:col-span-3 flex flex-col gap-6">
           
           {activeTab === 'qr' ? (
             <>
               {/* QR TYPE SELECTOR */}
-              <div className="form-group">
-                <label>Content Type</label>
-                <div className="qr-type-grid">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-text-main">Content Type</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
                     { id: 'url', name: 'Web Address' },
                     { id: 'text', name: 'Plain Text' },
                     { id: 'wifi', name: 'WiFi Network' },
                     { id: 'email', name: 'Email Address' },
                     { id: 'phone', name: 'Phone Link' },
-                    { id: 'sms', name: 'SMS message' }
+                    { id: 'sms', name: 'SMS Message' }
                   ].map(t => (
                     <button 
                       key={t.id}
-                      className={`qr-type-btn ${qrType === t.id ? 'active' : ''}`}
+                      type="button"
+                      className={`px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer text-center ${
+                        qrType === t.id 
+                          ? 'bg-accent border-accent text-white shadow-sm' 
+                          : 'bg-card border-border text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
                       onClick={() => setQrType(t.id)}
                     >
                       {t.name}
@@ -832,61 +848,55 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               </div>
 
               {/* DYNAMIC CONTENT INPUTS */}
-              <div className="content-inputs-card">
+              <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 shadow-sm">
                 {qrType === 'url' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-url">URL Address</label>
-                    <input 
-                      id="qr-url"
-                      type="url"
-                      placeholder="https://example.com"
-                      value={qrUrl}
-                      onChange={(e) => setQrUrl(e.target.value)}
-                    />
-                  </div>
+                  <FieldInput 
+                    id="qr-url"
+                    type="url"
+                    label="URL Address"
+                    placeholder="https://example.com"
+                    value={qrUrl}
+                    onChange={(e) => setQrUrl(e.target.value)}
+                  />
                 )}
 
                 {qrType === 'text' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-text">Plain Text Content</label>
-                    <textarea 
-                      id="qr-text"
-                      rows="3"
-                      placeholder="Type your text content here..."
-                      value={qrText}
-                      onChange={(e) => setQrText(e.target.value)}
-                    />
-                  </div>
+                  <FieldInput 
+                    as="textarea"
+                    id="qr-text"
+                    label="Plain Text Content"
+                    rows="3"
+                    placeholder="Type your text content here..."
+                    value={qrText}
+                    onChange={(e) => setQrText(e.target.value)}
+                  />
                 )}
 
                 {qrType === 'wifi' && (
-                  <div className="wifi-inputs">
-                    <div className="form-group">
-                      <label htmlFor="wifi-ssid">Network Name (SSID)</label>
-                      <input 
-                        id="wifi-ssid"
-                        type="text"
-                        placeholder="SSID Name"
-                        value={qrWifiSsid}
-                        onChange={(e) => setQrWifiSsid(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="wifi-password">Password</label>
-                      <input 
-                        id="wifi-password"
-                        type="text"
-                        placeholder="Network Password"
-                        disabled={qrWifiAuth === 'nopass'}
-                        value={qrWifiPassword}
-                        onChange={(e) => setQrWifiPassword(e.target.value)}
-                      />
-                    </div>
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="wifi-auth">Security</label>
+                  <div className="flex flex-col gap-4">
+                    <FieldInput 
+                      id="wifi-ssid"
+                      type="text"
+                      label="Network Name (SSID)"
+                      placeholder="SSID Name"
+                      value={qrWifiSsid}
+                      onChange={(e) => setQrWifiSsid(e.target.value)}
+                    />
+                    <FieldInput 
+                      id="wifi-password"
+                      type="text"
+                      label="Password"
+                      placeholder="Network Password"
+                      disabled={qrWifiAuth === 'nopass'}
+                      value={qrWifiPassword}
+                      onChange={(e) => setQrWifiPassword(e.target.value)}
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="wifi-auth" className="text-sm font-semibold text-text-main">Security</label>
                         <select 
                           id="wifi-auth"
+                          className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                           value={qrWifiAuth}
                           onChange={(e) => setQrWifiAuth(e.target.value)}
                         >
@@ -895,10 +905,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           <option value="nopass">Unsecured (No Password)</option>
                         </select>
                       </div>
-                      <div className="form-group col-checkbox">
-                        <label className="checkbox-label">
+                      <div className="flex items-center mt-6">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                           <input 
                             type="checkbox"
+                            className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                             checked={qrWifiHidden}
                             onChange={(e) => setQrWifiHidden(e.target.checked)}
                           />
@@ -910,94 +921,94 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                 )}
 
                 {qrType === 'email' && (
-                  <div className="email-inputs">
-                    <div className="form-group">
-                      <label htmlFor="email-to">Recipient Email</label>
-                      <input 
-                        id="email-to"
-                        type="email"
-                        placeholder="hello@example.com"
-                        value={qrEmailTo}
-                        onChange={(e) => setQrEmailTo(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email-subject">Subject</label>
-                      <input 
-                        id="email-subject"
-                        type="text"
-                        placeholder="Subject Line"
-                        value={qrEmailSubject}
-                        onChange={(e) => setQrEmailSubject(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email-body">Body Text</label>
-                      <textarea 
-                        id="email-body"
-                        rows="3"
-                        placeholder="Email contents..."
-                        value={qrEmailBody}
-                        onChange={(e) => setQrEmailBody(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {qrType === 'phone' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-phone">Phone Number</label>
-                    <input 
-                      id="qr-phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
-                      value={qrPhone}
-                      onChange={(e) => setQrPhone(e.target.value)}
+                  <div className="flex flex-col gap-4">
+                    <FieldInput 
+                      id="email-to"
+                      type="email"
+                      label="Recipient Email"
+                      placeholder="hello@example.com"
+                      value={qrEmailTo}
+                      onChange={(e) => setQrEmailTo(e.target.value)}
+                    />
+                    <FieldInput 
+                      id="email-subject"
+                      type="text"
+                      label="Subject"
+                      placeholder="Subject Line"
+                      value={qrEmailSubject}
+                      onChange={(e) => setQrEmailSubject(e.target.value)}
+                    />
+                    <FieldInput 
+                      as="textarea"
+                      id="email-body"
+                      label="Body Text"
+                      rows="3"
+                      placeholder="Email contents..."
+                      value={qrEmailBody}
+                      onChange={(e) => setQrEmailBody(e.target.value)}
                     />
                   </div>
                 )}
 
+                {qrType === 'phone' && (
+                  <FieldInput 
+                    id="qr-phone"
+                    type="tel"
+                    label="Phone Number"
+                    placeholder="+1 (555) 000-0000"
+                    value={qrPhone}
+                    onChange={(e) => setQrPhone(e.target.value)}
+                  />
+                )}
+
                 {qrType === 'sms' && (
-                  <div className="sms-inputs">
-                    <div className="form-group">
-                      <label htmlFor="sms-phone">Phone Number</label>
-                      <input 
-                        id="sms-phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                        value={qrSmsPhone}
-                        onChange={(e) => setQrSmsPhone(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="sms-msg">Message</label>
-                      <textarea 
-                        id="sms-msg"
-                        rows="2"
-                        placeholder="Type SMS text..."
-                        value={qrSmsMessage}
-                        onChange={(e) => setQrSmsMessage(e.target.value)}
-                      />
-                    </div>
+                  <div className="flex flex-col gap-4">
+                    <FieldInput 
+                      id="sms-phone"
+                      type="tel"
+                      label="Phone Number"
+                      placeholder="+1 (555) 000-0000"
+                      value={qrSmsPhone}
+                      onChange={(e) => setQrSmsPhone(e.target.value)}
+                    />
+                    <FieldInput 
+                      as="textarea"
+                      id="sms-msg"
+                      label="Message"
+                      rows="2"
+                      placeholder="Type SMS text..."
+                      value={qrSmsMessage}
+                      onChange={(e) => setQrSmsMessage(e.target.value)}
+                    />
                   </div>
                 )}
               </div>
 
               {/* QR STYLE CUSTOMIZATION */}
-              <div className="section-divider">Style Customization</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Style Customization</div>
 
-              <div className="style-card">
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-dots-style">Dots Style</label>
-                    <select id="qr-dots-style" value={qrDotsStyle} onChange={(e) => setQrDotsStyle(e.target.value)}>
+              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Dots Style</label>
+                    <select 
+                      id="qr-dots-style" 
+                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                      value={qrDotsStyle} 
+                      onChange={(e) => setQrDotsStyle(e.target.value)}
+                    >
                       <option value="square">Classic Square</option>
                       <option value="circle">Rounded Circles</option>
                     </select>
                   </div>
-                  <div className="form-group col">
-                    <label htmlFor="qr-eyes-style">Corner Eyes Style</label>
-                    <select id="qr-eyes-style" value={qrEyesStyle} onChange={(e) => setQrEyesStyle(e.target.value)}>
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Corner Eyes Style</label>
+                    <select 
+                      id="qr-eyes-style" 
+                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                      value={qrEyesStyle} 
+                      onChange={(e) => setQrEyesStyle(e.target.value)}
+                    >
                       <option value="square">Standard Square</option>
                       <option value="rounded">Smooth Rounded</option>
                       <option value="circle">Circular Rings</option>
@@ -1005,23 +1016,25 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Foreground Color Type</label>
-                  <div className="radio-group">
-                    <label className="radio-label">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color Type</span>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                       <input 
                         type="radio" 
                         name="fgType" 
+                        className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                         value="solid" 
                         checked={qrFgType === 'solid'} 
                         onChange={() => setQrFgType('solid')}
                       />
                       Solid Color
                     </label>
-                    <label className="radio-label">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                       <input 
                         type="radio" 
                         name="fgType" 
+                        className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                         value="gradient" 
                         checked={qrFgType === 'gradient'} 
                         onChange={() => setQrFgType('gradient')}
@@ -1032,79 +1045,88 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                 </div>
 
                 {qrFgType === 'solid' ? (
-                  <div className="form-group">
-                    <label htmlFor="qr-fg-color">Foreground Color</label>
-                    <div className="color-picker-input">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
+                    <div className="flex items-center gap-2">
                       <input 
                         id="qr-fg-color"
                         type="color" 
+                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                         value={qrFgColor} 
                         onChange={(e) => setQrFgColor(e.target.value)}
                       />
                       <input 
                         type="text" 
-                        className="color-hex-text"
-                        value={qrFgColor.toUpperCase()} 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                        value={qrFgColor} 
                         onChange={(e) => setQrFgColor(e.target.value)}
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="gradient-inputs">
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-1">Start Color</label>
-                        <div className="color-picker-input">
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
+                        <div className="flex items-center gap-2">
                           <input 
                             id="qr-grad-1"
                             type="color" 
+                            className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                             value={qrGradColor1} 
                             onChange={(e) => setQrGradColor1(e.target.value)}
                           />
                           <input 
                             type="text" 
-                            className="color-hex-text"
-                            value={qrGradColor1.toUpperCase()} 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                            value={qrGradColor1} 
                             onChange={(e) => setQrGradColor1(e.target.value)}
                           />
                         </div>
                       </div>
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-2">End Color</label>
-                        <div className="color-picker-input">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
+                        <div className="flex items-center gap-2">
                           <input 
                             id="qr-grad-2"
                             type="color" 
+                            className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                             value={qrGradColor2} 
                             onChange={(e) => setQrGradColor2(e.target.value)}
                           />
                           <input 
                             type="text" 
-                            className="color-hex-text"
-                            value={qrGradColor2.toUpperCase()} 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                            value={qrGradColor2} 
                             onChange={(e) => setQrGradColor2(e.target.value)}
                           />
                         </div>
                       </div>
                     </div>
                     
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-style">Gradient Shape</label>
-                        <select id="qr-grad-style" value={qrGradType} onChange={(e) => setQrGradType(e.target.value)}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Gradient Shape</label>
+                        <select 
+                          id="qr-grad-style" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                          value={qrGradType} 
+                          onChange={(e) => setQrGradType(e.target.value)}
+                        >
                           <option value="linear">Linear</option>
                           <option value="radial">Radial</option>
                         </select>
                       </div>
                       {qrGradType === 'linear' && (
-                        <div className="form-group col">
-                          <label htmlFor="qr-grad-angle">Angle ({qrGradAngle}°)</label>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">Angle ({qrGradAngle}°)</label>
                           <input 
                             id="qr-grad-angle"
                             type="range" 
                             min="0" 
                             max="360" 
                             step="15"
+                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                             value={qrGradAngle} 
                             onChange={(e) => setQrGradAngle(e.target.value)}
                           />
@@ -1114,30 +1136,32 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   </div>
                 )}
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-bg-color">Background Color</label>
-                    <div className="color-picker-input" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                    <div className="flex items-center gap-2" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
                       <input 
                         id="qr-bg-color"
                         type="color" 
                         disabled={qrBgTransparent}
+                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                         value={qrBgColor} 
                         onChange={(e) => setQrBgColor(e.target.value)}
                       />
                       <input 
                         type="text" 
-                        className="color-hex-text"
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
                         disabled={qrBgTransparent}
-                        value={qrBgColor.toUpperCase()} 
+                        value={qrBgColor} 
                         onChange={(e) => setQrBgColor(e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group col col-checkbox">
-                    <label className="checkbox-label" style={{ marginTop: '28px' }}>
+                  <div className="flex items-center mt-6">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                       <input 
                         type="checkbox"
+                        className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                         checked={qrBgTransparent}
                         onChange={(e) => setQrBgTransparent(e.target.checked)}
                       />
@@ -1146,11 +1170,12 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   </div>
                 </div>
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-error-correct">Error Correction</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">Error Correction</label>
                     <select 
                       id="qr-error-correct" 
+                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                       disabled={logoImg !== null}
                       value={logoImg ? 'H' : qrErrorCorrection} 
                       onChange={(e) => setQrErrorCorrection(e.target.value)}
@@ -1160,11 +1185,16 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       <option value="Q">Quartile (25% recovery)</option>
                       <option value="H">High (30% recovery)</option>
                     </select>
-                    {logoImg && <span className="small note warning-note">Locked to HIGH (H) to support center logo.</span>}
+                    {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">Locked to HIGH (H) to support center logo.</span>}
                   </div>
-                  <div className="form-group col">
-                    <label htmlFor="qr-export-size">Resolution</label>
-                    <select id="qr-export-size" value={qrExportSize} onChange={(e) => setQrExportSize(Number(e.target.value))}>
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Resolution</label>
+                    <select 
+                      id="qr-export-size" 
+                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                      value={qrExportSize} 
+                      onChange={(e) => setQrExportSize(Number(e.target.value))}
+                    >
                       <option value={256}>256 x 256 px</option>
                       <option value={512}>512 x 512 px</option>
                       <option value={1024}>1024 x 1024 px</option>
@@ -1175,56 +1205,64 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               </div>
 
               {/* QR LOGO UPLOAD */}
-              <div className="section-divider">Embed Logo / Image</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Embed Logo / Image</div>
               
-              <div className="logo-card">
-                <div className="form-group">
-                  <label>Upload Logo</label>
-                  <div className="logo-upload-controls">
-                    <label htmlFor="logo-file-picker" className="btn btn-secondary btn-small file-upload-btn">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                      </svg>
-                      {logoFile ? 'Change Logo' : 'Choose Logo'}
+              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Upload Logo</span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label htmlFor="logo-file-picker">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm select-none">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        {logoFile ? 'Change Logo' : 'Choose Logo'}
+                      </span>
                     </label>
                     <input 
                       id="logo-file-picker"
                       type="file" 
                       accept="image/png, image/jpeg, image/svg+xml"
                       onChange={handleLogoChange}
-                      style={{ display: 'none' }}
+                      className="hidden"
                     />
                     {logoFile && (
-                      <span className="uploaded-file-name">
+                      <span className="bg-app border border-border text-text-muted px-2.5 py-1 rounded-md text-xs font-mono max-w-[200px] truncate">
                         {logoFile.name}
                       </span>
                     )}
                     {logoImg && (
-                      <button className="btn btn-secondary btn-small danger-text" style={{ marginLeft: 'auto' }} onClick={removeLogo}>
+                      <Button variant="secondary" size="sm" className="text-red-500 hover:text-red-600 font-bold ml-auto" onClick={removeLogo}>
                         Remove Logo
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
 
                 {logoImg && (
-                  <div className="logo-details">
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="logo-scale">Logo Size ({Math.round(logoScale * 100)}%)</label>
+                  <div className="border-t border-border pt-4 mt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Size ({Math.round(logoScale * 100)}%)</label>
                         <input 
                           id="logo-scale"
                           type="range" 
                           min="0.10" 
                           max="0.25" 
                           step="0.01"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                           value={logoScale} 
-                          onChange={(e) => setLogoScale(e.target.value)}
+                          onChange={(e) => setLogoScale(parseFloat(e.target.value))}
                         />
                       </div>
-                      <div className="form-group col">
-                        <label htmlFor="logo-bg-shape">Logo Background</label>
-                        <select id="logo-bg-shape" value={logoBgShape} onChange={(e) => setLogoBgShape(e.target.value)}>
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Background</label>
+                        <select 
+                          id="logo-bg-shape" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                          value={logoBgShape} 
+                          onChange={(e) => setLogoBgShape(e.target.value)}
+                        >
                           <option value="none">None (Overlaid)</option>
                           <option value="circle">White Circle</option>
                           <option value="square">White Square</option>
@@ -1234,111 +1272,121 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   </div>
                 )}
               </div>
-              <div style={{ marginTop: '24px' }}>
-                <button className="btn btn-secondary" onClick={resetQR} style={{ width: '100%' }}>
+              <div className="mt-2">
+                <Button variant="secondary" className="w-full" onClick={resetQR}>
                   Reset QR Settings to Default
-                </button>
+                </Button>
               </div>
             </>
           ) : (
             // ================= BARCODE INPUTS & STYLING =================
             <>
-              <div className="form-group">
-                <label htmlFor="barcode-val">Barcode Value</label>
-                <input 
+              <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 shadow-sm">
+                <FieldInput 
                   id="barcode-val"
                   type="text" 
+                  label="Barcode Value"
                   value={barcodeValue} 
                   onChange={(e) => setBarcodeValue(e.target.value)}
+                  error={barcodeError}
                 />
-                {barcodeError && <span className="error-text">{barcodeError}</span>}
+
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label htmlFor="barcode-format" className="text-sm font-semibold text-text-main">Format</label>
+                  <select 
+                    id="barcode-format" 
+                    className="bg-app border border-border rounded-lg px-3 py-2.5 text-sm text-text-main outline-none focus:border-accent"
+                    value={barcodeFormat} 
+                    onChange={(e) => setBarcodeFormat(e.target.value)}
+                  >
+                    <option value="CODE128">Code 128 (Standard ASCII)</option>
+                    <option value="EAN13">EAN-13 (13 Digits)</option>
+                    <option value="EAN8">EAN-8 (8 Digits)</option>
+                    <option value="UPC">UPC-A (12 Digits)</option>
+                    <option value="CODE39">Code 39 (Alphanumeric)</option>
+                    <option value="ITF">ITF (Interleaved 2 of 5)</option>
+                    <option value="CODABAR">Codabar</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="barcode-format">Format</label>
-                <select id="barcode-format" value={barcodeFormat} onChange={(e) => setBarcodeFormat(e.target.value)}>
-                  <option value="CODE128">Code 128 (Standard ASCII)</option>
-                  <option value="EAN13">EAN-13 (13 Digits)</option>
-                  <option value="EAN8">EAN-8 (8 Digits)</option>
-                  <option value="UPC">UPC-A (12 Digits)</option>
-                  <option value="CODE39">Code 39 (Alphanumeric)</option>
-                  <option value="ITF">ITF (Interleaved 2 of 5)</option>
-                  <option value="CODABAR">Codabar</option>
-                </select>
-              </div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Barcode Styling</div>
 
-              <div className="section-divider">Barcode Styling</div>
-
-              <div className="style-card">
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-line-color">Line Color</label>
-                    <div className="color-picker-input">
+              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
+                    <div className="flex items-center gap-2">
                       <input 
                         id="bc-line-color"
                         type="color" 
+                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                         value={barcodeLineColor} 
                         onChange={(e) => setBarcodeLineColor(e.target.value)}
                       />
                       <input 
                         type="text" 
-                        className="color-hex-text"
-                        value={barcodeLineColor.toUpperCase()} 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                        value={barcodeLineColor} 
                         onChange={(e) => setBarcodeLineColor(e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group col">
-                    <label htmlFor="bc-bg-color">Background Color</label>
-                    <div className="color-picker-input">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                    <div className="flex items-center gap-2">
                       <input 
                         id="bc-bg-color"
                         type="color" 
+                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
                         value={barcodeBgColor} 
                         onChange={(e) => setBarcodeBgColor(e.target.value)}
                       />
                       <input 
                         type="text" 
-                        className="color-hex-text"
-                        value={barcodeBgColor.toUpperCase()} 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                        value={barcodeBgColor} 
                         onChange={(e) => setBarcodeBgColor(e.target.value)}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-width">Bar Width ({barcodeWidth}px)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Width ({barcodeWidth}px)</label>
                     <input 
                       id="bc-width"
                       type="range" 
                       min="1" 
                       max="4" 
                       step="1"
+                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                       value={barcodeWidth} 
-                      onChange={(e) => setBarcodeWidth(e.target.value)}
+                      onChange={(e) => setBarcodeWidth(parseInt(e.target.value))}
                     />
                   </div>
-                  <div className="form-group col">
-                    <label htmlFor="bc-height">Bar Height ({barcodeHeight}px)</label>
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Height ({barcodeHeight}px)</label>
                     <input 
                       id="bc-height"
                       type="range" 
                       min="40" 
                       max="150" 
                       step="5"
+                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                       value={barcodeHeight} 
-                      onChange={(e) => setBarcodeHeight(e.target.value)}
+                      onChange={(e) => setBarcodeHeight(parseInt(e.target.value))}
                     />
                   </div>
                 </div>
 
-                <div className="row">
-                  <div className="form-group col col-checkbox">
-                    <label className="checkbox-label" style={{ marginTop: '28px' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center mt-6">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                       <input 
                         type="checkbox"
+                        className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                         checked={barcodeDisplayValue}
                         onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
                       />
@@ -1346,40 +1394,42 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     </label>
                   </div>
                   {barcodeDisplayValue && (
-                    <div className="form-group col">
-                      <label htmlFor="bc-font-size">Font Size ({barcodeFontSize}px)</label>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
                       <input 
                         id="bc-font-size"
                         type="range" 
                         min="10" 
                         max="24" 
                         step="1"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                         value={barcodeFontSize} 
-                        onChange={(e) => setBarcodeFontSize(e.target.value)}
+                        onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-margin">Outer Margin ({barcodeMargin}px)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outer Margin ({barcodeMargin}px)</label>
                     <input 
                       id="bc-margin"
                       type="range" 
                       min="0" 
                       max="40" 
                       step="5"
+                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                       value={barcodeMargin} 
-                      onChange={(e) => setBarcodeMargin(e.target.value)}
+                      onChange={(e) => setBarcodeMargin(parseInt(e.target.value))}
                     />
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: '24px' }}>
-                <button className="btn btn-secondary" onClick={resetBarcode} style={{ width: '100%' }}>
+              <div className="mt-2">
+                <Button variant="secondary" className="w-full" onClick={resetBarcode}>
                   Reset Barcode Settings to Default
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -1387,32 +1437,32 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
         {/* ================= RIGHT SIDE: STICKY PREVIEW CARD ================= */}
-        <div className="preview-panel">
-          <div className="sticky-preview-card">
-            <h3>Live Preview</h3>
+        <div className="lg:col-span-2 lg:sticky lg:top-6 flex flex-col gap-4">
+          <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
+            <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 text-center">Live Preview</h3>
 
-            <div className="preview-area-container">
+            <div className="flex justify-center items-center bg-app border border-border border-dashed rounded-xl p-4 min-h-[220px] select-none">
               {activeTab === 'qr' ? (
-                <div className="canvas-wrapper">
+                <div className="flex items-center justify-center w-full">
                   {!getQRValue() ? (
-                    <div className="preview-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <rect x="7" y="7" width="3" height="3"></rect>
                         <rect x="14" y="7" width="3" height="3"></rect>
                         <rect x="7" y="14" width="3" height="3"></rect>
                       </svg>
-                      <p>Enter content to generate QR Code</p>
+                      <p className="text-xs font-medium">Enter content to generate QR Code</p>
                     </div>
                   ) : (
-                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="preview-element" />
+                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="max-w-full h-auto bg-transparent border border-border/30 rounded-lg shadow-sm" />
                   )}
                 </div>
               ) : (
-                <div className="canvas-wrapper barcode-wrapper">
+                <div className="flex items-center justify-center w-full">
                   {!barcodeValue ? (
-                    <div className="preview-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
                         <line x1="3" y1="5" x2="3" y2="19"></line>
                         <line x1="6" y1="5" x2="6" y2="19"></line>
                         <line x1="10" y1="5" x2="10" y2="19"></line>
@@ -1421,55 +1471,55 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <line x1="18" y1="5" x2="18" y2="19"></line>
                         <line x1="21" y1="5" x2="21" y2="19"></line>
                       </svg>
-                      <p>Enter value to generate Barcode</p>
+                      <p className="text-xs font-medium">Enter value to generate Barcode</p>
                     </div>
                   ) : barcodeError ? (
-                    <div className="preview-error-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-red-500/70 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-80">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                       </svg>
-                      <p>{barcodeError}</p>
+                      <p className="text-xs font-semibold">{barcodeError}</p>
                     </div>
                   ) : (
-                    <>
-                      <canvas ref={barcodeCanvasRef} className="preview-element barcode-canvas" />
+                    <div className="w-full flex justify-center overflow-x-auto p-1 bg-white rounded-lg">
+                      <canvas ref={barcodeCanvasRef} className="max-w-full h-auto" />
                       {/* Hidden SVG reference specifically for high-fidelity export */}
                       <svg ref={barcodeSvgRef} style={{ display: 'none' }} />
-                    </>
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
             {/* ACTION BUTTONS */}
-            <div className="preview-actions">
+            <div className="flex flex-col gap-2">
               {activeTab === 'qr' ? (
                 <>
-                  <button className="btn btn-primary" disabled={!getQRValue()} onClick={handleQrDownloadPNG}>
+                  <Button variant="primary" disabled={!getQRValue()} onClick={handleQrDownloadPNG} className="w-full">
                     Download PNG
-                  </button>
-                  <button className="btn btn-secondary" disabled={!getQRValue()} onClick={handleQrDownloadSVG}>
+                  </Button>
+                  <Button variant="secondary" disabled={!getQRValue()} onClick={handleQrDownloadSVG} className="w-full">
                     Download SVG (Vector)
-                  </button>
-                  <button className={`btn btn-secondary btn-copy ${copied ? 'copied' : ''}`} disabled={!getQRValue()} onClick={handleQrCopy}>
+                  </Button>
+                  <Button variant="secondary" disabled={!getQRValue()} onClick={handleQrCopy} className="w-full">
                     {copied ? 'Copied Image!' : 'Copy to Clipboard'}
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-primary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG}>
+                  <Button variant="primary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG} className="w-full">
                     Download PNG
-                  </button>
-                  <button className="btn btn-secondary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG}>
+                  </Button>
+                  <Button variant="secondary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG} className="w-full">
                     Download SVG (Vector)
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
             
-            <p className="small note center-text">
+            <p className="text-[10px] text-text-muted text-center leading-relaxed">
               {activeTab === 'qr' 
                 ? "Scannable with any mobile camera. Transparent background works best on light sites."
                 : "Vector SVG format provides crisp line borders for barcode scanners at any size."}
@@ -1478,6 +1528,6 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
       </div>
-    </article>
+    </Card>
   );
 }

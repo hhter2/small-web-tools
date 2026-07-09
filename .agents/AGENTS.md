@@ -177,8 +177,8 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | MediaSeparatorWaveform | done |
 | MediaSeparatorFormatSelect | done |
 | HomeGrid | done |
-| BioinfoIcon | pending |
-| DnaRnaIcon | pending |
+| BioinfoIcon | done |
+| DnaRnaIcon | done |
 
 ## Rules for new work
 
@@ -196,8 +196,3 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 1. `Button variant="danger"` is a placeholder — needs a real parity pass
    against `.btn-danger-custom` / `.btn-danger-confirm` before use.
    Do not use `variant="danger"` in any tool component until this is resolved.
-2. `BioinfoIcon` and `DnaRnaIcon` are still plain JSX with inline SVG —
-   they have no CSS class dependencies but have not been formally reviewed
-   for Tailwind alignment. Mark as done once reviewed.
-3. `CurrencyCounter` still uses `.tab-btn` and `.tab-btn.active` from `styles.css`.
-   These have not been extracted into a primitive yet; migrate when touching the component.

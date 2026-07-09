@@ -752,10 +752,9 @@ export default function App() {
             w-[260px] flex-shrink-0 bg-sidebar border-r border-border-sidebar flex flex-col
             shadow-sidebar z-[100]
             transition-[left,width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-            md:sticky md:flex md:top-auto
+            md:hidden
             max-md:fixed max-md:bottom-0
             ${mobileSidebarOpen ? 'max-md:left-0 max-md:shadow-[10px_0_30px_rgba(0,0,0,0.15)]' : 'max-md:-left-[280px]'}
-            ${isSidebarCollapsed ? 'md:w-[78px]' : 'md:w-[260px]'}
           `}
           style={sidebarHeightStyle}
         >

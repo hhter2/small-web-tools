@@ -154,7 +154,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | IpLookup | done |
 | ImgMeta | pending |
 | OfficeMeta | pending |
-| AudioMeta | pending |
+| AudioMeta | done |
 | VideoMeta | pending |
 | RandomWheel | done |
 | TypingSpeedTest | pending |

@@ -836,7 +836,7 @@ export default function App() {
               <input
                 type="text"
                 id="tool-search"
-                className="w-full py-2 pl-8 pr-3 text-[0.83rem] rounded-[7px] bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar outline-none transition-all duration-200 placeholder:text-text-sidebar-muted focus:border-accent focus:shadow-[0_0_0_2px_var(--focus-ring)]"
+                className="w-full !py-2 !pl-8 !pr-3 text-[0.83rem] rounded-[7px] bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar outline-none transition-all duration-200 placeholder:text-text-sidebar-muted focus:border-accent focus:shadow-[0_0_0_2px_var(--focus-ring)]"
                 placeholder="Search tools..."
                 aria-label="Search tools"
                 autoComplete="off"
@@ -1121,7 +1121,7 @@ export default function App() {
                   </svg>
                   <input
                     type="text"
-                    className="header-search-input w-full py-[6px] pl-8 pr-8 border border-border rounded bg-[var(--bg-search-sidebar)] text-text-main text-[0.8rem] outline-none font-sans transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
+                    className="header-search-input w-full !h-8 !pl-8 !pr-8 !py-0 border border-border rounded bg-[var(--bg-search-sidebar)] text-text-main text-[0.8rem] outline-none font-sans transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
                     placeholder="Search tools..."
                     aria-label="Search tools"
                     autoComplete="off"

@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Card from './ui/Card';
+import ToolHeader from './ui/ToolHeader';
+import Button from './ui/Button';
 
 // ─── Ping Test ───────────────────────────────────────────────────────────────
 const runPingTest = async (signal) => {
@@ -432,17 +435,15 @@ export default function NetworkSpeedTest() {
   const showViz = isRunning || phase === 'complete';
 
   return (
-    <article id="tool-speedtest" className="tool-card tool-card--wide active">
-      <h2>Network Speed Test</h2>
+    <Card id="tool-speedtest" variant="tool" size="wide">
+      <ToolHeader 
+        title="Network Speed Test" 
+        description="Measures your real-time network download & upload speed and server latency. Each phase runs for 10 seconds."
+      />
 
-      <p className="small note">
-        Measures your real-time network download &amp; upload speed and server latency.
-        Each phase runs for 10 seconds.
-      </p>
-
-      <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'row', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label htmlFor="data-limit-select" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+      <div className="flex flex-row flex-wrap gap-4 items-end justify-start mb-5">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="data-limit-select" className="text-xs font-bold text-text-muted">
             Test Size Limit
           </label>
           <select
@@ -450,16 +451,7 @@ export default function NetworkSpeedTest() {
             value={dataLimit}
             onChange={(e) => setDataLimit(e.target.value)}
             disabled={isRunning}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-card)',
-              color: 'var(--text-main)',
-              outline: 'none',
-              cursor: isRunning ? 'not-allowed' : 'pointer',
-              fontSize: '0.9rem',
-            }}
+            className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none text-sm disabled:cursor-not-allowed cursor-pointer"
           >
             <option value="light">Light (30MB Down / 8MB Up)</option>
             <option value="standard">Standard (100MB Down / 25MB Up)</option>
@@ -469,9 +461,9 @@ export default function NetworkSpeedTest() {
         </div>
 
         {dataLimit === 'custom' && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label htmlFor="custom-down-input" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+          <div className="flex gap-3 flex-wrap">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="custom-down-input" className="text-xs font-bold text-text-muted">
                 Download (MB)
               </label>
               <input
@@ -482,20 +474,11 @@ export default function NetworkSpeedTest() {
                 value={customDownload}
                 onChange={(e) => setCustomDownload(e.target.value)}
                 disabled={isRunning}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-main)',
-                  outline: 'none',
-                  width: '95px',
-                  fontSize: '0.9rem',
-                }}
+                className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none w-[95px] text-sm"
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label htmlFor="custom-up-input" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="custom-up-input" className="text-xs font-bold text-text-muted">
                 Upload (MB)
               </label>
               <input
@@ -506,16 +489,7 @@ export default function NetworkSpeedTest() {
                 value={customUpload}
                 onChange={(e) => setCustomUpload(e.target.value)}
                 disabled={isRunning}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-main)',
-                  outline: 'none',
-                  width: '95px',
-                  fontSize: '0.9rem',
-                }}
+                className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none w-[95px] text-sm"
               />
             </div>
           </div>
@@ -523,29 +497,19 @@ export default function NetworkSpeedTest() {
 
         <div>
           {isRunning ? (
-            <button className="btn-primary" onClick={stopTest} type="button">Stop Test</button>
+            <Button variant="primary" onClick={stopTest}>Stop Test</Button>
           ) : (
-            <button className="btn-primary" onClick={startTest} type="button">Start Test</button>
+            <Button variant="primary" onClick={startTest}>Start Test</Button>
           )}
         </div>
       </div>
 
       {/* ── Speedometer + Line Charts ── */}
       {showViz && (
-        <div className="row" style={{ marginBottom: '20px', gap: '16px', alignItems: 'stretch' }}>
+        <div className="flex flex-col md:flex-row gap-4 w-full mb-5 items-stretch">
 
           {/* Speedometer Box */}
-          <div style={{
-            flex: '2 1 280px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--bg-card)',
-            borderRadius: '12px',
-            border: '1px solid var(--border-color)',
-            padding: '12px',
-          }}>
+          <div className="flex-[2_1_280px] flex flex-col items-center justify-center bg-card rounded-md border border-border p-3">
             <svg viewBox="0 0 200 140" style={{ width: '100%', height: 'auto', maxHeight: '150px' }}>
               {/* Track */}
               <path d="M 39.38,130 A 70,70 0 1,1 160.62,130"
@@ -600,20 +564,11 @@ export default function NetworkSpeedTest() {
           </div>
 
           {/* Download Speed Chart */}
-          <div style={{
-            flex: '2 1 280px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            background: 'var(--bg-card)',
-            borderRadius: '12px',
-            border: '1px solid var(--border-color)',
-            padding: '12px',
-          }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="flex-[2_1_280px] flex flex-col gap-1 bg-card rounded-md border border-border p-3">
+            <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">
               ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
             </span>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            <div className="flex-1 flex items-center">
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
                 {/* Grid */}
                 <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
@@ -635,20 +590,11 @@ export default function NetworkSpeedTest() {
           </div>
 
           {/* Upload Speed Chart */}
-          <div style={{
-            flex: '2 1 280px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            background: 'var(--bg-card)',
-            borderRadius: '12px',
-            border: '1px solid var(--border-color)',
-            padding: '12px',
-          }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="flex-[2_1_280px] flex flex-col gap-1 bg-card rounded-md border border-border p-3">
+            <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">
               ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
             </span>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            <div className="flex-1 flex items-center">
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
                 {/* Grid */}
                 <line x1="25" y1="10"  x2="285" y2="10"  stroke="var(--border-color)" strokeWidth="0.8" strokeDasharray="3 3" />
@@ -674,11 +620,11 @@ export default function NetworkSpeedTest() {
 
       {/* Progress bar */}
       {(phase === 'download' || phase === 'upload') && (
-        <div className="progress-container" style={{ marginBottom: '20px' }}>
-          <div id="progress-bar" style={{
+        <div className="w-full bg-border rounded-full h-1.5 overflow-hidden mb-5">
+          <div style={{
             width: `${progress}%`,
             background: phase === 'download' ? '#3b82f6' : '#ef4444',
-          }} />
+          }} className="h-full transition-all duration-100" />
         </div>
       )}
 
@@ -704,23 +650,23 @@ export default function NetworkSpeedTest() {
 
       {/* Results */}
       {phase === 'complete' && (
-        <div className="results-container">
-          <h3>Test Results</h3>
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-bold text-text-main">Test Results</h3>
           {/* Row 1: Speed Performance Metrics */}
-          <div className="row count-results" style={{ marginBottom: '16px' }}>
-            <div className="result-box" style={{ flex: '1 1 180px' }}>
+          <div className="flex flex-col md:flex-row gap-4 w-full mb-4">
+            <div className="result-box flex-[1_1_180px]">
               <span className="result-label">↓ Avg Download</span>
               <span className="result-val">
                 {avgDownloadSpeed != null ? `${avgDownloadSpeed.toFixed(2)} Mbps` : 'N/A'}
               </span>
             </div>
-            <div className="result-box" style={{ flex: '1 1 180px' }}>
+            <div className="result-box flex-[1_1_180px]">
               <span className="result-label">↑ Avg Upload</span>
               <span className="result-val">
                 {avgUploadSpeed != null ? `${avgUploadSpeed.toFixed(2)} Mbps` : 'N/A'}
               </span>
             </div>
-            <div className="result-box" style={{ flex: '1 1 180px' }}>
+            <div className="result-box flex-[1_1_180px]">
               <span className="result-label">Latency (Ping)</span>
               <span className="result-val">
                 {pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
@@ -729,14 +675,14 @@ export default function NetworkSpeedTest() {
           </div>
 
           {/* Row 2: Connection Details */}
-          <div className="row count-results">
-            <div className="result-box" style={{ flex: '1 1 250px' }}>
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="result-box flex-[1_1_250px]">
               <span className="result-label">IP Address</span>
               <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
                 {clientIp || 'Fetching…'}
               </span>
             </div>
-            <div className="result-box" style={{ flex: '1 1 250px' }}>
+            <div className="result-box flex-[1_1_250px]">
               <span className="result-label">Provider (ISP)</span>
               <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
                 {clientOrg || 'Fetching…'}
@@ -747,8 +693,9 @@ export default function NetworkSpeedTest() {
       )}
 
       {phase === 'error' && error && (
-        <div className="error-message" style={{ marginBottom: '20px' }}>{error}</div>
+        <div className="text-red-500 font-semibold p-4 rounded bg-red-500/10 border border-red-500/20 mb-5">{error}</div>
       )}
-    </article>
+    </Card>
   );
 }
+

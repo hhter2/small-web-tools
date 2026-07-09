@@ -33,120 +33,7 @@ const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
 const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '';
 
-const toolDetails = {
-  "tool-home": {
-    title: "Dashboard",
-    desc: "A premium dashboard of handy utility tools."
-  },
-  "tool-slash": {
-    title: "Slashes Converter",
-    desc: "Normalize Windows paths to web-friendly forward slashes."
-  },
-  "tool-casing": {
-    title: "Casing Switcher",
-    desc: "Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case."
-  },
-  "tool-wc": {
-    title: "Word & Character Counter",
-    desc: "Calculate words, character lengths, and line endings in real time."
-  },
-  "tool-date": {
-    title: "Date Counter",
-    desc: "Calculate the exact number of days between two specified dates."
-  },
-  "tool-currency": {
-    title: "Currency Converter & Counter",
-    desc: "Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists."
-  },
-  "tool-color": {
-    title: "Color Code Converter",
-    desc: "Seamlessly translate colors between HEX, RGB, and HSL formats."
-  },
-  "tool-ascii": {
-    title: "ASCII Converter",
-    desc: "Convert text characters to their ASCII codes and vice versa."
-  },
-  "tool-unicode": {
-    title: "Unicode Converter",
-    desc: "Encode text to Unicode code points or decode raw code points to text."
-  },
-  "tool-base": {
-    title: "Base Converter",
-    desc: "Interconvert numbers between binary, octal, decimal, hexadecimal, and sexagesimal."
-  },
-  "tool-dna": {
-    title: "DNA/RNA Direction Transfer",
-    desc: "Perform sequence base complementation, reversing, and swap 5'/3' strand orientations."
-  },
-  "tool-iplookup": {
-    title: "IP Address Lookup",
-    desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
-  },
-  "tool-imgmeta": {
-    title: "Image Metadata",
-    desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
-  },
-  "tool-wheel": {
-    title: "Random Wheel",
-    desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
-  },
-  "tool-typing": {
-    title: "Typing Speed Test",
-    desc: "Test and improve your typing speed in English or Chinese with custom templates."
-  },
-  "tool-codon": {
-    title: "RNA Codon Table",
-    desc: "Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties."
-  },
-  "tool-qrcode": {
-    title: "QR Code Generator",
-    desc: "Create highly customizable QR codes with dot styles, custom eyes, gradients, and embedded logos."
-  },
-  "tool-barcode": {
-    title: "Barcode Generator",
-    desc: "Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF) with live input validation."
-  },
-  "tool-speedtest": {
-    title: "Network Speed Test",
-    desc: "Test your network latency (ping) and download speed in real-time."
-  },
-  "tool-password": {
-    title: "Secure Password Generator",
-    desc: "Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling."
-  },
-  "tool-pwstrength": {
-    title: "Password Strength Checker",
-    desc: "Analyze password complexity, calculate entropy, estimate cracking time, and check character rules."
-  },
-  "tool-officemeta": {
-    title: "Office Metadata Reader",
-    desc: "Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally."
-  },
-  "tool-fontextractor": {
-    title: "Website Font Extractor",
-    desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
-  },
-  "tool-qrbarcodescan": {
-    title: "QR & Barcode Scanner",
-    desc: "Scan QR codes and barcodes instantly using your camera or by uploading an image. Supports 14+ formats including QR Code, Code 128, EAN, UPC, Data Matrix, and more."
-  },
-  "tool-audiometa": {
-    title: "Audio Metadata Reader",
-    desc: "Extract and analyze metadata tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA files entirely in-browser with full privacy."
-  },
-  "tool-videometa": {
-    title: "Video Metadata Reader",
-    desc: "Extract and analyze encoding format, resolution, frame rate, audio tracks, timecode, color primaries, and subtitle information from MP4, MOV, and log files entirely in-browser with full privacy."
-  },
-  "tool-mediasplit": {
-    title: "Media Splitter",
-    desc: "Split a video's audio track and silent video track locally."
-  },
-  "tool-folder-analyzer": {
-    title: "Folder Structure Analyzer",
-    desc: "Scan and map folder structures, calculate file metrics, and count code lines entirely client-side."
-  }
-};
+
 const categories = [
   {
     id: 'text',
@@ -782,7 +669,9 @@ export default function App() {
     }
   };
 
-  const activeDetails = toolDetails[activeTool] || toolDetails['tool-home'];
+  const activeTitle = activeTool === 'tool-home'
+    ? 'Dashboard'
+    : (navItems.find(item => item.id === activeTool)?.name || '');
 
   return (
     <div className={`app-container ${SHOW_CHANNEL_ALERT ? 'has-banner' : ''}`}>
@@ -1231,7 +1120,7 @@ export default function App() {
                 <span className="top-bar-sep">/</span>
               </>
             )}
-            <span className="top-bar-title">{activeDetails.title}</span>
+            <span className="top-bar-title">{activeTitle}</span>
           </div>
           <div className="top-bar-right">
           </div>

@@ -170,5 +170,8 @@ npm run preview
   - Wrapped options configuration form in a `lg:max-h-[480px] lg:overflow-y-auto` container in QR Code & Barcode Generator (`QrBarcodeGenerator.jsx`).
   - Reduced dropzone and viewfinder container heights to `max-h-[220px]` in QR & Barcode Scanner (`QrBarcodeScanner.jsx`).
   - Reduced canvas wrapper dimensions to `max-w-[340px]`, min-h to `min-h-[440px]`, and lists/edit textareas to `h-[220px]` in Random Wheel (`RandomWheel.jsx`).
-- **RNA Codon Table alignment fix**: Removed the absolute-positioned `ct-axis-right-container` (which was rendering an overlapping copy of U, C, A, G third-base labels and clashing with the row-aligned repeating grid). The third-base vertical right axis now renders using only the row-aligned grid cells, aligning perfectly with all 16 rows.
+- **RNA Codon Table fixes**:
+  - **Alignment Shift**: Removed the absolute-positioned `ct-axis-right-container` (which was rendering an overlapping copy of U, C, A, G third-base labels and clashing with the row-aligned repeating grid). The third-base vertical right axis now renders using only the row-aligned grid cells, aligning perfectly with all 16 rows.
+  - **Filter Button Visibility**: Separated the default classes (`bg-card`, `text-text-muted`) and active classes dynamically on the codon filter buttons (`CodonTable.jsx`). This avoids Tailwind style compilation conflicts where both the white background and white text were applied on the active state in light theme, causing the active button label to become invisible.
+
 

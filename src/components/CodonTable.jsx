@@ -1263,7 +1263,11 @@ export default function CodonTable() {
               <button
                 key={key}
                 id={`ct-filter-${key}`}
-                className={`px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold border border-border bg-card text-text-muted cursor-pointer transition-all duration-200 tracking-wide hover:border-accent hover:text-accent hover:-translate-y-px ${filterMode === key ? activeClass : ''}`}
+                className={`px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold border cursor-pointer transition-all duration-200 tracking-wide hover:border-accent hover:text-accent hover:-translate-y-px ${
+                  filterMode === key 
+                    ? activeClass 
+                    : 'border-border bg-card text-text-muted'
+                }`}
                 onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
                 aria-pressed={filterMode === key}
               >

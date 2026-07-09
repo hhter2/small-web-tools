@@ -153,7 +153,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | CodonTable | pending |
 | IpLookup | done |
 | ImgMeta | pending |
-| OfficeMeta | pending |
+| OfficeMeta | done |
 | AudioMeta | done |
 | VideoMeta | pending |
 | RandomWheel | done |

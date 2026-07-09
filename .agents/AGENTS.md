@@ -162,7 +162,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | QrBarcodeGenerator | pending |
 | QrBarcodeScanner | pending |
 | WebsiteFontExtractor | done |
-| FolderAnalyzer | pending |
+| FolderAnalyzer | done |
 | MediaSeparator | done |
 | MediaSeparatorQueueItem | done |
 | MediaSeparatorWaveform | done |

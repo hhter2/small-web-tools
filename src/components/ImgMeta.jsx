@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ExifReader from 'exifreader';
 import JSZip from 'jszip';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 // Jpeg Metadata Stripping Logic
 function stripJpegMetadata(arrayBuffer, mode) {
@@ -1049,12 +1053,12 @@ export default function ImgMeta() {
       anyGroup = true;
 
       groupsToRender.push(
-        <div key={group.id} className="imgmeta-param-group">
-          <div className="imgmeta-param-group-header">
-            <span className="group-icon">{group.icon}</span>
-            {group.label}
+        <div key={group.id} className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+          <div className="flex items-center gap-2 text-sm font-semibold text-text-main border-b border-border pb-2">
+            <span className="text-accent">{group.icon}</span>
+            <span>{group.label}</span>
           </div>
-          <div className="imgmeta-param-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {(() => {
               const cells = [];
               let i = 0;
@@ -1063,16 +1067,16 @@ export default function ImgMeta() {
                 if (p.label === 'Camera Model' && i + 1 < params.length && params[i+1].label === 'Lens Model') {
                   const pNext = params[i+1];
                   cells.push(
-                    <div key={`group-${i}`} className="imgmeta-stat-row-group" style={{ display: 'flex', width: '100%', flex: '1 1 100%' }}>
-                      <div className="imgmeta-stat-cell" style={{ flex: 1 }}>
-                        <div className="imgmeta-stat-label">{p.label}</div>
-                        <div className={`imgmeta-stat-value ${p.value ? '' : 'not-available'}`} title={p.value || ''}>
+                    <div key={`group-${i}`} className="col-span-1 sm:col-span-2 md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1 bg-app border border-border/40 rounded-lg p-2.5">
+                        <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{p.label}</div>
+                        <div className={`text-sm font-bold text-text-main truncate font-mono ${p.value ? '' : 'opacity-40 font-normal'}`} title={p.value || ''}>
                           {p.value || '—'}
                         </div>
                       </div>
-                      <div className="imgmeta-stat-cell" style={{ flex: 1 }}>
-                        <div className="imgmeta-stat-label">{pNext.label}</div>
-                        <div className={`imgmeta-stat-value ${pNext.value ? '' : 'not-available'}`} title={pNext.value || ''}>
+                      <div className="flex flex-col gap-1 bg-app border border-border/40 rounded-lg p-2.5">
+                        <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{pNext.label}</div>
+                        <div className={`text-sm font-bold text-text-main truncate font-mono ${pNext.value ? '' : 'opacity-40 font-normal'}`} title={pNext.value || ''}>
                           {pNext.value || '—'}
                         </div>
                       </div>
@@ -1081,9 +1085,9 @@ export default function ImgMeta() {
                   i += 2;
                 } else {
                   cells.push(
-                    <div key={i} className="imgmeta-stat-cell">
-                      <div className="imgmeta-stat-label">{p.label}</div>
-                      <div className={`imgmeta-stat-value ${p.value ? '' : 'not-available'}`} title={p.value || ''}>
+                    <div key={i} className="flex flex-col gap-1 bg-app border border-border/40 rounded-lg p-2.5">
+                      <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{p.label}</div>
+                      <div className={`text-sm font-bold text-text-main truncate font-mono ${p.value ? '' : 'opacity-40 font-normal'}`} title={p.value || ''}>
                         {p.value || '—'}
                       </div>
                     </div>
@@ -1099,10 +1103,10 @@ export default function ImgMeta() {
     }
 
     if (!anyGroup) {
-      return <div className="imgmeta-no-tags-cam">No matching parameters found.</div>;
+      return <div className="text-center py-8 text-sm text-text-muted italic bg-card border border-border rounded-xl">No matching parameters found.</div>;
     }
 
-    return groupsToRender;
+    return <div className="flex flex-col gap-4 w-full">{groupsToRender}</div>;
   };
 
   const getGroupedAdvancedTags = () => {
@@ -1172,22 +1176,22 @@ export default function ImgMeta() {
     
     if (matchCount === 0) {
       return (
-        <div id="imgmeta-no-tags" className="imgmeta-no-tags-msg" style={{ display: 'block' }}>
+        <div id="imgmeta-no-tags" className="text-center py-8 text-sm text-text-muted italic bg-card border border-border rounded-xl">
           No matching tags found.
         </div>
       );
     }
     
     return (
-      <div className="imgmeta-advanced-wrapper">
-        <div className="advanced-toolbar">
-          <span className="match-count">Found {matchCount} metadata tags</span>
-          <button className="btn-secondary btn-sm" onClick={toggleExpandAll}>
+      <div className="flex flex-col gap-4 w-full">
+        <div className="flex justify-between items-center gap-4 bg-card border border-border rounded-xl p-3 shadow-sm">
+          <span className="text-xs font-semibold text-text-main">Found {matchCount} metadata tags</span>
+          <Button variant="secondary" size="sm" onClick={toggleExpandAll}>
             {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
-          </button>
+          </Button>
         </div>
         
-        <div className="advanced-groups-list">
+        <div className="flex flex-col gap-3">
           {ADVANCED_GROUPS.map(g => {
             const list = groups[g.id] || [];
             if (list.length === 0) return null;
@@ -1195,35 +1199,35 @@ export default function ImgMeta() {
             const isCollapsed = collapsedGroups[g.id];
             
             return (
-              <div key={g.id} className={`advanced-group-card ${isCollapsed ? 'collapsed' : ''}`}>
+              <div key={g.id} className="border border-border bg-card rounded-xl shadow-sm overflow-hidden">
                 <div
-                  className="advanced-group-header"
+                  className="flex justify-between items-center p-3 cursor-pointer select-none hover:bg-app/40 transition-colors"
                   onClick={() => setCollapsedGroups(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
                 >
-                  <div className="header-label">
-                    <span className="group-icon">{g.icon}</span>
-                    <span className="group-name">{g.label}</span>
-                    <span className="group-count">({list.length})</span>
+                  <div className="flex items-center gap-2 font-semibold text-sm text-text-main">
+                    <span className="text-accent">{g.icon}</span>
+                    <span>{g.label}</span>
+                    <span className="text-text-muted font-normal text-xs">({list.length})</span>
                   </div>
-                  <span className="collapse-arrow">{isCollapsed ? '▼' : '▲'}</span>
+                  <span className="text-xs text-text-muted">{isCollapsed ? '▼' : '▲'}</span>
                 </div>
                 
                 {!isCollapsed && (
-                  <div className="advanced-group-body">
-                    <table className="imgmeta-table">
+                  <div className="border-t border-border overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr>
-                          <th>Tag Name</th>
-                          <th>Value</th>
-                          <th>Description</th>
+                        <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                          <th className="p-3 pl-4">Tag Name</th>
+                          <th className="p-3">Value</th>
+                          <th className="p-3 pr-4">Description</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-border">
                         {list.map(tag => (
-                          <tr key={tag.name}>
-                            <td>{tag.name}</td>
-                            <td title={tag.value}>{tag.value}</td>
-                            <td title={tag.description}>{tag.description || '—'}</td>
+                          <tr key={tag.name} className="hover:bg-app/20 transition-colors font-mono">
+                            <td className="p-3 pl-4 font-semibold text-text-main whitespace-nowrap">{tag.name}</td>
+                            <td className="p-3 text-text-main max-w-[240px] truncate" title={tag.value}>{tag.value}</td>
+                            <td className="p-3 pr-4 text-text-muted max-w-[280px] truncate" title={tag.description}>{tag.description || '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1242,25 +1246,26 @@ export default function ImgMeta() {
     const comparedImages = images.filter(img => compareSelectedIds.includes(img.id));
 
     return (
-      <div className="imgmeta-compare-container card-glass">
-        <div className="compare-header">
-          <h3>⚖️ Side-by-Side Metadata Comparison</h3>
-          <button className="btn-secondary btn-sm" onClick={() => setCompareMode(false)}>
+      <div className="border border-border bg-card rounded-xl p-5 flex flex-col gap-5 shadow-sm w-full">
+        <div className="flex justify-between items-center gap-4 border-b border-border pb-3">
+          <h3 className="text-sm font-bold text-text-main">⚖️ Side-by-Side Metadata Comparison</h3>
+          <Button variant="secondary" size="sm" onClick={() => setCompareMode(false)}>
             Back to Detail View
-          </button>
+          </Button>
         </div>
-        <div className="imgmeta-table-container compare-table-wrapper">
+        <div className="overflow-x-auto rounded-xl border border-border">
           {comparedImages.length > 0 ? (
-            <table className="imgmeta-table compare-table">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr>
-                  <th>Field / Parameter</th>
+                <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                  <th className="p-3.5 pl-4 w-48 shrink-0">Field / Parameter</th>
                   {comparedImages.map(img => (
-                    <th key={img.id} className={img.id === selectedImageId ? 'active-col' : ''}>
-                      <div className="compare-th-content">
-                        <span className="compare-filename" title={img.name}>{img.name}</span>
+                    <th key={img.id} className={`p-3.5 min-w-[200px] max-w-[300px] ${img.id === selectedImageId ? 'bg-accent-light/10 border-x border-accent/20' : ''}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-text-main truncate" title={img.name}>{img.name}</span>
                         <button
-                          className="btn-close-sm"
+                          type="button"
+                          className="text-text-muted hover:text-red-500 text-sm font-bold cursor-pointer bg-transparent border-none p-0.5"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleCompareSelection(img.id);
@@ -1274,16 +1279,16 @@ export default function ImgMeta() {
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border font-mono">
                 {COMPARE_FIELDS.map((field, fIdx) => (
-                  <tr key={fIdx}>
-                    <td className="compare-field-label">{field.label}</td>
+                  <tr key={fIdx} className="hover:bg-app/10 transition-colors">
+                    <td className="p-3.5 pl-4 font-bold text-text-muted bg-app/20 text-xs font-sans">{field.label}</td>
                     {comparedImages.map(img => {
                       const val = field.fn(img);
                       return (
                         <td
                           key={img.id}
-                          className={`${img.id === selectedImageId ? 'active-col' : ''} ${!val ? 'not-available' : ''}`}
+                          className={`p-3.5 truncate max-w-[300px] ${img.id === selectedImageId ? 'bg-accent-light/5 border-x border-accent/10' : ''} ${!val ? 'opacity-40 font-normal font-sans' : 'text-text-main font-semibold'}`}
                         >
                           {val || '—'}
                         </td>
@@ -1294,9 +1299,9 @@ export default function ImgMeta() {
               </tbody>
             </table>
           ) : (
-            <div className="compare-empty-state">
-              <p>No images selected for comparison.</p>
-              <p className="small text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-app/20">
+              <p className="text-sm font-semibold text-text-muted">No images selected for comparison.</p>
+              <p className="text-xs text-text-muted/60 mt-1">
                 Use the checkboxes on the thumbnails above to select images to compare.
               </p>
             </div>
@@ -1312,12 +1317,16 @@ export default function ImgMeta() {
     const isJpeg = activeImage && (activeImage.type === 'JPEG' || activeImage.type === 'JPG' || activeImage.name.toLowerCase().endsWith('.jpg') || activeImage.name.toLowerCase().endsWith('.jpeg'));
     
     return (
-      <div className="imgmeta-top-bar card-glass">
-        <div className="thumbnails-scroll-container">
+      <div className="flex flex-col gap-4 border-b border-border pb-5 mb-6">
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 w-full">
           {images.map(img => (
             <div
               key={img.id}
-              className={`thumbnail-card ${img.id === selectedImageId ? 'selected' : ''}`}
+              className={`relative flex items-center gap-2.5 bg-card border rounded-xl p-1.5 cursor-pointer hover:border-accent transition-all shrink-0 w-48 ${
+                img.id === selectedImageId 
+                  ? 'border-accent bg-accent-light/10 shadow-sm' 
+                  : 'border-border'
+              }`}
               onClick={() => {
                 setSelectedImageId(img.id);
               }}
@@ -1325,7 +1334,7 @@ export default function ImgMeta() {
               {images.length > 1 && (
                 <input
                   type="checkbox"
-                  className="thumb-compare-checkbox"
+                  className="absolute top-2 left-2 z-10 rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                   checked={compareSelectedIds.includes(img.id)}
                   onChange={(e) => {
                     e.stopPropagation();
@@ -1335,105 +1344,128 @@ export default function ImgMeta() {
                   title="Include in comparison"
                 />
               )}
-              <div className="thumb-img-wrapper">
+              <div className="relative w-12 h-12 rounded-lg bg-app overflow-hidden flex items-center justify-center border border-border/50 shrink-0">
                 {img.previewSrc ? (
-                  <img src={img.previewSrc} alt={img.name} />
+                  <img src={img.previewSrc} alt={img.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="thumb-raw-icon">RAW</div>
+                  <div className="text-[10px] font-black text-text-muted">RAW</div>
                 )}
                 <button
-                  className="thumb-remove-btn"
+                  type="button"
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center text-xs font-bold cursor-pointer opacity-0 hover:opacity-100 parent-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemoveImage(img.id);
                   }}
+                  style={{ transform: 'scale(0.85)' }}
                   title="Remove image"
                 >
                   ×
                 </button>
               </div>
-              <div className="thumb-info">
-                <span className="thumb-name" title={img.name}>{img.name}</span>
-                <span className="thumb-size">{img.strippedInfo ? img.strippedInfo.formattedSize : img.formattedSize}</span>
+              <div className="flex flex-col justify-center min-w-0 flex-1">
+                <span className="text-xs font-semibold text-text-main truncate pr-2" title={img.name}>{img.name}</span>
+                <span className="text-[10px] text-text-muted mt-0.5">{img.strippedInfo ? img.strippedInfo.formattedSize : img.formattedSize}</span>
               </div>
             </div>
           ))}
           
-          <div className="thumbnail-add-card" onClick={handleDropzoneClick}>
-            <div className="add-icon">+</div>
+          <div 
+            className="flex items-center justify-center gap-2 bg-app border border-border border-dashed rounded-xl p-3 cursor-pointer hover:border-accent hover:bg-accent-light/5 text-xs font-semibold text-text-muted shrink-0 w-36 select-none transition-colors"
+            onClick={handleDropzoneClick}
+          >
+            <span className="text-base font-bold text-accent">+</span>
             <span>Add More</span>
           </div>
         </div>
         
-        <div className="top-bar-actions">
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-1 bg-app/40 border border-border rounded-xl p-3">
           {/* Metadata Stripping inline */}
-          {activeImage && isJpeg && (
-            <div className="top-bar-stripper">
+          {activeImage && isJpeg ? (
+            <div className="flex items-center gap-2.5">
               {!activeImage.strippedInfo ? (
                 <>
-                  <span className="stripper-mini-label">Strip:</span>
-                  <button
-                    className="btn-accent btn-sm"
+                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0">Strip Meta:</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-1 hover:text-accent font-bold"
                     onClick={() => handleStripMetadata(activeImage, 'private')}
                   >
                     🔒 Private
-                  </button>
-                  <button
-                    className="btn-accent-outline btn-sm"
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-1 hover:text-red-500 font-bold"
                     onClick={() => handleStripMetadata(activeImage, 'all')}
                   >
                     🗑️ All
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <span className="stripper-mini-status">
-                    ✓ {activeImage.strippedInfo.mode === 'private' ? 'Private' : 'All'}
+                  <span className="text-xs font-bold text-accent">
+                    ✓ Stripped: {activeImage.strippedInfo.mode === 'private' ? 'Private Only' : 'All Meta'}
                   </span>
-                  <button
-                    className="btn-primary btn-sm"
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => downloadStrippedFile(activeImage)}
                   >
-                    💾 Download
-                  </button>
-                  <button
-                    className="btn-secondary btn-sm"
+                    💾 Download Stripped
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleRestoreOriginal(activeImage.id)}
                   >
-                    🔄 Restore
-                  </button>
+                    🔄 Restore Original
+                  </Button>
                 </>
               )}
             </div>
+          ) : (
+            <div className="text-xs text-text-muted/60 italic">Metadata stripping is only supported for JPEG/JPG format.</div>
           )}
 
-          <button
-            className={`btn-secondary ${compareMode ? 'active' : ''}`}
-            onClick={() => setCompareMode(!compareMode)}
-            title="Toggle side-by-side comparison"
-          >
-            ⚖️ Compare {images.length > 1 ? `(${compareSelectedIds.length})` : ''}
-          </button>
-          <button
-            className="btn-primary"
-            onClick={handleExportZip}
-            title="Export all images as a ZIP archive"
-          >
-            📦 Export to Folder (.zip)
-          </button>
-          <button className="btn-secondary" onClick={handleClear}>
-            Clear All
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={compareMode ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setCompareMode(!compareMode)}
+              title="Toggle side-by-side comparison"
+              className="flex items-center gap-1.5"
+            >
+              <span>⚖️ Compare {images.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleExportZip}
+              title="Export all images as a ZIP archive"
+              className="flex items-center gap-1.5"
+            >
+              <span>📦 Export ZIP</span>
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleClear}>
+              Clear All
+            </Button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <article id="tool-imgmeta" className="tool-card tool-card--wide active">
-      <h2>Image Metadata</h2>
+    <Card id="tool-imgmeta" variant="tool" size="wide">
+      <ToolHeader 
+        title="Image Metadata Viewer &amp; Stripper" 
+        description="Extract camera exposure tags (EXIF), colors, GPS data, IPTC, and XMP metadata from your files, or strip sensitive geolocation and camera details cleanly." 
+      />
+      
       <div 
-        className="imgmeta-container"
+        className="relative flex flex-col mt-6 min-h-[300px]"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -1444,21 +1476,21 @@ export default function ImgMeta() {
           id="imgmeta-file-input"
           accept="image/*,.cr3,.CR3"
           multiple
-          style={{ display: 'none' }}
+          className="hidden"
           ref={fileInputRef}
           onChange={handleFileChange}
         />
         
         {/* Full-width drag over overlay when files are already present */}
         {dragOver && images.length > 0 && (
-          <div className="imgmeta-drag-overlay">
-            <div className="overlay-content">
-              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <div className="absolute inset-0 bg-accent/15 border-2 border-dashed border-accent rounded-xl flex items-center justify-center z-30 backdrop-blur-[2px] transition-all">
+            <div className="flex flex-col items-center gap-3 text-accent text-center bg-card border border-border rounded-2xl p-6 shadow-lg">
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="animate-bounce">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <p>Drop files to add to Image Metadata</p>
+              <p className="text-sm font-bold">Drop files to add to Image Metadata</p>
             </div>
           </div>
         )}
@@ -1470,25 +1502,27 @@ export default function ImgMeta() {
         {images.length === 0 && (
           <div
             id="imgmeta-dropzone"
-            className={`imgmeta-dropzone ${dragOver ? 'dragover' : ''}`}
+            className={`flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-10 cursor-pointer bg-card/50 hover:bg-card/80 hover:border-accent transition-all text-center select-none ${dragOver ? 'border-accent bg-accent/5' : ''}`}
             onClick={handleDropzoneClick}
           >
-            <div className="dropzone-content">
-              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <div className="flex flex-col items-center gap-4 max-w-sm">
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted/60">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <p className="dropzone-title">Drag &amp; drop images here</p>
-              <p className="dropzone-or">or</p>
-              <button 
+              <div>
+                <p className="text-base font-bold text-text-main">Drag &amp; drop images here</p>
+                <p className="text-xs text-text-muted mt-1">or</p>
+              </div>
+              <Button 
                 type="button" 
-                className="btn-secondary" 
+                variant="secondary" 
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
               >
                 Browse Files
-              </button>
-              <p className="dropzone-note">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
+              </Button>
+              <p className="text-[10px] text-text-muted/60 leading-relaxed">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
             </div>
           </div>
         )}
@@ -1497,60 +1531,61 @@ export default function ImgMeta() {
         {images.length > 0 && compareMode && renderCompareView()}
 
         {images.length > 0 && !compareMode && activeImage && (
-          <div id="imgmeta-results" className="imgmeta-results-grid" style={{ display: 'grid' }}>
+          <div id="imgmeta-results" className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            
             {/* Left Column: File Info & Preview & Stripper Diff */}
-            <div className="imgmeta-preview-col">
-              <div className="card-glass imgmeta-preview-card">
-                <div className="imgmeta-img-container">
+            <div className="lg:col-span-2 flex flex-col gap-6 w-full">
+              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                <div className="relative bg-app/80 flex items-center justify-center p-4 border-b border-border/60 min-h-[180px] max-h-[360px] overflow-hidden">
                   {displayedPreviewSrc && (
-                    <img id="imgmeta-preview-img" alt="Preview" src={displayedPreviewSrc} style={{ display: 'block' }} />
+                    <img id="imgmeta-preview-img" alt="Preview" src={displayedPreviewSrc} className="max-w-full max-h-[320px] rounded-lg object-contain shadow-sm" />
                   )}
                   {isRaw && (
-                    <div id="imgmeta-raw-icon" className="imgmeta-raw-icon" style={{ display: 'flex' }}>
-                      <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <div id="imgmeta-raw-icon" className="flex flex-col items-center gap-2 text-text-muted/40">
+                      <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
                       </svg>
-                      <span>RAW IMAGE</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">RAW Image (No Thumbnail)</span>
                     </div>
                   )}
                 </div>
-                <div className="imgmeta-file-meta">
-                  <h3 id="imgmeta-file-name">{activeImage.name}</h3>
-                  <p><span className="label">Format:</span> <span>{activeImage.type}</span></p>
-                  <p><span className="label">Size:</span> <span>{displayedSize}</span></p>
+                <div className="p-4 flex flex-col gap-1.5 bg-card">
+                  <h3 id="imgmeta-file-name" className="text-sm font-bold text-text-main truncate" title={activeImage.name}>{activeImage.name}</h3>
+                  <div className="flex justify-between items-center text-xs mt-1 border-t border-border/40 pt-2 text-text-muted">
+                    <p><span className="font-semibold text-text-main">Format:</span> <span className="font-mono">{activeImage.type}</span></p>
+                    <p><span className="font-semibold text-text-main">Size:</span> <span className="font-mono">{displayedSize}</span></p>
+                  </div>
                 </div>
               </div>
 
               {/* Stripper Diff (Visual list of removed vs retained tags) */}
               {activeImage.strippedInfo && (
-                <div className="card-glass imgmeta-stripper-card">
-                  <h4>Stripped Tags Verification</h4>
-                  <div className="stripper-result">
-                    <div className="stripper-diff">
-                      <div className="diff-section removed">
-                        <span className="diff-label">Removed ({activeImage.strippedInfo.removedTags.length})</span>
-                        <div className="diff-tags-list">
-                          {activeImage.strippedInfo.removedTags.slice(0, 10).map(t => (
-                            <span key={t} className="tag-pill removed">{t}</span>
-                          ))}
-                          {activeImage.strippedInfo.removedTags.length > 10 && (
-                            <span className="tag-pill more">+{activeImage.strippedInfo.removedTags.length - 10} more</span>
-                          )}
-                          {activeImage.strippedInfo.removedTags.length === 0 && <span className="no-tags">None</span>}
-                        </div>
+                <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+                  <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Stripped Tags Verification</h4>
+                  <div className="flex flex-col gap-3.5 border border-border rounded-lg p-3 bg-app/30">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Removed ({activeImage.strippedInfo.removedTags.length})</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeImage.strippedInfo.removedTags.slice(0, 10).map(t => (
+                          <span key={t} className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 text-[10px] font-mono border border-red-500/20">{t}</span>
+                        ))}
+                        {activeImage.strippedInfo.removedTags.length > 10 && (
+                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">+{activeImage.strippedInfo.removedTags.length - 10} more</span>
+                        )}
+                        {activeImage.strippedInfo.removedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">None</span>}
                       </div>
-                      <div className="diff-section retained">
-                        <span className="diff-label">Retained ({activeImage.strippedInfo.retainedTags.length})</span>
-                        <div className="diff-tags-list">
-                          {activeImage.strippedInfo.retainedTags.slice(0, 10).map(t => (
-                            <span key={t} className="tag-pill retained">{t}</span>
-                          ))}
-                          {activeImage.strippedInfo.retainedTags.length > 10 && (
-                            <span className="tag-pill more">+{activeImage.strippedInfo.retainedTags.length - 10} more</span>
-                          )}
-                          {activeImage.strippedInfo.retainedTags.length === 0 && <span className="no-tags">None</span>}
-                        </div>
+                    </div>
+                    <div className="flex flex-col gap-2 border-t border-border/60 pt-3">
+                      <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Retained ({activeImage.strippedInfo.retainedTags.length})</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeImage.strippedInfo.retainedTags.slice(0, 10).map(t => (
+                          <span key={t} className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono border border-emerald-500/20">{t}</span>
+                        ))}
+                        {activeImage.strippedInfo.retainedTags.length > 10 && (
+                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">+{activeImage.strippedInfo.retainedTags.length - 10} more</span>
+                        )}
+                        {activeImage.strippedInfo.retainedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">None</span>}
                       </div>
                     </div>
                   </div>
@@ -1558,41 +1593,47 @@ export default function ImgMeta() {
               )}
 
               {/* Standard Actions */}
-              <div className="imgmeta-actions">
-                <button
+              <div className="flex items-center gap-2">
+                <Button
                   id="imgmeta-download-json"
-                  className="btn-primary flex-1"
+                  variant="primary"
+                  className="flex-1 flex items-center justify-center gap-1.5"
                   onClick={() => downloadJson(displayedTags, activeImage.name)}
                 >
-                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  Export JSON
-                </button>
-                <button id="imgmeta-clear" className="btn-secondary" onClick={() => handleRemoveImage(activeImage.id)}>Remove</button>
+                  <span>Export JSON</span>
+                </Button>
+                <Button id="imgmeta-clear" variant="secondary" onClick={() => handleRemoveImage(activeImage.id)}>Remove</Button>
               </div>
             </div>
 
             {/* Right Column: Metadata Tabs, Table & GPS Map */}
-            <div className="imgmeta-data-col">
-              <div className="imgmeta-header-actions">
-                <div className="imgmeta-tabs">
+            <div className="lg:col-span-3 flex flex-col gap-4 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-3">
+                <div className="flex gap-1 overflow-x-auto pb-1 max-w-full">
                   {['all', 'exposure', 'colors', 'optics', 'others', 'advanced'].map(tab => (
                     <button
                       key={tab}
-                      className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                        activeTab === tab 
+                          ? 'bg-accent border-accent text-white shadow-sm' 
+                          : 'bg-card border-border text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
                       onClick={() => setActiveTab(tab)}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                   ))}
                 </div>
-                <div className="imgmeta-search-wrapper">
+                <div className="relative max-w-xs w-full">
                   <input
                     type="text"
                     id="imgmeta-tag-search"
+                    className="w-full bg-card border border-border rounded-lg pl-3 pr-8 py-1.5 text-xs text-text-main outline-none focus:border-accent"
                     placeholder="Search tags..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1602,47 +1643,46 @@ export default function ImgMeta() {
 
               {/* Param Group View */}
               {activeTab !== 'advanced' && (
-                <div id="imgmeta-cam-view" className="imgmeta-cam-view" style={{ display: 'flex' }}>
+                <div id="imgmeta-cam-view" className="flex flex-col gap-4 w-full">
                   {renderCamView()}
                   
                   {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
                   {gpsCoords && (
-                    <div className="card-glass imgmeta-gps-card green-region-gps">
-                      <div className="green-region-gps-inner">
-                        <div className="gps-header">
-                          <h4>📍 GPS Location</h4>
-                          <p className="coords-text">{gpsCoord}</p>
-                          <div className="gps-actions">
-                            <button
-                              type="button"
-                              className="btn-accent-outline btn-sm"
+                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
+                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
+                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
+                          <div className="flex items-center gap-2 ml-auto">
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               onClick={() => setShowMap(!showMap)}
                             >
-                              {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
-                            </button>
+                              {showMap ? 'Hide Map' : 'Show Map'}
+                            </Button>
                             <a
                               href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="btn-secondary btn-sm"
-                              style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
                             >
                               Google Maps ↗
                             </a>
                           </div>
                         </div>
                         {showMap && (
-                          <div className="gps-map-container large-map">
+                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
                             <iframe
                               title="GPS Location Map"
                               width="100%"
-                              height="380"
+                              height="320"
                               frameBorder="0"
                               scrolling="no"
                               marginHeight="0"
                               marginWidth="0"
                               src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                              className="w-full border-none"
                             ></iframe>
                           </div>
                         )}
@@ -1654,47 +1694,46 @@ export default function ImgMeta() {
 
               {/* Advanced Table View - Collapsible Groups */}
               {activeTab === 'advanced' && (
-                <div className="imgmeta-advanced-wrapper-outer" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="flex flex-col gap-4 w-full">
                   {renderAdvancedGroups()}
                   
                   {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
                   {gpsCoords && (
-                    <div className="card-glass imgmeta-gps-card green-region-gps">
-                      <div className="green-region-gps-inner">
-                        <div className="gps-header">
-                          <h4>📍 GPS Location</h4>
-                          <p className="coords-text">{gpsCoord}</p>
-                          <div className="gps-actions">
-                            <button
-                              type="button"
-                              className="btn-accent-outline btn-sm"
+                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
+                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
+                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
+                          <div className="flex items-center gap-2 ml-auto">
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               onClick={() => setShowMap(!showMap)}
                             >
-                              {showMap ? '🙈 Hide Map' : '🗺️ Show Map'}
-                            </button>
+                              {showMap ? 'Hide Map' : 'Show Map'}
+                            </Button>
                             <a
                               href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="btn-secondary btn-sm"
-                              style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
                             >
                               Google Maps ↗
                             </a>
                           </div>
                         </div>
                         {showMap && (
-                          <div className="gps-map-container large-map">
+                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
                             <iframe
                               title="GPS Location Map"
                               width="100%"
-                              height="380"
+                              height="320"
                               frameBorder="0"
                               scrolling="no"
                               marginHeight="0"
                               marginWidth="0"
                               src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              style={{ border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '12px' }}
+                              className="w-full border-none"
                             ></iframe>
                           </div>
                         )}
@@ -1707,7 +1746,7 @@ export default function ImgMeta() {
           </div>
         )}
       </div>
-      {status && <p className="small status-msg" id="imgmeta-status">{status}</p>}
-    </article>
+      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm mt-4 text-center" id="imgmeta-status">{status}</p>}
+    </Card>
   );
 }

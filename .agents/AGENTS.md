@@ -159,7 +159,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | RandomWheel | done |
 | TypingSpeedTest | done |
 | NetworkSpeedTest | done |
-| QrBarcodeGenerator | pending |
+| QrBarcodeGenerator | done |
 | QrBarcodeScanner | pending |
 | WebsiteFontExtractor | done |
 | FolderAnalyzer | done |

@@ -40,7 +40,7 @@ const toolDetails = {
   },
   "tool-slash": {
     title: "Slashes Converter",
-    desc: "Switch \ to /."
+    desc: "Switch \\ to /."
   },
   "tool-casing": {
     title: "Casing Switcher",
@@ -64,7 +64,7 @@ const toolDetails = {
   },
   "tool-ascii": {
     title: "ASCII Converter",
-    desc: "Text to ASCII codes."
+    desc: "Text to ASCII codes; ASCII codes to text."
   },
   "tool-unicode": {
     title: "Unicode Converter",

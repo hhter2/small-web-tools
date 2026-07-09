@@ -75,7 +75,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-slash',
       title: 'Slashes Converter',
       category: 'developer',
-      desc: 'Switch \ to /.',
+      desc: 'Switch \\ to /.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <line x1="6" y1="18" x2="18" y2="6"></line>
@@ -147,7 +147,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-ascii',
       title: 'ASCII Converter',
       category: 'developer',
-      desc: 'Convert text characters to their ASCII codes and vice versa.',
+      desc: 'Text to ASCII codes; ASCII codes to text.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="4 17 10 11 4 5"></polyline>

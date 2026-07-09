@@ -140,7 +140,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | Tool | Status |
 |---|---|
 | PasswordGenerator | pending |
-| ColorConverter | pending |
+| ColorConverter | done |
 | SlashesConverter | done |
 | CasingSwitcher | done |
 | WordCounter | done |

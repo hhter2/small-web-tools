@@ -95,9 +95,8 @@ React DOM entry — calls `ReactDOM.createRoot(...).render(<App />)`. Imports `s
 
 ### `src/App.jsx`
 The central hub of the application:
-- Defines `toolDetails` (id → `{ title, desc }` for every tool)
+- Defines `navItems` array containing tool route IDs, names/tooltips, categories, and SVG icons
 - Defines `categories` (grouping tools by type: Text, Developer, Network, Media, File, Game, Bio)
-- Defines `tools` array with route ID, component reference, category, tags
 - Manages client-side routing via `useState` (no React Router; URL hash `#tool-id` is used)
 - Renders the top navigation bar, sidebar, breadcrumb, and the active tool component
 - Injects version info via Vite `define` globals (`__APP_VERSION__`, `__SHOW_CHANNEL_ALERT__`, `__APP_CHANNEL__`)
@@ -206,11 +205,11 @@ npm run preview
 ## Adding a New Tool — Checklist
 
 1. Create `src/components/<ToolName>.jsx`
-2. Import and register the component in `src/App.jsx`:
-   - Add entry to `toolDetails` (id, title, desc)
-   - Add entry to `tools` array (id, component, category, tags)
+2. Register and import the component in `src/App.jsx`:
    - Add `import` statement at the top
-3. Add the tool's card thumbnail/icon to `HomeGrid.jsx` if needed
+   - Add entry to the `navItems` array (id, name, tooltip, category, icon)
+   - Add a case inside `renderActiveTool` function to return the component
+3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
 4. Add styles to `src/styles.css`
 5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
 6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created

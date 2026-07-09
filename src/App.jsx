@@ -33,120 +33,7 @@ const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
 const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '';
 
-const toolDetails = {
-  "tool-home": {
-    title: "Dashboard",
-    desc: "A premium dashboard of handy utility tools."
-  },
-  "tool-slash": {
-    title: "Slashes Converter",
-    desc: "Switch \\ to /."
-  },
-  "tool-casing": {
-    title: "Casing Switcher",
-    desc: "Support full sentence, single  words, specific term, etc."
-  },
-  "tool-wc": {
-    title: "Word & Character Counter",
-    desc: "Calculate the number of words and characters. Support English and Chinese."
-  },
-  "tool-date": {
-    title: "Date Counter",
-    desc: "Calculate for the dates."
-  },
-  "tool-currency": {
-    title: "Currency Converter & Counter",
-    desc: "Resource by Live API."
-  },
-  "tool-color": {
-    title: "Color Code Converter",
-    desc: "Transfer and select colors between HEX, RGB, and other formats."
-  },
-  "tool-ascii": {
-    title: "ASCII Converter",
-    desc: "Text to ASCII codes; ASCII codes to text."
-  },
-  "tool-unicode": {
-    title: "Unicode Converter",
-    desc: "Text to Unicode; Unicode to text."
-  },
-  "tool-base": {
-    title: "Base Converter",
-    desc: "Base conversion between binary, octal, decimal, and hexadecimal."
-  },
-  "tool-dna": {
-    title: "DNA/RNA Direction Transfer",
-    desc: "Swap 5'/3' directions and show the anti-sense brand. Support with the figure."
-  },
-  "tool-iplookup": {
-    title: "IP Address Lookup",
-    desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
-  },
-  "tool-imgmeta": {
-    title: "Image Metadata",
-    desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
-  },
-  "tool-wheel": {
-    title: "Random Wheel",
-    desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
-  },
-  "tool-typing": {
-    title: "Typing Speed Test",
-    desc: "Test and improve your typing speed in English or Chinese with custom templates."
-  },
-  "tool-codon": {
-    title: "RNA Codon Table",
-    desc: "Find and learn amino acid with interactive."
-  },
-  "tool-qrcode": {
-    title: "QR Code Generator",
-    desc: "Create fully custimized QR code for free."
-  },
-  "tool-barcode": {
-    title: "Barcode Generator",
-    desc: "Generate multiple format barcodes."
-  },
-  "tool-speedtest": {
-    title: "Network Speed Test",
-    desc: "Test the real-time network speed and latency."
-  },
-  "tool-password": {
-    title: "Secure Password Generator",
-    desc: "Generate secure passwords. Use CSPRNG for generating."
-  },
-  "tool-pwstrength": {
-    title: "Password Strength Checker",
-    desc: "Check the passward is strengh or not."
-  },
-  "tool-officemeta": {
-    title: "Office Metadata Reader",
-    desc: "Show the metadata from office files."
-  },
-  "tool-fontextractor": {
-    title: "Website Font Extractor",
-    desc: "Scan and extract font of any URLs. Also download them and find the similarities."
-  },
-  "tool-qrbarcodescan": {
-    title: "QR & Barcode Scanner",
-    desc: "Scan the QR and barcodes. Support upload and camera."
-  },
-  "tool-audiometa": {
-    title: "Audio Metadata Reader",
-    desc: "Extract and analyze metadata tags, technical parameters entirely locally without upload."
-  },
-  "tool-videometa": {
-    title: "Video Metadata Reader",
-    desc: "Extract and analyze encoding format, resolution, and other parameters entirely locally without upload."
-  },
-  "tool-mediasplit": {
-    title: "Media Splitter",
-    desc: "Split a video's audio track and silent video track locally."
-  },
-  "tool-folder-analyzer": {
-    title: "Folder Structure Analyzer",
-    desc: "Obtain the folder structure by one click."
-  }
-};
+
 const categories = [
   {
     id: 'text',
@@ -782,7 +669,9 @@ export default function App() {
     }
   };
 
-  const activeDetails = toolDetails[activeTool] || toolDetails['tool-home'];
+  const activeTitle = activeTool === 'tool-home'
+    ? 'Dashboard'
+    : (navItems.find(item => item.id === activeTool)?.name || '');
 
   return (
     <div className={`app-container ${SHOW_CHANNEL_ALERT ? 'has-banner' : ''}`}>
@@ -1231,7 +1120,7 @@ export default function App() {
                 <span className="top-bar-sep">/</span>
               </>
             )}
-            <span className="top-bar-title">{activeDetails.title}</span>
+            <span className="top-bar-title">{activeTitle}</span>
           </div>
           <div className="top-bar-right">
           </div>

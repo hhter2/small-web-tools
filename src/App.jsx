@@ -100,6 +100,23 @@ const categories = [
   }
 ];
 
+const staticTools = [
+  'tool-casing',
+  'tool-ascii',
+  'tool-unicode',
+  'tool-fontextractor',
+  'tool-speedtest',
+  'tool-color',
+  'tool-dna',
+  'tool-currency',
+  'tool-qrcode',
+  'tool-barcode',
+  'tool-password',
+  'tool-pwstrength',
+  'tool-qrbarcodescan',
+  'tool-wheel'
+];
+
 const navItems = [
   {
     id: 'tool-slash',
@@ -992,7 +1009,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main
-          className="flex-1 min-w-0 p-0 flex flex-col overflow-y-auto overflow-x-hidden"
+          className={`flex-1 min-w-0 p-0 flex flex-col overflow-x-hidden ${staticTools.includes(activeTool) ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-auto'}`}
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
@@ -1250,88 +1267,90 @@ export default function App() {
           </div>
 
           {/* Tool Stage */}
-          <section className="w-full flex-1 flex flex-col items-center px-12 py-8 max-md:pt-[100px] max-md:px-[14px] max-[500px]:px-[10px]">
+          <section className={`w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'py-4 md:py-3 max-md:pt-[100px]' : 'py-8 max-md:pt-[100px]'}`}>
             {renderActiveTool()}
           </section>
 
           {/* Footer */}
-          <footer className="mt-auto w-full bg-footer border-t border-border">
-            {/* Footer Links Grid */}
-            {activeTool === 'tool-home' && (
-              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
-                {categories.map(cat => {
-                  const catItems = navItems.filter(item => item.category === cat.id);
-                  if (catItems.length === 0) return null;
-                  return (
-                    <div key={cat.id} className="flex flex-col gap-[10px]">
-                      <button
-                        className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
-                        onClick={() => {
-                          setActiveTool('tool-home');
-                          setSelectedHomeTab(cat.id);
-                        }}
-                      >
-                        {cat.name}
-                      </button>
-                      {cat.id === 'utilities' ? (
-                        (() => {
-                          const subGroups = {};
-                          catItems.forEach(item => {
-                            const sg = item.subGroup || 'Utilities';
-                            if (!subGroups[sg]) subGroups[sg] = [];
-                            subGroups[sg].push(item);
-                          });
-                          const sortedSubGroupNames = Object.keys(subGroups).sort();
-                          return sortedSubGroupNames.map(sgName => (
-                            <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
-                              <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
-                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                                <button
-                                  key={item.id}
-                                  className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
-                                  onClick={() => handleNavClick(item.id)}
-                                >
-                                  {item.name}
-                                </button>
-                              ))}
-                            </div>
-                          ));
-                        })()
-                      ) : (
-                        catItems.map(item => (
-                          <button
-                            key={item.id}
-                            className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
-                            onClick={() => handleNavClick(item.id)}
-                          >
-                            {item.name}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          {!staticTools.includes(activeTool) && (
+            <footer className="mt-auto w-full bg-footer border-t border-border">
+              {/* Footer Links Grid */}
+              {activeTool === 'tool-home' && (
+                <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
+                  {categories.map(cat => {
+                    const catItems = navItems.filter(item => item.category === cat.id);
+                    if (catItems.length === 0) return null;
+                    return (
+                      <div key={cat.id} className="flex flex-col gap-[10px]">
+                        <button
+                          className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
+                          onClick={() => {
+                            setActiveTool('tool-home');
+                            setSelectedHomeTab(cat.id);
+                          }}
+                        >
+                          {cat.name}
+                        </button>
+                        {cat.id === 'utilities' ? (
+                          (() => {
+                            const subGroups = {};
+                            catItems.forEach(item => {
+                              const sg = item.subGroup || 'Utilities';
+                              if (!subGroups[sg]) subGroups[sg] = [];
+                              subGroups[sg].push(item);
+                            });
+                            const sortedSubGroupNames = Object.keys(subGroups).sort();
+                            return sortedSubGroupNames.map(sgName => (
+                              <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
+                                <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
+                                {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                                  <button
+                                    key={item.id}
+                                    className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
+                                    onClick={() => handleNavClick(item.id)}
+                                  >
+                                    {item.name}
+                                  </button>
+                                ))}
+                              </div>
+                            ));
+                          })()
+                        ) : (
+                          catItems.map(item => (
+                            <button
+                              key={item.id}
+                              className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
+                              onClick={() => handleNavClick(item.id)}
+                            >
+                              {item.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-            {/* Footer Bottom Bar */}
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-3 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-[500px]:px-4 max-[500px]:py-[10px]">
-              {/* Left spacer */}
-              <div></div>
-              {/* Center: Brand & Copyright */}
-              <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
-                <span className="font-display font-bold text-text-main">Small Web Tools</span>
-                <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
-                <span className="text-text-muted">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
+              {/* Footer Bottom Bar */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-3 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-[500px]:px-4 max-[500px]:py-[10px]">
+                {/* Left spacer */}
+                <div></div>
+                {/* Center: Brand & Copyright */}
+                <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
+                  <span className="font-display font-bold text-text-main">Small Web Tools</span>
+                  <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
+                  <span className="text-text-muted">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
+                </div>
+                {/* Right: Social Links */}
+                <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
+                  <button className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="GitHub" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                  </button>
+                </div>
               </div>
-              {/* Right: Social Links */}
-              <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
-                <button className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="GitHub" aria-label="GitHub">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                </button>
-              </div>
-            </div>
-          </footer>
+            </footer>
+          )}
         </main>
 
         {/* Collapsed Sidebar Hover Tooltip */}

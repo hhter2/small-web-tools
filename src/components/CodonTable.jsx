@@ -1328,17 +1328,6 @@ export default function CodonTable() {
               {/* Main table body */}
               <div className="flex flex-col relative">
 
-                {/* Right axis: Third Base — one row per third-base letter, aligned via grid */}
-                <div className="absolute right-0 top-0 bottom-0 w-11 flex flex-col justify-around py-2" aria-label="Third base in codon">
-                  {THIRD_BASES.map(b3 => {
-                    const colorClass = b3 === 'U' ? 'text-purple-400' : b3 === 'C' ? 'text-sky-400' : b3 === 'A' ? 'text-amber-400' : b3 === 'G' ? 'text-emerald-400' : '';
-                    return (
-                      <div key={b3} className="flex items-center justify-center" role="rowheader">
-                        <span className={`font-mono text-sm sm:text-base font-bold ${colorClass}`}>{b3}</span>
-                      </div>
-                    );
-                  })}
-                </div>
 
                 {BASES.map(b1 => {
                   const b1ColorClass = b1 === 'U' ? 'text-purple-400' : b1 === 'C' ? 'text-sky-400' : b1 === 'A' ? 'text-amber-400' : b1 === 'G' ? 'text-emerald-400' : '';

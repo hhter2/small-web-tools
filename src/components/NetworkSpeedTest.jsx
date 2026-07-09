@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 import Button from './ui/Button';
+import Spinner from './ui/Spinner';
+import ResultDisplay from './ui/ResultDisplay';
 
 // ─── Ping Test ───────────────────────────────────────────────────────────────
 const runPingTest = async (signal) => {
@@ -630,22 +632,13 @@ export default function NetworkSpeedTest() {
 
       {/* Phase labels */}
       {phase === 'ping' && (
-        <div className="loader-container" style={{ marginBottom: '20px' }}>
-          <div className="spinner" />
-          <span>Testing latency (ping)…</span>
-        </div>
+        <Spinner container label="Testing latency (ping)…" className="mb-5" />
       )}
       {phase === 'download' && (
-        <div className="loader-container" style={{ marginBottom: '20px' }}>
-          <div className="spinner" />
-          <span>Measuring download speed ({progress.toFixed(0)}%)…</span>
-        </div>
+        <Spinner container label={`Measuring download speed (${progress.toFixed(0)}%)…`} className="mb-5" />
       )}
       {phase === 'upload' && (
-        <div className="loader-container" style={{ marginBottom: '20px' }}>
-          <div className="spinner" />
-          <span>Measuring upload speed ({progress.toFixed(0)}%)…</span>
-        </div>
+        <Spinner container label={`Measuring upload speed (${progress.toFixed(0)}%)…`} className="mb-5" />
       )}
 
       {/* Results */}
@@ -654,40 +647,37 @@ export default function NetworkSpeedTest() {
           <h3 className="text-lg font-bold text-text-main">Test Results</h3>
           {/* Row 1: Speed Performance Metrics */}
           <div className="flex flex-col md:flex-row gap-4 w-full mb-4">
-            <div className="result-box flex-[1_1_180px]">
-              <span className="result-label">↓ Avg Download</span>
-              <span className="result-val">
-                {avgDownloadSpeed != null ? `${avgDownloadSpeed.toFixed(2)} Mbps` : 'N/A'}
-              </span>
-            </div>
-            <div className="result-box flex-[1_1_180px]">
-              <span className="result-label">↑ Avg Upload</span>
-              <span className="result-val">
-                {avgUploadSpeed != null ? `${avgUploadSpeed.toFixed(2)} Mbps` : 'N/A'}
-              </span>
-            </div>
-            <div className="result-box flex-[1_1_180px]">
-              <span className="result-label">Latency (Ping)</span>
-              <span className="result-val">
-                {pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
-              </span>
-            </div>
+            <ResultDisplay
+              label="↓ Avg Download"
+              value={avgDownloadSpeed != null ? `${avgDownloadSpeed.toFixed(2)} Mbps` : 'N/A'}
+              className="flex-[1_1_180px]"
+            />
+            <ResultDisplay
+              label="↑ Avg Upload"
+              value={avgUploadSpeed != null ? `${avgUploadSpeed.toFixed(2)} Mbps` : 'N/A'}
+              className="flex-[1_1_180px]"
+            />
+            <ResultDisplay
+              label="Latency (Ping)"
+              value={pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
+              className="flex-[1_1_180px]"
+            />
           </div>
 
           {/* Row 2: Connection Details */}
           <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="result-box flex-[1_1_250px]">
-              <span className="result-label">IP Address</span>
-              <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
-                {clientIp || 'Fetching…'}
-              </span>
-            </div>
-            <div className="result-box flex-[1_1_250px]">
-              <span className="result-label">Provider (ISP)</span>
-              <span className="result-val" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
-                {clientOrg || 'Fetching…'}
-              </span>
-            </div>
+            <ResultDisplay
+              label="IP Address"
+              value={clientIp || 'Fetching…'}
+              className="flex-[1_1_250px]"
+              valueClassName="text-[1.25rem] font-bold"
+            />
+            <ResultDisplay
+              label="Provider (ISP)"
+              value={clientOrg || 'Fetching…'}
+              className="flex-[1_1_250px]"
+              valueClassName="text-[1.25rem] font-bold"
+            />
           </div>
         </div>
       )}

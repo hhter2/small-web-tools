@@ -38,11 +38,14 @@ small-web-tools/
 │   ├── App.jsx                  # Root component: routing, layout, all tool metadata & categories
 │   ├── styles.css               # Global stylesheet — @tailwind directives, colors, resets, scrollbar, keyframes
 │   └── components/              # Individual tool components (one file per tool)
-│       ├── ui/                  # Shared UI primitives (Phase 1 — Tailwind-based)
+│       ├── ui/                  # Shared UI primitives (Phase 6 — Tailwind-based)
 │       │   ├── Card.jsx         # Card wrapper: variant="tool" | "home"
 │       │   ├── Button.jsx       # Button: variant="primary" | "secondary" | "danger" (danger=placeholder)
 │       │   ├── FieldInput.jsx   # Input/textarea with label, hint, error affordances
-│       │   └── ToolHeader.jsx   # <h2> title block with optional description
+│       │   ├── ToolHeader.jsx   # <h2> title block with optional description
+│       │   ├── ToggleSwitch.jsx # Toggle switch: replaces .toggle-switch/.toggle-slider/.toggle-label
+│       │   ├── Spinner.jsx      # Animated ring: size="default"|"small", container + label mode
+│       │   └── ResultDisplay.jsx # Accent-bg result card: label + large value display
 │       ├── HomeGrid.jsx         # Dashboard / home page grid of all tools
 │       ├── SlashesConverter.jsx # Path slashes converter (Windows → web)
 │       ├── CasingSwitcher.jsx   # Text casing conversion (invert, sentence, title, terms)
@@ -220,6 +223,6 @@ npm run preview
    - Add a case inside `renderActiveTool` function to return the component
 3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
 4. Style the tool using Tailwind utility classes and the shared primitives in
-   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`). Do not add new rules to `src/styles.css`.
+   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`). Do not add new rules to `src/styles.css`.
 5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
 6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created

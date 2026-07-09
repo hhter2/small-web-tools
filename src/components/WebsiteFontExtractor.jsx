@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import Spinner from './ui/Spinner';
 
 // ── fontSimilarity: Lightweight local matcher ─────────────────────────────────
 // Given a font family name, returns up to 3 suggested Google Fonts alternatives
@@ -253,7 +254,7 @@ function FontCard({ font, index, previewText }) {
           </p>
         ) : (
           <div className="flex items-center gap-2.5 text-text-muted text-[0.83rem]">
-            <div className="spinner spinner--small" />
+            <Spinner size="small" />
             <span>Loading preview…</span>
           </div>
         )}
@@ -291,7 +292,7 @@ function FontCard({ font, index, previewText }) {
           >
             {downloading ? (
               <>
-                <div className="spinner spinner--small" />
+                <Spinner size="small" />
                 Downloading…
               </>
             ) : (
@@ -510,10 +511,12 @@ export default function WebsiteFontExtractor() {
 
       {/* Loading indicator */}
       {loading && (
-        <div id="fontextractor-loader" className="flex flex-col items-center justify-center gap-4 py-12 text-text-muted text-sm w-full">
-          <div className="spinner" />
-          <span>Fetching stylesheets and parsing font definitions…</span>
-        </div>
+        <Spinner
+          id="fontextractor-loader"
+          container
+          label="Fetching stylesheets and parsing font definitions…"
+          className="py-12 w-full"
+        />
       )}
 
       {/* Error / info status */}

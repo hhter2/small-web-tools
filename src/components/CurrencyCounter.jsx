@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
+import ResultDisplay from './ui/ResultDisplay';
 
 const currencyDetails = {
   USD: { name: "US Dollar", locale: "en-US", symbol: "$", flag: "🇺🇸" },
@@ -380,18 +381,24 @@ export default function CurrencyCounter() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 w-full mt-2">
-            <div className="result-box flex-1">
-              <span className="result-label">Total ({bulkFromCurrency})</span>
-              <span className="result-val" id="currency-source-total">{formatCurrency(sourceTotal, bulkFromCurrency)}</span>
-            </div>
-            <div className="result-box flex-1">
-              <span className="result-label">Total ({bulkToCurrency})</span>
-              <span className="result-val" id="currency-target-total" style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{formatCurrency(convertedTotal, bulkToCurrency)}</span>
-            </div>
-            <div className="result-box flex-1">
-              <span className="result-label">Lines Counted</span>
-              <span className="result-val" id="currency-line-count">{lineCount}</span>
-            </div>
+            <ResultDisplay
+              label={`Total (${bulkFromCurrency})`}
+              value={formatCurrency(sourceTotal, bulkFromCurrency)}
+              className="flex-1"
+              id="currency-source-total"
+            />
+            <ResultDisplay
+              label={`Total (${bulkToCurrency})`}
+              value={formatCurrency(convertedTotal, bulkToCurrency)}
+              className="flex-1"
+              id="currency-target-total"
+            />
+            <ResultDisplay
+              label="Lines Counted"
+              value={lineCount}
+              className="flex-1"
+              id="currency-line-count"
+            />
           </div>
 
           {parsedAmounts.length > 0 && (

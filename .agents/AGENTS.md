@@ -145,7 +145,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | CasingSwitcher | pending |
 | WordCounter | done |
 | DateCounter | done |
-| CurrencyCounter | pending |
+| CurrencyCounter | done |
 | AsciiConverter | done |
 | UnicodeConverter | done |
 | BaseConverter | done |

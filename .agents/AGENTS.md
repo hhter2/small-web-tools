@@ -124,21 +124,30 @@ Before producing any code, confirm:
 
 This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in sync — if you update one, check the other.
 
-## Current state (Phase 1)
+## Current state (Phase 6 — complete)
 
 - Tailwind is configured (`tailwind.config.js`), theme values map to the existing
   CSS custom properties in `src/styles.css` (`:root` / `html[data-theme="dark"]`).
   Colors, radii, and shadows are NOT duplicated — Tailwind reads the same variables.
 - Shared primitives live in `src/components/ui/`: `Card`, `Button`, `FieldInput`,
-  `ToolHeader`. Use these for any new tool or when touching an existing one.
-- `src/styles.css` is legacy. It still styles all 31 tool components today — none
-  have been migrated yet. Do not delete rules from it until the component using
-  them has been migrated and visually verified.
+  `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`.
+  Use these for any new tool or when touching an existing one.
+- `src/styles.css` now contains **only** the following:
+  - `@import` (Google Fonts)
+  - `@tailwind base/components/utilities` directives
+  - `:root` and `html[data-theme="dark"]` CSS custom property definitions
+  - Global resets (`*`, `html/body`, `body`)
+  - Global element styles (`h1–h6`, `label`, `textarea`, `input`, `select`)
+  - Remaining shared patterns still in use by tool components:
+    `.btn-secondary`, `.tab-btn`, `.search-input-group`, `.iplookup-results-layout`
+  - Tool-specific styles (CodonTable `ct-*`, HomeGrid, ColorConverter, etc.)
+  - Scrollbar styles and remaining `@keyframes`
 
 ## Migration status by tool
 
 | Tool | Status |
 |---|---|
+| **App.jsx (shell layout)** | **done** |
 | PasswordGenerator | done |
 | ColorConverter | done |
 | SlashesConverter | done |
@@ -184,6 +193,11 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 
 ## Still open
 
-1. `Button variant="danger"` in the draft is a placeholder — needs a real parity pass
-   against `.btn-danger-custom` (styles.css line 2449) / `.btn-danger-confirm` (line 2691)
-   before use. Do not use `variant="danger"` in any tool component until this is resolved.
+1. `Button variant="danger"` is a placeholder — needs a real parity pass
+   against `.btn-danger-custom` / `.btn-danger-confirm` before use.
+   Do not use `variant="danger"` in any tool component until this is resolved.
+2. `BioinfoIcon` and `DnaRnaIcon` are still plain JSX with inline SVG —
+   they have no CSS class dependencies but have not been formally reviewed
+   for Tailwind alignment. Mark as done once reviewed.
+3. `CurrencyCounter` still uses `.tab-btn` and `.tab-btn.active` from `styles.css`.
+   These have not been extracted into a primitive yet; migrate when touching the component.

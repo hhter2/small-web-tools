@@ -3,6 +3,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import ToggleSwitch from './ui/ToggleSwitch';
 
 function countWords(text) {
   if (!text) return 0;
@@ -272,16 +273,13 @@ export default function CasingSwitcher() {
             
             {/* Global Setting: Exclude Specific Words */}
             <div className="border-b border-border pb-4">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="enable-exclude-words"
-                  checked={enableExcludeWords}
-                  onChange={(e) => setEnableExcludeWords(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label" style={{ fontWeight: 600, color: 'var(--accent)' }}>Exclude Specific Words</span>
-              </label>
+              <ToggleSwitch
+                id="enable-exclude-words"
+                checked={enableExcludeWords}
+                onChange={(e) => setEnableExcludeWords(e.target.checked)}
+                label="Exclude Specific Words"
+                labelClassName="font-semibold text-accent"
+              />
 
               {enableExcludeWords && (
                 <div className="mt-2.5 pl-14 flex flex-col gap-2">
@@ -302,16 +300,12 @@ export default function CasingSwitcher() {
 
             {/* Mode 1: Case Change */}
             <div className="border-b border-border pb-4">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="enable-case-change"
-                  checked={enableCaseChange}
-                  onChange={(e) => setEnableCaseChange(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">1. All Case Conversion</span>
-              </label>
+              <ToggleSwitch
+                id="enable-case-change"
+                checked={enableCaseChange}
+                onChange={(e) => setEnableCaseChange(e.target.checked)}
+                label="1. All Case Conversion"
+              />
 
               {enableCaseChange && (
                 <div className="mt-2.5 pl-14 flex flex-col gap-2">
@@ -353,30 +347,22 @@ export default function CasingSwitcher() {
 
             {/* Mode 4: Title Case */}
             <div className="border-b border-border pb-4">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="enable-title-case"
-                  checked={enableTitleCase}
-                  onChange={(e) => setEnableTitleCase(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">2. Make Each Word Capital</span>
-              </label>
+              <ToggleSwitch
+                id="enable-title-case"
+                checked={enableTitleCase}
+                onChange={(e) => setEnableTitleCase(e.target.checked)}
+                label="2. Make Each Word Capital"
+              />
             </div>
 
             {/* Mode 2: Sentence Case */}
             <div className="border-b border-border pb-4">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="enable-sentence-case"
-                  checked={enableSentenceCase}
-                  onChange={(e) => setEnableSentenceCase(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">3. Sentence First Word Capital</span>
-              </label>
+              <ToggleSwitch
+                id="enable-sentence-case"
+                checked={enableSentenceCase}
+                onChange={(e) => setEnableSentenceCase(e.target.checked)}
+                label="3. Sentence First Word Capital"
+              />
 
               {enableSentenceCase && (
                 <div className="mt-2.5 pl-14 flex flex-col gap-2">
@@ -397,16 +383,12 @@ export default function CasingSwitcher() {
 
             {/* Mode 3: Specific Terms */}
             <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  id="enable-specific-terms"
-                  checked={enableSpecificTerms}
-                  onChange={(e) => setEnableSpecificTerms(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label">4. Specific Terms Capitalization</span>
-              </label>
+              <ToggleSwitch
+                id="enable-specific-terms"
+                checked={enableSpecificTerms}
+                onChange={(e) => setEnableSpecificTerms(e.target.checked)}
+                label="4. Specific Terms Capitalization"
+              />
 
               {enableSpecificTerms && (
                 <div className="mt-2.5 pl-14 flex flex-col gap-2.5">

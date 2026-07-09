@@ -285,12 +285,11 @@ export default function CasingSwitcher() {
                 <div className="mt-2.5 pl-14 flex flex-col gap-2">
                   <div className="flex flex-col gap-2 w-full">
                     <FieldInput
+                      type="text"
                       id="exclude-words-input"
-                      as="textarea"
                       value={excludeWords}
                       onChange={(e) => setExcludeWords(e.target.value)}
                       placeholder="e.g. and, or, but, I"
-                      rows={2}
                       label="Words to preserve case (comma-separated)"
                     />
                   </div>

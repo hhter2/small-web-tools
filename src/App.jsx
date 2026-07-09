@@ -1267,7 +1267,7 @@ export default function App() {
           </div>
 
           {/* Tool Stage */}
-          <section className={`w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'py-4 md:py-3 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-hidden' : 'py-8 max-md:pt-[100px]'}`}>
+          <section className={`w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'py-4 md:py-3 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
             {renderActiveTool()}
           </section>
 

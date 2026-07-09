@@ -190,7 +190,7 @@ export default function CasingSwitcher() {
             <FieldInput
               id="casing-input"
               as="textarea"
-              rows={6}
+              rows={3}
               label="Input Text"
               placeholder="Type or paste text to convert..."
               value={input}
@@ -225,7 +225,7 @@ export default function CasingSwitcher() {
             <FieldInput
               id="casing-output"
               as="textarea"
-              rows={6}
+              rows={3}
               readOnly
               label="Output Preview"
               placeholder="Converted text will appear here in real time..."

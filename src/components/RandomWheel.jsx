@@ -328,11 +328,11 @@ export default function RandomWheel() {
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-6 lg:gap-8 w-full items-start mt-3">
         
         {/* Left side: Wheel Canvas & Win Banner */}
-        <div className="flex flex-col items-center justify-center relative w-full bg-app border border-border rounded-2xl p-8 min-h-[520px] max-[768px]:p-[20px_12px] max-[768px]:min-h-0">
+        <div className="flex flex-col items-center justify-center relative w-full bg-app border border-border rounded-2xl p-8 min-h-[440px] max-[768px]:p-[20px_12px] max-[768px]:min-h-0">
           <div className="bg-slate-900/75 dark:bg-black/75 backdrop-blur-md border border-white/10 text-white px-9 py-2.5 rounded-full font-display font-bold text-lg mb-6 text-center shadow-lg select-none z-[5] tracking-wide max-[768px]:px-6 max-[768px]:py-2 max-[768px]:text-[1.1rem] max-[768px]:mb-4" id="wheel-display-title">
             {title}
           </div>
-          <div className="relative w-full max-w-[420px] aspect-square rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-card overflow-visible cursor-pointer transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
+          <div className="relative w-full max-w-[340px] aspect-square rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-card overflow-visible cursor-pointer transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
             <canvas ref={canvasRef} id="wheel-canvas" className="w-full h-full block" width="450" height="450" onClick={spin}></canvas>
             <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 flex items-center drop-shadow-md pointer-events-none" onClick={spin}>
               <svg viewBox="0 0 24 24" width="28" height="28" fill="red">
@@ -369,11 +369,11 @@ export default function RandomWheel() {
           </div>
 
           {/* Options Box with View Mode and Edit Mode */}
-          <div className="border border-border rounded-xl bg-app overflow-hidden min-h-[280px] flex flex-col">
+          <div className="border border-border rounded-xl bg-app overflow-hidden min-h-[220px] flex flex-col">
             <div className="flex-grow flex flex-col">
               {/* View Mode (List View) */}
               {!isEditing && (
-                <div id="wheel-list-view" className="p-4 h-[280px] overflow-y-auto flex flex-col gap-2">
+                <div id="wheel-list-view" className="p-4 h-[220px] overflow-y-auto flex flex-col gap-2">
                   {items.length === 0 ? (
                     <div className="text-text-muted italic p-3 text-sm text-center">
                       No options typed. Press Edit to add options.
@@ -391,7 +391,7 @@ export default function RandomWheel() {
               {isEditing && (
                 <textarea
                   id="wheel-text-input"
-                  className="p-4 h-[280px] w-full border-none bg-transparent text-text-main font-sans text-[0.95rem] leading-relaxed resize-none outline-none"
+                  className="p-4 h-[220px] w-full border-none bg-transparent text-text-main font-sans text-[0.95rem] leading-relaxed resize-none outline-none"
                   placeholder="Type options here, one per line..."
                   value={textareaVal}
                   onChange={(e) => handleTextareaChange(e.target.value)}

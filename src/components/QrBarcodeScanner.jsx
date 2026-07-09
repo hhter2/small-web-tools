@@ -615,7 +615,7 @@ export default function QrBarcodeScanner() {
                   {cameraError && <p className="text-[0.84rem] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 px-3.5 mt-1">{cameraError}</p>}
 
                   {/* Camera viewfinder */}
-                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-square w-full">
+                  <div className="relative rounded-2xl overflow-hidden bg-black max-h-[220px] aspect-square w-full">
                     <div id={READER_ID} className="w-full h-full" />
                     {isScanning && (
                       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -646,7 +646,7 @@ export default function QrBarcodeScanner() {
             <div className="flex flex-col gap-3">
               <div
                 id="qrscan-dropzone"
-                className={`border-2 border-dashed border-border rounded-2xl cursor-pointer transition-colors duration-200 aspect-square w-full flex items-center justify-center overflow-hidden bg-card relative hover:border-accent hover:bg-accent/5 ${isDragging ? 'border-accent bg-accent/5' : ''}`}
+                className={`border-2 border-dashed border-border rounded-2xl cursor-pointer transition-colors duration-200 max-h-[220px] aspect-square w-full flex items-center justify-center overflow-hidden bg-card relative hover:border-accent hover:bg-accent/5 ${isDragging ? 'border-accent bg-accent/5' : ''}`}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}

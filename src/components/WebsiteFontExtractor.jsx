@@ -557,15 +557,17 @@ export default function WebsiteFontExtractor() {
           </div>
 
           {/* Font cards grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {fonts.map((font, i) => (
-              <FontCard
-                key={`${font.url}-${i}`}
-                font={font}
-                index={i}
-                previewText={previewText}
-              />
-            ))}
+          <div className="max-h-[250px] md:max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {fonts.map((font, i) => (
+                <FontCard
+                  key={`${font.url}-${i}`}
+                  font={font}
+                  index={i}
+                  previewText={previewText}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}

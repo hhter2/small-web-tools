@@ -815,7 +815,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         
         {/* ================= LEFT SIDE: CONFIG PANEL ================= */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
+        <div className="lg:col-span-3 flex flex-col gap-6 lg:max-h-[480px] lg:overflow-y-auto pr-3 custom-scrollbar">
           
           {activeTab === 'qr' ? (
             <>

@@ -28,7 +28,9 @@ const variants = {
   secondary:
     'bg-app border border-border text-text-muted px-3.5 py-[7px] text-[0.82rem] hover:bg-nav-hover-bg hover:border-accent hover:text-accent aria-pressed:bg-nav-active-bg aria-pressed:border-accent aria-pressed:text-nav-active-text',
   danger:
-    'bg-app border border-border text-text-muted px-3.5 py-[7px] text-[0.82rem] hover:bg-red-50 hover:border-red-400 hover:text-red-600', // placeholder — needs parity check, see AGENTS.md
+    'bg-red-500/10 border border-red-500/25 text-red-500 px-3.5 py-[7px] text-[0.82rem] hover:bg-red-500 hover:text-white hover:border-red-500 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)] active:translate-y-0',
+  dangerConfirm:
+    'bg-red-500 text-white px-5 py-2.5 text-[0.88rem] hover:bg-red-600 active:bg-red-700',
 };
 
 const sizes = {

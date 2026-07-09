@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -849,7 +853,7 @@ function MiniPlayer({ file, objectUrl }) {
   if (!objectUrl) return null;
 
   return (
-    <div className="audiometa-player">
+    <div className="flex items-center gap-4 bg-app border border-border rounded-xl p-3 w-full mt-4">
       <audio
         ref={audioRef}
         src={objectUrl}
@@ -858,7 +862,11 @@ function MiniPlayer({ file, objectUrl }) {
         onEnded={handleEnded}
         preload="metadata"
       />
-      <button className="audiometa-player-btn" onClick={togglePlay} aria-label={playing ? 'Pause' : 'Play'}>
+      <button 
+        className="flex items-center justify-center w-9 h-9 rounded-full bg-accent text-white border-none cursor-pointer transition-all hover:bg-accent-hover hover:scale-105 shrink-0 shadow-md" 
+        onClick={togglePlay} 
+        aria-label={playing ? 'Pause' : 'Play'}
+      >
         {playing ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="4" width="4" height="16" rx="1"/>
@@ -870,9 +878,9 @@ function MiniPlayer({ file, objectUrl }) {
           </svg>
         )}
       </button>
-      <div className="audiometa-player-progress-area">
+      <div className="flex flex-col gap-1.5 flex-1">
         <div
-          className="audiometa-player-track"
+          className="relative h-1.5 bg-border rounded-full cursor-pointer"
           ref={progressRef}
           onClick={handleSeek}
           role="slider"
@@ -880,10 +888,10 @@ function MiniPlayer({ file, objectUrl }) {
           aria-valuemax={duration}
           aria-valuenow={currentTime}
         >
-          <div className="audiometa-player-fill" style={{ width: `${progress}%` }} />
-          <div className="audiometa-player-thumb" style={{ left: `${progress}%` }} />
+          <div className="absolute top-0 left-0 h-full bg-accent rounded-full transition-all duration-75" style={{ width: `${progress}%` }} />
+          <div className="absolute top-1/2 w-3 h-3 rounded-full bg-white border-2 border-accent shadow -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-75" style={{ left: `${progress}%` }} />
         </div>
-        <div className="audiometa-player-times">
+        <div className="flex justify-between text-xs text-text-muted font-mono">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -940,13 +948,21 @@ function DefaultCoverArt({ format, size = 120 }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function FormatBadge({ format }) {
-  const colorMap = {
-    MP3: 'badge-mp3', FLAC: 'badge-flac', WAV: 'badge-wav',
-    M4A: 'badge-m4a', AAC: 'badge-m4a', OGG: 'badge-ogg',
-    OPUS: 'badge-ogg', AIFF: 'badge-aiff', WMA: 'badge-wma',
+  const badgeColors = {
+    MP3: 'bg-green-500/15 text-green-700 dark:text-green-400 dark:bg-green-500/10',
+    FLAC: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 dark:bg-indigo-500/10',
+    WAV: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 dark:bg-orange-500/10',
+    M4A: 'bg-pink-500/15 text-pink-700 dark:text-pink-400 dark:bg-pink-500/10',
+    AAC: 'bg-pink-500/15 text-pink-700 dark:text-pink-400 dark:bg-pink-500/10',
+    OGG: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/10',
+    OPUS: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/10',
+    AIFF: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 dark:bg-amber-500/10',
+    WMA: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 dark:bg-purple-500/10',
+    DEFAULT: 'bg-secondary text-text-muted',
   };
+  const colorClass = badgeColors[format] || badgeColors.DEFAULT;
   return (
-    <span className={`audiometa-format-badge ${colorMap[format] || 'badge-generic'}`}>
+    <span className={`inline-block px-1.5 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider ${colorClass}`}>
       {format}
     </span>
   );
@@ -1196,8 +1212,7 @@ export default function AudioMeta() {
   };
 
   return (
-    <div
-      className="audiometa-container"
+    <Card id="tool-audio-meta" variant="tool" size="wide"
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
@@ -1212,96 +1227,90 @@ export default function AudioMeta() {
         id="audiometa-file-input"
       />
 
+      <ToolHeader 
+        title="Audio Metadata &amp; Tags Reader" 
+        description="View technical metadata, audio codec info, and ID3 / Vorbis comment tags, compare multiple files, or strip metadata losslessly." 
+      />
+
       {/* Full-width drag over overlay when files are already present */}
       {dragOver && files.length > 0 && (
-        <div className="audiometa-drag-overlay">
-          <div className="overlay-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18V5l12-2v13"/>
-              <circle cx="6" cy="18" r="3"/>
-              <circle cx="18" cy="16" r="3"/>
-            </svg>
-            <p>Drop audio files to add to list</p>
-          </div>
+        <div className="absolute inset-0 bg-accent/10 border-2 border-dashed border-accent rounded-xl flex flex-col items-center justify-center gap-3 z-50 backdrop-blur-sm">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent animate-bounce">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+          <p className="text-lg font-bold text-text-main">Drop audio files to add to list</p>
         </div>
       )}
 
       {/* Drop zone shown only when empty */}
       {files.length === 0 && (
         <div
-          className={`audiometa-dropzone${dragOver ? ' dragover' : ''}`}
+          className={`border-2 border-dashed border-border rounded-xl p-8 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-4 min-h-[220px] hover:border-accent hover:bg-accent-light/5 mt-4 ${dragOver ? 'border-accent bg-accent-light/5' : ''}`}
           onClick={() => fileInputRef.current?.click()}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
           aria-label="Upload audio files"
         >
-          <div className="dropzone-content">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex flex-col items-center gap-3">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
               <path d="M9 18V5l12-2v13"/>
               <circle cx="6" cy="18" r="3"/>
               <circle cx="18" cy="16" r="3"/>
             </svg>
-            <p className="dropzone-title">Drop audio files here</p>
-            <p className="dropzone-or">or</p>
-            <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</button>
-            <p className="dropzone-note">Supports MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA and more</p>
+            <p className="text-lg font-bold text-text-main">Drop audio files here</p>
+            <p className="text-sm text-text-muted">or</p>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</Button>
+            <p className="text-xs text-text-muted mt-2">Supports MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA and more</p>
           </div>
         </div>
       )}
 
       {status && (
-        <p className={`audiometa-status${status.startsWith('Failed') || status.startsWith('Error') ? ' error' : ''}`}>
+        <p className={`mt-3 p-3 rounded-lg text-sm font-medium ${status.startsWith('Failed') || status.startsWith('Error') ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-accent-light/10 text-accent'}`}>
           {status}
         </p>
       )}
 
       {files.length > 0 && (
-        <div className="audiometa-workspace">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 items-start mt-4">
           {/* Sidebar: file list */}
-          <aside className="audiometa-sidebar">
-            <div className="audiometa-sidebar-header">
-              <span className="audiometa-sidebar-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="audiometa-clear-btn" onClick={() => fileInputRef.current?.click()} title="Add audio files">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
+          <aside className="flex flex-col bg-card border border-border rounded-xl max-h-[600px] overflow-hidden">
+            <div className="flex justify-between items-center p-3 border-b border-border bg-app/50">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title="Add audio files" className="p-1 px-2 text-[0.75rem]">
                   Add
-                </button>
-                <button className="audiometa-clear-btn" onClick={handleClearAll} title="Clear all">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14H6L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4h6v2"/>
-                  </svg>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleClearAll} title="Clear all" className="p-1 px-2 text-[0.75rem]">
                   Clear All
-                </button>
+                </Button>
               </div>
             </div>
-            <ul className="audiometa-file-list">
+            <ul className="flex flex-col overflow-y-auto divide-y divide-border">
               {files.map(f => (
                 <li
                   key={f.id}
-                  className={`audiometa-file-item${f.id === selectedId ? ' active' : ''}`}
+                  className={`flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-hover-bg relative group ${f.id === selectedId ? 'bg-accent-light/10 border-l-4 border-accent pl-2' : ''}`}
                   onClick={() => setSelectedId(f.id)}
                 >
-                  <div className="audiometa-file-thumb">
+                  <div className="w-9 h-9 rounded-md overflow-hidden flex-shrink-0">
                     {f.coverArt
-                      ? <img src={f.coverArt} alt="cover" />
+                      ? <img src={f.coverArt} className="w-full h-full object-cover" alt="cover" />
                       : <DefaultCoverArt format={f.format} size={36} />
                     }
                   </div>
-                  <div className="audiometa-file-info">
-                    <span className="audiometa-file-name" title={f.name}>{f.name}</span>
-                    <span className="audiometa-file-meta-small">
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium text-text-main truncate" title={f.name}>{f.name}</span>
+                    <span className="flex items-center gap-1.5 mt-0.5">
                       <FormatBadge format={f.format} />
-                      {f.formattedSize}
+                      <span className="text-xs text-text-muted">{f.formattedSize}</span>
                     </span>
                   </div>
                   <button
-                    className="audiometa-remove-btn"
+                    className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-500 rounded transition-opacity"
                     onClick={(e) => { e.stopPropagation(); handleRemove(f.id); }}
                     aria-label="Remove file"
                   >
@@ -1315,42 +1324,45 @@ export default function AudioMeta() {
           </aside>
 
           {/* Main panel */}
-          <main className="audiometa-main">
+          <main className="flex flex-col gap-4 min-w-0">
             {/* Tab bar */}
-            <div className="audiometa-tabs">
-              {[
-                { id: 'overview', label: '📋 Overview' },
-                { id: 'all', label: '🗂 All Parameters' },
-                { id: 'compare', label: `⚖️ Compare (${compareFiles.length})` },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  className={`audiometa-tab-btn${activeTab === tab.id ? ' active' : ''}`}
-                  onClick={() => setActiveTab(tab.id)}
-                  id={`audiometa-tab-${tab.id}`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-              <div className="audiometa-tabs-actions">
+            <div className="flex flex-wrap gap-2 items-center justify-between pb-3 border-b border-border">
+              <div className="flex gap-2">
+                {[
+                  { id: 'overview', label: '📋 Overview' },
+                  { id: 'all', label: '🗂 All Parameters' },
+                  { id: 'compare', label: `⚖️ Compare (${compareFiles.length})` },
+                ].map(tab => (
+                  <Button
+                    key={tab.id}
+                    variant={activeTab === tab.id ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setActiveTab(tab.id)}
+                    id={`audiometa-tab-${tab.id}`}
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 items-center">
                 {activeFile && (
                   <>
-                    <button className="btn-secondary btn-sm" onClick={handleExportJson} title="Export metadata as JSON">
+                    <Button variant="secondary" size="sm" onClick={handleExportJson} title="Export metadata as JSON">
                       ⬇ JSON
-                    </button>
+                    </Button>
                     {activeFile.ext === 'mp3' && !activeFile.strippedInfo && (
-                      <button className="btn-secondary btn-sm" onClick={handleStripMp3} title="Strip all ID3 metadata from MP3">
+                      <Button variant="secondary" size="sm" onClick={handleStripMp3} title="Strip all ID3 metadata from MP3">
                         ✂ Strip Tags
-                      </button>
+                      </Button>
                     )}
                     {activeFile.strippedInfo && (
                       <>
-                        <button className="btn-secondary btn-sm" onClick={handleDownloadStripped}>
+                        <Button variant="secondary" size="sm" onClick={handleDownloadStripped}>
                           ⬇ Download Stripped
-                        </button>
-                        <button className="btn-secondary btn-sm" onClick={handleRestoreOriginal}>
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={handleRestoreOriginal}>
                           ↩ Restore
-                        </button>
+                        </Button>
                       </>
                     )}
                   </>
@@ -1360,32 +1372,32 @@ export default function AudioMeta() {
 
             {/* ── Overview Tab ── */}
             {activeTab === 'overview' && activeFile && (
-              <div className="audiometa-overview">
+              <div className="flex flex-col gap-4">
                 {/* Header card: cover + basic info */}
-                <div className="audiometa-header-card">
-                  <div className="audiometa-cover-art">
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+                  <div className="w-[120px] h-[120px] rounded-xl overflow-hidden flex-shrink-0 shadow-md">
                     {activeFile.coverArt
-                      ? <img src={activeFile.coverArt} alt="Album art" />
+                      ? <img src={activeFile.coverArt} className="w-full h-full object-cover" alt="Album art" />
                       : <DefaultCoverArt format={activeFile.format} size={120} />
                     }
                   </div>
-                  <div className="audiometa-track-info">
-                    <h2 className="audiometa-track-title">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold text-text-main truncate">
                       {activeFile.tags['TIT2'] || activeFile.name}
                     </h2>
                     {activeFile.tags['TPE1'] && (
-                      <p className="audiometa-track-artist">{activeFile.tags['TPE1']}</p>
+                      <p className="text-text-muted font-medium mt-1">{activeFile.tags['TPE1']}</p>
                     )}
                     {activeFile.tags['TALB'] && (
-                      <p className="audiometa-track-album">
+                      <p className="text-sm text-text-muted mt-1">
                         {activeFile.tags['TALB']}
                         {activeFile.tags['TDRC'] && ` · ${activeFile.tags['TDRC']}`}
                       </p>
                     )}
-                    <div className="audiometa-track-badges">
+                    <div className="flex items-center gap-2 mt-2">
                       <FormatBadge format={activeFile.format} />
                       {activeFile.strippedInfo && (
-                        <span className="audiometa-stripped-badge">Tags Stripped</span>
+                        <span className="bg-red-500/10 text-red-600 dark:text-red-400 text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider">Tags Stripped</span>
                       )}
                     </div>
                     {/* Mini Player */}
@@ -1394,13 +1406,13 @@ export default function AudioMeta() {
                 </div>
 
                 {/* Metadata cards grid */}
-                <div className="audiometa-overview-grid">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Tags card */}
-                  <div className="audiometa-info-card">
-                    <h3 className="audiometa-card-title">
-                      <span className="audiometa-card-icon">🏷️</span> Metadata
+                  <div className="bg-card border border-border rounded-xl p-5">
+                    <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <span>🏷️</span> Metadata
                     </h3>
-                    <dl className="audiometa-dl">
+                    <dl className="flex flex-col gap-2">
                       {[
                         ['Title', activeFile.tags['TIT2']],
                         ['Artist', activeFile.tags['TPE1']],
@@ -1413,31 +1425,31 @@ export default function AudioMeta() {
                         ['Composer', activeFile.tags['TCOM']],
                         ['Comment', activeFile.tags['COMM']],
                       ].filter(([, v]) => v).map(([k, v]) => (
-                        <div className="audiometa-dl-row" key={k}>
-                          <dt>{k}</dt>
-                          <dd>{v}</dd>
+                        <div className="flex justify-between py-1.5 border-b border-border last:border-0" key={k}>
+                          <dt className="text-xs text-text-muted font-medium">{k}</dt>
+                          <dd className="text-sm text-text-main font-semibold max-w-[70%] text-right truncate" title={v}>{v}</dd>
                         </div>
                       ))}
                       {Object.keys(activeFile.tags).filter(k =>
                         !['TIT2','TPE1','TPE2','TALB','TDRC','TCON','TRCK','TPOS','TCOM','COMM'].includes(k)
                       ).slice(0, 8).map(k => (
-                        <div className="audiometa-dl-row" key={k}>
-                          <dt>{getTagLabel(k)}</dt>
-                          <dd>{String(activeFile.tags[k])}</dd>
+                        <div className="flex justify-between py-1.5 border-b border-border last:border-0" key={k}>
+                          <dt className="text-xs text-text-muted font-medium">{getTagLabel(k)}</dt>
+                          <dd className="text-sm text-text-main font-semibold max-w-[70%] text-right truncate" title={String(activeFile.tags[k])}>{String(activeFile.tags[k])}</dd>
                         </div>
                       ))}
                       {Object.keys(activeFile.tags).length === 0 && (
-                        <p className="audiometa-no-tags">No metadata tags found in this file.</p>
+                        <p className="text-sm text-text-muted italic">No metadata tags found in this file.</p>
                       )}
                     </dl>
                   </div>
 
                   {/* Technical card */}
-                  <div className="audiometa-info-card">
-                    <h3 className="audiometa-card-title">
-                      <span className="audiometa-card-icon">🔧</span> Technical
+                  <div className="bg-card border border-border rounded-xl p-5">
+                    <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <span>🔧</span> Technical
                     </h3>
-                    <dl className="audiometa-dl">
+                    <dl className="flex flex-col gap-2">
                       {[
                         ['Format', activeFile.format],
                         ['Duration', formatDuration(activeFile.technical.durationSec)],
@@ -1448,9 +1460,9 @@ export default function AudioMeta() {
                         ['Codec', activeFile.technical.audioFormat],
                         ['File Size', activeFile.strippedInfo ? `${activeFile.strippedInfo.formattedSize} (stripped)` : activeFile.formattedSize],
                       ].filter(([, v]) => v && v !== '—').map(([k, v]) => (
-                        <div className="audiometa-dl-row" key={k}>
-                          <dt>{k}</dt>
-                          <dd>{v}</dd>
+                        <div className="flex justify-between py-1.5 border-b border-border last:border-0" key={k}>
+                          <dt className="text-xs text-text-muted font-medium">{k}</dt>
+                          <dd className="text-sm text-text-main font-semibold">{v}</dd>
                         </div>
                       ))}
                     </dl>
@@ -1459,12 +1471,12 @@ export default function AudioMeta() {
 
                 {/* MP3 Stripping info */}
                 {activeFile.strippedInfo && (
-                  <div className="audiometa-strip-banner">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-xl p-3.5 text-sm text-text-main">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 shrink-0">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
-                    Metadata stripped. Original: {activeFile.formattedSize} → Stripped: {activeFile.strippedInfo.formattedSize}
-                    <button className="btn-sm" onClick={handleDownloadStripped}>Download</button>
+                    <span>Metadata stripped. Original: {activeFile.formattedSize} → Stripped: {activeFile.strippedInfo.formattedSize}</span>
+                    <Button size="sm" variant="primary" onClick={handleDownloadStripped} className="ml-auto">Download</Button>
                   </div>
                 )}
               </div>
@@ -1472,9 +1484,9 @@ export default function AudioMeta() {
 
             {/* ── All Parameters Tab ── */}
             {activeTab === 'all' && activeFile && (
-              <div className="audiometa-all-params">
-                <div className="audiometa-search-bar">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 px-4">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted shrink-0">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   </svg>
                   <input
@@ -1482,26 +1494,27 @@ export default function AudioMeta() {
                     placeholder="Search parameters..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 border-none bg-transparent text-sm text-text-main outline-none placeholder-text-muted/50"
                     id="audiometa-search-input"
                   />
                   {searchQuery && (
-                    <button className="audiometa-search-clear" onClick={() => setSearchQuery('')}>×</button>
+                    <button className="bg-none border-none text-text-muted cursor-pointer text-base hover:text-text-main" onClick={() => setSearchQuery('')}>×</button>
                   )}
                 </div>
                 {filteredParamGroups.length === 0 ? (
-                  <p className="audiometa-no-tags">No parameters match your search.</p>
+                  <p className="text-sm text-text-muted italic text-center p-4">No parameters match your search.</p>
                 ) : (
                   filteredParamGroups.map(group => (
-                    <div key={group.key} className="audiometa-param-group">
+                    <div key={group.key} className="bg-card border border-border rounded-xl overflow-hidden">
                       <button
-                        className="audiometa-param-group-header"
+                        className="flex items-center gap-2 w-full p-3.5 px-5 bg-none border-none cursor-pointer text-sm font-semibold text-text-main text-left transition-colors hover:bg-hover-bg"
                         onClick={() => toggleGroup(group.key)}
                         id={`audiometa-group-${group.key}`}
                       >
                         <span>{group.icon} {group.label}</span>
-                        <span className="audiometa-param-count">{group.rows.length}</span>
+                        <span className="ml-auto text-xs text-text-muted bg-app px-2 py-0.5 rounded-full mr-2">{group.rows.length}</span>
                         <svg
-                          className={`audiometa-chevron${collapsedGroups[group.key] ? ' collapsed' : ''}`}
+                          className={`text-text-muted shrink-0 transition-transform duration-200 ${collapsedGroups[group.key] ? '-rotate-90' : ''}`}
                           width="14" height="14" viewBox="0 0 24 24" fill="none"
                           stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                         >
@@ -1509,16 +1522,18 @@ export default function AudioMeta() {
                         </svg>
                       </button>
                       {!collapsedGroups[group.key] && (
-                        <table className="audiometa-param-table">
-                          <tbody>
-                            {group.rows.map(([k, v]) => (
-                              <tr key={k}>
-                                <td className="audiometa-param-key">{k}</td>
-                                <td className="audiometa-param-val">{v}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                        <div className="border-t border-border overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <tbody>
+                              {group.rows.map(([k, v]) => (
+                                <tr key={k} className="hover:bg-hover-bg/30">
+                                  <td className="p-2.5 px-5 w-[200px] text-xs text-text-muted font-medium border-b border-border last:border-0 vertical-align-top">{k}</td>
+                                  <td className="p-2.5 px-5 text-xs text-text-main border-b border-border last:border-0 break-all vertical-align-top">{v}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
                   ))
@@ -1528,36 +1543,36 @@ export default function AudioMeta() {
 
             {/* ── Compare Tab ── */}
             {activeTab === 'compare' && (
-              <div className="audiometa-compare">
-                <div className="audiometa-compare-select">
-                  <p className="audiometa-compare-hint">Select files to compare:</p>
-                  <div className="audiometa-compare-chips">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-text-muted">Select files to compare:</p>
+                  <div className="flex flex-wrap gap-2">
                     {files.map(f => (
                       <button
                         key={f.id}
-                        className={`audiometa-chip${compareSelectedIds.includes(f.id) ? ' selected' : ''}`}
+                        className={`flex items-center gap-1.5 p-1.5 px-3 rounded-lg border text-xs font-medium cursor-pointer transition-colors max-w-[200px] truncate ${compareSelectedIds.includes(f.id) ? 'border-accent bg-accent-light/10 text-text-main' : 'border-border bg-card text-text-muted hover:border-accent hover:text-text-main'}`}
                         onClick={() => toggleCompare(f.id)}
                       >
                         <FormatBadge format={f.format} />
-                        {f.name}
+                        <span className="truncate">{f.name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
                 {compareFiles.length >= 1 ? (
-                  <div className="audiometa-compare-table-wrapper">
-                    <table className="audiometa-compare-table">
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full border-collapse min-w-[400px]">
                       <thead>
                         <tr>
-                          <th>Parameter</th>
+                          <th className="p-3 px-4 bg-app text-xs font-semibold text-text-muted text-left border-b border-border">Parameter</th>
                           {compareFiles.map(f => (
-                            <th key={f.id}>
-                              <div className="audiometa-compare-th">
+                            <th key={f.id} className="p-3 px-4 bg-app text-xs font-semibold text-text-muted text-left border-b border-border max-w-[180px] truncate">
+                              <div className="flex items-center gap-2 truncate">
                                 {f.coverArt
-                                  ? <img src={f.coverArt} className="audiometa-compare-thumb" alt="" />
+                                  ? <img src={f.coverArt} className="w-8 h-8 rounded object-cover shrink-0" alt="" />
                                   : <DefaultCoverArt format={f.format} size={32} />
                                 }
-                                <span title={f.name}>{f.name}</span>
+                                <span className="truncate" title={f.name}>{f.name}</span>
                               </div>
                             </th>
                           ))}
@@ -1565,10 +1580,10 @@ export default function AudioMeta() {
                       </thead>
                       <tbody>
                         {COMPARE_FIELDS.map(field => (
-                          <tr key={field.label}>
-                            <td className="audiometa-compare-row-label">{field.label}</td>
+                          <tr key={field.label} className="hover:bg-hover-bg/30">
+                            <td className="p-2.5 px-4 text-xs font-medium text-text-muted border-b border-border last:border-0 w-[130px] truncate">{field.label}</td>
                             {compareFiles.map(f => (
-                              <td key={f.id} className="audiometa-compare-cell">
+                              <td key={f.id} className="p-2.5 px-4 text-xs text-text-main border-b border-border last:border-0 min-w-[140px] vertical-align-top">
                                 {field.fn(f)}
                               </td>
                             ))}
@@ -1578,13 +1593,13 @@ export default function AudioMeta() {
                     </table>
                   </div>
                 ) : (
-                  <p className="audiometa-no-tags">Select at least one file above to compare.</p>
+                  <p className="text-sm text-text-muted italic text-center p-4">Select at least one file above to compare.</p>
                 )}
               </div>
             )}
           </main>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

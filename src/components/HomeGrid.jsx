@@ -5,7 +5,7 @@ import DnaRnaIcon from './DnaRnaIcon.jsx';
 const categories = [
   {
     id: 'text',
-    name: 'Text',
+      desc: 'Switch \ to /.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -75,7 +75,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-slash',
       title: 'Slashes Converter',
       category: 'developer',
-      desc: 'Normalize Windows paths to web-friendly forward slashes.',
+      desc: 'Switch \ to /.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <line x1="6" y1="18" x2="18" y2="6"></line>
@@ -87,7 +87,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-wc',
       title: 'Word Counter',
       category: 'text',
-      desc: 'Calculate words, character lengths, and line endings in real time.',
+      desc: 'Calculate the number of words and characters. Support English and Chinese.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
@@ -98,7 +98,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-casing',
       title: 'Casing Switcher',
       category: 'text',
-      desc: 'Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case.',
+      desc: 'Support full sentence, single  words, specific term, etc.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 20L9 5l5 15" />
@@ -112,7 +112,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-typing',
       title: 'Typing Speed Test',
       category: 'text',
-      desc: 'Measure your typing speed and accuracy in English or Chinese with custom templates and real-time statistics.',
+      desc: 'Test and improve your typing speed in English or Chinese with custom templates.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
@@ -132,7 +132,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-color',
       title: 'Color Converter',
       category: 'media',
-      desc: 'Seamlessly translate colors between HEX, RGB, and HSL formats.',
+      desc: 'Transfer and select colors between HEX, RGB, and other formats.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
@@ -159,7 +159,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-unicode',
       title: 'Unicode Converter',
       category: 'developer',
-      desc: 'Encode text to Unicode code points or decode raw code points.',
+      desc: 'Text to Unicode; Unicode to text.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -172,7 +172,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-fontextractor',
       title: 'Font Extractor',
       category: 'developer',
-      desc: 'Scan any website to extract web fonts, preview them live, download font files, and find Google Fonts alternatives.',
+      desc: 'Scan and extract font of any URLs. Also download them and find the similarities.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="4 7 4 4 20 4 20 7"></polyline>
@@ -187,7 +187,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-base',
       title: 'Base Converter',
       category: 'developer',
-      desc: 'Convert numbers between binary, octal, decimal, hex, and base-60.',
+      desc: 'Base conversion between binary, octal, decimal, and hexadecimal.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="9" x2="20" y2="9"></line>
@@ -201,7 +201,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-folder-analyzer',
       title: 'Folder Analyzer',
       category: 'developer',
-      desc: 'Recursively scan directories, map project structure, count lines of code, and export to text or SVG diagrams.',
+      desc: 'Obtain the folder structure by one click.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -214,14 +214,14 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-dna',
       title: 'DNA/RNA Converter',
       category: 'bioinfo',
-      desc: "Complements, reverses, and swaps 5'/3' strand sequence orientations.",
+      desc: "Swap 5'/3' directions and show the anti-sense brand. Support with the figure.",
       icon: <DnaRnaIcon />
     },
     {
       id: 'tool-codon',
       title: 'RNA Codon Table',
       category: 'bioinfo',
-      desc: 'Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties.',
+      desc: 'Find and learn amino acid with interactive.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2"></rect>
@@ -236,7 +236,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-iplookup',
       title: 'IP Lookup',
       category: 'network',
-      desc: 'Geolocate, identify ISP, timezone, and coordinates for any IP address.',
+      desc: 'Identify geographical location, timezone, ISP, and coordinates for any IP address.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -248,7 +248,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-speedtest',
       title: 'Network Speed Test',
       category: 'network',
-      desc: 'Test your network latency (ping) and download speed in real-time.',
+      desc: 'Test the real-time network speed and latency.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -260,7 +260,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-imgmeta',
       title: 'Image Metadata',
       category: 'media',
-      desc: 'Locally analyze metadata, camera model, and GPS details of images.',
+      desc: 'Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -272,7 +272,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-officemeta',
       title: 'Office Metadata Reader',
       category: 'media',
-      desc: 'Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally.',
+      desc: 'Show the metadata from office files.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -287,7 +287,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-audiometa',
       title: 'Audio Metadata Reader',
       category: 'media',
-      desc: 'Extract tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, OGG, AIFF and more — fully private, in-browser.',
+      desc: 'Extract and analyze metadata tags, technical parameters entirely locally without upload.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 18V5l12-2v13"/>
@@ -300,7 +300,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       id: 'tool-videometa',
       title: 'Video Metadata Reader',
       category: 'media',
-      desc: 'Extract encoding, resolution, FPS, audio tracks, timecodes, color primaries, and subtitles from MP4, MOV, and log files — fully private, in-browser.',
+      desc: 'Extract and analyze encoding format, resolution, and other parameters entirely locally without upload.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="23 7 16 12 23 17 23 7"></polygon>
@@ -325,7 +325,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Barcode Generator',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF, Codabar) with live validation.',
+      desc: 'Generate multiple format barcodes.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
@@ -337,7 +337,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Currency Converter & Counter',
       category: 'utilities',
       subGroup: 'Calculation',
-      desc: 'Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists.',
+      desc: 'Resource by Live API.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -350,7 +350,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Date Counter',
       category: 'utilities',
       subGroup: 'Calculation',
-      desc: 'Calculate the exact number of days between two specified dates.',
+      desc: 'Calculate for the dates.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -365,7 +365,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Secure Password Generator',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling.',
+      desc: 'Generate secure passwords. Use CSPRNG for generating.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -378,7 +378,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Password Strength Checker',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Analyze password complexity, calculate entropy, estimate cracking time, and verify character rules.',
+      desc: 'Check the passward is strengh or not.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -391,7 +391,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'QR Code Generator',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Generate styled QR codes with custom dots, eyes, colors, gradients, and embedded logos.',
+      desc: 'Create fully custimized QR code for free.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -406,7 +406,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'QR & Barcode Scanner',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Scan QR codes and barcodes instantly with your camera or by uploading an image. Supports 14+ formats.',
+      desc: 'Scan the QR and barcodes. Support upload and camera.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -419,7 +419,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       title: 'Random Wheel',
       category: 'utilities',
       subGroup: 'Utilities',
-      desc: 'Spin the customizable wheel to draw random items with elimination.',
+      desc: 'Set options, spin the wheel, and draw random items with optional single-draw elimination.',
       icon: (
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>

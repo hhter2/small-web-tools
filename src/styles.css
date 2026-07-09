@@ -1069,38 +1069,7 @@ html[data-theme="dark"] .status-msg {
 }
 
 /* Inline copy button and label row styling for premium feel */
-.label-row-with-copy {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
-}
 
-.copy-btn-inline {
-  background: var(--accent-light);
-  color: var(--accent);
-  border: 1px solid rgba(79, 70, 229, 0.15);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  line-height: 1;
-}
-
-.copy-btn-inline:hover {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: var(--accent);
-}
-
-.copy-btn-inline.copied {
-  background: #10b981;
-  color: #ffffff;
-  border-color: #10b981;
-}
 
 html[data-theme="dark"] .copy-btn-inline {
   border-color: rgba(99, 102, 241, 0.3);
@@ -4659,179 +4628,7 @@ html[data-theme="dark"] .swatch-block.selected {
   background: rgba(16, 185, 129, 0.1);
 }
 
-/* DNA Visual Mode Styles */
-.view-mode-toggle-container {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  background: var(--bg-app);
-  padding: 4px;
-  border-radius: 10px;
-  align-self: flex-start;
-  border: 1px solid var(--border-color);
-  width: fit-content;
-}
 
-.view-mode-btn {
-  background: transparent;
-  border: none;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.view-mode-btn:hover {
-  color: var(--text-main);
-}
-
-.view-mode-btn.active {
-  background: var(--bg-card);
-  color: var(--accent);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="dark"] .view-mode-btn.active {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* Codon Toggle Buttons */
-.codon-toggle-container {
-  display: flex;
-  background: var(--bg-app);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  height: 46px;
-  width: 100%;
-}
-
-.codon-toggle-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  line-height: 1;
-}
-
-.codon-toggle-btn:hover {
-  color: var(--text-main);
-}
-
-.codon-toggle-btn.active {
-  background: var(--bg-card);
-  color: var(--accent);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="dark"] .codon-toggle-btn.active {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-
-.dna-visual-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.dna-visual-placeholder {
-  padding: 48px;
-  text-align: center;
-  color: var(--text-muted);
-  font-weight: 500;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-}
-
-.dna-visual-placeholder.error {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.2);
-  background: rgba(239, 68, 68, 0.02);
-}
-
-.dna-visual-wrapper {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  box-shadow: var(--shadow-card);
-}
-
-.dna-visual-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 500;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-line {
-  display: inline-block;
-  width: 24px;
-  height: 6px;
-  border-radius: 3px;
-}
-
-.legend-line--red {
-  background: #ef4444;
-}
-
-.legend-line--blue {
-  background: #3b82f6;
-  opacity: 0.6;
-}
-
-.dna-visual-scroll-container {
-  width: 100%;
-  overflow-x: auto;
-  white-space: nowrap;
-  padding-bottom: 12px;
-}
-
-.dna-visual-scroll-container::-webkit-scrollbar {
-  height: 8px;
-}
-.dna-visual-scroll-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-.dna-visual-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-
-.dna-svg {
-  display: block;
-}
 
 /* Typing Speed Test Styles */
 .typing-header-row {
@@ -7286,15 +7083,7 @@ html[data-theme="dark"] .ct-fisc-side-bond {
     font-size: 0.82rem;
   }
 
-  /* DNA Visual extra small */
-  .dna-visual-wrapper {
-    padding: 14px 10px;
-  }
 
-  .dna-visual-legend {
-    gap: 12px;
-    font-size: 0.78rem;
-  }
 
   /* ImgMeta extra small */
   .imgmeta-dropzone {

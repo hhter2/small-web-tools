@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
+import ToolHeader from './ui/ToolHeader';
 
 const dnaComplementMap = {
   'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
@@ -329,7 +331,7 @@ export default function DnaConverter() {
 
     if (!cleaned) {
       return (
-        <div className="dna-visual-placeholder">
+        <div className="p-12 text-center text-text-muted font-medium bg-card border border-border rounded-lg">
           Enter a valid sequence to see the visual representation.
         </div>
       );
@@ -337,7 +339,7 @@ export default function DnaConverter() {
 
     if (/[^ACGUTN]/.test(cleaned)) {
       return (
-        <div className="dna-visual-placeholder error">
+        <div className="p-12 text-center text-text-muted font-medium bg-card border border-border rounded-lg text-red-500 border-red-500/20 bg-red-500/[0.02]">
           Error: Only A, T, C, G, U, and N characters are allowed.
         </div>
       );
@@ -375,36 +377,36 @@ export default function DnaConverter() {
     const bottomStrandGroups = getStrandGroups(bottomStrand, '3-5', isRna);
 
     return (
-      <div className="dna-visual-container">
-        <div className="dna-visual-wrapper">
-          <div className="dna-visual-legend">
+      <div className="flex flex-col gap-4 w-full">
+        <div className="bg-card border border-border rounded-lg p-6 max-[480px]:p-3 flex flex-col gap-4 w-full shadow-card">
+          <div className="flex flex-wrap gap-6 max-[480px]:gap-3 text-sm max-[480px]:text-[0.78rem] text-text-muted font-medium border-b border-border pb-3">
             {isTopSense ? (
               <>
-                <div className="legend-item">
-                  <span className="legend-line legend-line--red"></span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444]"></span>
                   <span>Sense Strand (Input: 5' → 3')</span>
                 </div>
-                <div className="legend-item">
-                  <span className="legend-line legend-line--blue" style={{ opacity: 0.3 }}></span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6] opacity-30"></span>
                   <span>Anti-sense Strand (Target: 3' → 5')</span>
                 </div>
               </>
             ) : (
               <>
-                <div className="legend-item">
-                  <span className="legend-line legend-line--blue"></span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6]"></span>
                   <span>Anti-sense Strand (Input: 3' → 5')</span>
                 </div>
-                <div className="legend-item">
-                  <span className="legend-line legend-line--red" style={{ opacity: 0.3 }}></span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444] opacity-30"></span>
                   <span>Sense Strand (Target: 5' → 3')</span>
                 </div>
               </>
             )}
           </div>
           
-          <div className="dna-visual-scroll-container">
-            <svg width={svgWidth} height={svgHeight} className="dna-svg">
+          <div className="w-full overflow-x-auto whitespace-nowrap pb-3">
+            <svg width={svgWidth} height={svgHeight} className="block">
               <defs>
                 <marker id="arrow-right-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
@@ -604,14 +606,15 @@ export default function DnaConverter() {
   };
 
   return (
-    <article id="tool-dna" className="tool-card tool-card--wide active">
-      <h2>DNA/RNA Direction Transfer</h2>
+    <Card id="tool-dna" variant="tool" size="wide">
+      <ToolHeader title="DNA/RNA Direction Transfer" />
       
-      <div className="row">
-        <div className="form-group flex-1">
-          <label htmlFor="dna-seq-type">Sequence Type</label>
+      <div className="flex flex-col md:flex-row gap-4 w-full">
+        <div className="flex flex-col gap-2 w-full flex-1">
+          <label className="text-sm font-semibold text-text-main" htmlFor="dna-seq-type">Sequence Type</label>
           <select
             id="dna-seq-type"
+            className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
             value={seqType}
             onChange={(e) => setSeqType(e.target.value)}
           >
@@ -620,10 +623,11 @@ export default function DnaConverter() {
             <option value="rna">RNA</option>
           </select>
         </div>
-        <div className="form-group flex-1">
-          <label htmlFor="dna-direction">Input Direction</label>
+        <div className="flex flex-col gap-2 w-full flex-1">
+          <label className="text-sm font-semibold text-text-main" htmlFor="dna-direction">Input Direction</label>
           <select
             id="dna-direction"
+            className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
             value={direction}
             onChange={(e) => setDirection(e.target.value)}
           >
@@ -631,26 +635,26 @@ export default function DnaConverter() {
             <option value="3-5">3' → 5'</option>
           </select>
         </div>
-        <div className="form-group flex-1">
-          <label>Codon Display</label>
-          <div className="codon-toggle-container" role="group" aria-label="Codon Display Mode">
+        <div className="flex flex-col gap-2 w-full flex-1">
+          <label className="text-sm font-semibold text-text-main">Codon Display</label>
+          <div className="flex bg-app p-1 rounded-md border border-border h-[46px] w-full" role="group" aria-label="Codon Display Mode">
             <button
               type="button"
-              className={`codon-toggle-btn ${codonMode === 'none' ? 'active' : ''}`}
+              className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'none' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('none')}
             >
               Standard
             </button>
             <button
               type="button"
-              className={`codon-toggle-btn ${codonMode === 'codon' ? 'active' : ''}`}
+              className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'codon' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('codon')}
             >
               Codons
             </button>
             <button
               type="button"
-              className={`codon-toggle-btn ${codonMode === 'amino' ? 'active' : ''}`}
+              className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'amino' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('amino')}
             >
               Amino Acids
@@ -659,10 +663,11 @@ export default function DnaConverter() {
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="dna-input">DNA/RNA Sequence</label>
+      <div className="flex flex-col gap-2 w-full">
+        <label className="text-sm font-semibold text-text-main" htmlFor="dna-input">DNA/RNA Sequence</label>
         <textarea
           id="dna-input"
+          className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
           rows="4"
           placeholder="Enter sequence (e.g., 5'-CACGT-3' or simply CACGT)"
           value={input}
@@ -670,17 +675,17 @@ export default function DnaConverter() {
         />
       </div>
 
-      <div className="view-mode-toggle-container">
+      <div className="flex gap-2 mb-5 bg-app p-1 rounded-md align-self-start border border-border w-fit">
         <button
           type="button"
-          className={`view-mode-btn ${viewMode === 'text' ? 'active' : ''}`}
+          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
           onClick={() => setViewMode('text')}
         >
           Text Mode
         </button>
         <button
           type="button"
-          className={`view-mode-btn ${viewMode === 'figure' ? 'active' : ''}`}
+          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
           onClick={() => setViewMode('figure')}
         >
           Figure Mode
@@ -688,48 +693,67 @@ export default function DnaConverter() {
       </div>
 
       {viewMode === 'text' ? (
-        <div className="grid-outputs">
-          <div className="form-group">
-            <div className="label-row-with-copy">
-              <label htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
               <button
-                className={`copy-btn-inline ${copiedBtn === 'opposite' ? 'copied' : ''}`}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'opposite' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.opposite, 'opposite')}
               >
                 {copiedBtn === 'opposite' ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <input id="dna-output-opposite" type="text" readOnly value={outputs.opposite} />
+            <input 
+              id="dna-output-opposite" 
+              type="text" 
+              className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card read-only:bg-app read-only:opacity-80 read-only:focus:ring-0 read-only:focus:border-border" 
+              readOnly 
+              value={outputs.opposite} 
+            />
           </div>
-          <div className="form-group">
-            <div className="label-row-with-copy">
-              <label htmlFor="dna-output-revcomp">Reverse Complement (Standard 5' → 3')</label>
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-revcomp">Reverse Complement (Standard 5' → 3')</label>
               <button
-                className={`copy-btn-inline ${copiedBtn === 'revcomp' ? 'copied' : ''}`}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'revcomp' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.revcomp, 'revcomp')}
               >
                 {copiedBtn === 'revcomp' ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <input id="dna-output-revcomp" type="text" readOnly value={outputs.revcomp} />
+            <input 
+              id="dna-output-revcomp" 
+              type="text" 
+              className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card read-only:bg-app read-only:opacity-80 read-only:focus:ring-0 read-only:focus:border-border" 
+              readOnly 
+              value={outputs.revcomp} 
+            />
           </div>
-          <div className="form-group full-width">
-            <div className="label-row-with-copy">
-              <label htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
+          <div className="flex flex-col gap-2 w-full col-span-1 md:col-span-2">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
               <button
-                className={`copy-btn-inline ${copiedBtn === 'reverse' ? 'copied' : ''}`}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'reverse' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.reverse, 'reverse')}
               >
                 {copiedBtn === 'reverse' ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <input id="dna-output-reverse" type="text" readOnly value={outputs.reverse} />
+            <input 
+              id="dna-output-reverse" 
+              type="text" 
+              className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card read-only:bg-app read-only:opacity-80 read-only:focus:ring-0 read-only:focus:border-border" 
+              readOnly 
+              value={outputs.reverse} 
+            />
           </div>
         </div>
       ) : (
         renderVisualDna()
       )}
-      <p className="small status-msg" id="dna-status" style={statusStyle}>{statusText}</p>
-    </article>
+      <p className="min-h-[18px] text-red-500 font-medium text-sm mt-2" id="dna-status" style={statusStyle}>{statusText}</p>
+    </Card>
   );
 }
+

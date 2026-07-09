@@ -159,5 +159,4 @@ npm run preview
   - Updated the `Card` primitive to use `rounded-2xl` for the `home` variant (matching the original design's 16px border-radius) and allow theme overrides of hover/border styles.
   - Consolidated the home dashboard tools list by passing `navItems` as a `tools` prop from `App.jsx` and defining a single source of truth for tool descriptions.
   - Pruned 80+ dead CSS class rules (including `.home-card`, `.audiometa-*` legacy, and alert banner classes) from `src/styles.css`.
-
-
+- **Tailwind and Theme Variable Restore**: Restored the accidentally deleted `@tailwind` directives, Google Fonts import, and light-theme `:root` CSS custom properties at the top of `src/styles.css` to fix the broken site layout and enable styling/theme systems correctly.

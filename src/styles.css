@@ -1,3 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+
+  /* Light Mode Design Tokens – Premium SaaS Slate/Indigo Theme */
+  --bg-app: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-sidebar: #0f172a;
+  --text-sidebar-muted: #64748b;
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-light: rgba(16, 185, 129, 0.08);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --accent-mint: #10b981;
+  --accent-mint-light: rgba(16, 185, 129, 0.1);
+  --border-color: #e2e8f0;
+  --border-sidebar: #e2e8f0;
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px rgba(15, 23, 42, 0.04);
+  --shadow-sidebar: 1px 0 0px #e2e8f0;
+  --scrollbar-bg: #f8fafc;
+  --scrollbar-thumb: #cbd5e1;
+  --border-hover: #cbd5e1;
+  --focus-ring: rgba(16, 185, 129, 0.2);
+  --bg-footer: #f8fafc;
+  --nav-active-bg: rgba(16, 185, 129, 0.08);
+  --nav-active-text: #059669;
+  --nav-hover-bg: rgba(15, 23, 42, 0.02);
+  --bg-search-sidebar: #f1f5f9;
+  --bg-header: #ffffff;
+
+  /* Alert Banner Tokens */
+  --banner-height: 0px;
+  --bg-warning-banner: #fffbeb;
+  --border-warning-banner: #fde68a;
+  --text-warning-banner: #b45309;
+}
 
 html[data-theme="dark"] {
   color-scheme: dark;

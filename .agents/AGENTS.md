@@ -152,7 +152,7 @@ This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in syn
 | DnaConverter | done |
 | CodonTable | pending |
 | IpLookup | done |
-| ImgMeta | pending |
+| ImgMeta | done |
 | OfficeMeta | done |
 | AudioMeta | done |
 | VideoMeta | pending |

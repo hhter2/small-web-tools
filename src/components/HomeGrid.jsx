@@ -94,7 +94,7 @@ function ToolCard({ tool, onSelectTool }) {
       onClick={() => onSelectTool(tool.id)}
     >
       <div className="flex items-start gap-4 w-full">
-        <div className={`w-[46px] h-[46px] rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all duration-300 ${theme.iconBg}`}>
+        <div className={`w-[46px] h-[46px] rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all duration-300 ${theme.iconBg} [&_svg]:w-5 [&_svg]:h-5 [&_svg]:flex-shrink-0`}>
           {tool.icon}
         </div>
         <div className="flex flex-col gap-1.5 flex-1">

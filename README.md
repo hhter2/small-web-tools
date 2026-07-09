@@ -160,3 +160,4 @@ npm run preview
   - Consolidated the home dashboard tools list by passing `navItems` as a `tools` prop from `App.jsx` and defining a single source of truth for tool descriptions.
   - Pruned 80+ dead CSS class rules (including `.home-card`, `.audiometa-*` legacy, and alert banner classes) from `src/styles.css`.
 - **Tailwind and Theme Variable Restore**: Restored the accidentally deleted `@tailwind` directives, Google Fonts import, and light-theme `:root` CSS custom properties at the top of `src/styles.css` to fix the broken site layout and enable styling/theme systems correctly.
+- **Toolcard Icon Size Fix**: Added explicit styling sizing rules (`[&_svg]:w-5 [&_svg]:h-5`) in the `ToolCard` icon container in `HomeGrid.jsx` to correct the size of dashboard tool icons to their intended 20px size.

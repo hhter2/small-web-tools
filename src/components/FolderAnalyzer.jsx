@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+
 
 const TEXT_EXTENSIONS = new Set([
   'txt', 'md', 'markdown', 'json', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 
@@ -1074,34 +1078,39 @@ export default function FolderAnalyzer() {
   const flattenedRows = treeData ? getFlattenedRows(treeData) : [];
 
   return (
-    <article 
+    <Card 
       id="tool-folder-analyzer" 
-      className={`tool-card tool-card--wide active ${dragOver ? 'dragover-active' : ''}`}
+      variant="tool" 
+      size="wide"
+      className={`relative ${dragOver ? 'border-accent bg-accent-light/5' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="folder-analyzer-header">
-        <div className="header-title-group">
-          <h2>Folder Structure Analyzer</h2>
+      <div className="flex justify-between items-start flex-wrap gap-4 w-full mb-3">
+        <div className="flex-1 min-w-0">
+          <ToolHeader 
+            title="Folder Structure Analyzer" 
+            description="Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side." 
+          />
           {status === 'success' && activeProject && scannedProjects.length === 1 && (
-            <div className="scanned-path-subtitle-wrapper">
-              <div className="scanned-path-subtitle">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="subtitle-icon">
+            <div className="flex flex-wrap gap-3 items-center mt-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-text-muted bg-app border border-border p-1.5 px-3 rounded-lg">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" className="text-accent shrink-0">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span>{activeProject.path || activeProject.name}</span>
+                <span className="truncate max-w-[200px]" title={activeProject.path || activeProject.name}>{activeProject.path || activeProject.name}</span>
               </div>
               
-              <div className="single-add-path-inline">
+              <div className="relative">
                 {showAddPathInput ? (
-                  <form onSubmit={handleInlineAddPath} className="inline-add-path-form">
+                  <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
                     <input
                       type="text"
                       placeholder="Type path to add..."
                       value={inlinePath}
                       onChange={(e) => setInlinePath(e.target.value)}
-                      className="inline-add-input"
+                      className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
                       autoFocus
                       onBlur={() => {
                         setTimeout(() => {
@@ -1109,11 +1118,11 @@ export default function FolderAnalyzer() {
                         }, 200);
                       }}
                     />
-                    <button type="submit" className="btn-primary btn-xs">Add</button>
-                    <button type="button" className="btn-secondary btn-xs" onClick={() => setShowAddPathInput(false)}>Cancel</button>
+                    <Button type="submit" size="sm" variant="primary">Add</Button>
+                    <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
                   </form>
                 ) : (
-                  <button className="batch-tab-btn-add" onClick={() => setShowAddPathInput(true)}>
+                  <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
                     + Add Path
                   </button>
                 )}
@@ -1122,33 +1131,33 @@ export default function FolderAnalyzer() {
           )}
         </div>
         {status === 'success' && (
-          <button className="btn-secondary btn-clear" onClick={handleClear}>
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" className="button-icon">
+          <Button variant="secondary" size="sm" onClick={handleClear} className="flex items-center gap-1.5 self-start">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" className="shrink-0">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
             Clear All
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Batch project tabs */}
       {status === 'success' && scannedProjects.length > 1 && (
-        <div className="batch-project-tabs">
+        <div className="flex flex-wrap gap-2 items-center border-b border-border pb-3 mb-4 mt-2">
           {scannedProjects.map((proj, idx) => (
-            <div key={proj.path + idx} className={`batch-tab-wrapper ${idx === activeProjectIndex ? 'active' : ''}`}>
+            <div key={proj.path + idx} className={`flex items-center gap-1.5 p-1.5 px-3 rounded-lg border text-xs font-medium cursor-pointer transition-colors max-w-[200px] truncate ${idx === activeProjectIndex ? 'border-accent bg-accent-light/10 text-text-main' : 'border-border bg-card text-text-muted hover:border-accent hover:text-text-main'}`}>
               <button
-                className={`batch-tab-btn ${idx === activeProjectIndex ? 'active' : ''}`}
+                className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer truncate text-left text-xs font-medium text-inherit"
                 onClick={() => { setActiveProjectIndex(idx); setCollapsedPaths({}); }}
                 title={proj.path}
               >
-                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none">
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none" className="shrink-0">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
-                {proj.name}
+                <span className="truncate">{proj.name}</span>
               </button>
               <button 
-                className="batch-tab-remove-btn" 
+                className="text-text-muted hover:text-red-500 font-bold ml-1 text-sm bg-transparent border-none cursor-pointer" 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveProject(idx);
@@ -1160,15 +1169,15 @@ export default function FolderAnalyzer() {
             </div>
           ))}
           
-          <div className="batch-tab-add-wrapper">
+          <div className="relative">
             {showAddPathInput ? (
-              <form onSubmit={handleInlineAddPath} className="inline-add-path-form">
+              <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
                 <input
                   type="text"
                   placeholder="Type path to add..."
                   value={inlinePath}
                   onChange={(e) => setInlinePath(e.target.value)}
-                  className="inline-add-input"
+                  className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
                   autoFocus
                   onBlur={() => {
                     setTimeout(() => {
@@ -1176,22 +1185,16 @@ export default function FolderAnalyzer() {
                     }, 200);
                   }}
                 />
-                <button type="submit" className="btn-primary btn-xs">Add</button>
-                <button type="button" className="btn-secondary btn-xs" onClick={() => setShowAddPathInput(false)}>Cancel</button>
+                <Button type="submit" size="sm" variant="primary">Add</Button>
+                <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
               </form>
             ) : (
-              <button className="batch-tab-btn-add" onClick={() => setShowAddPathInput(true)}>
+              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
                 + Add Path
               </button>
             )}
           </div>
         </div>
-      )}
-
-      {status !== 'success' && (
-        <p className="tool-description">
-          Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side.
-        </p>
       )}
 
       {/* Hidden file input */}
@@ -1207,13 +1210,14 @@ export default function FolderAnalyzer() {
 
       {/* Input Options (only visible when not showing results) */}
       {status !== 'success' && (
-        <div className="folder-analyzer-inputs">
-          <div className="form-group flex-1">
-            <label htmlFor="custom-root-path">Folder Path / Custom Root Name</label>
-            <div className="path-input-group">
+        <div className="flex gap-4 items-end mt-4">
+          <div className="flex flex-col gap-2 w-full flex-1">
+            <label htmlFor="custom-root-path" className="text-sm font-semibold text-text-main">Folder Path / Custom Root Name</label>
+            <div className="flex gap-3 w-full items-stretch">
               <input
                 type="text"
                 id="custom-root-path"
+                className="flex-1 min-w-0 px-4 py-2.5 h-12 bg-card border border-border rounded-lg text-text-main placeholder-text-muted/50 outline-none transition-all focus:border-accent text-sm"
                 placeholder="Enter folder path or custom root name..."
                 value={customPath}
                 onChange={(e) => setCustomPath(e.target.value)}
@@ -1223,21 +1227,22 @@ export default function FolderAnalyzer() {
                   }
                 }}
               />
-              <button
+              <Button
                 type="button"
-                className="btn-primary"
+                variant="primary"
                 onClick={handleLocalPathScan}
                 disabled={!customPath.trim()}
+                className="h-12 px-6 flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="button-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                   <line x1="12" y1="11" x2="12" y2="17"></line>
                   <line x1="9" y1="14" x2="15" y2="14"></line>
                 </svg>
-                Analyze Path
-              </button>
+                <span>Analyze Path</span>
+              </Button>
             </div>
-            <span className="path-help-text">
+            <span className="text-xs text-text-muted mt-1.5">
               * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
             </span>
           </div>
@@ -1247,32 +1252,32 @@ export default function FolderAnalyzer() {
       {/* Selection Areas (only visible when not showing results) */}
       {status !== 'success' && (
         <div 
-          className="folder-analyzer-dropzone"
+          className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5 mt-4"
           onClick={() => folderInputRef.current && folderInputRef.current.click()}
         >
-          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="17 8 12 3 7 8"></polyline>
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
-          <h3>Drag &amp; Drop Folder here</h3>
-          <p>or click to select folder from your computer</p>
+          <h3 className="text-lg font-bold text-text-main">Drag &amp; Drop Folder here</h3>
+          <p className="text-sm text-text-muted">or click to select folder from your computer</p>
         </div>
       )}
 
       {/* Scanning status */}
       {status === 'scanning' && (
-        <div className="folder-analyzer-loading">
-          <div className="loading-spinner"></div>
-          <h4>Scanning your folder...</h4>
-          <p>{progress.phase}</p>
-          <div className="progress-bar-container">
+        <div className="flex flex-col items-center justify-center p-8 gap-4 bg-card border border-border rounded-xl mt-4">
+          <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin"></div>
+          <h4 className="text-lg font-bold text-text-main">Scanning your folder...</h4>
+          <p className="text-sm text-text-muted">{progress.phase}</p>
+          <div className="w-full max-w-md h-2 bg-border rounded-full overflow-hidden mt-2">
             <div 
-              className="progress-bar-fill" 
+              className="h-full bg-accent transition-all duration-300" 
               style={{ width: `${(progress.current / (progress.total || 1)) * 100}%` }}
             ></div>
           </div>
-          <span className="progress-numbers">
+          <span className="text-xs text-text-muted">
             {progress.current} / {progress.total} files completed
           </span>
         </div>
@@ -1280,169 +1285,172 @@ export default function FolderAnalyzer() {
 
       {/* Error state */}
       {status === 'error' && (
-        <div className="folder-analyzer-error">
-          <svg viewBox="0 0 24 24" width="32" height="32" stroke="#ef4444" strokeWidth="2" fill="none">
+        <div className="flex flex-col items-center justify-center p-8 gap-4 bg-card border border-border rounded-xl mt-4">
+          <svg viewBox="0 0 24 24" width="32" height="32" stroke="#ef4444" strokeWidth="2" fill="none" className="shrink-0">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
-          <h4>Something went wrong</h4>
-          <p>{errorMsg}</p>
-          <button className="btn-secondary" onClick={() => setStatus('idle')}>Try Again</button>
+          <h4 className="text-lg font-bold text-text-main">Something went wrong</h4>
+          <p className="text-sm text-red-500 font-medium">{errorMsg}</p>
+          <Button variant="secondary" onClick={() => setStatus('idle')}>Try Again</Button>
         </div>
       )}
 
       {/* Result stage */}
       {status === 'success' && treeData && (
-        <div className="folder-analyzer-results">
+        <div className="flex flex-col gap-5 mt-4">
           
           {/* Metrics summary */}
-          <div className="folder-analyzer-summary">
-            <div className="summary-badge">
-              <span className="badge-label">Total Files</span>
-              <span className="badge-value">{projectStats.filesCount}</span>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Total Files</span>
+              <span className="text-2xl font-bold text-text-main">{projectStats.filesCount}</span>
             </div>
-            <div className="summary-badge">
-              <span className="badge-label">Total Code Lines</span>
-              <span className="badge-value highlight">
-                {projectStats.totalLines.toLocaleString()}
-              </span>
+            <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Total Code Lines</span>
+              <span className="text-2xl font-bold text-accent">{projectStats.totalLines.toLocaleString()}</span>
             </div>
-            <div className="summary-badge">
-              <span className="badge-label">Project Size</span>
-              <span className="badge-value">
-                {formatSize(projectStats.totalSize)}
-              </span>
+            <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Project Size</span>
+              <span className="text-2xl font-bold text-text-main">{formatSize(projectStats.totalSize)}</span>
             </div>
           </div>
 
           {/* Result view header actions */}
-          <div className="folder-analyzer-actions-bar">
-            <div className="view-mode-tabs">
-              <button 
-                className={`tab-btn ${viewMode === 'figure' ? 'active' : ''}`}
+          <div className="flex flex-wrap gap-4 items-center justify-between bg-card border border-border rounded-xl p-3 px-4">
+            <div className="flex gap-2">
+              <Button 
+                variant={viewMode === 'figure' ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() => setViewMode('figure')}
               >
                 Figure
-              </button>
-              <button 
-                className={`tab-btn ${viewMode === 'text' ? 'active' : ''}`}
+              </Button>
+              <Button 
+                variant={viewMode === 'text' ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() => setViewMode('text')}
               >
                 Plaintext
-              </button>
+              </Button>
             </div>
 
             {/* Tree Collapse/Expand Actions */}
             {viewMode === 'figure' && (
-              <div className="tree-expansion-controls">
-                <button 
-                  className="btn-secondary btn-sm" 
-                  onClick={toggleExpandCollapseAll} 
-                  title={hasCollapsedSubfolders ? "Expand all folders" : "Collapse all folders"}
-                >
-                  {hasCollapsedSubfolders ? "Expand All" : "Collapse All"}
-                </button>
-              </div>
+              <Button 
+                variant="secondary"
+                size="sm"
+                onClick={toggleExpandCollapseAll} 
+                title={hasCollapsedSubfolders ? "Expand all folders" : "Collapse all folders"}
+              >
+                {hasCollapsedSubfolders ? "Expand All" : "Collapse All"}
+              </Button>
             )}
 
             {/* Filters Toggles */}
-            <div className="filter-switches-group">
-              <label className="switch-toggle">
+            <div className="flex flex-wrap gap-4 items-center">
+              <label className="flex items-center gap-2 text-xs font-semibold text-text-main cursor-pointer select-none">
                 <input 
                   type="checkbox" 
                   id="toggle-system-exclude"
                   checked={showSystemExclude}
                   onChange={(e) => setShowSystemExclude(e.target.checked)}
+                  className="rounded border-border text-accent focus:ring-accent w-4 h-4"
                 />
-                <span className="switch-slider"></span>
-                <span className="switch-label">Excluded Folders</span>
+                <span>Excluded Folders</span>
               </label>
               
               {gitignoreText && (
-                <label className="switch-toggle">
+                <label className="flex items-center gap-2 text-xs font-semibold text-text-main cursor-pointer select-none">
                   <input 
                     type="checkbox" 
                     id="toggle-gitignore"
                     checked={showGitignored}
                     onChange={(e) => setShowGitignored(e.target.checked)}
+                    className="rounded border-border text-accent focus:ring-accent w-4 h-4"
                   />
-                  <span className="switch-slider"></span>
-                  <span className="switch-label">Gitignored Files</span>
+                  <span>Gitignored Files</span>
                 </label>
               )}
             </div>
 
-            <div className="action-buttons-group">
-              <button 
-                className="action-icon-btn" 
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="secondary"
+                size="sm"
                 title="Copy tree structure"
                 onClick={handleCopy}
+                className="relative"
               >
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="shrink-0">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
-                {copySuccess && <span className="action-tooltip">Copied!</span>}
-              </button>
+                {copySuccess && <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-2 py-0.5 rounded shadow">Copied!</span>}
+              </Button>
 
               <div 
-                className="download-dropdown-wrapper"
+                className="relative"
                 ref={downloadWrapperRef}
                 onMouseEnter={() => setDownloadOpen(true)}
                 onMouseLeave={() => setDownloadOpen(false)}
               >
-                <button 
-                  className={`action-icon-btn ${downloadOpen ? 'active' : ''}`}
+                <Button 
+                  variant="secondary"
+                  size="sm"
                   title="Download structure file"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDownloadOpen(!downloadOpen);
                   }}
+                  active={downloadOpen}
                 >
-                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" className="shrink-0">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                </button>
-                <div className={`download-options ${downloadOpen ? 'show' : ''}`}>
-                  <button onClick={() => { handleDownload('txt'); setDownloadOpen(false); }}>As Plaintext (.txt)</button>
-                  <button onClick={() => { handleDownload('svg'); setDownloadOpen(false); }}>As SVG Diagram (.svg)</button>
-                </div>
+                </Button>
+                {downloadOpen && (
+                  <div className="absolute right-0 mt-1 bg-card border border-border rounded-xl shadow-lg py-1.5 z-50 min-w-[160px] flex flex-col">
+                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('txt'); setDownloadOpen(false); }}>As Plaintext (.txt)</button>
+                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('svg'); setDownloadOpen(false); }}>As SVG Diagram (.svg)</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Rendering outputs */}
           {viewMode === 'text' ? (
-            <div className="folder-analyzer-text-viewer">
-              <pre>
-                <code>{generateAsciiTree(treeData)}</code>
+            <div className="bg-app border border-border rounded-xl p-5 overflow-auto max-h-[500px]">
+              <pre className="m-0">
+                <code className="font-mono text-xs text-text-main">{generateAsciiTree(treeData)}</code>
               </pre>
             </div>
           ) : (
-            <div className="folder-analyzer-table-viewer">
-              <table className="analyzer-table">
+            <div className="bg-card border border-border rounded-xl overflow-x-auto w-full">
+              <table className="w-full border-collapse text-left text-sm min-w-[600px]">
                 <thead>
-                  <tr>
-                    <th onClick={() => handleSort('name')} className="sortable-header">
-                      <div className="header-sort-wrapper">
+                  <tr className="bg-app border-b border-border">
+                    <th onClick={() => handleSort('name')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
+                      <div className="flex items-center gap-1.5">
                         Name {renderSortIcon('name')}
                       </div>
                     </th>
-                    <th onClick={() => handleSort('type')} className="sortable-header">
-                      <div className="header-sort-wrapper">
+                    <th onClick={() => handleSort('type')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
+                      <div className="flex items-center gap-1.5">
                         Type {renderSortIcon('type')}
                       </div>
                     </th>
-                    <th onClick={() => handleSort('lines')} className="sortable-header">
-                      <div className="header-sort-wrapper">
+                    <th onClick={() => handleSort('lines')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
+                      <div className="flex items-center gap-1.5">
                         Lines {renderSortIcon('lines')}
                       </div>
                     </th>
-                    <th onClick={() => handleSort('size')} className="sortable-header">
-                      <div className="header-sort-wrapper">
+                    <th onClick={() => handleSort('size')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
+                      <div className="flex items-center gap-1.5">
                         Size {renderSortIcon('size')}
                       </div>
                     </th>
@@ -1451,58 +1459,57 @@ export default function FolderAnalyzer() {
                 <tbody>
                   {flattenedRows.map((row) => {
                     const isDir = row.type === 'directory';
-                    const hasChildren = row.children && row.children.length > 0;
                     const isCollapsed = collapsedPaths[row.path];
-
                     const isDimmed = row.isIgnored || row.name === '.gitignore';
 
                     return (
-                      <tr key={row.path} className={`table-row-${row.type} ${isDimmed ? 'is-ignored' : ''}`}>
-                        <td>
+                      <tr key={row.path} className={`border-b border-border last:border-0 transition-colors hover:bg-hover-bg/30 ${isDimmed ? 'opacity-40' : ''}`}>
+                        <td className="p-2 px-5">
                           <div 
-                            className="table-cell-name" 
+                            className="flex items-center gap-2" 
                             style={{ paddingLeft: `${row.depth * 20}px` }}
                           >
-                            {isDir && (
+                            {isDir ? (
                               <button 
-                                className={`collapse-arrow-btn ${isCollapsed ? 'collapsed' : ''}`}
+                                className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-hover-bg text-text-muted hover:text-text-main bg-transparent border-none cursor-pointer shrink-0 transition-all"
                                 onClick={() => toggleFolder(row.path)}
                                 aria-label={isCollapsed ? 'Expand folder' : 'Collapse folder'}
                               >
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="3" fill="none">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="3" fill="none" className={`transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}>
                                   <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
                               </button>
+                            ) : (
+                              <span className="w-6 shrink-0"></span>
                             )}
-                            {!isDir && <span className="collapse-arrow-spacer"></span>}
-                            <span className="item-icon-wrapper">
+                            <span className="flex items-center justify-center shrink-0 w-[18px] h-[18px]">
                               {renderSvgIcon(row.name, row.type)}
                             </span>
                             <span 
-                              className={`row-title-text ${isDir ? 'is-dir' : ''}`}
+                              className={`font-mono text-xs text-text-main user-select-none cursor-pointer ${isDir ? 'font-bold' : ''}`}
                               onClick={() => isDir && toggleFolder(row.path)}
                             >
                               {row.name}{isDir && '/'}
                             </span>
                           </div>
                         </td>
-                        <td className="cell-type">{getFileLabel(row.name, row.type)}</td>
-                        <td className="cell-lines">
+                        <td className="p-2 px-5 text-xs text-text-muted font-medium">{getFileLabel(row.name, row.type)}</td>
+                        <td className="p-2 px-5 text-xs font-mono">
                           {isDir ? (
-                            <span className="folder-lines-badge">
+                            <span className="bg-secondary/40 text-text-muted px-2 py-0.5 rounded-full font-sans font-semibold text-[10px]">
                               {row.lineCount.toLocaleString()} total
                             </span>
                           ) : (
                             row.isText ? (
-                              <span className="file-lines-badge">
+                              <span className="bg-accent-light/10 text-accent px-2 py-0.5 rounded-full font-sans font-semibold text-[10px]">
                                 {row.lineCount.toLocaleString()} lines
                               </span>
                             ) : (
-                              <span className="binary-label">binary</span>
+                              <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider font-sans bg-secondary px-1.5 py-0.5 rounded">binary</span>
                             )
                           )}
                         </td>
-                        <td className="cell-size">{formatSize(row.size)}</td>
+                        <td className="p-2 px-5 text-xs text-text-main font-mono">{formatSize(row.size)}</td>
                       </tr>
                     );
                   })}
@@ -1513,6 +1520,6 @@ export default function FolderAnalyzer() {
 
         </div>
       )}
-    </article>
+    </Card>
   );
 }

@@ -1257,60 +1257,62 @@ export default function App() {
           {/* Footer */}
           <footer className="mt-auto w-full bg-footer border-t border-border">
             {/* Footer Links Grid */}
-            <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
-              {categories.map(cat => {
-                const catItems = navItems.filter(item => item.category === cat.id);
-                if (catItems.length === 0) return null;
-                return (
-                  <div key={cat.id} className="flex flex-col gap-[10px]">
-                    <button
-                      className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
-                      onClick={() => {
-                        setActiveTool('tool-home');
-                        setSelectedHomeTab(cat.id);
-                      }}
-                    >
-                      {cat.name}
-                    </button>
-                    {cat.id === 'utilities' ? (
-                      (() => {
-                        const subGroups = {};
-                        catItems.forEach(item => {
-                          const sg = item.subGroup || 'Utilities';
-                          if (!subGroups[sg]) subGroups[sg] = [];
-                          subGroups[sg].push(item);
-                        });
-                        const sortedSubGroupNames = Object.keys(subGroups).sort();
-                        return sortedSubGroupNames.map(sgName => (
-                          <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
-                            <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
-                            {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                              <button
-                                key={item.id}
-                                className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
-                                onClick={() => handleNavClick(item.id)}
-                              >
-                                {item.name}
-                              </button>
-                            ))}
-                          </div>
-                        ));
-                      })()
-                    ) : (
-                      catItems.map(item => (
-                        <button
-                          key={item.id}
-                          className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
-                          onClick={() => handleNavClick(item.id)}
-                        >
-                          {item.name}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {activeTool === 'tool-home' && (
+              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
+                {categories.map(cat => {
+                  const catItems = navItems.filter(item => item.category === cat.id);
+                  if (catItems.length === 0) return null;
+                  return (
+                    <div key={cat.id} className="flex flex-col gap-[10px]">
+                      <button
+                        className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
+                        onClick={() => {
+                          setActiveTool('tool-home');
+                          setSelectedHomeTab(cat.id);
+                        }}
+                      >
+                        {cat.name}
+                      </button>
+                      {cat.id === 'utilities' ? (
+                        (() => {
+                          const subGroups = {};
+                          catItems.forEach(item => {
+                            const sg = item.subGroup || 'Utilities';
+                            if (!subGroups[sg]) subGroups[sg] = [];
+                            subGroups[sg].push(item);
+                          });
+                          const sortedSubGroupNames = Object.keys(subGroups).sort();
+                          return sortedSubGroupNames.map(sgName => (
+                            <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
+                              <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
+                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                                <button
+                                  key={item.id}
+                                  className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
+                                  onClick={() => handleNavClick(item.id)}
+                                >
+                                  {item.name}
+                                </button>
+                              ))}
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        catItems.map(item => (
+                          <button
+                            key={item.id}
+                            className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
+                            onClick={() => handleNavClick(item.id)}
+                          >
+                            {item.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Footer Bottom Bar */}
             <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-3 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-[500px]:px-4 max-[500px]:py-[10px]">

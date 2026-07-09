@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import FieldInput from './ui/FieldInput';
+import ToolHeader from './ui/ToolHeader';
 
 async function ipLookup(ip) {
   const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -57,6 +61,24 @@ function getFlagEmoji(countryCode) {
     .replace(/./g, (char) =>
       String.fromCodePoint(char.charCodeAt(0) + 127397)
     );
+}
+
+/** Inline copy button styled to match legacy .copy-btn-inline */
+function CopyBtn({ value, copiedKey, thisKey, onCopy }) {
+  const isCopied = copiedKey === thisKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onCopy(value, thisKey)}
+      className={`px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 leading-none border
+        ${isCopied
+          ? 'bg-[#10b981] text-white border-[#10b981]'
+          : 'bg-accent-light text-accent border-accent/15 hover:bg-accent hover:text-white hover:border-accent'
+        }`}
+    >
+      {isCopied ? 'Copied!' : 'Copy'}
+    </button>
+  );
 }
 
 export default function IpLookup() {
@@ -122,127 +144,76 @@ export default function IpLookup() {
   }
 
   return (
-    <article id="tool-iplookup" className="tool-card tool-card--wide active">
-      <h2>IP Address Lookup</h2>
-      <div className="row">
-        <div className="form-group flex-1">
-          <label htmlFor="iplookup-input">IP Address</label>
-          <div className="search-input-group">
-            <input
-              id="iplookup-input"
-              type="text"
-              placeholder="Enter IP address (leave blank for your current IP)..."
-              value={ipInput}
-              onChange={(e) => setIpInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  doLookup();
-                }
-              }}
-            />
-            <button
-              id="iplookup-btn"
-              type="button"
-              className="btn-primary"
-              onClick={doLookup}
-              disabled={loading}
-            >
-              Lookup
-            </button>
-          </div>
+    <Card id="tool-iplookup" variant="tool" size="wide">
+      <ToolHeader title="IP Address Lookup" />
+      <div className="flex flex-col gap-2 w-full">
+        <label htmlFor="iplookup-input" className="text-sm font-semibold text-text-main">IP Address</label>
+        <div className="flex gap-3 w-full">
+          <input
+            id="iplookup-input"
+            type="text"
+            placeholder="Enter IP address (leave blank for your current IP)..."
+            value={ipInput}
+            onChange={(e) => setIpInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                doLookup();
+              }
+            }}
+            className="flex-1 px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
+          />
+          <Button
+            id="iplookup-btn"
+            type="button"
+            variant="primary"
+            onClick={doLookup}
+            disabled={loading}
+          >
+            Lookup
+          </Button>
         </div>
       </div>
-      
+
       {loading && (
-        <div id="iplookup-loader" className="loader-container">
-          <div className="spinner"></div>
+        <div id="iplookup-loader" className="flex flex-col items-center justify-center gap-3 py-6">
+          <div className="w-10 h-10 border-4 border-border border-t-accent rounded-full animate-spin" />
           <span>Fetching IP details...</span>
         </div>
       )}
 
       {showResults && (
-        <div id="iplookup-results" className="results-container">
-          <div className="iplookup-results-layout">
-            <div className="grid-outputs">
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-ip">IP Address</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'ip' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(result.ip, 'ip')}
-                  >
-                    {copiedBtn === 'ip' ? 'Copied!' : 'Copy'}
-                  </button>
+        <div id="iplookup-results" className="w-full">
+          <div className="grid grid-cols-[1.2fr_1fr] gap-6 w-full max-[900px]:grid-cols-1 max-[900px]:gap-5">
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { id: 'iplookup-res-ip', label: 'IP Address', val: result.ip || "Unknown", copyKey: 'ip' },
+                { id: 'iplookup-res-location', label: 'Location (City / Zip)', val: locationVal, copyKey: 'location' },
+                { id: 'iplookup-res-region-country', label: 'Region & Country', val: regionCountryVal, copyKey: 'regionCountry' },
+                { id: 'iplookup-res-org', label: 'Organization (ISP)', val: result.org || "Unknown", copyKey: 'org' },
+                { id: 'iplookup-res-timezone', label: 'Timezone', val: timezoneVal, copyKey: 'timezone' },
+                { id: 'iplookup-res-coords', label: 'Coordinates', val: coordsVal, copyKey: 'coords' },
+              ].map(({ id, label, val, copyKey }) => (
+                <div key={copyKey} className="flex flex-col gap-2 w-full">
+                  <div className="flex justify-between items-center mb-0.5">
+                    <label htmlFor={id} className="text-sm font-semibold text-text-main">{label}</label>
+                    <CopyBtn value={val} copiedKey={copiedBtn} thisKey={copyKey} onCopy={handleCopy} />
+                  </div>
+                  <input
+                    id={id}
+                    type="text"
+                    readOnly
+                    value={val}
+                    className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none read-only:opacity-80"
+                  />
                 </div>
-                <input id="iplookup-res-ip" type="text" readOnly value={result.ip || "Unknown"} />
-              </div>
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-location">Location (City / Zip)</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'location' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(locationVal, 'location')}
-                  >
-                    {copiedBtn === 'location' ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <input id="iplookup-res-location" type="text" readOnly value={locationVal} />
-              </div>
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-region-country">Region &amp; Country</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'regionCountry' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(regionCountryVal, 'regionCountry')}
-                  >
-                    {copiedBtn === 'regionCountry' ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <input id="iplookup-res-region-country" type="text" readOnly value={regionCountryVal} />
-              </div>
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-org">Organization (ISP)</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'org' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(result.org, 'org')}
-                  >
-                    {copiedBtn === 'org' ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <input id="iplookup-res-org" type="text" readOnly value={result.org || "Unknown"} />
-              </div>
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-timezone">Timezone</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'timezone' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(timezoneVal, 'timezone')}
-                  >
-                    {copiedBtn === 'timezone' ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <input id="iplookup-res-timezone" type="text" readOnly value={timezoneVal} />
-              </div>
-              <div className="form-group">
-                <div className="label-row-with-copy">
-                  <label htmlFor="iplookup-res-coords">Coordinates</label>
-                  <button
-                    className={`copy-btn-inline ${copiedBtn === 'coords' ? 'copied' : ''}`}
-                    onClick={() => handleCopy(coordsVal, 'coords')}
-                  >
-                    {copiedBtn === 'coords' ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <input id="iplookup-res-coords" type="text" readOnly value={coordsVal} />
-              </div>
+              ))}
             </div>
 
             {/* Interactive Map */}
             {mapSrc && (
-              <div className="map-wrapper">
-                <label>Map Preview</label>
-                <div className="map-container">
+              <div className="flex flex-col gap-2 w-full h-full">
+                <label className="text-sm font-semibold text-text-main">Map Preview</label>
+                <div className="rounded-xl overflow-hidden border border-border bg-app flex-1 min-h-[250px]">
                   <iframe
                     id="iplookup-map"
                     title="IP Location Map"
@@ -260,7 +231,7 @@ export default function IpLookup() {
         </div>
       )}
 
-      {status && <p className="small status-msg" id="iplookup-status">{status}</p>}
-    </article>
+      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm" id="iplookup-status">{status}</p>}
+    </Card>
   );
 }

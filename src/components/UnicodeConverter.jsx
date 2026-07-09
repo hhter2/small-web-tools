@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import Card from './ui/Card';
+import FieldInput from './ui/FieldInput';
+import ToolHeader from './ui/ToolHeader';
 
 function textToUnicode(text) {
   return Array.from(text)
@@ -34,42 +37,42 @@ export default function UnicodeConverter() {
   const codesToTextResult = unicodeToText(codesVal);
 
   return (
-    <article id="tool-unicode" className="tool-card active">
-      <h2>Unicode Converter</h2>
-      <div className="form-group">
-        <label htmlFor="unicode-text">Text to Unicode</label>
-        <textarea
-          id="unicode-text"
-          rows="3"
-          placeholder="Hello"
-          value={textVal}
-          onChange={(e) => setTextVal(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="unicode-codes">Unicode codes</label>
-        <textarea
-          id="unicode-codes"
-          rows="3"
-          readOnly
-          value={textToUnicodeOutput}
-        />
-      </div>
-      <div className="form-group border-top">
-        <label htmlFor="unicode-codes-input">Unicode codes to text</label>
-        <input
+    <Card id="tool-unicode" variant="tool">
+      <ToolHeader title="Unicode Converter" />
+      <FieldInput
+        as="textarea"
+        id="unicode-text"
+        label="Text to Unicode"
+        rows={3}
+        placeholder="Hello"
+        value={textVal}
+        onChange={(e) => setTextVal(e.target.value)}
+      />
+      <FieldInput
+        as="textarea"
+        id="unicode-codes"
+        label="Unicode codes"
+        rows={3}
+        readOnly
+        value={textToUnicodeOutput}
+      />
+      <div className="flex flex-col gap-2 w-full border-t border-border pt-5 mt-2">
+        <FieldInput
           id="unicode-codes-input"
+          label="Unicode codes to text"
           type="text"
           placeholder="U+4F60 U+597D"
           value={codesVal}
           onChange={(e) => setCodesVal(e.target.value)}
         />
       </div>
-      <div className="result-banner">
-        <span className="banner-label">Decoded Text:</span>
+      <div className="bg-accent-light border-l-4 border-accent rounded-[4px_12px_12px_4px] px-5 py-4 font-semibold text-text-main text-[1.05rem] min-h-[52px] flex items-center gap-2 transition-all duration-300">
+        <span className="text-text-muted font-medium">Decoded Text:</span>
         <strong id="unicode-text-output">{codesToTextResult.text || "—"}</strong>
       </div>
-      <p className="small status-msg" id="unicode-status">{codesToTextResult.error || ""}</p>
-    </article>
+      <p className="min-h-[18px] text-red-500 font-medium text-sm" id="unicode-status">
+        {codesToTextResult.error || ""}
+      </p>
+    </Card>
   );
 }

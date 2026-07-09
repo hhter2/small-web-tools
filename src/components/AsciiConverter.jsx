@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import Card from './ui/Card';
+import FieldInput from './ui/FieldInput';
+import ToolHeader from './ui/ToolHeader';
 
 function textToAscii(text) {
   return Array.from(text, (char) => char.charCodeAt(0)).join(" ");
@@ -31,42 +34,42 @@ export default function AsciiConverter() {
   const codesToTextResult = asciiToText(codesVal);
 
   return (
-    <article id="tool-ascii" className="tool-card active">
-      <h2>ASCII Converter</h2>
-      <div className="form-group">
-        <label htmlFor="ascii-text">Text to ASCII codes</label>
-        <textarea
-          id="ascii-text"
-          rows="3"
-          placeholder="Hello"
-          value={textVal}
-          onChange={(e) => setTextVal(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="ascii-codes">ASCII codes</label>
-        <textarea
-          id="ascii-codes"
-          rows="3"
-          readOnly
-          value={textToAsciiOutput}
-        />
-      </div>
-      <div className="form-group border-top">
-        <label htmlFor="ascii-codes-input">ASCII codes to text</label>
-        <input
+    <Card id="tool-ascii" variant="tool">
+      <ToolHeader title="ASCII Converter" />
+      <FieldInput
+        as="textarea"
+        id="ascii-text"
+        label="Text to ASCII codes"
+        rows={3}
+        placeholder="Hello"
+        value={textVal}
+        onChange={(e) => setTextVal(e.target.value)}
+      />
+      <FieldInput
+        as="textarea"
+        id="ascii-codes"
+        label="ASCII codes"
+        rows={3}
+        readOnly
+        value={textToAsciiOutput}
+      />
+      <div className="flex flex-col gap-2 w-full border-t border-border pt-5 mt-2">
+        <FieldInput
           id="ascii-codes-input"
+          label="ASCII codes to text"
           type="text"
           placeholder="72 101 108 108 111"
           value={codesVal}
           onChange={(e) => setCodesVal(e.target.value)}
         />
       </div>
-      <div className="result-banner">
-        <span className="banner-label">Decoded Text:</span>
+      <div className="bg-accent-light border-l-4 border-accent rounded-[4px_12px_12px_4px] px-5 py-4 font-semibold text-text-main text-[1.05rem] min-h-[52px] flex items-center gap-2 transition-all duration-300">
+        <span className="text-text-muted font-medium">Decoded Text:</span>
         <strong id="ascii-text-output">{codesToTextResult.text || "—"}</strong>
       </div>
-      <p className="small status-msg" id="ascii-status">{codesToTextResult.error || ""}</p>
-    </article>
+      <p className="min-h-[18px] text-red-500 font-medium text-sm" id="ascii-status">
+        {codesToTextResult.error || ""}
+      </p>
+    </Card>
   );
 }

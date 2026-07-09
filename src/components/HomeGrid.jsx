@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import BioinfoIcon from './BioinfoIcon.jsx';
 import DnaRnaIcon from './DnaRnaIcon.jsx';
 
@@ -68,8 +68,43 @@ const categories = [
   }
 ];
 
-export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab }) {
+// Theme config: border, icon bg/color, hover border, hover shadow
+const THEME = {
+  green:  { border: 'border-[rgba(16,185,129,0.15)]',   iconBg: 'bg-[rgba(16,185,129,0.08)] text-[#10b981]',   hover: 'hover:border-[#10b981] hover:shadow-[0_12px_30px_-10px_rgba(16,185,129,0.2),0_0_1px_1px_rgba(16,185,129,0.1)]' },
+  blue:   { border: 'border-[rgba(59,130,246,0.15)]',   iconBg: 'bg-[rgba(59,130,246,0.08)] text-[#3b82f6]',   hover: 'hover:border-[#3b82f6] hover:shadow-[0_12px_30px_-10px_rgba(59,130,246,0.2),0_0_1px_1px_rgba(59,130,246,0.1)]' },
+  purple: { border: 'border-[rgba(139,92,246,0.15)]',   iconBg: 'bg-[rgba(139,92,246,0.08)] text-[#8b5cf6]',   hover: 'hover:border-[#8b5cf6] hover:shadow-[0_12px_30px_-10px_rgba(139,92,246,0.2),0_0_1px_1px_rgba(139,92,246,0.1)]' },
+  pink:   { border: 'border-[rgba(236,72,153,0.15)]',   iconBg: 'bg-[rgba(236,72,153,0.08)] text-[#ec4899]',   hover: 'hover:border-[#ec4899] hover:shadow-[0_12px_30px_-10px_rgba(236,72,153,0.2),0_0_1px_1px_rgba(236,72,153,0.1)]' },
+  gold:   { border: 'border-[rgba(245,158,11,0.15)]',   iconBg: 'bg-[rgba(245,158,11,0.08)] text-[#f59e0b]',   hover: 'hover:border-[#f59e0b] hover:shadow-[0_12px_30px_-10px_rgba(245,158,11,0.2),0_0_1px_1px_rgba(245,158,11,0.1)]' },
+  teal:   { border: 'border-[rgba(20,184,166,0.15)]',   iconBg: 'bg-[rgba(20,184,166,0.08)] text-[#14b8a6]',   hover: 'hover:border-[#14b8a6] hover:shadow-[0_12px_30px_-10px_rgba(20,184,166,0.2),0_0_1px_1px_rgba(20,184,166,0.1)]' },
+};
 
+const getTheme = (category) => {
+  const map = { text: 'pink', developer: 'green', network: 'blue', media: 'gold', bioinfo: 'teal', utilities: 'purple' };
+  return THEME[map[category]] ?? THEME.purple;
+};
+
+function ToolCard({ tool, onSelectTool }) {
+  const theme = getTheme(tool.category);
+  return (
+    <div
+      key={tool.id}
+      className={`bg-card border ${theme.border} rounded-2xl p-6 cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col justify-between gap-5 shadow-card ${theme.hover}`}
+      onClick={() => onSelectTool(tool.id)}
+    >
+      <div className="flex items-start gap-4 w-full">
+        <div className={`w-[46px] h-[46px] rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all duration-300 ${theme.iconBg}`}>
+          {tool.icon}
+        </div>
+        <div className="flex flex-col gap-1.5 flex-1">
+          <h3 className="text-[1.05rem] font-bold text-text-main tracking-[-0.01em] m-0">{tool.title}</h3>
+          <p className="text-[0.84rem] text-text-muted leading-[1.45] m-0">{tool.desc}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HomeGrid({ onSelectTool, activeTab = 'all' }) {
   const tools = [
     {
       id: 'tool-slash',
@@ -134,7 +169,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'media',
       desc: 'Transfer and select colors between HEX, RGB, and other formats.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
           <circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"></circle>
           <circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"></circle>
@@ -149,7 +184,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'developer',
       desc: 'Text to ASCII codes; ASCII codes to text.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="4 17 10 11 4 5"></polyline>
           <line x1="12" y1="19" x2="20" y2="19"></line>
         </svg>
@@ -161,7 +196,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'developer',
       desc: 'Text to Unicode; Unicode to text.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="2" y1="12" x2="22" y2="12"></line>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
@@ -189,7 +224,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'developer',
       desc: 'Base conversion between binary, octal, decimal, and hexadecimal.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <line x1="4" y1="9" x2="20" y2="9"></line>
           <line x1="4" y1="15" x2="20" y2="15"></line>
           <line x1="9" y1="4" x2="9" y2="20"></line>
@@ -238,7 +273,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'network',
       desc: 'Identify geographical location, timezone, ISP, and coordinates for any IP address.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
@@ -250,7 +285,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'network',
       desc: 'Test the real-time network speed and latency.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
@@ -262,7 +297,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'media',
       desc: 'Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
@@ -274,7 +309,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       category: 'media',
       desc: 'Show the metadata from office files.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -421,7 +456,7 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
       subGroup: 'Utilities',
       desc: 'Set options, spin the wheel, and draw random items with optional single-draw elimination.',
       icon: (
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="2" x2="12" y2="22"></line>
           <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -432,162 +467,80 @@ export default function HomeGrid({ onSelectTool, activeTab = 'all', setActiveTab
     }
   ];
 
-  const getThemeClass = (category) => {
-    switch (category) {
-      case 'text':
-        return 'theme-pink';
-      case 'developer':
-        return 'theme-green';
-      case 'network':
-        return 'theme-blue';
-      case 'media':
-        return 'theme-gold';
-      case 'bioinfo':
-        return 'theme-teal';
-      case 'utilities':
-      default:
-        return 'theme-purple';
-    }
-  };
+  function renderGrid(toolList) {
+    return (
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 mt-6">
+        {toolList.map(tool => (
+          <ToolCard key={tool.id} tool={tool} onSelectTool={onSelectTool} />
+        ))}
+      </div>
+    );
+  }
+
+  function renderSubGroups(catTools) {
+    const subGroups = {};
+    catTools.forEach(tool => {
+      const sg = tool.subGroup || 'Utilities';
+      if (!subGroups[sg]) subGroups[sg] = [];
+      subGroups[sg].push(tool);
+    });
+    const sortedSubGroupNames = Object.keys(subGroups).sort();
+    return sortedSubGroupNames.map(sgName => (
+      <div key={sgName} className="mt-6 mb-6">
+        <h4 className="text-[0.9rem] font-bold uppercase tracking-[0.05em] text-text-muted mb-3 pl-1.5 border-l-2 border-accent leading-none">
+          {sgName}
+        </h4>
+        {renderGrid(subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)))}
+      </div>
+    ));
+  }
 
   return (
-    <div id="tool-home" className="dashboard-container active">
-      <div className="dashboard-hero-minimal">
-        <h1>Welcome to Small Web Tools! 👋</h1>
-        <p className="hero-subtitle">Explore your developer and utility toolkit.</p>
+    <div id="tool-home" className="w-full max-w-[1200px] mx-auto">
+      <div className="mb-8 flex flex-col gap-1.5">
+        <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">Welcome to Small Web Tools! 👋</h1>
+        <p className="text-[0.95rem] text-text-muted leading-[1.5]">Explore your developer and utility toolkit.</p>
       </div>
 
       {activeTab === 'all' ? (
-        /* Render sections grouped by category */
         categories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;
-          
-          if (cat.id === 'utilities') {
-            const subGroups = {};
-            catTools.forEach(tool => {
-              const sg = tool.subGroup || 'Utilities';
-              if (!subGroups[sg]) subGroups[sg] = [];
-              subGroups[sg].push(tool);
-            });
-            const sortedSubGroupNames = Object.keys(subGroups).sort();
-            
-            return (
-              <div key={cat.id} className="home-category-section">
-                <h3 className="home-category-heading">
-                  {cat.icon}
-                  {cat.name}
-                </h3>
-                {sortedSubGroupNames.map(sgName => (
-                  <div key={sgName} className="home-subcategory-section">
-                    <h4 className="home-subcategory-heading">{sgName}</h4>
-                    <div className="home-grid">
-                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
-                        <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
-                          <div className="home-card-header">
-                            <div className="home-card-icon">{tool.icon}</div>
-                            <div className="home-card-text">
-                              <h3>{tool.title}</h3>
-                              <p>{tool.desc}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          }
-          
+
           return (
-            <div key={cat.id} className="home-category-section">
-              <h3 className="home-category-heading">
+            <div key={cat.id} className="mb-10 last:mb-0">
+              <h3 className="text-[1.25rem] font-bold text-text-main mb-[18px] flex items-center gap-2 tracking-[-0.01em] [&>svg]:text-accent [&>svg]:w-[18px] [&>svg]:h-[18px]">
                 {cat.icon}
                 {cat.name}
               </h3>
-              <div className="home-grid">
-                {catTools.map(tool => (
-                  <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
-                    <div className="home-card-header">
-                      <div className="home-card-icon">{tool.icon}</div>
-                      <div className="home-card-text">
-                        <h3>{tool.title}</h3>
-                        <p>{tool.desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {cat.id === 'utilities'
+                ? renderSubGroups(catTools)
+                : renderGrid(catTools)
+              }
             </div>
           );
         })
+      ) : activeTab === 'utilities' ? (
+        <div className="mb-10">
+          {renderSubGroups(tools.filter(t => t.category === 'utilities'))}
+        </div>
       ) : (
-        /* Render filtered grid for active category */
-        activeTab === 'utilities' ? (
-          (() => {
-            const catTools = tools.filter(t => t.category === 'utilities');
-            const subGroups = {};
-            catTools.forEach(tool => {
-              const sg = tool.subGroup || 'Utilities';
-              if (!subGroups[sg]) subGroups[sg] = [];
-              subGroups[sg].push(tool);
-            });
-            const sortedSubGroupNames = Object.keys(subGroups).sort();
-            
-            return (
-              <div className="home-category-section" style={{ marginTop: 0 }}>
-                {sortedSubGroupNames.map(sgName => (
-                  <div key={sgName} className="home-subcategory-section" style={{ marginBottom: '24px' }}>
-                    <h4 className="home-subcategory-heading">{sgName}</h4>
-                    <div className="home-grid">
-                      {subGroups[sgName].sort((a, b) => a.title.localeCompare(b.title)).map(tool => (
-                        <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
-                          <div className="home-card-header">
-                            <div className="home-card-icon">{tool.icon}</div>
-                            <div className="home-card-text">
-                              <h3>{tool.title}</h3>
-                              <p>{tool.desc}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()
-        ) : (
-          (() => {
+        <div className="mb-10">
+          {(() => {
             const cat = categories.find(c => c.id === activeTab);
             return (
-              <div className="home-category-section" style={{ marginTop: 0 }}>
+              <>
                 {cat && (
-                  <h3 className="home-category-heading">
+                  <h3 className="text-[1.25rem] font-bold text-text-main mb-[18px] flex items-center gap-2 tracking-[-0.01em] [&>svg]:text-accent [&>svg]:w-[18px] [&>svg]:h-[18px]">
                     {cat.icon}
                     {cat.name}
                   </h3>
                 )}
-                <div className="home-grid">
-                  {tools
-                    .filter(t => t.category === activeTab)
-                    .map(tool => (
-                      <div key={tool.id} className={`home-card ${getThemeClass(tool.category)}`} onClick={() => onSelectTool(tool.id)}>
-                        <div className="home-card-header">
-                          <div className="home-card-icon">{tool.icon}</div>
-                          <div className="home-card-text">
-                            <h3>{tool.title}</h3>
-                            <p>{tool.desc}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
+                {renderGrid(tools.filter(t => t.category === activeTab))}
+              </>
             );
-          })()
-        )
+          })()}
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import Card from './ui/Card';
+import FieldInput from './ui/FieldInput';
+import ToolHeader from './ui/ToolHeader';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -32,31 +35,32 @@ export default function DateCounter() {
   };
 
   return (
-    <article id="tool-date" className="tool-card tool-card--compact active">
-      <h2>Date Counter</h2>
-      <div className="row inputs">
-        <div className="form-group">
-          <label htmlFor="date-start">Start date</label>
-          <input
-            id="date-start"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="date-end">End date</label>
-          <input
-            id="date-end"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
+    <Card id="tool-date" variant="tool" size="compact">
+      <ToolHeader title="Date Counter" />
+      <div className="flex gap-4 w-full">
+        <FieldInput
+          id="date-start"
+          label="Start date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="flex-1"
+        />
+        <FieldInput
+          id="date-end"
+          label="End date"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="flex-1"
+        />
       </div>
-      <div className="result-banner" id="date-output">
+      <div
+        id="date-output"
+        className="bg-accent-light border-l-4 border-accent rounded-[4px_12px_12px_4px] px-5 py-4 font-semibold text-text-main text-[1.05rem] min-h-[52px] flex items-center gap-2 transition-all duration-300"
+      >
         {calculateDiff()}
       </div>
-    </article>
+    </Card>
   );
 }

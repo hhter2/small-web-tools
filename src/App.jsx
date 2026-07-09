@@ -106,6 +106,7 @@ const navItems = [
     name: 'Slashes Converter',
     tooltip: 'Slashes Converter',
     category: 'developer',
+    desc: 'Switch \\ to /.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="6" y1="18" x2="18" y2="6"></line>
@@ -118,6 +119,7 @@ const navItems = [
     name: 'Word Counter',
     tooltip: 'Word Counter',
     category: 'text',
+    desc: 'Calculate the number of words and characters. Support English and Chinese.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
@@ -129,6 +131,7 @@ const navItems = [
     name: 'Casing Switcher',
     tooltip: 'Casing Switcher',
     category: 'text',
+    desc: 'Support full sentence, single  words, specific term, etc.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 20L9 5l5 15" />
@@ -143,6 +146,7 @@ const navItems = [
     name: 'Typing Speed Test',
     tooltip: 'Typing Speed Test',
     category: 'text',
+    desc: 'Test and improve your typing speed in English or Chinese with custom templates.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
@@ -163,6 +167,7 @@ const navItems = [
     name: 'Color Converter',
     tooltip: 'Color Converter',
     category: 'media',
+    desc: 'Transfer and select colors between HEX, RGB, and other formats.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
@@ -178,6 +183,7 @@ const navItems = [
     name: 'ASCII Converter',
     tooltip: 'ASCII Converter',
     category: 'developer',
+    desc: 'Text to ASCII codes; ASCII codes to text.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 17 10 11 4 5"></polyline>
@@ -190,6 +196,7 @@ const navItems = [
     name: 'Unicode Converter',
     tooltip: 'Unicode Converter',
     category: 'developer',
+    desc: 'Text to Unicode; Unicode to text.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -203,6 +210,7 @@ const navItems = [
     name: 'Font Extractor',
     tooltip: 'Website Font Extractor',
     category: 'developer',
+    desc: 'Scan and extract font of any URLs. Also download them and find the similarities.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 7 4 4 20 4 20 7"></polyline>
@@ -218,6 +226,7 @@ const navItems = [
     name: 'Base Converter',
     tooltip: 'Base Converter',
     category: 'developer',
+    desc: 'Base conversion between binary, octal, decimal, and hexadecimal.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="4" y1="9" x2="20" y2="9"></line>
@@ -232,6 +241,7 @@ const navItems = [
     name: 'Folder Analyzer',
     tooltip: 'Folder Structure Analyzer',
     category: 'developer',
+    desc: 'Obtain the folder structure by one click.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -245,6 +255,7 @@ const navItems = [
     name: 'DNA/RNA Converter',
     tooltip: 'DNA/RNA Converter',
     category: 'bioinfo',
+    desc: "Swap 5'/3' directions and show the anti-sense brand. Support with the figure.",
     icon: <DnaRnaIcon />
   },
   {
@@ -252,6 +263,7 @@ const navItems = [
     name: 'Codon Table',
     tooltip: 'RNA Codon Table',
     category: 'bioinfo',
+    desc: 'Find and learn amino acid with interactive.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"></rect>
@@ -267,6 +279,7 @@ const navItems = [
     name: 'IP Lookup',
     tooltip: 'IP Lookup',
     category: 'network',
+    desc: 'Identify geographical location, timezone, ISP, and coordinates for any IP address.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -279,6 +292,7 @@ const navItems = [
     name: 'Speed Test',
     tooltip: 'Network Speed Test',
     category: 'network',
+    desc: 'Test the real-time network speed and latency.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -292,6 +306,7 @@ const navItems = [
     name: 'Image Metadata',
     tooltip: 'Image Metadata',
     category: 'media',
+    desc: 'Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -304,6 +319,7 @@ const navItems = [
     name: 'Office Metadata',
     tooltip: 'Office Metadata Reader',
     category: 'media',
+    desc: 'Show the metadata from office files.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -319,6 +335,7 @@ const navItems = [
     name: 'Audio Metadata',
     tooltip: 'Audio Metadata Reader',
     category: 'media',
+    desc: 'Extract and analyze metadata tags, technical parameters entirely locally without upload.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 18V5l12-2v13"/>
@@ -332,6 +349,7 @@ const navItems = [
     name: 'Video Metadata',
     tooltip: 'Video Metadata Reader',
     category: 'media',
+    desc: 'Extract and analyze encoding format, resolution, and other parameters entirely locally without upload.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="23 7 16 12 23 17 23 7"></polygon>
@@ -344,6 +362,7 @@ const navItems = [
     name: 'Media Splitter',
     tooltip: 'Media Splitter',
     category: 'media',
+    desc: "Split a video's audio track and silent video track locally.",
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
@@ -357,6 +376,7 @@ const navItems = [
     tooltip: 'Barcode Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Generate multiple format barcodes.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
@@ -369,6 +389,7 @@ const navItems = [
     tooltip: 'Currency Converter & Counter',
     category: 'utilities',
     subGroup: 'Calculation',
+    desc: 'Resource by Live API.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -382,6 +403,7 @@ const navItems = [
     tooltip: 'Date Counter',
     category: 'utilities',
     subGroup: 'Calculation',
+    desc: 'Calculate for the dates.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -397,6 +419,7 @@ const navItems = [
     tooltip: 'Secure Password Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Generate secure passwords. Use CSPRNG for generating.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -410,6 +433,7 @@ const navItems = [
     tooltip: 'Password Strength Checker',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Check the passward is strengh or not.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -423,6 +447,7 @@ const navItems = [
     tooltip: 'QR Code Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Create fully custimized QR code for free.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -438,6 +463,7 @@ const navItems = [
     tooltip: 'QR & Barcode Scanner',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Scan the QR and barcodes. Support upload and camera.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -451,6 +477,7 @@ const navItems = [
     tooltip: 'Random Wheel',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Set options, spin the wheel, and draw random items with optional single-draw elimination.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -609,7 +636,7 @@ export default function App() {
   const renderActiveTool = () => {
     switch (activeTool) {
       case 'tool-home':
-        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
       case 'tool-slash':
         return <SlashesConverter />;
       case 'tool-wc':
@@ -665,7 +692,7 @@ export default function App() {
       case 'tool-folder-analyzer':
         return <FolderAnalyzer />;
       default:
-        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
   };
 

@@ -33,17 +33,13 @@ Follow this sequence exactly — do not skip or reorder steps:
 1. Create `src/components/<ToolName>.jsx`
 2. In `src/App.jsx`:
    - Add `import` at the top
-   - Add entry to `toolDetails` object: `id`, `title`, `desc`
-   - Add entry to `tools` array: `id`, component reference, `category`, `tags`
-3. Add card/icon to `HomeGrid.jsx` if the tool needs a home-page tile
-4. Style the tool using Tailwind utility classes and the shared primitives in
-   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`) wherever they
-   fit. Only add new rules to `src/styles.css` for things a shared primitive doesn't
-   cover (e.g. a one-off keyframe animation specific to this tool).
-5. If the tool requires a serverless API:
+   - Add entry to the `navItems` array: `id`, `name`, `tooltip`, `category`, `icon`, `desc` (optional), `subGroup` (optional)
+   - Add a case inside `renderActiveTool` function to return the component
+3. Style the tool using Tailwind utility classes and the shared primitives in `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`). Do not add new rules to `src/styles.css`.
+4. If the tool requires a serverless API:
    - Create `functions/api/<name>.js`
    - Mirror the handler in `vite.config.js` under the dev-server proxy section
-6. Update `CODEBASE.md`: add a row to the Tool Inventory table and update the directory tree
+5. Update `CODEBASE.md`: add a row to the Tool Inventory table and update the directory tree
 
 ---
 
@@ -71,7 +67,6 @@ Follow this sequence exactly — do not skip or reorder steps:
 - Keep components self-contained — one component per file, one file per tool.
 - **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.
 
-
 ---
 
 ## 6. Serverless Functions (`functions/api/`)
@@ -93,7 +88,6 @@ Unless the task explicitly involves these, **do not read or modify**:
 - `public/` — static assets, rarely touched
 - `README.md` — maintained manually by the user; **do not update it as part of any task** unless explicitly instructed
 - `TODO.md` — maintained manually by the user. **Never modify this file by yourself**. All operations on it are done by the human. There may be issues or features written in it with a `#` prefix (e.g., `#fix`). Do **not** read this file unless explicitly instructed (e.g. when the user says "detail for #fix" or similar). Otherwise, there is no need to read it.
-
 
 ---
 

@@ -153,4 +153,11 @@ npm run preview
 - **Utilities Sub-Grouping and Sorting**: Grouped all tools in the `Utilities` category into two sub-groups: `Calculation` (containing `Currency Converter` and `Date Counter`) and `Utilities` (containing `Barcode Generator`, `Password Generator`, `Password Strength`, `QR Code Generator`, and `Random Wheel`). Both the sub-groups themselves and the tools inside them are sorted alphabetically. Implemented this grouped layout with custom styled headers, spacing, and indentations across the sidebar navigation, desktop header dropdown, home dashboard grid (in both main and filtered views), and footer links.
 - **Cloudflare Pages Functions integration (v0.3.0-alpha)**: Added Cloudflare Pages serverless functions (Workers) under the `/functions/api/` directory to serve `/api/iplookup`, `/api/extract-fonts`, and `/api/font-proxy` in production, eliminating CORS and JSON parsing errors on the deployed website.
 - **Office Metadata Homepage Fix**: Added the Office Metadata Reader tool to the Home Grid dashboard under the Media category so it is accessible from the home page (it was previously only visible in the navigation header and footer).
+- **Cleanup and Refactoring Fix-up Pass**: Completed a post-migration cleanup to align the configuration and styling of the project with the Tailwind CSS architecture:
+  - Split `.agents/AGENTS.md` back into distinct `/CLAUDE.md` (root instructions) and `/AGENTS.md` (root styling migration status) to resolve duplication and config drift.
+  - Refactored `HomeGrid.jsx`'s `ToolCard` to use the shared `Card` primitive (with `variant="home"`) instead of duplicate inline Tailwind classes.
+  - Updated the `Card` primitive to use `rounded-2xl` for the `home` variant (matching the original design's 16px border-radius) and allow theme overrides of hover/border styles.
+  - Consolidated the home dashboard tools list by passing `navItems` as a `tools` prop from `App.jsx` and defining a single source of truth for tool descriptions.
+  - Pruned 80+ dead CSS class rules (including `.home-card`, `.audiometa-*` legacy, and alert banner classes) from `src/styles.css`.
+
 

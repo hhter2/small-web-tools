@@ -22,17 +22,17 @@ import React from 'react';
  * no extra work here.
  */
 
-const base = 'bg-card border border-border transition-all';
+const base = 'bg-card border transition-all';
 
 const variants = {
   tool: {
-    default: 'rounded-xl p-8 flex flex-col gap-5 w-full max-w-[680px] shadow-card',
-    compact: 'rounded-xl p-8 flex flex-col gap-5 w-full max-w-[520px] shadow-card',
-    wide: 'rounded-xl p-8 flex flex-col gap-5 w-full shadow-card',
+    default: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full max-w-[680px] shadow-card',
+    compact: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full max-w-[520px] shadow-card',
+    wide: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full shadow-card',
   },
   home: {
     default:
-      'rounded-lg p-6 flex flex-col justify-between gap-5 shadow-card duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+      'rounded-2xl p-6 flex flex-col justify-between gap-5 shadow-card duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
   },
 };
 
@@ -46,7 +46,9 @@ export default function Card({
   ...rest
 }) {
   const variantClasses = variants[variant]?.[size] ?? variants[variant]?.default ?? '';
-  const clickableClasses = clickable ? 'cursor-pointer hover:border-border-hover hover:-translate-y-0.5' : '';
+  const clickableClasses = clickable
+    ? `cursor-pointer hover:-translate-y-0.5 ${variant === 'tool' ? 'hover:border-border-hover' : ''}`
+    : '';
   const animationClasses = variant === 'tool' && animateIn ? 'animate-[fadeInScale_0.3s_cubic-bezier(0.34,1.56,0.64,1)]' : '';
 
   return (

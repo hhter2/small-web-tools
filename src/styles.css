@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   color-scheme: light;
 
@@ -764,12 +768,12 @@ input[type="date"][readonly]:focus {
   font-size: 0.88rem;
   font-family: "Plus Jakarta Sans", "Inter", sans-serif;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .btn-primary:hover {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .btn-primary:active {
@@ -1110,27 +1114,6 @@ html[data-theme="dark"] .copy-btn-inline:hover {
 html[data-theme="dark"] .copy-btn-inline.copied {
   background: #059669;
   border-color: #059669;
-}
-
-/* Secondary Button Styles */
-.btn-secondary {
-  align-self: flex-start;
-  padding: 12px 24px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-app);
-  color: var(--text-main);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--accent-light);
-  color: var(--accent);
-  border-color: var(--accent);
 }
 
 /* Search input group styling for IP Lookup */

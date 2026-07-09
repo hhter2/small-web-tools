@@ -36,7 +36,10 @@ Follow this sequence exactly — do not skip or reorder steps:
    - Add entry to `toolDetails` object: `id`, `title`, `desc`
    - Add entry to `tools` array: `id`, component reference, `category`, `tags`
 3. Add card/icon to `HomeGrid.jsx` if the tool needs a home-page tile
-4. Add all component styles to `src/styles.css` (do not create separate CSS files)
+4. Style the tool using Tailwind utility classes and the shared primitives in
+   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`) wherever they
+   fit. Only add new rules to `src/styles.css` for things a shared primitive doesn't
+   cover (e.g. a one-off keyframe animation specific to this tool).
 5. If the tool requires a serverless API:
    - Create `functions/api/<name>.js`
    - Mirror the handler in `vite.config.js` under the dev-server proxy section
@@ -49,7 +52,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 | Constraint | Rule |
 |---|---|
 | Routing | Hash-based (`#tool-id`) via `useState` in `App.jsx`. **Do not introduce React Router or any router library.** |
-| Styling | All styles go in `src/styles.css`. **Do not create component-level CSS files or use CSS-in-JS.** |
+| Styling | New and migrated components use Tailwind utility classes plus the shared primitives in `src/components/ui/`. `src/styles.css` is legacy — it stays in place for components not yet migrated, but do not add new rules to it if an equivalent Tailwind-based primitive already exists. **Do not introduce CSS-in-JS.** See `AGENTS.md` for the full migration status. |
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Only via `functions/api/` (Cloudflare Pages Functions). **Do not call third-party APIs directly from the browser** unless the tool is fully client-side. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
@@ -63,7 +66,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 - **Components**: Functional components with hooks only. No class components.
 - **Naming**: PascalCase for component files and function names (e.g., `MyTool.jsx`). camelCase for variables and props.
 - **Tool IDs**: kebab-case prefixed with `tool-` (e.g., `tool-mytool`). Must be unique across the entire `tools` array in `App.jsx`.
-- **CSS class names**: Use descriptive, tool-specific class names to avoid collisions (e.g., `.mytool-container`, `.mytool-input`).
+- **Styling**: Default to Tailwind utility classes and the shared primitives in `src/components/ui/`. Fall back to a global class in `src/styles.css` only for things not covered by a primitive (rare — e.g. a tool-specific keyframe animation). If you do add a global class, use a descriptive, tool-specific name to avoid collisions (e.g., `.mytool-container`).
 - **No inline styles** unless absolutely necessary for dynamic values.
 - Keep components self-contained — one component per file, one file per tool.
 - **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.

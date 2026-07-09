@@ -117,3 +117,73 @@ Before producing any code, confirm:
 - A serverless function is added or removed
 
 **Do not wait to be asked — updating `CODEBASE.md` is part of every task that changes the file structure.**
+
+---
+
+# AGENTS.md — Styling migration status
+
+This section tracks the Tailwind CSS migration. Keep this and `CLAUDE.md` in sync — if you update one, check the other.
+
+## Current state (Phase 1)
+
+- Tailwind is configured (`tailwind.config.js`), theme values map to the existing
+  CSS custom properties in `src/styles.css` (`:root` / `html[data-theme="dark"]`).
+  Colors, radii, and shadows are NOT duplicated — Tailwind reads the same variables.
+- Shared primitives live in `src/components/ui/`: `Card`, `Button`, `FieldInput`,
+  `ToolHeader`. Use these for any new tool or when touching an existing one.
+- `src/styles.css` is legacy. It still styles all 31 tool components today — none
+  have been migrated yet. Do not delete rules from it until the component using
+  them has been migrated and visually verified.
+
+## Migration status by tool
+
+| Tool | Status |
+|---|---|
+| PasswordGenerator | pending |
+| ColorConverter | pending |
+| SlashesConverter | pending |
+| CasingSwitcher | pending |
+| WordCounter | pending |
+| DateCounter | pending |
+| CurrencyCounter | pending |
+| AsciiConverter | pending |
+| UnicodeConverter | pending |
+| BaseConverter | pending |
+| DnaConverter | pending |
+| CodonTable | pending |
+| IpLookup | pending |
+| ImgMeta | pending |
+| OfficeMeta | pending |
+| AudioMeta | pending |
+| VideoMeta | pending |
+| RandomWheel | pending |
+| TypingSpeedTest | pending |
+| NetworkSpeedTest | pending |
+| QrBarcodeGenerator | pending |
+| QrBarcodeScanner | pending |
+| WebsiteFontExtractor | pending |
+| FolderAnalyzer | pending |
+| MediaSeparator | pending |
+| MediaSeparatorQueueItem | pending |
+| MediaSeparatorWaveform | pending |
+| MediaSeparatorFormatSelect | pending |
+| HomeGrid | pending |
+| BioinfoIcon | pending |
+| DnaRnaIcon | pending |
+
+## Rules for new work
+
+- New tools: build with Tailwind + `src/components/ui/` primitives from the start.
+  Do not add new rules to `styles.css`.
+- Touching an existing tool for an unrelated bug fix: no obligation to migrate it,
+  but if you do touch its styling anyway, prefer migrating that one component fully
+  over patching the legacy CSS further.
+- If a shared primitive doesn't cover something you need, extend the primitive
+  (add a variant/prop) rather than writing one-off Tailwind classes in the tool
+  component, so the pattern stays reusable.
+
+## Still open
+
+1. `Button variant="danger"` in the draft is a placeholder — needs a real parity pass
+   against `.btn-danger-custom` (styles.css line 2449) / `.btn-danger-confirm` (line 2691)
+   before use. Do not use `variant="danger"` in any tool component until this is resolved.

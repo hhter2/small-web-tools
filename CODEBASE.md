@@ -23,9 +23,10 @@ small-web-tools/
 ├── README.md                    # User-facing documentation & changelog
 ├── TODO.md                      # Human-maintained tasks & issues (do not edit; read only on request)
 ├── package.json                 # Project metadata, scripts, and dependencies
-
 ├── package-lock.json            # Lockfile (auto-generated, do not edit)
 ├── vite.config.js               # Vite build config (also contains dev-server IP lookup proxy)
+├── tailwind.config.js           # Tailwind CSS v3 config — theme mapped to existing CSS variables
+├── postcss.config.js            # PostCSS config (tailwindcss + autoprefixer)
 ├── .gitignore                   # Git ignore rules
 ├── index.html                   # SPA entry point (Vite root)
 │
@@ -35,8 +36,14 @@ small-web-tools/
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)
 │   ├── App.jsx                  # Root component: routing, layout, all tool metadata & categories
-│   └── styles.css               # Global stylesheet (design system, all component styles)
+│   ├── styles.css               # Global stylesheet — legacy styles for all 31 tool components
+│   │                            # (Tailwind @tailwind directives at top; new tools use Tailwind instead)
 │   └── components/              # Individual tool components (one file per tool)
+│       ├── ui/                  # Shared UI primitives (Phase 1 — Tailwind-based)
+│       │   ├── Card.jsx         # Card wrapper: variant="tool" | "home"
+│       │   ├── Button.jsx       # Button: variant="primary" | "secondary" | "danger" (danger=placeholder)
+│       │   ├── FieldInput.jsx   # Input/textarea with label, hint, error affordances
+│       │   └── ToolHeader.jsx   # <h2> title block with optional description
 │       ├── HomeGrid.jsx         # Dashboard / home page grid of all tools
 │       ├── SlashesConverter.jsx # Path slashes converter (Windows → web)
 │       ├── CasingSwitcher.jsx   # Text casing conversion (invert, sentence, title, terms)
@@ -102,12 +109,15 @@ The central hub of the application:
 - Injects version info via Vite `define` globals (`__APP_VERSION__`, `__SHOW_CHANNEL_ALERT__`, `__APP_CHANNEL__`)
 
 ### `src/styles.css`
-Monolithic global stylesheet (~190 KB). Contains:
+Monolithic legacy stylesheet (~13,800 lines before Phase 1). Contains:
+- Tailwind CSS directives (`@tailwind base/components/utilities`) at the top
 - CSS custom properties (design tokens: colors, spacing, typography)
 - Base reset and typography
 - Layout styles for sidebar, navbar, content area
-- Per-tool component styles (scoped by class name convention)
+- Per-tool component styles (scoped by class name convention) — legacy, being migrated tool-by-tool
 - Responsive breakpoints and dark-mode support
+
+**Do not add new rules here** if an equivalent Tailwind-based primitive in `src/components/ui/` exists.
 
 ### `vite.config.js`
 Vite configuration with multiple responsibilities:
@@ -181,6 +191,9 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
 | `@ffmpeg/ffmpeg` | ^0.12.15 | Client-side ffmpeg runner |
 | `@ffmpeg/util` | ^0.12.2 | Utilities for loading and handling ffmpeg.wasm |
+| `tailwindcss` | ^3.4 | Utility-first CSS framework (Phase 1 migration) |
+| `postcss` | ^8.5 | CSS transformation pipeline (Tailwind peer dependency) |
+| `autoprefixer` | ^10.4 | Automatic vendor prefixes via PostCSS |
 
 ---
 
@@ -210,6 +223,9 @@ npm run preview
    - Add entry to the `navItems` array (id, name, tooltip, category, icon)
    - Add a case inside `renderActiveTool` function to return the component
 3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
-4. Add styles to `src/styles.css`
+4. Style the tool using Tailwind utility classes and the shared primitives in
+   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`) wherever they
+   fit. Only add new rules to `src/styles.css` for things a shared primitive doesn't
+   cover (e.g. a one-off keyframe animation specific to this tool).
 5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
 6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created

@@ -117,9 +117,19 @@ const renderCustomQR = (canvas, text, options) => {
 
   // Calculate layout offsets for external label
   const hasLabel = (textLabelMode === 'label' || textLabelMode === 'both') && textLabel;
-  const labelHeight = hasLabel ? Math.max(textSize * 1.8, size * 0.12) : 0;
+  const labelHeight = hasLabel ? (textSize + moduleSize * 0.5) : 0;
   const totalHeight = size + labelHeight;
   const qrYOffset = (hasLabel && labelPosition === 'top') ? labelHeight : 0;
+
+  // Calculate label Y coordinate
+  let labelY = 0;
+  if (hasLabel) {
+    if (labelPosition === 'top') {
+      labelY = margin * moduleSize + textSize / 2;
+    } else {
+      labelY = (margin + numModules) * moduleSize + moduleSize * 0.5 + textSize / 2;
+    }
+  }
 
   canvas.width = size;
   canvas.height = totalHeight;
@@ -169,12 +179,51 @@ const renderCustomQR = (canvas, text, options) => {
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
   };
 
+  // Calculate text bounding box for clearing modules behind embedded text
+  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
+  let textMinX = 0, textMaxX = 0, textMinY = 0, textMaxY = 0;
+  if (hasEmbed) {
+    ctx.save();
+    ctx.font = `${textStyle} ${textWeight} ${textSize}px ${textFont}`;
+    const textWidth = ctx.measureText(textLabel).width;
+    ctx.restore();
+
+    let embedX = size / 2;
+    let embedY = size / 2; // relative to QR square (without qrYOffset)
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size;
+    }
+
+    const padX = textBgPadding + moduleSize * 0.3;
+    const padY = textBgPadding + moduleSize * 0.3;
+    const textHeight = textSize;
+
+    textMinX = embedX - textWidth / 2 - padX;
+    textMaxX = embedX + textWidth / 2 + padX;
+    textMinY = embedY - textHeight / 2 - padY;
+    textMaxY = embedY + textHeight / 2 + padY;
+  }
+
+  const isInsideTextArea = (r, c) => {
+    if (!hasEmbed) return false;
+    const modX = (margin + c) * moduleSize;
+    const modY = (margin + r) * moduleSize;
+    return (modX + moduleSize >= textMinX && modX <= textMaxX && modY + moduleSize >= textMinY && modY <= textMaxY);
+  };
+
   // Draw Dots
   for (let r = 0; r < numModules; r++) {
     for (let c = 0; c < numModules; c++) {
       if (modules.data[r * numModules + c] === 0) continue;
       if (isEye(r, c)) continue;
       if (isInsideLogoArea(r, c)) continue;
+      if (isInsideTextArea(r, c)) continue;
 
       const x = (margin + c) * moduleSize;
       const y = (margin + r) * moduleSize + qrYOffset;
@@ -321,9 +370,7 @@ const renderCustomQR = (canvas, text, options) => {
     ctx.textBaseline = 'middle';
 
     const labelX = size / 2;
-    const labelY = labelPosition === 'top' 
-      ? labelHeight / 2 
-      : size + labelHeight / 2;
+    // labelY is precalculated at the top
 
     if (textBgEnabled) {
       const textWidth = ctx.measureText(textLabel).width;
@@ -354,7 +401,6 @@ const renderCustomQR = (canvas, text, options) => {
   }
 
   // Draw Embedded Text
-  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
   if (hasEmbed) {
     ctx.save();
     ctx.font = `${textStyle} ${textWeight} ${textSize}px ${textFont}`;
@@ -452,9 +498,19 @@ const generateQRSVG = (text, options) => {
 
   // Calculate layout offsets for external label
   const hasLabel = (textLabelMode === 'label' || textLabelMode === 'both') && textLabel;
-  const labelHeight = hasLabel ? Math.max(textSize * 1.8, size * 0.12) : 0;
+  const labelHeight = hasLabel ? (textSize + moduleSize * 0.5) : 0;
   const totalHeight = size + labelHeight;
   const qrYOffset = (hasLabel && labelPosition === 'top') ? labelHeight : 0;
+
+  // Calculate label Y coordinate
+  let labelY = 0;
+  if (hasLabel) {
+    if (labelPosition === 'top') {
+      labelY = margin * moduleSize + textSize / 2;
+    } else {
+      labelY = (margin + numModules) * moduleSize + moduleSize * 0.5 + textSize / 2;
+    }
+  }
 
   let svgContent = '';
 
@@ -501,6 +557,40 @@ const generateQRSVG = (text, options) => {
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
   };
 
+  // Calculate text bounding box for clearing modules behind embedded text
+  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
+  let textMinX = 0, textMaxX = 0, textMinY = 0, textMaxY = 0;
+  if (hasEmbed) {
+    const textWidth = estimateTextWidth(textLabel, textSize, textWeight);
+    let embedX = size / 2;
+    let embedY = size / 2; // relative to QR square (without qrYOffset)
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size;
+    }
+
+    const padX = textBgPadding + moduleSize * 0.3;
+    const padY = textBgPadding + moduleSize * 0.3;
+    const textHeight = textSize;
+
+    textMinX = embedX - textWidth / 2 - padX;
+    textMaxX = embedX + textWidth / 2 + padX;
+    textMinY = embedY - textHeight / 2 - padY;
+    textMaxY = embedY + textHeight / 2 + padY;
+  }
+
+  const isInsideTextArea = (r, c) => {
+    if (!hasEmbed) return false;
+    const modX = (margin + c) * moduleSize;
+    const modY = (margin + r) * moduleSize;
+    return (modX + moduleSize >= textMinX && modX <= textMaxX && modY + moduleSize >= textMinY && modY <= textMaxY);
+  };
+
   // Draw Dots
   let pathD = '';
   for (let r = 0; r < numModules; r++) {
@@ -508,6 +598,7 @@ const generateQRSVG = (text, options) => {
       if (modules.data[r * numModules + c] === 0) continue;
       if (isEye(r, c)) continue;
       if (isInsideLogoArea(r, c)) continue;
+      if (isInsideTextArea(r, c)) continue;
 
       const x = (margin + c) * moduleSize;
       const y = (margin + r) * moduleSize + qrYOffset;
@@ -597,9 +688,7 @@ const generateQRSVG = (text, options) => {
   // Draw External Label SVG
   if (hasLabel) {
     const labelX = size / 2;
-    const labelY = labelPosition === 'top' 
-      ? labelHeight / 2 
-      : size + labelHeight / 2;
+    // labelY is precalculated at the top
 
     if (textBgEnabled) {
       const estW = estimateTextWidth(textLabel, textSize, textWeight) + textBgPadding * 2;
@@ -618,7 +707,6 @@ const generateQRSVG = (text, options) => {
   }
 
   // Draw Embedded Text SVG
-  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
   if (hasEmbed) {
     let embedX = size / 2;
     let embedY = size / 2 + qrYOffset;
@@ -708,7 +796,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [qrTextFont, setQrTextFont] = useState('sans-serif');
   const [qrTextWeight, setQrTextWeight] = useState('bold'); // 'normal' | 'bold'
   const [qrTextStyle, setQrTextStyle] = useState('normal'); // 'normal' | 'italic'
-  const [qrTextBgEnabled, setQrTextBgEnabled] = useState(false);
+  const [qrTextBgEnabled, setQrTextBgEnabled] = useState(true);
   const [qrTextBgColor, setQrTextBgColor] = useState('#ffffff');
   const [qrTextBgPadding, setQrTextBgPadding] = useState(6);
   const [qrTextStrokeEnabled, setQrTextStrokeEnabled] = useState(false);
@@ -777,7 +865,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     setQrTextFont('sans-serif');
     setQrTextWeight('bold');
     setQrTextStyle('normal');
-    setQrTextBgEnabled(false);
+    setQrTextBgEnabled(true);
     setQrTextBgColor('#ffffff');
     setQrTextBgPadding(6);
     setQrTextStrokeEnabled(false);

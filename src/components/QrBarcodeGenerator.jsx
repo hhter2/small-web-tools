@@ -743,7 +743,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // ================= QR State =================
-  const [qrType, setQrType] = useState('url'); // 'text' | 'url' | 'wifi' | 'email' | 'phone' | 'sms'
+  const [qrType, setQrType] = useState('text'); // 'text' | 'wifi'
   const [qrText, setQrText] = useState('');
   const [qrUrl, setQrUrl] = useState('');
   const [qrPhone, setQrPhone] = useState('');
@@ -828,7 +828,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const barcodeSvgRef = useRef(null);
 
   const resetQR = () => {
-    setQrType('url');
+    setQrType('text');
     setQrText('');
     setQrUrl('');
     setQrPhone('');
@@ -1214,14 +1214,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               {/* QR TYPE SELECTOR */}
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-text-main">Content Type</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'url', name: 'Web Address' },
                     { id: 'text', name: 'Plain Text' },
-                    { id: 'wifi', name: 'WiFi Network' },
-                    { id: 'email', name: 'Email Address' },
-                    { id: 'phone', name: 'Phone Link' },
-                    { id: 'sms', name: 'SMS Message' }
+                    { id: 'wifi', name: 'WiFi Network' }
                   ].map(t => (
                     <button 
                       key={t.id}
@@ -1241,17 +1237,6 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
               {/* DYNAMIC CONTENT INPUTS */}
               <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 shadow-sm">
-                {qrType === 'url' && (
-                  <FieldInput 
-                    id="qr-url"
-                    type="url"
-                    label="URL Address"
-                    placeholder="https://example.com"
-                    value={qrUrl}
-                    onChange={(e) => setQrUrl(e.target.value)}
-                  />
-                )}
-
                 {qrType === 'text' && (
                   <FieldInput 
                     as="textarea"
@@ -1309,69 +1294,6 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         </label>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {qrType === 'email' && (
-                  <div className="flex flex-col gap-4">
-                    <FieldInput 
-                      id="email-to"
-                      type="email"
-                      label="Recipient Email"
-                      placeholder="hello@example.com"
-                      value={qrEmailTo}
-                      onChange={(e) => setQrEmailTo(e.target.value)}
-                    />
-                    <FieldInput 
-                      id="email-subject"
-                      type="text"
-                      label="Subject"
-                      placeholder="Subject Line"
-                      value={qrEmailSubject}
-                      onChange={(e) => setQrEmailSubject(e.target.value)}
-                    />
-                    <FieldInput 
-                      as="textarea"
-                      id="email-body"
-                      label="Body Text"
-                      rows="3"
-                      placeholder="Email contents..."
-                      value={qrEmailBody}
-                      onChange={(e) => setQrEmailBody(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                {qrType === 'phone' && (
-                  <FieldInput 
-                    id="qr-phone"
-                    type="tel"
-                    label="Phone Number"
-                    placeholder="+1 (555) 000-0000"
-                    value={qrPhone}
-                    onChange={(e) => setQrPhone(e.target.value)}
-                  />
-                )}
-
-                {qrType === 'sms' && (
-                  <div className="flex flex-col gap-4">
-                    <FieldInput 
-                      id="sms-phone"
-                      type="tel"
-                      label="Phone Number"
-                      placeholder="+1 (555) 000-0000"
-                      value={qrSmsPhone}
-                      onChange={(e) => setQrSmsPhone(e.target.value)}
-                    />
-                    <FieldInput 
-                      as="textarea"
-                      id="sms-msg"
-                      label="Message"
-                      rows="2"
-                      placeholder="Type SMS text..."
-                      value={qrSmsMessage}
-                      onChange={(e) => setQrSmsMessage(e.target.value)}
-                    />
                   </div>
                 )}
               </div>

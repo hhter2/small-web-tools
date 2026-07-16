@@ -803,6 +803,79 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [qrTextStrokeColor, setQrTextStrokeColor] = useState('#ffffff');
   const [qrTextStrokeWidth, setQrTextStrokeWidth] = useState(3);
 
+  // ================= Color Helper Functions =================
+  const isValidHex = (val) => /^#[0-9a-fA-F]{6}$/.test(val);
+
+  const handleColorInputChange = (setter) => (e) => {
+    setter(e.target.value);
+  };
+
+  const handleColorInputBlur = (value, setter, defaultColor = '#000000') => () => {
+    if (!value) {
+      setter(defaultColor);
+      return;
+    }
+    let val = value.trim();
+    let clean = val.replace(/[^0-9a-fA-F]/g, '');
+    if (clean.length === 3) {
+      val = '#' + clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2];
+    } else if (clean.length === 6) {
+      val = '#' + clean;
+    } else {
+      val = defaultColor;
+    }
+    setter(val);
+  };
+
+  const PRESET_COLORS = [
+    '#000000', '#ffffff', '#4f46e5', '#3b82f6',
+    '#10b981', '#f59e0b', '#ef4444', '#ec4899',
+    '#8b5cf6', '#06b6d4', '#6b7280', '#111827'
+  ];
+
+  const [activeColorPicker, setActiveColorPicker] = useState(null); // null | 'fg' | 'grad1' | 'grad2' | 'bg' | 'text' | 'textBg' | 'textStroke' | 'bcLine' | 'bcBg'
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (activeColorPicker && !e.target.closest('.color-picker-container')) {
+        setActiveColorPicker(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [activeColorPicker]);
+
+  const ColorPickerSwatch = ({ pickerKey, color, setter, defaultColor }) => {
+    const isOpen = activeColorPicker === pickerKey;
+    return (
+      <div className="color-picker-container relative shrink-0">
+        <button
+          type="button"
+          className="w-10 h-10 rounded border border-border cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          style={{ backgroundColor: isValidHex(color) ? color : defaultColor }}
+          onClick={() => setActiveColorPicker(isOpen ? null : pickerKey)}
+        />
+        {isOpen && (
+          <div className="absolute left-0 mt-1 p-2 bg-card border border-border rounded-lg shadow-xl z-50 grid grid-cols-4 gap-1 w-32">
+            {PRESET_COLORS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className="w-6 h-6 rounded border border-border cursor-pointer transition-transform hover:scale-110"
+                style={{ backgroundColor: preset }}
+                title={preset}
+                onClick={() => {
+                  setter(preset);
+                  setActiveColorPicker(null);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Accordion state — which QR advanced section is open
   const [openSection, setOpenSection] = useState(null); // null | 'style' | 'logo' | 'text'
   const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
@@ -1363,18 +1436,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <div className="flex flex-col gap-1.5 w-full">
                       <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
                       <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="fg" color={qrFgColor} setter={setQrFgColor} defaultColor="#111827" />
                         <input 
                           id="qr-fg-color"
-                          type="color" 
-                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                          value={qrFgColor} 
-                          onChange={(e) => setQrFgColor(e.target.value)}
-                        />
-                        <input 
                           type="text" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                           value={qrFgColor} 
-                          onChange={(e) => setQrFgColor(e.target.value)}
+                          onChange={handleColorInputChange(setQrFgColor)}
+                          onBlur={handleColorInputBlur(qrFgColor, setQrFgColor, '#111827')}
                         />
                       </div>
                     </div>
@@ -1384,36 +1453,28 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <div className="flex flex-col gap-1.5 w-full">
                           <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
                           <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="grad1" color={qrGradColor1} setter={setQrGradColor1} defaultColor="#4f46e5" />
                             <input 
                               id="qr-grad-1"
-                              type="color" 
-                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                              value={qrGradColor1} 
-                              onChange={(e) => setQrGradColor1(e.target.value)}
-                            />
-                            <input 
                               type="text" 
-                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                               value={qrGradColor1} 
-                              onChange={(e) => setQrGradColor1(e.target.value)}
+                              onChange={handleColorInputChange(setQrGradColor1)}
+                              onBlur={handleColorInputBlur(qrGradColor1, setQrGradColor1, '#4f46e5')}
                             />
                           </div>
                         </div>
                         <div className="flex flex-col gap-1.5 w-full">
                           <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
                           <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="grad2" color={qrGradColor2} setter={setQrGradColor2} defaultColor="#06b6d4" />
                             <input 
                               id="qr-grad-2"
-                              type="color" 
-                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                              value={qrGradColor2} 
-                              onChange={(e) => setQrGradColor2(e.target.value)}
-                            />
-                            <input 
                               type="text" 
-                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                               value={qrGradColor2} 
-                              onChange={(e) => setQrGradColor2(e.target.value)}
+                              onChange={handleColorInputChange(setQrGradColor2)}
+                              onBlur={handleColorInputBlur(qrGradColor2, setQrGradColor2, '#06b6d4')}
                             />
                           </div>
                         </div>
@@ -1454,21 +1515,17 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
                       <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
-                      <div className="flex items-center gap-2" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bg" color={qrBgColor} setter={setQrBgColor} defaultColor="#ffffff" />
                         <input 
                           id="qr-bg-color"
-                          type="color" 
-                          disabled={qrBgTransparent}
-                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                          value={qrBgColor} 
-                          onChange={(e) => setQrBgColor(e.target.value)}
-                        />
-                        <input 
                           type="text" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                           disabled={qrBgTransparent}
                           value={qrBgColor} 
-                          onChange={(e) => setQrBgColor(e.target.value)}
+                          onChange={handleColorInputChange(setQrBgColor)}
+                          onBlur={handleColorInputBlur(qrBgColor, setQrBgColor, '#ffffff')}
+                          style={{ opacity: qrBgTransparent ? 0.4 : 1 }}
                         />
                       </div>
                     </div>
@@ -1662,18 +1719,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <div className="flex flex-col gap-1.5 w-full">
                           <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Text Color</label>
                           <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="text" color={qrTextColor} setter={setQrTextColor} defaultColor="#111827" />
                             <input 
                               id="qr-text-color"
-                              type="color" 
-                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                              value={qrTextColor} 
-                              onChange={(e) => setQrTextColor(e.target.value)}
-                            />
-                            <input 
                               type="text" 
-                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                               value={qrTextColor} 
-                              onChange={(e) => setQrTextColor(e.target.value)}
+                              onChange={handleColorInputChange(setQrTextColor)}
+                              onBlur={handleColorInputBlur(qrTextColor, setQrTextColor, '#111827')}
                             />
                           </div>
                         </div>
@@ -1793,18 +1846,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                             <div className="flex flex-col gap-1.5 w-full">
                               <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
                               <div className="flex items-center gap-2">
+                                <ColorPickerSwatch pickerKey="textBg" color={qrTextBgColor} setter={setQrTextBgColor} defaultColor="#ffffff" />
                                 <input 
                                   id="qr-text-bg-color"
-                                  type="color" 
-                                  className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                                  value={qrTextBgColor} 
-                                  onChange={(e) => setQrTextBgColor(e.target.value)}
-                                />
-                                <input 
                                   type="text" 
-                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                                   value={qrTextBgColor} 
-                                  onChange={(e) => setQrTextBgColor(e.target.value)}
+                                  onChange={handleColorInputChange(setQrTextBgColor)}
+                                  onBlur={handleColorInputBlur(qrTextBgColor, setQrTextBgColor, '#ffffff')}
                                 />
                               </div>
                             </div>
@@ -1844,18 +1893,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                             <div className="flex flex-col gap-1.5 w-full">
                               <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Color</label>
                               <div className="flex items-center gap-2">
+                                <ColorPickerSwatch pickerKey="textStroke" color={qrTextStrokeColor} setter={setQrTextStrokeColor} defaultColor="#ffffff" />
                                 <input 
                                   id="qr-text-stroke-color"
-                                  type="color" 
-                                  className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                                  value={qrTextStrokeColor} 
-                                  onChange={(e) => setQrTextStrokeColor(e.target.value)}
-                                />
-                                <input 
                                   type="text" 
-                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                                   value={qrTextStrokeColor} 
-                                  onChange={(e) => setQrTextStrokeColor(e.target.value)}
+                                  onChange={handleColorInputChange(setQrTextStrokeColor)}
+                                  onBlur={handleColorInputBlur(qrTextStrokeColor, setQrTextStrokeColor, '#ffffff')}
                                 />
                               </div>
                             </div>
@@ -1926,36 +1971,28 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <div className="flex flex-col gap-1.5 w-full">
                       <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
                       <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bcLine" color={barcodeLineColor} setter={setBarcodeLineColor} defaultColor="#111827" />
                         <input 
                           id="bc-line-color"
-                          type="color" 
-                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                          value={barcodeLineColor} 
-                          onChange={(e) => setBarcodeLineColor(e.target.value)}
-                        />
-                        <input 
                           type="text" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                           value={barcodeLineColor} 
-                          onChange={(e) => setBarcodeLineColor(e.target.value)}
+                          onChange={handleColorInputChange(setBarcodeLineColor)}
+                          onBlur={handleColorInputBlur(barcodeLineColor, setBarcodeLineColor, '#111827')}
                         />
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 w-full">
                       <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
                       <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bcBg" color={barcodeBgColor} setter={setBarcodeBgColor} defaultColor="#ffffff" />
                         <input 
                           id="bc-bg-color"
-                          type="color" 
-                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                          value={barcodeBgColor} 
-                          onChange={(e) => setBarcodeBgColor(e.target.value)}
-                        />
-                        <input 
                           type="text" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
                           value={barcodeBgColor} 
-                          onChange={(e) => setBarcodeBgColor(e.target.value)}
+                          onChange={handleColorInputChange(setBarcodeBgColor)}
+                          onBlur={handleColorInputBlur(barcodeBgColor, setBarcodeBgColor, '#ffffff')}
                         />
                       </div>
                     </div>

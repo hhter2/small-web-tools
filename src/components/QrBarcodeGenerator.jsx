@@ -896,6 +896,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       case 'url':
         return qrUrl;
       case 'wifi':
+        if (!qrWifiSsid || !qrWifiSsid.trim()) return '';
         const ssidEsc = escapeWifiString(qrWifiSsid);
         const passEsc = escapeWifiString(qrWifiPassword);
         const hidden = qrWifiHidden ? 'true' : 'false';

@@ -803,6 +803,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [qrTextStrokeColor, setQrTextStrokeColor] = useState('#ffffff');
   const [qrTextStrokeWidth, setQrTextStrokeWidth] = useState(3);
 
+  // Accordion state — which QR advanced section is open
+  const [openSection, setOpenSection] = useState(null); // null | 'style' | 'logo' | 'text'
+  const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
+
   // Copy status
   const [copied, setCopied] = useState(false);
 
@@ -871,6 +875,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     setQrTextStrokeEnabled(false);
     setQrTextStrokeColor('#ffffff');
     setQrTextStrokeWidth(3);
+    setOpenSection(null);
   };
 
   const resetBarcode = () => {
@@ -1133,6 +1138,30 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     URL.revokeObjectURL(url);
   };
 
+  // Reusable accordion header button
+  const AccordionHeader = ({ sectionKey, label, badge }) => (
+    <button
+      type="button"
+      onClick={() => toggleSection(sectionKey)}
+      className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card hover:bg-nav-hover-bg transition-colors text-left group"
+    >
+      <span className="flex items-center gap-2">
+        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{label}</span>
+        {badge && (
+          <span className="text-[10px] font-bold bg-accent/15 text-accent px-1.5 py-0.5 rounded-full">{badge}</span>
+        )}
+      </span>
+      <svg
+        viewBox="0 0 24 24" width="14" height="14"
+        stroke="currentColor" strokeWidth="2.5" fill="none"
+        strokeLinecap="round" strokeLinejoin="round"
+        className={`text-text-muted transition-transform duration-200 shrink-0 ${openSection === sectionKey ? 'rotate-180' : ''}`}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  );
+
   return (
     <Card id="tool-qrbarcode" variant="tool" size="wide">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
@@ -1178,7 +1207,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         
         {/* ================= LEFT SIDE: CONFIG PANEL ================= */}
-        <div className="lg:col-span-3 flex flex-col gap-6 lg:max-h-[480px] lg:overflow-y-auto pr-3 custom-scrollbar">
+        <div className="lg:col-span-3 flex flex-col gap-4 lg:max-h-[520px] lg:overflow-y-auto pr-3 custom-scrollbar">
           
           {activeTab === 'qr' ? (
             <>
@@ -1347,584 +1376,587 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                 )}
               </div>
 
-              {/* QR STYLE CUSTOMIZATION */}
-              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Style Customization</div>
-
-              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Dots Style</label>
-                    <select 
-                      id="qr-dots-style" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      value={qrDotsStyle} 
-                      onChange={(e) => setQrDotsStyle(e.target.value)}
-                    >
-                      <option value="square">Classic Square</option>
-                      <option value="circle">Rounded Circles</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Corner Eyes Style</label>
-                    <select 
-                      id="qr-eyes-style" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      value={qrEyesStyle} 
-                      onChange={(e) => setQrEyesStyle(e.target.value)}
-                    >
-                      <option value="square">Standard Square</option>
-                      <option value="rounded">Smooth Rounded</option>
-                      <option value="circle">Circular Rings</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color Type</span>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="fgType" 
-                        className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                        value="solid" 
-                        checked={qrFgType === 'solid'} 
-                        onChange={() => setQrFgType('solid')}
-                      />
-                      Solid Color
-                    </label>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="fgType" 
-                        className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                        value="gradient" 
-                        checked={qrFgType === 'gradient'} 
-                        onChange={() => setQrFgType('gradient')}
-                      />
-                      Gradient Color
-                    </label>
-                  </div>
-                </div>
-
-                {qrFgType === 'solid' ? (
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        id="qr-fg-color"
-                        type="color" 
-                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                        value={qrFgColor} 
-                        onChange={(e) => setQrFgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                        value={qrFgColor} 
-                        onChange={(e) => setQrFgColor(e.target.value)}
-                      />
+              {/* ── ACCORDION: STYLE CUSTOMIZATION ── */}
+              <AccordionHeader sectionKey="style" label="Style Customization" />
+              {openSection === 'style' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Dots Style</label>
+                      <select 
+                        id="qr-dots-style" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrDotsStyle} 
+                        onChange={(e) => setQrDotsStyle(e.target.value)}
+                      >
+                        <option value="square">Classic Square</option>
+                        <option value="circle">Rounded Circles</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Corner Eyes Style</label>
+                      <select 
+                        id="qr-eyes-style" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrEyesStyle} 
+                        onChange={(e) => setQrEyesStyle(e.target.value)}
+                      >
+                        <option value="square">Standard Square</option>
+                        <option value="rounded">Smooth Rounded</option>
+                        <option value="circle">Circular Rings</option>
+                      </select>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
-                        <div className="flex items-center gap-2">
-                          <input 
-                            id="qr-grad-1"
-                            type="color" 
-                            className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                            value={qrGradColor1} 
-                            onChange={(e) => setQrGradColor1(e.target.value)}
-                          />
-                          <input 
-                            type="text" 
-                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                            value={qrGradColor1} 
-                            onChange={(e) => setQrGradColor1(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
-                        <div className="flex items-center gap-2">
-                          <input 
-                            id="qr-grad-2"
-                            type="color" 
-                            className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                            value={qrGradColor2} 
-                            onChange={(e) => setQrGradColor2(e.target.value)}
-                          />
-                          <input 
-                            type="text" 
-                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                            value={qrGradColor2} 
-                            onChange={(e) => setQrGradColor2(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Gradient Shape</label>
-                        <select 
-                          id="qr-grad-style" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                          value={qrGradType} 
-                          onChange={(e) => setQrGradType(e.target.value)}
-                        >
-                          <option value="linear">Linear</option>
-                          <option value="radial">Radial</option>
-                        </select>
-                      </div>
-                      {qrGradType === 'linear' && (
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">Angle ({qrGradAngle}°)</label>
-                          <input 
-                            id="qr-grad-angle"
-                            type="range" 
-                            min="0" 
-                            max="360" 
-                            step="15"
-                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                            value={qrGradAngle} 
-                            onChange={(e) => setQrGradAngle(e.target.value)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
-                    <div className="flex items-center gap-2" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
-                      <input 
-                        id="qr-bg-color"
-                        type="color" 
-                        disabled={qrBgTransparent}
-                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                        value={qrBgColor} 
-                        onChange={(e) => setQrBgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                        disabled={qrBgTransparent}
-                        value={qrBgColor} 
-                        onChange={(e) => setQrBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-6">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                      <input 
-                        type="checkbox"
-                        className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                        checked={qrBgTransparent}
-                        onChange={(e) => setQrBgTransparent(e.target.checked)}
-                      />
-                      Transparent BG
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">Error Correction</label>
-                    <select 
-                      id="qr-error-correct" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      disabled={logoImg !== null}
-                      value={logoImg ? 'H' : qrErrorCorrection} 
-                      onChange={(e) => setQrErrorCorrection(e.target.value)}
-                    >
-                      <option value="L">Low (7% recovery)</option>
-                      <option value="M">Medium (15% recovery)</option>
-                      <option value="Q">Quartile (25% recovery)</option>
-                      <option value="H">High (30% recovery)</option>
-                    </select>
-                    {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">Locked to HIGH (H) to support center logo.</span>}
-                  </div>
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Resolution</label>
-                    <select 
-                      id="qr-export-size" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      value={qrExportSize} 
-                      onChange={(e) => setQrExportSize(Number(e.target.value))}
-                    >
-                      <option value={256}>256 x 256 px</option>
-                      <option value={512}>512 x 512 px</option>
-                      <option value={1024}>1024 x 1024 px</option>
-                      <option value={2048}>2048 x 2048 px</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* QR LOGO UPLOAD */}
-              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Embed Logo / Image</div>
-              
-              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Upload Logo</span>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <label htmlFor="logo-file-picker">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm select-none">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                        </svg>
-                        {logoFile ? 'Change Logo' : 'Choose Logo'}
-                      </span>
-                    </label>
-                    <input 
-                      id="logo-file-picker"
-                      type="file" 
-                      accept="image/png, image/jpeg, image/svg+xml"
-                      onChange={handleLogoChange}
-                      className="hidden"
-                    />
-                    {logoFile && (
-                      <span className="bg-app border border-border text-text-muted px-2.5 py-1 rounded-md text-xs font-mono max-w-[200px] truncate">
-                        {logoFile.name}
-                      </span>
-                    )}
-                    {logoImg && (
-                      <Button variant="secondary" size="sm" className="text-red-500 hover:text-red-600 font-bold ml-auto" onClick={removeLogo}>
-                        Remove Logo
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {logoImg && (
-                  <div className="border-t border-border pt-4 mt-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Size ({Math.round(logoScale * 100)}%)</label>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color Type</span>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                         <input 
-                          id="logo-scale"
-                          type="range" 
-                          min="0.10" 
-                          max="0.25" 
-                          step="0.01"
-                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                          value={logoScale} 
-                          onChange={(e) => setLogoScale(parseFloat(e.target.value))}
+                          type="radio" 
+                          name="fgType" 
+                          className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          value="solid" 
+                          checked={qrFgType === 'solid'} 
+                          onChange={() => setQrFgType('solid')}
+                        />
+                        Solid Color
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="fgType" 
+                          className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          value="gradient" 
+                          checked={qrFgType === 'gradient'} 
+                          onChange={() => setQrFgType('gradient')}
+                        />
+                        Gradient Color
+                      </label>
+                    </div>
+                  </div>
+
+                  {qrFgType === 'solid' ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          id="qr-fg-color"
+                          type="color" 
+                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                          value={qrFgColor} 
+                          onChange={(e) => setQrFgColor(e.target.value)}
+                        />
+                        <input 
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          value={qrFgColor} 
+                          onChange={(e) => setQrFgColor(e.target.value)}
                         />
                       </div>
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Background</label>
-                        <select 
-                          id="logo-bg-shape" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                          value={logoBgShape} 
-                          onChange={(e) => setLogoBgShape(e.target.value)}
-                        >
-                          <option value="none">None (Overlaid)</option>
-                          <option value="circle">White Circle</option>
-                          <option value="square">White Square</option>
-                        </select>
-                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              {/* QR TEXT CONTENT & LABEL STYLING */}
-              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Text Overlay & Labels</div>
-
-              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm">
-                <FieldInput 
-                  id="qr-text-label-input"
-                  type="text"
-                  label="Text Content (Words)"
-                  placeholder="e.g., SCAN ME, JOIN NOW"
-                  value={qrTextLabel}
-                  onChange={(e) => setQrTextLabel(e.target.value)}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-text-label-mode" className="text-xs font-bold text-text-muted uppercase tracking-wider">Display Mode</label>
-                    <select 
-                      id="qr-text-label-mode" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      value={qrTextLabelMode} 
-                      onChange={(e) => setQrTextLabelMode(e.target.value)}
-                    >
-                      <option value="none">None (Disabled)</option>
-                      <option value="label">External Label Only</option>
-                      <option value="embedded">Embedded Text Only</option>
-                      <option value="both">Both (Label + Embedded)</option>
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="qr-text-font" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Family</label>
-                    <select 
-                      id="qr-text-font" 
-                      className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                      disabled={qrTextLabelMode === 'none'}
-                      value={qrTextFont} 
-                      onChange={(e) => setQrTextFont(e.target.value)}
-                    >
-                      <option value="sans-serif">Sans-Serif</option>
-                      <option value="serif">Serif</option>
-                      <option value="monospace">Monospace</option>
-                      <option value="Arial">Arial</option>
-                      <option value="Georgia">Georgia</option>
-                      <option value="Impact">Impact</option>
-                      <option value="Courier New">Courier New</option>
-                      <option value="Trebuchet MS">Trebuchet MS</option>
-                      <option value="Verdana">Verdana</option>
-                    </select>
-                  </div>
-                </div>
-
-                {qrTextLabelMode !== 'none' && (
-                  <div className="border-t border-border pt-4 flex flex-col gap-4">
-                    
-                    {/* Size and Color */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-text-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({qrTextSize}px)</label>
-                        <input 
-                          id="qr-text-size"
-                          type="range" 
-                          min="12" 
-                          max="64" 
-                          step="1"
-                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                          value={qrTextSize} 
-                          onChange={(e) => setQrTextSize(parseInt(e.target.value))}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Text Color</label>
-                        <div className="flex items-center gap-2">
-                          <input 
-                            id="qr-text-color"
-                            type="color" 
-                            className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                            value={qrTextColor} 
-                            onChange={(e) => setQrTextColor(e.target.value)}
-                          />
-                          <input 
-                            type="text" 
-                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                            value={qrTextColor} 
-                            onChange={(e) => setQrTextColor(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Weight and Style */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-text-weight" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Weight</label>
-                        <select 
-                          id="qr-text-weight" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                          value={qrTextWeight} 
-                          onChange={(e) => setQrTextWeight(e.target.value)}
-                        >
-                          <option value="normal">Normal</option>
-                          <option value="bold">Bold</option>
-                          <option value="bolder">Extra Bold</option>
-                        </select>
-                      </div>
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="qr-text-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Style</label>
-                        <select 
-                          id="qr-text-style" 
-                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                          value={qrTextStyle} 
-                          onChange={(e) => setQrTextStyle(e.target.value)}
-                        >
-                          <option value="normal">Normal</option>
-                          <option value="italic">Italic</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Positions */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4">
-                      {(qrTextLabelMode === 'label' || qrTextLabelMode === 'both') && (
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-label-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Label Position</label>
-                          <select 
-                            id="qr-label-pos" 
-                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                            value={qrLabelPosition} 
-                            onChange={(e) => setQrLabelPosition(e.target.value)}
-                          >
-                            <option value="bottom">Below QR Code</option>
-                            <option value="top">Above QR Code</option>
-                          </select>
-                        </div>
-                      )}
-                      {(qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-embed-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Embedded Position</label>
-                          <select 
-                            id="qr-embed-pos" 
-                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
-                            value={qrEmbeddedPosition} 
-                            onChange={(e) => setQrEmbeddedPosition(e.target.value)}
-                          >
-                            <option value="center">Center</option>
-                            <option value="top">Top Third</option>
-                            <option value="bottom">Bottom Third</option>
-                            <option value="custom">Custom Coordinates</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Custom coordinates offset */}
-                    {qrEmbeddedPosition === 'custom' && (qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-x" className="text-xs font-bold text-text-muted uppercase tracking-wider">Horizontal Position ({qrTextXOffset}%)</label>
-                          <input 
-                            id="qr-text-x"
-                            type="range" 
-                            min="-50" 
-                            max="50" 
-                            step="1"
-                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
-                            value={qrTextXOffset} 
-                            onChange={(e) => setQrTextXOffset(parseInt(e.target.value))}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-y" className="text-xs font-bold text-text-muted uppercase tracking-wider">Vertical Position ({qrTextYOffset}%)</label>
-                          <input 
-                            id="qr-text-y"
-                            type="range" 
-                            min="-50" 
-                            max="50" 
-                            step="1"
-                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
-                            value={qrTextYOffset} 
-                            onChange={(e) => setQrTextYOffset(parseInt(e.target.value))}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Background block settings */}
-                    <div className="border-t border-border pt-4 flex flex-col gap-3">
-                      <div className="flex items-center">
-                        <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                          <input 
-                            type="checkbox"
-                            className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                            checked={qrTextBgEnabled}
-                            onChange={(e) => setQrTextBgEnabled(e.target.checked)}
-                          />
-                          Draw Background Behind Text
-                        </label>
-                      </div>
-
-                      {qrTextBgEnabled && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
-                            <div className="flex items-center gap-2">
-                              <input 
-                                id="qr-text-bg-color"
-                                type="color" 
-                                className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                                value={qrTextBgColor} 
-                                onChange={(e) => setQrTextBgColor(e.target.value)}
-                              />
-                              <input 
-                                type="text" 
-                                className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                                value={qrTextBgColor} 
-                                onChange={(e) => setQrTextBgColor(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-bg-pad" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Padding ({qrTextBgPadding}px)</label>
+                          <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
+                          <div className="flex items-center gap-2">
                             <input 
-                              id="qr-text-bg-pad"
+                              id="qr-grad-1"
+                              type="color" 
+                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                              value={qrGradColor1} 
+                              onChange={(e) => setQrGradColor1(e.target.value)}
+                            />
+                            <input 
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              value={qrGradColor1} 
+                              onChange={(e) => setQrGradColor1(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              id="qr-grad-2"
+                              type="color" 
+                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                              value={qrGradColor2} 
+                              onChange={(e) => setQrGradColor2(e.target.value)}
+                            />
+                            <input 
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              value={qrGradColor2} 
+                              onChange={(e) => setQrGradColor2(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Gradient Shape</label>
+                          <select 
+                            id="qr-grad-style" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrGradType} 
+                            onChange={(e) => setQrGradType(e.target.value)}
+                          >
+                            <option value="linear">Linear</option>
+                            <option value="radial">Radial</option>
+                          </select>
+                        </div>
+                        {qrGradType === 'linear' && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">Angle ({qrGradAngle}°)</label>
+                            <input 
+                              id="qr-grad-angle"
                               type="range" 
                               min="0" 
-                              max="30" 
+                              max="360" 
+                              step="15"
+                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                              value={qrGradAngle} 
+                              onChange={(e) => setQrGradAngle(e.target.value)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <div className="flex items-center gap-2" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
+                        <input 
+                          id="qr-bg-color"
+                          type="color" 
+                          disabled={qrBgTransparent}
+                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                          value={qrBgColor} 
+                          onChange={(e) => setQrBgColor(e.target.value)}
+                        />
+                        <input 
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          disabled={qrBgTransparent}
+                          value={qrBgColor} 
+                          onChange={(e) => setQrBgColor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center mt-6">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          checked={qrBgTransparent}
+                          onChange={(e) => setQrBgTransparent(e.target.checked)}
+                        />
+                        Transparent BG
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">Error Correction</label>
+                      <select 
+                        id="qr-error-correct" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        disabled={logoImg !== null}
+                        value={logoImg ? 'H' : qrErrorCorrection} 
+                        onChange={(e) => setQrErrorCorrection(e.target.value)}
+                      >
+                        <option value="L">Low (7% recovery)</option>
+                        <option value="M">Medium (15% recovery)</option>
+                        <option value="Q">Quartile (25% recovery)</option>
+                        <option value="H">High (30% recovery)</option>
+                      </select>
+                      {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">Locked to HIGH (H) to support center logo.</span>}
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Resolution</label>
+                      <select 
+                        id="qr-export-size" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrExportSize} 
+                        onChange={(e) => setQrExportSize(Number(e.target.value))}
+                      >
+                        <option value={256}>256 x 256 px</option>
+                        <option value={512}>512 x 512 px</option>
+                        <option value={1024}>1024 x 1024 px</option>
+                        <option value={2048}>2048 x 2048 px</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ACCORDION: EMBED LOGO ── */}
+              <AccordionHeader sectionKey="logo" label="Embed Logo / Image" badge={logoImg ? '1 logo' : null} />
+              {openSection === 'logo' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Upload Logo</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label htmlFor="logo-file-picker">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm select-none">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          {logoFile ? 'Change Logo' : 'Choose Logo'}
+                        </span>
+                      </label>
+                      <input 
+                        id="logo-file-picker"
+                        type="file" 
+                        accept="image/png, image/jpeg, image/svg+xml"
+                        onChange={handleLogoChange}
+                        className="hidden"
+                      />
+                      {logoFile && (
+                        <span className="bg-app border border-border text-text-muted px-2.5 py-1 rounded-md text-xs font-mono max-w-[200px] truncate">
+                          {logoFile.name}
+                        </span>
+                      )}
+                      {logoImg && (
+                        <Button variant="secondary" size="sm" className="text-red-500 hover:text-red-600 font-bold ml-auto" onClick={removeLogo}>
+                          Remove Logo
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {logoImg && (
+                    <div className="border-t border-border pt-4 mt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Size ({Math.round(logoScale * 100)}%)</label>
+                          <input 
+                            id="logo-scale"
+                            type="range" 
+                            min="0.10" 
+                            max="0.25" 
+                            step="0.01"
+                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                            value={logoScale} 
+                            onChange={(e) => setLogoScale(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Background</label>
+                          <select 
+                            id="logo-bg-shape" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={logoBgShape} 
+                            onChange={(e) => setLogoBgShape(e.target.value)}
+                          >
+                            <option value="none">None (Overlaid)</option>
+                            <option value="circle">White Circle</option>
+                            <option value="square">White Square</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── ACCORDION: TEXT OVERLAY ── */}
+              <AccordionHeader sectionKey="text" label="Text Overlay & Labels" badge={qrTextLabelMode !== 'none' ? qrTextLabelMode : null} />
+              {openSection === 'text' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
+                  <FieldInput 
+                    id="qr-text-label-input"
+                    type="text"
+                    label="Text Content (Words)"
+                    placeholder="e.g., SCAN ME, JOIN NOW"
+                    value={qrTextLabel}
+                    onChange={(e) => setQrTextLabel(e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-text-label-mode" className="text-xs font-bold text-text-muted uppercase tracking-wider">Display Mode</label>
+                      <select 
+                        id="qr-text-label-mode" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrTextLabelMode} 
+                        onChange={(e) => setQrTextLabelMode(e.target.value)}
+                      >
+                        <option value="none">None (Disabled)</option>
+                        <option value="label">External Label Only</option>
+                        <option value="embedded">Embedded Text Only</option>
+                        <option value="both">Both (Label + Embedded)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-text-font" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Family</label>
+                      <select 
+                        id="qr-text-font" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        disabled={qrTextLabelMode === 'none'}
+                        value={qrTextFont} 
+                        onChange={(e) => setQrTextFont(e.target.value)}
+                      >
+                        <option value="sans-serif">Sans-Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Verdana">Verdana</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {qrTextLabelMode !== 'none' && (
+                    <div className="border-t border-border pt-4 flex flex-col gap-4">
+                      
+                      {/* Size and Color */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({qrTextSize}px)</label>
+                          <input 
+                            id="qr-text-size"
+                            type="range" 
+                            min="12" 
+                            max="64" 
+                            step="1"
+                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                            value={qrTextSize} 
+                            onChange={(e) => setQrTextSize(parseInt(e.target.value))}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Text Color</label>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              id="qr-text-color"
+                              type="color" 
+                              className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                              value={qrTextColor} 
+                              onChange={(e) => setQrTextColor(e.target.value)}
+                            />
+                            <input 
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                              value={qrTextColor} 
+                              onChange={(e) => setQrTextColor(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Weight and Style */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-weight" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Weight</label>
+                          <select 
+                            id="qr-text-weight" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrTextWeight} 
+                            onChange={(e) => setQrTextWeight(e.target.value)}
+                          >
+                            <option value="normal">Normal</option>
+                            <option value="bold">Bold</option>
+                            <option value="bolder">Extra Bold</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Style</label>
+                          <select 
+                            id="qr-text-style" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrTextStyle} 
+                            onChange={(e) => setQrTextStyle(e.target.value)}
+                          >
+                            <option value="normal">Normal</option>
+                            <option value="italic">Italic</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Positions */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4">
+                        {(qrTextLabelMode === 'label' || qrTextLabelMode === 'both') && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-label-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Label Position</label>
+                            <select 
+                              id="qr-label-pos" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                              value={qrLabelPosition} 
+                              onChange={(e) => setQrLabelPosition(e.target.value)}
+                            >
+                              <option value="bottom">Below QR Code</option>
+                              <option value="top">Above QR Code</option>
+                            </select>
+                          </div>
+                        )}
+                        {(qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-embed-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Embedded Position</label>
+                            <select 
+                              id="qr-embed-pos" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                              value={qrEmbeddedPosition} 
+                              onChange={(e) => setQrEmbeddedPosition(e.target.value)}
+                            >
+                              <option value="center">Center</option>
+                              <option value="top">Top Third</option>
+                              <option value="bottom">Bottom Third</option>
+                              <option value="custom">Custom Coordinates</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Custom coordinates offset */}
+                      {qrEmbeddedPosition === 'custom' && (qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-text-x" className="text-xs font-bold text-text-muted uppercase tracking-wider">Horizontal Position ({qrTextXOffset}%)</label>
+                            <input 
+                              id="qr-text-x"
+                              type="range" 
+                              min="-50" 
+                              max="50" 
                               step="1"
                               className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
-                              value={qrTextBgPadding} 
-                              onChange={(e) => setQrTextBgPadding(parseInt(e.target.value))}
+                              value={qrTextXOffset} 
+                              onChange={(e) => setQrTextXOffset(parseInt(e.target.value))}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-text-y" className="text-xs font-bold text-text-muted uppercase tracking-wider">Vertical Position ({qrTextYOffset}%)</label>
+                            <input 
+                              id="qr-text-y"
+                              type="range" 
+                              min="-50" 
+                              max="50" 
+                              step="1"
+                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                              value={qrTextYOffset} 
+                              onChange={(e) => setQrTextYOffset(parseInt(e.target.value))}
                             />
                           </div>
                         </div>
                       )}
-                    </div>
 
-                    {/* Stroke Outline settings */}
-                    <div className="border-t border-border pt-4 flex flex-col gap-3">
-                      <div className="flex items-center">
-                        <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                          <input 
-                            type="checkbox"
-                            className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                            checked={qrTextStrokeEnabled}
-                            onChange={(e) => setQrTextStrokeEnabled(e.target.checked)}
-                          />
-                          Add Text Outline (Stroke)
-                        </label>
-                      </div>
+                      {/* Background block settings */}
+                      <div className="border-t border-border pt-4 flex flex-col gap-3">
+                        <div className="flex items-center">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                              checked={qrTextBgEnabled}
+                              onChange={(e) => setQrTextBgEnabled(e.target.checked)}
+                            />
+                            Draw Background Behind Text
+                          </label>
+                        </div>
 
-                      {qrTextStrokeEnabled && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Color</label>
-                            <div className="flex items-center gap-2">
+                        {qrTextBgEnabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  id="qr-text-bg-color"
+                                  type="color" 
+                                  className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                                  value={qrTextBgColor} 
+                                  onChange={(e) => setQrTextBgColor(e.target.value)}
+                                />
+                                <input 
+                                  type="text" 
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                                  value={qrTextBgColor} 
+                                  onChange={(e) => setQrTextBgColor(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-bg-pad" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Padding ({qrTextBgPadding}px)</label>
                               <input 
-                                id="qr-text-stroke-color"
-                                type="color" 
-                                className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                                value={qrTextStrokeColor} 
-                                onChange={(e) => setQrTextStrokeColor(e.target.value)}
-                              />
-                              <input 
-                                type="text" 
-                                className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                                value={qrTextStrokeColor} 
-                                onChange={(e) => setQrTextStrokeColor(e.target.value)}
+                                id="qr-text-bg-pad"
+                                type="range" 
+                                min="0" 
+                                max="30" 
+                                step="1"
+                                className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                                value={qrTextBgPadding} 
+                                onChange={(e) => setQrTextBgPadding(parseInt(e.target.value))}
                               />
                             </div>
                           </div>
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-stroke-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Thickness ({qrTextStrokeWidth}px)</label>
-                            <input 
-                              id="qr-text-stroke-width"
-                              type="range" 
-                              min="1" 
-                              max="8" 
-                              step="1"
-                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
-                              value={qrTextStrokeWidth} 
-                              onChange={(e) => setQrTextStrokeWidth(parseInt(e.target.value))}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
 
-                  </div>
-                )}
-              </div>
+                      {/* Stroke Outline settings */}
+                      <div className="border-t border-border pt-4 flex flex-col gap-3">
+                        <div className="flex items-center">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                              checked={qrTextStrokeEnabled}
+                              onChange={(e) => setQrTextStrokeEnabled(e.target.checked)}
+                            />
+                            Add Text Outline (Stroke)
+                          </label>
+                        </div>
+
+                        {qrTextStrokeEnabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Color</label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  id="qr-text-stroke-color"
+                                  type="color" 
+                                  className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                                  value={qrTextStrokeColor} 
+                                  onChange={(e) => setQrTextStrokeColor(e.target.value)}
+                                />
+                                <input 
+                                  type="text" 
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                                  value={qrTextStrokeColor} 
+                                  onChange={(e) => setQrTextStrokeColor(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-stroke-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Thickness ({qrTextStrokeWidth}px)</label>
+                              <input 
+                                id="qr-text-stroke-width"
+                                type="range" 
+                                min="1" 
+                                max="8" 
+                                step="1"
+                                className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                                value={qrTextStrokeWidth} 
+                                onChange={(e) => setQrTextStrokeWidth(parseInt(e.target.value))}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="mt-2">
                 <Button variant="secondary" className="w-full" onClick={resetQR}>
@@ -1964,122 +1996,124 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                 </div>
               </div>
 
-              <div className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 mt-2">Barcode Styling</div>
-
-              <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        id="bc-line-color"
-                        type="color" 
-                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                        value={barcodeLineColor} 
-                        onChange={(e) => setBarcodeLineColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                        value={barcodeLineColor} 
-                        onChange={(e) => setBarcodeLineColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        id="bc-bg-color"
-                        type="color" 
-                        className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
-                        value={barcodeBgColor} 
-                        onChange={(e) => setBarcodeBgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
-                        value={barcodeBgColor} 
-                        onChange={(e) => setBarcodeBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Width ({barcodeWidth}px)</label>
-                    <input 
-                      id="bc-width"
-                      type="range" 
-                      min="1" 
-                      max="4" 
-                      step="1"
-                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                      value={barcodeWidth} 
-                      onChange={(e) => setBarcodeWidth(parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Height ({barcodeHeight}px)</label>
-                    <input 
-                      id="bc-height"
-                      type="range" 
-                      min="40" 
-                      max="150" 
-                      step="5"
-                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                      value={barcodeHeight} 
-                      onChange={(e) => setBarcodeHeight(parseInt(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center mt-6">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                      <input 
-                        type="checkbox"
-                        className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                        checked={barcodeDisplayValue}
-                        onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
-                      />
-                      Show Text Label
-                    </label>
-                  </div>
-                  {barcodeDisplayValue && (
+              <AccordionHeader sectionKey="barcode-style" label="Barcode Styling" />
+              {openSection === 'barcode-style' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                      <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          id="bc-line-color"
+                          type="color" 
+                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                          value={barcodeLineColor} 
+                          onChange={(e) => setBarcodeLineColor(e.target.value)}
+                        />
+                        <input 
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          value={barcodeLineColor} 
+                          onChange={(e) => setBarcodeLineColor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          id="bc-bg-color"
+                          type="color" 
+                          className="w-10 h-10 p-0.5 rounded border border-border cursor-pointer bg-transparent"
+                          value={barcodeBgColor} 
+                          onChange={(e) => setBarcodeBgColor(e.target.value)}
+                        />
+                        <input 
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-28 uppercase"
+                          value={barcodeBgColor} 
+                          onChange={(e) => setBarcodeBgColor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Width ({barcodeWidth}px)</label>
                       <input 
-                        id="bc-font-size"
+                        id="bc-width"
                         type="range" 
-                        min="10" 
-                        max="24" 
+                        min="1" 
+                        max="4" 
                         step="1"
                         className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                        value={barcodeFontSize} 
-                        onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
+                        value={barcodeWidth} 
+                        onChange={(e) => setBarcodeWidth(parseInt(e.target.value))}
                       />
                     </div>
-                  )}
-                </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Height ({barcodeHeight}px)</label>
+                      <input 
+                        id="bc-height"
+                        type="range" 
+                        min="40" 
+                        max="150" 
+                        step="5"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeHeight} 
+                        onChange={(e) => setBarcodeHeight(parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outer Margin ({barcodeMargin}px)</label>
-                    <input 
-                      id="bc-margin"
-                      type="range" 
-                      min="0" 
-                      max="40" 
-                      step="5"
-                      className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                      value={barcodeMargin} 
-                      onChange={(e) => setBarcodeMargin(parseInt(e.target.value))}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center mt-6">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          checked={barcodeDisplayValue}
+                          onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
+                        />
+                        Show Text Label
+                      </label>
+                    </div>
+                    {barcodeDisplayValue && (
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                        <input 
+                          id="bc-font-size"
+                          type="range" 
+                          min="10" 
+                          max="24" 
+                          step="1"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                          value={barcodeFontSize} 
+                          onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outer Margin ({barcodeMargin}px)</label>
+                      <input 
+                        id="bc-margin"
+                        type="range" 
+                        min="0" 
+                        max="40" 
+                        step="5"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeMargin} 
+                        onChange={(e) => setBarcodeMargin(parseInt(e.target.value))}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
               <div className="mt-2">
                 <Button variant="secondary" className="w-full" onClick={resetBarcode}>
                   Reset Barcode Settings to Default

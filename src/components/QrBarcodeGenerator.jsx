@@ -2129,9 +2129,9 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
             <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 text-center">Live Preview</h3>
 
-            <div className="flex justify-center items-center bg-app border border-border border-dashed rounded-xl p-4 min-h-[220px] select-none">
+            <div className="flex justify-center items-center bg-app border border-border border-dashed rounded-xl p-4 h-[220px] select-none">
               {activeTab === 'qr' ? (
-                <div className="flex items-center justify-center w-full">
+                <div className="flex items-center justify-center h-full w-full">
                   {!getQRValue() ? (
                     <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
                       <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
@@ -2143,11 +2143,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       <p className="text-xs font-medium">Enter content to generate QR Code</p>
                     </div>
                   ) : (
-                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="max-w-full h-auto bg-transparent border border-border/30 rounded-lg shadow-sm" />
+                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="max-h-full max-w-full bg-transparent border border-border/30 rounded-lg shadow-sm" />
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center w-full">
+                <div className="flex items-center justify-center h-full w-full">
                   {!barcodeValue ? (
                     <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
                       <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
@@ -2171,8 +2171,8 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       <p className="text-xs font-semibold">{barcodeError}</p>
                     </div>
                   ) : (
-                    <div className="w-full flex justify-center overflow-x-auto p-1 bg-white rounded-lg">
-                      <canvas ref={barcodeCanvasRef} className="max-w-full h-auto" />
+                    <div className="max-h-full max-w-full flex justify-center overflow-x-auto p-1 bg-white rounded-lg">
+                      <canvas ref={barcodeCanvasRef} className="max-h-full max-w-full object-contain" />
                       {/* Hidden SVG reference specifically for high-fidelity export */}
                       <svg ref={barcodeSvgRef} style={{ display: 'none' }} />
                     </div>

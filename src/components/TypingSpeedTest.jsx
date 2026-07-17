@@ -11,12 +11,6 @@ const PRESETS = {
     'Success is not final, failure is not fatal: it is the courage to continue that counts. In the end, we will remember not the words of our enemies, but the silence of our friends. Believe you can and you are halfway there.',
     'Life is what happens when you are busy making other plans. The future belongs to those who believe in the beauty of their dreams. Do not go where the path may lead, go instead where there is no path and leave a trail.',
     'To live is the rarest thing in the world. Most people exist, that is all. You only live once, but if you do it right, once is enough. In three words I can sum up everything I have learned about life: it goes on.'
-  ],
-  chinese: [
-    '天將降大任於是人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？',
-    '北國風光，千里冰封，萬里雪飄。望長城內外，惟餘莽莽；大河上下，頓失滔滔。山舞銀蛇，原馳蠟象，欲與天公試比高。須晴日，看紅裝素裹，分外妖嬈。江山如此多嬌，引無數英雄競折腰。',
-    '大學之道，在明明德，在親民，在止於至善。知止而後有定，定而後能靜，靜而後能安，安而後能慮，慮而後能得。物有本末，事有終始，知所先後，則近道矣。古之欲明明德於天下者，先治其國。',
-    '世有伯樂，然後有千里馬。千里馬常有，而伯樂不常有。故雖有名馬，祗辱於奴隸人之手，駢死於槽櫨之間，不以千里稱也。馬之千里者，一食或盡粟一石。食馬者不知其能千里而食也。'
   ]
 };
 
@@ -330,7 +324,7 @@ export default function TypingSpeedTest() {
   const [duration, setDuration] = useState('30'); // '15', '30', '60'
   const [freeStopMode, setFreeStopMode] = useState('manual'); // 'manual' | 'time' | 'words'
   const [freeWordTarget, setFreeWordTarget] = useState('100'); // word limit for free mode
-  const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
+  const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'code', 'custom'
   const [customText, setCustomText] = useState('');
   
   const [showPunctuation, setShowPunctuation] = useState(true);
@@ -430,7 +424,6 @@ export default function TypingSpeedTest() {
   // Determine active language (automatically preset-based or content-detected)
   const activeLang = useMemo(() => {
     if (selectedPreset === 'english' || selectedPreset === 'code') return 'english';
-    if (selectedPreset === 'chinese') return 'chinese';
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
   }, [mode, typedText, rawTemplateText, selectedPreset]);
 
@@ -967,7 +960,7 @@ export default function TypingSpeedTest() {
           {/* Preset Selector */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
             <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1 shrink-0">
-              {['english', 'chinese', 'code', 'custom'].map((preset) => (
+              {['english', 'code', 'custom'].map((preset) => (
                 <button
                   type="button"
                   key={preset}

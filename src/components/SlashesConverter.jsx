@@ -1,41 +1,74 @@
 import React from 'react';
-import BidirectionalConverter from './ui/BidirectionalConverter';
+import AutoDetectConverter from './ui/AutoDetectConverter';
 
-const modes = [
-  {
-    id: 'forward',
-    shortLabel: '\\ → /',
-    detailLabel: 'Windows to Web / Unix',
-    inputLabel: 'Backslash path',
-    inputHint: 'Paste one path or multiple lines',
-    inputPlaceholder: 'C:\\Users\\name\\Documents\\report.pdf',
-    outputLabel: 'Forward-slash path',
-    outputPlaceholder: 'C:/Users/name/Documents/report.pdf',
-    emptyMessage: 'Paste a Windows-style path. Every backslash will be replaced automatically.',
-    convert: (value) => ({ value: value.replace(/\\/g, '/'), error: null }),
-  },
-  {
-    id: 'backward',
-    shortLabel: '/ → \\',
-    detailLabel: 'Web / Unix to Windows',
-    inputLabel: 'Forward-slash path',
-    inputHint: 'Best for file-system paths, not URLs',
-    inputPlaceholder: '/Users/name/Documents/report.pdf',
-    outputLabel: 'Backslash path',
-    outputPlaceholder: '\\Users\\name\\Documents\\report.pdf',
-    emptyMessage: 'Paste a forward-slash file path. Every slash will be replaced automatically.',
-    convert: (value) => ({ value: value.replace(/\//g, '\\'), error: null }),
-  },
-];
+function analyzePath(input) {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      sourceLabel: 'Path style',
+      targetLabel: '',
+      output: '',
+      outputPlaceholder: 'The normalized path appears here.',
+      error: null,
+      status: 'Paste a file path. Its slash style will be detected automatically.',
+    };
+  }
+
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)) {
+    return {
+      sourceLabel: 'Web URL',
+      targetLabel: 'Web URL',
+      output: input,
+      outputPlaceholder: '',
+      error: null,
+      status: 'URL detected. Web URLs already use forward slashes, so no change was made.',
+    };
+  }
+
+  const backslashCount = (input.match(/\\/g) || []).length;
+  const forwardSlashCount = (input.match(/\//g) || []).length;
+
+  if (backslashCount > 0 && backslashCount >= forwardSlashCount) {
+    return {
+      sourceLabel: 'Backslash path',
+      targetLabel: 'Forward-slash path',
+      output: input.replace(/\\/g, '/'),
+      outputPlaceholder: '',
+      error: null,
+      status: 'Backslash path detected and converted automatically.',
+    };
+  }
+
+  if (forwardSlashCount > 0) {
+    return {
+      sourceLabel: 'Forward-slash path',
+      targetLabel: 'Backslash path',
+      output: input.replace(/\//g, '\\'),
+      outputPlaceholder: '',
+      error: null,
+      status: 'Forward-slash path detected and converted automatically.',
+    };
+  }
+
+  return {
+    sourceLabel: 'Plain text',
+    targetLabel: 'Unchanged text',
+    output: input,
+    outputPlaceholder: '',
+    error: null,
+    status: 'No slash characters were detected, so the input was left unchanged.',
+  };
+}
 
 export default function SlashesConverter() {
   return (
-    <BidirectionalConverter
+    <AutoDetectConverter
       toolId="tool-slash"
       title="Slashes Converter"
-      description="Convert file paths in either direction with a live preview, then copy or switch the result back in one click."
-      modes={modes}
-      defaultMode="forward"
+      description="Normalize file paths automatically. Paste either slash style and copy the converted result."
+      inputPlaceholder={'C:\\Users\\name\\Documents\\report.pdf\nor\n/Users/name/Documents/report.pdf'}
+      emptyTargetLabel="Converted path"
+      analyze={analyzePath}
     />
   );
 }

@@ -137,7 +137,7 @@ const navItems = [
     name: 'Word Counter',
     tooltip: 'Word Counter',
     category: 'text',
-    desc: 'Calculate the number of words and characters. Support English and Chinese.',
+    desc: 'Calculate words, characters, sentences, and reading time.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
@@ -164,7 +164,7 @@ const navItems = [
     name: 'Typing Speed Test',
     tooltip: 'Typing Speed Test',
     category: 'text',
-    desc: 'Test and improve your typing speed in English or Chinese with custom templates.',
+    desc: 'Test and improve your typing speed with English prose, code, or custom templates.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>

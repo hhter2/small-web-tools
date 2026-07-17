@@ -1,86 +1,73 @@
-import React, { useState } from 'react';
-import Card from './ui/Card';
-import FieldInput from './ui/FieldInput';
-import ToolHeader from './ui/ToolHeader';
+import React from 'react';
+import BidirectionalConverter from './ui/BidirectionalConverter';
 
 function textToUnicode(text) {
-  return Array.from(text)
-    .map((char) => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`)
-    .join(" ");
+  return {
+    value: Array.from(text)
+      .map((char) => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`)
+      .join(' '),
+    error: null,
+  };
 }
 
 function unicodeToText(codes) {
-  if (!codes.trim()) {
-    return { text: "", error: null };
-  }
+  if (!codes.trim()) return { value: '', error: null };
 
   const values = codes.split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const raw of values) {
-    const cleaned = raw.replace(/^U\+/i, "").replace(/^0x/i, "");
+    const cleaned = raw.replace(/^U\+/i, '').replace(/^0x/i, '');
+    if (!/^[0-9A-F]+$/i.test(cleaned)) {
+      return { value: '', error: `“${raw}” is not a hexadecimal Unicode code point.` };
+    }
+
     const codePoint = Number.parseInt(cleaned, 16);
-    if (Number.isNaN(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
-      return { text: "", error: "Unicode values must be valid hex code points." };
+    const isSurrogate = codePoint >= 0xd800 && codePoint <= 0xdfff;
+    if (codePoint > 0x10ffff || isSurrogate) {
+      return { value: '', error: `“${raw}” is not a valid Unicode scalar value.` };
     }
     chars.push(String.fromCodePoint(codePoint));
   }
 
-  return { text: chars.join(""), error: null };
+  return { value: chars.join(''), error: null };
 }
 
+const modes = [
+  {
+    id: 'encode',
+    shortLabel: 'Text → Unicode',
+    detailLabel: 'Encode',
+    inputLabel: 'Text',
+    inputHint: 'Supports multilingual text, symbols, and emoji',
+    inputPlaceholder: 'Hello 你好 👋',
+    outputLabel: 'Unicode code points',
+    outputPlaceholder: 'U+0048 U+0065 U+006C U+006C U+006F',
+    emptyMessage: 'Enter text to inspect its Unicode code points.',
+    convert: textToUnicode,
+  },
+  {
+    id: 'decode',
+    shortLabel: 'Unicode → Text',
+    detailLabel: 'Decode',
+    inputLabel: 'Unicode code points',
+    inputHint: 'Accepts U+4F60, 0x4F60, or bare hexadecimal values',
+    inputPlaceholder: 'U+4F60 U+597D U+1F44B',
+    outputLabel: 'Decoded text',
+    outputPlaceholder: '你好👋',
+    emptyMessage: 'Enter hexadecimal Unicode code points separated by spaces or commas.',
+    convert: unicodeToText,
+  },
+];
+
 export default function UnicodeConverter() {
-  const [textVal, setTextVal] = useState('');
-  const [codesVal, setCodesVal] = useState('');
-
-  const textToUnicodeOutput = textToUnicode(textVal);
-  const codesToTextResult = unicodeToText(codesVal);
-
   return (
-    <Card id="tool-unicode" variant="tool">
-      <ToolHeader title="Unicode Converter" />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start mt-2">
-        {/* Left Column: Text to Unicode */}
-        <div className="flex flex-col gap-4">
-          <FieldInput
-            as="textarea"
-            id="unicode-text"
-            label="Text to Unicode"
-            rows={3}
-            placeholder="Hello"
-            value={textVal}
-            onChange={(e) => setTextVal(e.target.value)}
-          />
-          <FieldInput
-            as="textarea"
-            id="unicode-codes"
-            label="Unicode codes"
-            rows={3}
-            readOnly
-            value={textToUnicodeOutput}
-          />
-        </div>
-
-        {/* Right Column: Unicode to Text */}
-        <div className="flex flex-col gap-4">
-          <FieldInput
-            id="unicode-codes-input"
-            label="Unicode codes to text"
-            type="text"
-            placeholder="U+4F60 U+597D"
-            value={codesVal}
-            onChange={(e) => setCodesVal(e.target.value)}
-          />
-          <div className="bg-accent-light border-l-4 border-accent rounded-[4px_12px_12px_4px] px-5 py-4 font-semibold text-text-main text-[1.05rem] min-h-[52px] flex items-center gap-2 transition-all duration-300">
-            <span className="text-text-muted font-medium">Decoded Text:</span>
-            <strong id="unicode-text-output">{codesToTextResult.text || "—"}</strong>
-          </div>
-          <p className="min-h-[18px] text-red-500 font-medium text-sm" id="unicode-status">
-            {codesToTextResult.error || ""}
-          </p>
-        </div>
-      </div>
-    </Card>
+    <BidirectionalConverter
+      toolId="tool-unicode"
+      title="Unicode Converter"
+      description="Inspect text as Unicode code points or turn hexadecimal code points back into text."
+      modes={modes}
+      defaultMode="encode"
+    />
   );
 }

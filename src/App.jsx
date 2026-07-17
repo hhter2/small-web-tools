@@ -104,6 +104,7 @@ const staticTools = [
   'tool-casing',
   'tool-ascii',
   'tool-unicode',
+  'tool-base',
   'tool-fontextractor',
   'tool-speedtest',
   'tool-color',

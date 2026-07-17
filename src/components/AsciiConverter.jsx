@@ -1,83 +1,79 @@
-import React, { useState } from 'react';
-import Card from './ui/Card';
-import FieldInput from './ui/FieldInput';
-import ToolHeader from './ui/ToolHeader';
+import React from 'react';
+import BidirectionalConverter from './ui/BidirectionalConverter';
 
 function textToAscii(text) {
-  return Array.from(text, (char) => char.charCodeAt(0)).join(" ");
+  if (!text) return { value: '', error: null };
+
+  const codes = [];
+  for (const char of text) {
+    const code = char.codePointAt(0);
+    if (code > 127) {
+      return {
+        value: '',
+        error: `“${char}” is outside the ASCII range. Use Unicode Converter for non-ASCII text.`,
+      };
+    }
+    codes.push(code);
+  }
+
+  return { value: codes.join(' '), error: null };
 }
 
 function asciiToText(codes) {
-  if (!codes.trim()) {
-    return { text: "", error: null };
-  }
+  if (!codes.trim()) return { value: '', error: null };
 
   const values = codes.split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const value of values) {
-    const code = Number.parseInt(value, 10);
-    if (Number.isNaN(code) || code < 0 || code > 127) {
-      return { text: "", error: "ASCII codes must be between 0 and 127." };
+    if (!/^\d+$/.test(value)) {
+      return { value: '', error: `“${value}” is not a decimal ASCII code.` };
+    }
+    const code = Number(value);
+    if (code < 0 || code > 127) {
+      return { value: '', error: `ASCII code ${value} is outside the allowed range of 0–127.` };
     }
     chars.push(String.fromCharCode(code));
   }
 
-  return { text: chars.join(""), error: null };
+  return { value: chars.join(''), error: null };
 }
 
+const modes = [
+  {
+    id: 'encode',
+    shortLabel: 'Text → ASCII',
+    detailLabel: 'Encode',
+    inputLabel: 'Plain text',
+    inputHint: 'Standard ASCII characters only (0–127)',
+    inputPlaceholder: 'Hello',
+    outputLabel: 'Decimal ASCII codes',
+    outputPlaceholder: '72 101 108 108 111',
+    emptyMessage: 'Enter ASCII text to see its decimal character codes.',
+    convert: textToAscii,
+  },
+  {
+    id: 'decode',
+    shortLabel: 'ASCII → Text',
+    detailLabel: 'Decode',
+    inputLabel: 'Decimal ASCII codes',
+    inputHint: 'Separate codes with spaces, commas, or new lines',
+    inputPlaceholder: '72 101 108 108 111',
+    outputLabel: 'Decoded text',
+    outputPlaceholder: 'Hello',
+    emptyMessage: 'Enter decimal values from 0 to 127 to decode them as text.',
+    convert: asciiToText,
+  },
+];
+
 export default function AsciiConverter() {
-  const [textVal, setTextVal] = useState('');
-  const [codesVal, setCodesVal] = useState('');
-
-  const textToAsciiOutput = textToAscii(textVal);
-  const codesToTextResult = asciiToText(codesVal);
-
   return (
-    <Card id="tool-ascii" variant="tool">
-      <ToolHeader title="ASCII Converter" />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start mt-2">
-        {/* Left Column: Text to ASCII */}
-        <div className="flex flex-col gap-4">
-          <FieldInput
-            as="textarea"
-            id="ascii-text"
-            label="Text to ASCII codes"
-            rows={3}
-            placeholder="Hello"
-            value={textVal}
-            onChange={(e) => setTextVal(e.target.value)}
-          />
-          <FieldInput
-            as="textarea"
-            id="ascii-codes"
-            label="ASCII codes"
-            rows={3}
-            readOnly
-            value={textToAsciiOutput}
-          />
-        </div>
-
-        {/* Right Column: ASCII to Text */}
-        <div className="flex flex-col gap-4">
-          <FieldInput
-            id="ascii-codes-input"
-            label="ASCII codes to text"
-            type="text"
-            placeholder="72 101 108 108 111"
-            value={codesVal}
-            onChange={(e) => setCodesVal(e.target.value)}
-          />
-          <div className="bg-accent-light border-l-4 border-accent rounded-[4px_12px_12px_4px] px-5 py-4 font-semibold text-text-main text-[1.05rem] min-h-[52px] flex items-center gap-2 transition-all duration-300">
-            <span className="text-text-muted font-medium">Decoded Text:</span>
-            <strong id="ascii-text-output">{codesToTextResult.text || "—"}</strong>
-          </div>
-          <p className="min-h-[18px] text-red-500 font-medium text-sm" id="ascii-status">
-            {codesToTextResult.error || ""}
-          </p>
-        </div>
-      </div>
-    </Card>
+    <BidirectionalConverter
+      toolId="tool-ascii"
+      title="ASCII Converter"
+      description="Encode standard ASCII text as decimal codes or decode decimal codes back into readable text."
+      modes={modes}
+      defaultMode="encode"
+    />
   );
 }

@@ -1267,7 +1267,7 @@ export default function App() {
           </div>
 
           {/* Tool Stage */}
-          <section className={`w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'py-4 md:py-3 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
+          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'tool-stage--static py-4 md:py-1.5 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
             {renderActiveTool()}
           </section>
 
@@ -1332,7 +1332,7 @@ export default function App() {
             )}
 
             {/* Footer Bottom Bar */}
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-3 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-[500px]:px-4 max-[500px]:py-[10px]">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-2 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-md:py-3 max-[500px]:px-4 max-[500px]:py-[10px]">
               {/* Left spacer */}
               <div></div>
               {/* Center: Brand & Copyright */}

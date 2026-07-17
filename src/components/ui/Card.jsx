@@ -26,9 +26,9 @@ const base = 'bg-card border transition-all';
 
 const variants = {
   tool: {
-    default: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full max-w-[680px] shadow-card',
-    compact: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full max-w-[520px] shadow-card',
-    wide: 'border-border rounded-xl p-8 flex flex-col gap-5 w-full shadow-card',
+    default: 'tool-card border-border rounded-xl p-6 flex flex-col gap-4 w-full max-w-[680px] shadow-card',
+    compact: 'tool-card border-border rounded-xl p-6 flex flex-col gap-4 w-full max-w-[520px] shadow-card',
+    wide: 'tool-card border-border rounded-xl p-6 flex flex-col gap-4 w-full shadow-card',
   },
   home: {
     default:

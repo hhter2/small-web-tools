@@ -16,10 +16,10 @@ import React from 'react';
 
 export default function ToolHeader({ title, description, className = '' }) {
   return (
-    <header className={['pb-3 mb-2 border-b border-border', className].filter(Boolean).join(' ')}>
+    <header className={['tool-header pb-2 border-b border-border', className].filter(Boolean).join(' ')}>
       <h2 className="text-2xl font-bold tracking-tight text-text-main m-0">{title}</h2>
       {description && (
-        <p className="mt-1.5 text-sm text-text-muted">{description}</p>
+        <p className="mt-1 text-sm text-text-muted">{description}</p>
       )}
     </header>
   );

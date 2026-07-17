@@ -1110,7 +1110,7 @@ export default function ColorConverter() {
         description="Convert hex, rgb, hsl, hsb, cmyk, lab codes, select colors from a swatches block or spectrum, and customize your palette." 
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full items-start mt-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full items-start">
         
         {/* Panel 1: Code Converter Inputs/Outputs */}
         <div className="flex flex-col gap-3 w-full">

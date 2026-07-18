@@ -10,7 +10,6 @@ function analyzePath(input) {
       output: '',
       outputPlaceholder: 'The normalized path appears here.',
       error: null,
-      status: 'Paste a file path. Its slash style will be detected automatically.',
     };
   }
 
@@ -21,7 +20,6 @@ function analyzePath(input) {
       output: input,
       outputPlaceholder: '',
       error: null,
-      status: 'URL detected. Web URLs already use forward slashes, so no change was made.',
     };
   }
 
@@ -35,7 +33,6 @@ function analyzePath(input) {
       output: input.replace(/\\/g, '/'),
       outputPlaceholder: '',
       error: null,
-      status: 'Backslash path detected and converted automatically.',
     };
   }
 
@@ -46,7 +43,6 @@ function analyzePath(input) {
       output: input.replace(/\//g, '\\'),
       outputPlaceholder: '',
       error: null,
-      status: 'Forward-slash path detected and converted automatically.',
     };
   }
 
@@ -56,7 +52,6 @@ function analyzePath(input) {
     output: input,
     outputPlaceholder: '',
     error: null,
-    status: 'No slash characters were detected, so the input was left unchanged.',
   };
 }
 

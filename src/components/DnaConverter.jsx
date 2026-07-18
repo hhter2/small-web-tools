@@ -606,7 +606,7 @@ export default function DnaConverter() {
   };
 
   return (
-    <Card id="tool-dna" variant="tool" size="wide">
+    <Card id="tool-dna" variant="tool" size="wide" className="!gap-3 !p-4">
       <ToolHeader title="DNA/RNA Direction Transfer" />
       
       <div className="flex flex-col md:flex-row gap-4 w-full">
@@ -637,7 +637,7 @@ export default function DnaConverter() {
         </div>
         <div className="flex flex-col gap-2 w-full flex-1">
           <label className="text-sm font-semibold text-text-main">Codon Display</label>
-          <div className="flex bg-app p-1 rounded-md border border-border h-[46px] w-full" role="group" aria-label="Codon Display Mode">
+          <div className="flex h-10 w-full rounded-md border border-border bg-app p-1" role="group" aria-label="Codon Display Mode">
             <button
               type="button"
               className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'none' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
@@ -668,14 +668,14 @@ export default function DnaConverter() {
         <textarea
           id="dna-input"
           className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
-          rows="4"
+          rows="3"
           placeholder="Enter sequence (e.g., 5'-CACGT-3' or simply CACGT)"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
       </div>
 
-      <div className="flex gap-2 mb-5 bg-app p-1 rounded-md align-self-start border border-border w-fit">
+      <div className="align-self-start flex w-fit gap-2 rounded-md border border-border bg-app p-1">
         <button
           type="button"
           className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
@@ -693,7 +693,7 @@ export default function DnaConverter() {
       </div>
 
       {viewMode === 'text' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-3">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex justify-between items-center mb-0.5">
               <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
@@ -730,7 +730,7 @@ export default function DnaConverter() {
               value={outputs.revcomp} 
             />
           </div>
-          <div className="flex flex-col gap-2 w-full col-span-1 md:col-span-2">
+          <div className="flex w-full flex-col gap-2">
             <div className="flex justify-between items-center mb-0.5">
               <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
               <button
@@ -752,7 +752,7 @@ export default function DnaConverter() {
       ) : (
         renderVisualDna()
       )}
-      <p className="min-h-[18px] text-red-500 font-medium text-sm mt-2" id="dna-status" style={statusStyle}>{statusText}</p>
+      {input.trim() && statusText && <p className="text-sm font-medium text-red-500" id="dna-status" style={statusStyle}>{statusText}</p>}
     </Card>
   );
 }

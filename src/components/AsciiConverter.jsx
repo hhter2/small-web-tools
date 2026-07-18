@@ -42,7 +42,6 @@ function analyzeAscii(input) {
       output: '',
       outputPlaceholder: 'The converted result appears here.',
       error: null,
-      status: 'Type text or paste decimal ASCII codes. The direction will be detected automatically.',
     };
   }
 
@@ -55,7 +54,6 @@ function analyzeAscii(input) {
       output: decoded.output,
       outputPlaceholder: 'Decoded text appears here.',
       error: decoded.error,
-      status: decoded.error || 'Decimal ASCII codes detected and decoded automatically.',
     };
   }
 
@@ -66,7 +64,6 @@ function analyzeAscii(input) {
     output: encoded.output,
     outputPlaceholder: 'Decimal ASCII codes appear here.',
     error: encoded.error,
-    status: encoded.error || 'Plain text detected and encoded automatically.',
   };
 }
 

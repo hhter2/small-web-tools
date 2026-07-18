@@ -177,13 +177,12 @@ export default function CasingSwitcher() {
   };
 
   return (
-    <Card id="tool-casing" variant="tool" size="wide">
+    <Card id="tool-casing" variant="tool" size="wide" className="!gap-3 !p-4">
       <ToolHeader 
         title="Lowercase &amp; Capital Switcher" 
-        description="Convert input text case, sentence capitalization, title casing, specific terms, or custom exclusion rules in real-time." 
       />
       
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6 mb-6 mt-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         {/* Left Column: Text Areas */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2 w-full">

@@ -171,11 +171,11 @@ export default function CurrencyCounter() {
   };
 
   return (
-    <Card id="tool-currency" variant="tool">
+    <Card id="tool-currency" variant="tool" className="!gap-2.5 !p-4">
       <ToolHeader title="Currency Converter & Counter" />
 
       {/* Tabs */}
-      <div className="tool-tabs mb-3 flex gap-2">
+      <div className="tool-tabs flex gap-2">
         <button
           className={`flex items-center gap-2 px-4 py-2 rounded-md border text-[0.85rem] font-semibold cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] font-sans ${
             activeTab === 'single'
@@ -215,7 +215,7 @@ export default function CurrencyCounter() {
       )}
 
       {/* Manual Rate Override Accordion/Input */}
-      <div className="flex items-center gap-3 mt-3 p-[12px_16px] bg-app rounded border border-dashed border-border max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-2">
+      <div className="flex items-center gap-3 rounded border border-dashed border-border bg-app px-3 py-2 max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-2">
         <input
           type="checkbox"
           id="toggle-manual-rate"
@@ -315,7 +315,7 @@ export default function CurrencyCounter() {
             </div>
           </div>
 
-          <div className="bg-app border border-border rounded-lg p-5 mt-4 text-center">
+          <div className="rounded-lg border border-border bg-app p-3 text-center">
             <div className="text-[1.3rem] min-[480px]:text-2xl md:text-[2rem] font-bold text-accent mb-2 break-all font-display">
               {formatCurrency(convertedAmount, toCurrency)}
             </div>

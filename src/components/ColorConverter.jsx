@@ -892,25 +892,22 @@ export default function ColorConverter() {
 
   const renderSlider = (label, value, min, max, gradient, onChange) => {
     return (
-      <div className="flex flex-col gap-2" key={label}>
-        <div className="flex justify-between items-center text-[0.85rem] text-text-muted">
-          <span className="font-semibold">{label}</span>
-          <span className="font-mono font-medium text-text-main">{value}</span>
-        </div>
-        <div className="w-full">
-          <input
-            type="range"
-            className="interactive-slider-input"
-            min={min}
-            max={max}
-            value={value}
-            onChange={onChange}
-            style={{
-              '--track-background': gradient,
-              '--thumb-color': `rgb(${activeRgb.r}, ${activeRgb.g}, ${activeRgb.b})`
-            }}
-          />
-        </div>
+      <div className="grid grid-cols-[76px_minmax(0,1fr)_36px] items-center gap-2 text-[0.78rem]" key={label}>
+        <span className="truncate font-semibold text-text-muted">{label}</span>
+        <input
+          type="range"
+          className="interactive-slider-input min-w-0"
+          min={min}
+          max={max}
+          value={value}
+          onChange={onChange}
+          aria-label={label}
+          style={{
+            '--track-background': gradient,
+            '--thumb-color': `rgb(${activeRgb.r}, ${activeRgb.g}, ${activeRgb.b})`
+          }}
+        />
+        <span className="text-right font-mono font-medium text-text-main">{value}</span>
       </div>
     );
   };
@@ -1043,11 +1040,11 @@ export default function ColorConverter() {
     }
 
     return (
-      <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 mt-4">
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
+        <div className="flex flex-col gap-2">
           {sliders}
         </div>
-        <div className="flex justify-between items-center pt-3 border-t border-border">
+        <div className="flex items-center justify-between border-t border-border pt-2">
           <div className="relative">
             <select
               value={sliderModel}
@@ -1104,24 +1101,23 @@ export default function ColorConverter() {
   };
 
   return (
-    <Card id="tool-color" variant="tool" size="wide">
+    <Card id="tool-color" variant="tool" size="wide" className="!gap-2 !p-2.5">
       <ToolHeader 
         title="Color Code Converter & HSL Selector" 
-        description="Convert hex, rgb, hsl, hsb, cmyk, lab codes, select colors from a swatches block or spectrum, and customize your palette." 
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full items-start">
+      <div className="grid w-full grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
         
         {/* Panel 1: Code Converter Inputs/Outputs */}
-        <div className="flex flex-col gap-3 w-full">
-          <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider mb-1 pb-2 border-b border-border">Code Converter</h3>
-          <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="color-input" className="text-sm font-semibold text-text-main">HEX, RGB, or HSL Code</label>
+        <div className="flex w-full flex-col gap-2.5">
+          <h3 className="border-b border-border pb-2 text-[0.95rem] uppercase tracking-wider text-text-muted">Code Converter</h3>
+          <div className="flex w-full flex-col gap-1.5">
+            <label htmlFor="color-input" className="text-xs font-semibold text-text-main">HEX, RGB, or HSL Code</label>
             <div className="flex gap-2 w-full">
               <input
                 id="color-input"
                 type="text"
-                className="flex-1 min-w-0 px-4 py-2.5 bg-card border border-border rounded-lg text-text-main placeholder-text-muted/50 outline-none transition-all focus:border-accent focus:ring-4 focus:ring-accent-light/20"
+                className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-2 text-text-main outline-none transition-all placeholder:text-text-muted/50 focus:border-accent focus:ring-4 focus:ring-accent-light/20"
                 placeholder="#4F46E5 or rgb(79, 70, 229) or hsl(244, 76%, 59%)"
                 value={input}
                 onChange={handleUserTextChange}
@@ -1134,7 +1130,7 @@ export default function ColorConverter() {
                   variant="secondary"
                   title="Pick color from screen"
                   onClick={handleEyeDropper}
-                  className="h-[46px] w-[46px]"
+                  className="h-10 w-10 p-0"
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M2 22l6-6M8 16l4 4M19.5 4.5a3.53 3.53 0 0 1 0 5L12 17l-5-5 7.5-7.5a3.53 3.53 0 0 1 5 0z"></path>
@@ -1145,12 +1141,12 @@ export default function ColorConverter() {
           </div>
           
           <div
-            className="w-full h-12 rounded-xl border border-border shadow-inner mt-1"
+            className="h-9 w-full rounded-lg border border-border shadow-inner"
             id="color-preview-swatch"
             style={{ backgroundColor: swatchBg }}
           />
           
-          <div className="flex gap-4 w-full mt-2">
+          <div className="flex w-full gap-3">
             <div className="flex-1">
               <FieldInput id="color-hex" label="HEX" type="text" readOnly value={hexVal} />
             </div>
@@ -1171,9 +1167,9 @@ export default function ColorConverter() {
             </div>
           </div>
           
-          <p className="min-h-[18px] text-red-500 font-medium text-sm mt-1" id="color-status">{statusText}</p>
+          {statusText && <p className="text-xs font-medium text-red-500" id="color-status">{statusText}</p>}
 
-          <div className="mt-2">
+          <div>
             {renderInteractiveSliders()}
           </div>
         </div>

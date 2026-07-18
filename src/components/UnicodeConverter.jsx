@@ -49,7 +49,6 @@ function analyzeUnicode(input) {
       output: '',
       outputPlaceholder: 'The converted result appears here.',
       error: null,
-      status: 'Type text or paste Unicode code points. The direction will be detected automatically.',
     };
   }
 
@@ -61,7 +60,6 @@ function analyzeUnicode(input) {
       output: decoded.output,
       outputPlaceholder: 'Decoded text appears here.',
       error: decoded.error,
-      status: decoded.error || 'Unicode code points detected and decoded automatically.',
     };
   }
 
@@ -71,7 +69,6 @@ function analyzeUnicode(input) {
     output: encodeUnicode(input),
     outputPlaceholder: 'Unicode code points appear here.',
     error: null,
-    status: 'Plain text detected and encoded automatically.',
   };
 }
 

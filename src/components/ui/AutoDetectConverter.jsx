@@ -44,11 +44,7 @@ export default function AutoDetectConverter({
     <Card id={toolId} variant="tool" size="wide" className="max-w-[920px] !gap-3">
       <ToolHeader title={title} description={description} />
 
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="pointer-events-none absolute left-1/2 top-[23px] z-10 hidden h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-sm text-accent shadow-sm md:flex" aria-hidden="true">
-          →
-        </div>
-
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <section className="flex min-w-0 flex-col border-b border-border md:border-b-0 md:border-r" aria-label="Source">
             <header className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/70 px-4 py-2.5">
@@ -84,18 +80,19 @@ export default function AutoDetectConverter({
               }}
               placeholder={inputPlaceholder}
               aria-label="Source input"
-              aria-describedby={`${toolId}-status`}
+              aria-describedby={result.error ? `${toolId}-error` : undefined}
               className={editorClasses}
             />
 
-            <div
-              id={`${toolId}-status`}
-              role={result.error ? 'alert' : 'status'}
-              className={`flex min-h-10 items-center gap-2 border-t border-border px-4 py-2 text-xs ${result.error ? 'bg-red-500/10 text-red-500' : 'bg-app/55 text-text-muted'}`}
-            >
-              <span className={`h-2 w-2 flex-none rounded-full ${result.error ? 'bg-red-500' : input.trim() ? 'bg-accent' : 'bg-text-muted/35'}`} />
-              <span>{result.status}</span>
-            </div>
+            {result.error && (
+              <div
+                id={`${toolId}-error`}
+                role="alert"
+                className="border-t border-border bg-red-500/10 px-4 py-2 text-xs text-red-500"
+              >
+                {result.error}
+              </div>
+            )}
           </section>
 
           <section className="flex min-w-0 flex-col bg-accent-light/20" aria-label="Result">
@@ -104,7 +101,6 @@ export default function AutoDetectConverter({
                 <span className="block truncate text-sm font-bold text-text-main">
                   {result.targetLabel || emptyTargetLabel}
                 </span>
-                <span className="block text-[0.68rem] font-medium text-text-muted">Live result</span>
               </div>
               <Button
                 type="button"
@@ -129,11 +125,6 @@ export default function AutoDetectConverter({
               aria-live="polite"
               className={`${editorClasses} bg-accent-light/15`}
             />
-
-            <div className="flex min-h-10 items-center justify-between gap-3 border-t border-border bg-app/35 px-4 py-2 text-xs text-text-muted">
-              <span>{output && !result.error ? 'Converted automatically' : 'Waiting for source input'}</span>
-              <span className="font-mono">{output && !result.error ? `${Array.from(output).length} chars` : ''}</span>
-            </div>
           </section>
         </div>
       </div>

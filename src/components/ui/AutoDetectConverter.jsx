@@ -4,7 +4,7 @@ import Card from './Card';
 import ToolHeader from './ToolHeader';
 
 const editorClasses =
-  'block w-full min-h-[210px] resize-y border-0 bg-transparent px-4 py-3.5 ' +
+  'block w-full resize-y border-0 bg-transparent px-4 py-3.5 ' +
   'font-mono text-[0.92rem] leading-6 text-text-main outline-none ' +
   'placeholder:text-text-muted/45 focus:ring-0 read-only:cursor-default read-only:opacity-90';
 
@@ -24,11 +24,18 @@ export default function AutoDetectConverter({
   inputPlaceholder,
   emptyTargetLabel,
   analyze,
+  editorMinHeightClass = 'min-h-[210px]',
+  renderSupplementary,
 }) {
   const [input, setInput] = useState('');
   const [copyState, setCopyState] = useState('idle');
   const result = useMemo(() => analyze(input), [analyze, input]);
   const output = result.output || '';
+
+  const updateInput = (value) => {
+    setInput(value);
+    setCopyState('idle');
+  };
 
   const handleCopy = async () => {
     if (!output || result.error) return;
@@ -75,13 +82,12 @@ export default function AutoDetectConverter({
               spellCheck={false}
               value={input}
               onChange={(event) => {
-                setInput(event.target.value);
-                setCopyState('idle');
+                updateInput(event.target.value);
               }}
               placeholder={inputPlaceholder}
               aria-label="Source input"
               aria-describedby={result.error ? `${toolId}-error` : undefined}
-              className={editorClasses}
+              className={`${editorClasses} ${editorMinHeightClass}`}
             />
 
             {result.error && (
@@ -123,11 +129,13 @@ export default function AutoDetectConverter({
               placeholder={result.error ? 'Fix the source input to see a result.' : result.outputPlaceholder}
               aria-label="Converted result"
               aria-live="polite"
-              className={`${editorClasses} bg-accent-light/15`}
+              className={`${editorClasses} ${editorMinHeightClass} bg-accent-light/15`}
             />
           </section>
         </div>
       </div>
+
+      {renderSupplementary?.({ input, setInput: updateInput })}
     </Card>
   );
 }

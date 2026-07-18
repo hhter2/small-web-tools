@@ -12,6 +12,15 @@ const BASE_OPTIONS = [
   { base: 60, short: 'BASE 60', label: 'Sexagesimal', example: '3:25:15' },
 ];
 
+const COMMON_BASES = [
+  { base: 2, short: 'BIN', label: 'Binary' },
+  { base: 8, short: 'OCT', label: 'Octal' },
+  { base: 10, short: 'DEC', label: 'Decimal' },
+  { base: 16, short: 'HEX', label: 'Hexadecimal' },
+];
+
+const COMMON_VALUES = Array.from({ length: 16 }, (_, value) => value);
+
 function parseBigIntFromBase(value, base) {
   let text = value.trim().toUpperCase();
   if (!text) return null;
@@ -85,6 +94,7 @@ export default function BaseConverter() {
   const [input, setInput] = useState('');
   const [baseFrom, setBaseFrom] = useState(10);
   const [copiedBase, setCopiedBase] = useState(null);
+  const [selectedReferenceValue, setSelectedReferenceValue] = useState(null);
 
   const trimmed = input.trim();
   const parsed = trimmed
@@ -106,6 +116,7 @@ export default function BaseConverter() {
   const useAsInput = (result) => {
     setInput(result.value);
     setBaseFrom(result.base);
+    setSelectedReferenceValue(null);
     setCopiedBase(null);
   };
 
@@ -117,6 +128,13 @@ export default function BaseConverter() {
     } catch {
       setCopiedBase(null);
     }
+  };
+
+  const selectReferenceValue = (base, value) => {
+    setInput(value.toString(base).toUpperCase());
+    setBaseFrom(base);
+    setSelectedReferenceValue(value);
+    setCopiedBase(null);
   };
 
   return (
@@ -141,6 +159,7 @@ export default function BaseConverter() {
                 aria-pressed={active}
                 onClick={() => {
                   setBaseFrom(option.base);
+                  setSelectedReferenceValue(null);
                   setCopiedBase(null);
                 }}
                 className={`rounded-lg border px-2.5 py-1.5 text-left transition-all ${active
@@ -168,6 +187,7 @@ export default function BaseConverter() {
               value={input}
               onChange={(event) => {
                 setInput(event.target.value);
+                setSelectedReferenceValue(null);
                 setCopiedBase(null);
               }}
               placeholder={selectedBase.example}
@@ -182,6 +202,7 @@ export default function BaseConverter() {
               disabled={!input}
               onClick={() => {
                 setInput('');
+                setSelectedReferenceValue(null);
                 setCopiedBase(null);
               }}
               className="rounded-lg border border-border bg-card px-4 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
@@ -256,6 +277,61 @@ export default function BaseConverter() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2" aria-labelledby="common-base-reference-title">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h3 id="common-base-reference-title" className="text-sm font-bold text-text-main">0–15 quick reference</h3>
+            <p className="text-xs text-text-muted">Select any value to use that representation as the input.</p>
+          </div>
+          <span className="text-[0.68rem] font-semibold text-text-muted">BIN · OCT · DEC · HEX</span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-border bg-app/70 p-1.5">
+          <div className="grid min-w-[760px] grid-cols-[58px_repeat(16,minmax(38px,1fr))] gap-1" role="grid" aria-label="Common base conversions for decimal 0 through 15">
+            <div className="flex items-center justify-center text-[0.6rem] font-extrabold uppercase tracking-wide text-text-muted" role="columnheader">
+              Base
+            </div>
+            {COMMON_VALUES.map((value) => (
+              <div key={`heading-${value}`} className={`flex min-h-6 items-center justify-center rounded text-[0.62rem] font-bold tabular-nums ${selectedReferenceValue === value ? 'bg-accent text-white' : 'text-text-muted'}`} role="columnheader">
+                {value}
+              </div>
+            ))}
+
+            {COMMON_BASES.map((row) => (
+              <React.Fragment key={row.base}>
+                <div className="flex min-h-8 flex-col items-center justify-center rounded-md border border-border bg-card leading-none" role="rowheader" title={`${row.label} (base ${row.base})`}>
+                  <span className="text-[0.64rem] font-extrabold text-accent">{row.short}</span>
+                  <span className="mt-0.5 text-[0.5rem] text-text-muted">{row.base}</span>
+                </div>
+                {COMMON_VALUES.map((value) => {
+                  const displayValue = value.toString(row.base).toUpperCase();
+                  const selected = selectedReferenceValue === value;
+                  const exactInput = selected && baseFrom === row.base;
+                  return (
+                    <button
+                      key={`${row.base}-${value}`}
+                      type="button"
+                      role="gridcell"
+                      aria-pressed={exactInput}
+                      aria-label={`${row.label} ${displayValue}, decimal ${value}`}
+                      title={`${displayValue} (base ${row.base}) = ${value} (decimal)`}
+                      onClick={() => selectReferenceValue(row.base, value)}
+                      className={`min-h-8 rounded-md border px-1 font-mono text-[0.72rem] font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${exactInput
+                        ? 'border-accent bg-accent text-white shadow-[0_2px_8px_var(--accent-light)]'
+                        : selected
+                          ? 'border-accent/45 bg-accent-light text-accent'
+                          : 'border-border bg-card text-text-main hover:border-accent hover:bg-accent-light hover:text-accent'}`}
+                    >
+                      {displayValue}
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </section>
     </Card>

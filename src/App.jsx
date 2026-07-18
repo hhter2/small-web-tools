@@ -1014,7 +1014,7 @@ export default function App() {
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
-          <header className="hidden min-w-0 overflow-hidden border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
+          <header className="hidden min-w-0 overflow-hidden border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] md:px-8 xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
             {/* Left: Brand */}
             <div className="flex shrink-0 items-center">
               <div

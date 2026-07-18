@@ -712,6 +712,8 @@ function InfoPanel({
 }) {
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const groupDropdownRef = useRef(null);
 
   const synonyms = data ? Object.keys(CODON_MAP).filter(
     c => CODON_MAP[c].aa === data.aa && c !== codon
@@ -735,7 +737,29 @@ function InfoPanel({
     ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
     : AA_GROUPS[selectedGroup];
 
-  const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
+  const selectedGroupLabel = selectedGroup === 'all'
+    ? 'All Groups'
+    : activeGroup?.name || 'All Groups';
+
+  const selectGroup = (value) => {
+    setSelectedGroup(value);
+    setHighlightedAA(null);
+    setSelectedCodon(null);
+    setIsGroupDropdownOpen(false);
+  };
+
+  useEffect(() => {
+    if (!isGroupDropdownOpen) return undefined;
+
+    const closeDropdown = (event) => {
+      if (!groupDropdownRef.current?.contains(event.target)) {
+        setIsGroupDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeDropdown);
+    return () => document.removeEventListener('mousedown', closeDropdown);
+  }, [isGroupDropdownOpen]);
 
   return (
     <div className="contents">
@@ -745,37 +769,74 @@ function InfoPanel({
         <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
         <div className="flex flex-col gap-2.5">
           
-          <div className="flex gap-2 items-center w-full">
-            <select
-              value={selectedGroup}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedGroup(val);
-                setHighlightedAA(null);
-                setSelectedCodon(null);
-              }}
-              className="min-w-0 flex-1 cursor-pointer rounded-lg border border-border bg-black/20 px-2.5 py-1.5 text-[0.8rem] text-text-main outline-none focus:border-accent"
-              style={{
-                borderLeft: activeGroupColor ? `4px solid ${activeGroupColor}` : '1px solid var(--border-color)',
-                paddingLeft: activeGroupColor ? '0.5rem' : '0.75rem'
-              }}
-            >
-              <option value="all">All Groups</option>
-              <optgroup label="Standard Groups">
-                {Object.entries(AA_GROUPS).map(([key, grp]) => (
-                  <option key={key} value={key}>{grp.name}</option>
-                ))}
-              </optgroup>
-              {customGroups.length > 0 && (
-                <optgroup label="Custom Groups">
-                  {customGroups.map((grp, idx) => (
-                    <option key={`custom-${idx}`} value={`custom-${idx}`}>
+          <div className="flex w-full items-center gap-2">
+            <div className="relative min-w-0 flex-1" ref={groupDropdownRef}>
+              <button
+                id="ct-group-selector"
+                type="button"
+                className={`flex h-8 w-full items-center justify-between gap-2 rounded-lg border bg-app px-2.5 text-left text-[0.8rem] font-medium text-text-main transition-all duration-150 hover:border-border-hover ${
+                  isGroupDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)]' : 'border-border'
+                }`}
+                onClick={() => setIsGroupDropdownOpen(prev => !prev)}
+                aria-expanded={isGroupDropdownOpen}
+                aria-haspopup="listbox"
+                aria-controls="ct-group-options"
+              >
+                <span className="min-w-0 truncate">{selectedGroupLabel}</span>
+                <svg className={`h-3 w-3 shrink-0 text-text-muted transition-transform duration-150 ${isGroupDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {isGroupDropdownOpen && (
+                <div id="ct-group-options" role="listbox" aria-label="Amino acid groups" className="absolute left-0 z-50 mt-2 flex max-h-64 w-full min-w-[190px] flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-[var(--bg-card-solid,var(--bg-card))] p-1 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.18)]">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selectedGroup === 'all'}
+                    className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === 'all' ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                    onClick={() => selectGroup('all')}
+                  >
+                    All Groups
+                  </button>
+
+                  <div className="px-2.5 pt-1 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Standard Groups</div>
+                  {Object.entries(AA_GROUPS).map(([key, grp]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedGroup === key}
+                      className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === key ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                      onClick={() => selectGroup(key)}
+                    >
                       {grp.name}
-                    </option>
+                    </button>
                   ))}
-                </optgroup>
+
+                  {customGroups.length > 0 && (
+                    <>
+                      <div className="mt-1 border-t border-border px-2.5 pt-2 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Custom Groups</div>
+                      {customGroups.map((grp, idx) => {
+                        const value = `custom-${idx}`;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            role="option"
+                            aria-selected={selectedGroup === value}
+                            className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === value ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                            onClick={() => selectGroup(value)}
+                          >
+                            {grp.name}
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
               )}
-            </select>
+            </div>
 
             <div className="flex gap-1.5 shrink-0">
               {selectedGroup.startsWith('custom-') && (

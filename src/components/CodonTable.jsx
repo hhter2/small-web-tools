@@ -143,25 +143,25 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
 
-  let cls = 'font-mono text-[0.66rem] sm:text-[0.82rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
+  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
 
   if (data?.type === 'start') {
     cls += ' text-emerald-600 font-bold hover:bg-emerald-500/15 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
     if (isSelected) {
-      cls += ' bg-emerald-600 border-emerald-600 text-white shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
+      cls += ' !bg-emerald-600 !border-emerald-600 !text-white shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
     } else if (isHighlighted) {
       cls += ' border-emerald-600 shadow-[0_0_10px_rgba(22,163,74,0.4)] bg-emerald-500/8';
     }
   } else if (data?.type === 'stop') {
     cls += ' text-red-600 font-bold hover:bg-red-500/12 hover:border-red-600 hover:text-red-600 hover:shadow-[0_0_0_3px_rgba(220,38,38,0.15)]';
     if (isSelected) {
-      cls += ' bg-red-600 border-red-600 text-white shadow-[0_0_0_3px_rgba(220,38,38,0.15)]';
+      cls += ' !bg-red-600 !border-red-600 !text-white shadow-[0_0_0_3px_rgba(220,38,38,0.15)]';
     } else if (isHighlighted) {
       cls += ' border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)] bg-red-500/8';
     }
   } else {
     if (isSelected) {
-      cls += ' bg-accent border-accent text-white font-bold shadow-[0_0_0_3px_var(--focus-ring),0_2px_10px_rgba(99,102,241,0.35)] animate-[ct-pulse-glow_2s_ease-in-out_infinite]';
+      cls += ' !bg-accent !border-accent !text-white font-bold shadow-[0_0_0_3px_var(--focus-ring),0_2px_10px_rgba(99,102,241,0.35)] animate-[ct-pulse-glow_2s_ease-in-out_infinite]';
     } else if (isHighlighted) {
       cls += ' bg-accent-light border-accent text-accent';
     }
@@ -180,6 +180,11 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
     <button
       id={`codon-${codon}`}
       className={cls}
+      style={isSelected ? {
+        backgroundColor: data?.type === 'start' ? '#059669' : data?.type === 'stop' ? '#dc2626' : 'var(--accent)',
+        borderColor: data?.type === 'start' ? '#059669' : data?.type === 'stop' ? '#dc2626' : 'var(--accent)',
+        color: '#fff'
+      } : undefined}
       onClick={handleClick}
       aria-label={`Codon ${codon} encodes ${data?.full ?? 'unknown'}`}
       aria-pressed={isSelected}
@@ -199,7 +204,7 @@ function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
   if (!data) return null;
 
   const aaColor = AA_COLORS[data.aa];
-  let cls = 'font-sans text-[0.58rem] sm:text-[0.72rem] font-bold leading-none py-0 px-0.5 rounded-md border border-transparent bg-transparent cursor-pointer text-center whitespace-nowrap relative overflow-hidden w-full text-text-muted hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-[1.06] hover:z-[2] active:scale-96';
+  let cls = 'font-sans text-[0.6rem] sm:text-[0.78rem] font-bold leading-none py-0 px-0.5 rounded-md border border-transparent bg-transparent cursor-pointer text-center whitespace-nowrap relative overflow-hidden w-full text-text-muted hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-[1.06] hover:z-[2] active:scale-96';
 
   if (data.type === 'start') {
     cls += ' text-emerald-600 hover:bg-emerald-500/12 hover:border-emerald-600';
@@ -702,7 +707,8 @@ function InfoPanel({
   handleDeleteCustomGroup,
   handleToggleAAInNewGroup,
   handleCreateCustomGroup,
-  setSelectedCodon
+  setSelectedCodon,
+  panelRef
 }) {
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
@@ -732,10 +738,10 @@ function InfoPanel({
   const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
 
   return (
-    <div className="flex w-full flex-col gap-2.5">
+    <div className="contents">
       
       {/* ── Filter by Groups Block ────────────────── */}
-      <div className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease]">
+      <div className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] lg:col-start-2 lg:row-start-1 xl:col-start-1">
         <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
         <div className="flex flex-col gap-2.5">
           
@@ -931,7 +937,7 @@ function InfoPanel({
       </div>
 
       {/* ── Codon Lookup Block ────────────────── */}
-      <div className={`relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] ${bgClass}`} role="status" aria-live="polite">
+      <div ref={panelRef} className={`relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 ${bgClass}`} role="status" aria-live="polite">
         
         {/* Hidden input for capturing keys */}
         <input
@@ -972,7 +978,7 @@ function InfoPanel({
         </div>
 
         {/* The 3 passcode typing cards */}
-        <div className="my-2 flex justify-center gap-2">
+        <div className="my-2 flex w-full justify-center gap-2.5">
           {['1ST', '2ND', '3RD'].map((posName, idx) => {
             const char = typedCodon[idx] || '';
             const isActive = typedCodon.length === idx;
@@ -980,7 +986,7 @@ function InfoPanel({
             return (
               <div
                 key={idx}
-                className={`flex h-[62px] w-[58px] cursor-pointer select-none flex-col items-center justify-center rounded-xl border-2 border-border bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-white/[0.05] ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
+                className={`flex h-[68px] min-w-0 max-w-[96px] flex-1 cursor-pointer select-none flex-col items-center justify-center rounded-xl border-2 border-border bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-white/[0.05] ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
                 onClick={handleCardClick}
                 title="Click to type codon (U, C, A, G)"
               >
@@ -1280,8 +1286,8 @@ export default function CodonTable() {
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="flex flex-col items-start justify-center gap-2.5 lg:flex-row">
-        <div className="min-w-0 max-w-full flex-[2.5]">
+      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(220px,0.7fr)_minmax(560px,1.7fr)_minmax(320px,1fr)]">
+        <div className="w-full min-w-0 max-w-full lg:row-span-2 xl:col-start-2 xl:row-span-1 xl:row-start-1">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
           <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
 
@@ -1356,7 +1362,7 @@ export default function CodonTable() {
                                 return (
                                   <div
                                     key={codon}
-                                    className={`flex min-h-[22px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
+                                    className={`flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px] ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
                                     role="row"
                                   >
                                     <CodonButton
@@ -1428,33 +1434,32 @@ export default function CodonTable() {
           </div>
         </div>
 
-        {/* ── Info Panel Sidebar ───────────────────────────────────── */}
-        <div className="w-full min-w-[280px] flex-1 self-start lg:sticky lg:top-3" ref={panelRef}>
-          <InfoPanel
-            typedCodon={typedCodon}
-            selectedCodon={selectedCodon}
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            customGroups={customGroups}
-            highlightedAA={highlightedAA}
-            setHighlightedAA={setHighlightedAA}
-            isCreatingGroup={isCreatingGroup}
-            setIsCreatingGroup={setIsCreatingGroup}
-            newGroupName={newGroupName}
-            setNewGroupName={setNewGroupName}
-            newGroupAAs={newGroupAAs}
-            setNewGroupAAs={setNewGroupAAs}
-            newGroupColor={newGroupColor}
-            setNewGroupColor={setNewGroupColor}
-            onType={handleTypeCodon}
-            onClear={handleClearSelection}
-            inputRef={inputRef}
-            handleDeleteCustomGroup={handleDeleteCustomGroup}
-            handleToggleAAInNewGroup={handleToggleAAInNewGroup}
-            handleCreateCustomGroup={handleCreateCustomGroup}
-            setSelectedCodon={setSelectedCodon}
-          />
-        </div>
+        {/* ── Group Filter + Codon Lookup ───────────────────────────── */}
+        <InfoPanel
+          typedCodon={typedCodon}
+          selectedCodon={selectedCodon}
+          selectedGroup={selectedGroup}
+          setSelectedGroup={setSelectedGroup}
+          customGroups={customGroups}
+          highlightedAA={highlightedAA}
+          setHighlightedAA={setHighlightedAA}
+          isCreatingGroup={isCreatingGroup}
+          setIsCreatingGroup={setIsCreatingGroup}
+          newGroupName={newGroupName}
+          setNewGroupName={setNewGroupName}
+          newGroupAAs={newGroupAAs}
+          setNewGroupAAs={setNewGroupAAs}
+          newGroupColor={newGroupColor}
+          setNewGroupColor={setNewGroupColor}
+          onType={handleTypeCodon}
+          onClear={handleClearSelection}
+          inputRef={inputRef}
+          handleDeleteCustomGroup={handleDeleteCustomGroup}
+          handleToggleAAInNewGroup={handleToggleAAInNewGroup}
+          handleCreateCustomGroup={handleCreateCustomGroup}
+          setSelectedCodon={setSelectedCodon}
+          panelRef={panelRef}
+        />
       </div>
 
     </Card>

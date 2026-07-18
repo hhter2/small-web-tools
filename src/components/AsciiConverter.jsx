@@ -1,72 +1,81 @@
-import React, { useState } from 'react';
+import React from 'react';
+import AutoDetectConverter from './ui/AutoDetectConverter';
 
-function textToAscii(text) {
-  return Array.from(text, (char) => char.charCodeAt(0)).join(" ");
+function encodeAscii(text) {
+  const codes = [];
+  for (const char of text) {
+    const code = char.codePointAt(0);
+    if (code > 127) {
+      return {
+        output: '',
+        error: `The character "${char}" is outside the ASCII range. Use Unicode Converter for non-ASCII text.`,
+      };
+    }
+    codes.push(code);
+  }
+  return { output: codes.join(' '), error: null };
 }
 
-function asciiToText(codes) {
-  if (!codes.trim()) {
-    return { text: "", error: null };
-  }
-
-  const values = codes.split(/[\s,]+/).filter(Boolean);
+function decodeAscii(codes) {
+  const values = codes.trim().split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const value of values) {
-    const code = Number.parseInt(value, 10);
-    if (Number.isNaN(code) || code < 0 || code > 127) {
-      return { text: "", error: "ASCII codes must be between 0 and 127." };
+    if (!/^\d+$/.test(value)) {
+      return { output: '', error: `"${value}" is not a decimal ASCII code.` };
+    }
+    const code = Number(value);
+    if (code < 0 || code > 127) {
+      return { output: '', error: `ASCII code ${value} is outside the allowed range of 0 to 127.` };
     }
     chars.push(String.fromCharCode(code));
   }
+  return { output: chars.join(''), error: null };
+}
 
-  return { text: chars.join(""), error: null };
+function analyzeAscii(input) {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      sourceLabel: 'Text or ASCII codes',
+      targetLabel: '',
+      output: '',
+      outputPlaceholder: 'The converted result appears here.',
+      error: null,
+    };
+  }
+
+  const looksLikeCodes = /^[\d\s,]+$/.test(trimmed);
+  if (looksLikeCodes) {
+    const decoded = decodeAscii(trimmed);
+    return {
+      sourceLabel: 'ASCII codes',
+      targetLabel: 'Plain text',
+      output: decoded.output,
+      outputPlaceholder: 'Decoded text appears here.',
+      error: decoded.error,
+    };
+  }
+
+  const encoded = encodeAscii(input);
+  return {
+    sourceLabel: 'Plain text',
+    targetLabel: 'ASCII codes',
+    output: encoded.output,
+    outputPlaceholder: 'Decimal ASCII codes appear here.',
+    error: encoded.error,
+  };
 }
 
 export default function AsciiConverter() {
-  const [textVal, setTextVal] = useState('');
-  const [codesVal, setCodesVal] = useState('');
-
-  const textToAsciiOutput = textToAscii(textVal);
-  const codesToTextResult = asciiToText(codesVal);
-
   return (
-    <article id="tool-ascii" className="tool-card active">
-      <h2>ASCII Converter</h2>
-      <div className="form-group">
-        <label htmlFor="ascii-text">Text to ASCII codes</label>
-        <textarea
-          id="ascii-text"
-          rows="3"
-          placeholder="Hello"
-          value={textVal}
-          onChange={(e) => setTextVal(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="ascii-codes">ASCII codes</label>
-        <textarea
-          id="ascii-codes"
-          rows="3"
-          readOnly
-          value={textToAsciiOutput}
-        />
-      </div>
-      <div className="form-group border-top">
-        <label htmlFor="ascii-codes-input">ASCII codes to text</label>
-        <input
-          id="ascii-codes-input"
-          type="text"
-          placeholder="72 101 108 108 111"
-          value={codesVal}
-          onChange={(e) => setCodesVal(e.target.value)}
-        />
-      </div>
-      <div className="result-banner">
-        <span className="banner-label">Decoded Text:</span>
-        <strong id="ascii-text-output">{codesToTextResult.text || "—"}</strong>
-      </div>
-      <p className="small status-msg" id="ascii-status">{codesToTextResult.error || ""}</p>
-    </article>
+    <AutoDetectConverter
+      toolId="tool-ascii"
+      title="ASCII Converter"
+      description="Convert between standard ASCII text and decimal character codes with automatic format detection."
+      inputPlaceholder={'Hello\nor\n72 101 108 108 111'}
+      emptyTargetLabel="Converted result"
+      analyze={analyzeAscii}
+    />
   );
 }

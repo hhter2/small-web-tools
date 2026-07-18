@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 import JSZip from 'jszip';
 
 // Helper to format bytes
@@ -936,37 +940,37 @@ export default function OfficeMeta() {
     const comparedFiles = files.filter(f => compareSelectedIds.includes(f.id));
 
     return (
-      <div className="imgmeta-compare-container card-glass">
-        <div className="compare-header">
-          <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
+      <div className="bg-card border border-border rounded-xl p-5 mt-4">
+        <div className="flex justify-between items-center pb-3 border-b border-border mb-4">
+          <h3 className="text-md font-bold text-text-main flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
             </svg>
             Side-by-Side Office Metadata Comparison
           </h3>
-          <button className="btn-secondary btn-sm" onClick={() => setCompareMode(false)}>
+          <Button variant="secondary" size="sm" onClick={() => setCompareMode(false)}>
             Back to Detail View
-          </button>
+          </Button>
         </div>
-        <div className="imgmeta-table-container compare-table-wrapper">
+        <div className="overflow-x-auto rounded-xl border border-border">
           {comparedFiles.length > 0 ? (
-            <table className="imgmeta-table compare-table">
+            <table className="w-full border-collapse text-left text-sm min-w-[600px]">
               <thead>
-                <tr>
-                  <th>Field / Parameter</th>
+                <tr className="bg-app border-b border-border">
+                  <th className="p-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Field / Parameter</th>
                   {comparedFiles.map(f => (
-                    <th key={f.id} className={f.id === selectedFileId ? 'active-col' : ''}>
-                      <div className="compare-th-content">
-                        <span className="compare-filename" title={f.name}>{f.name}</span>
+                    <th key={f.id} className={`p-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider max-w-[200px] truncate ${f.id === selectedFileId ? 'bg-accent-light/10 text-accent font-extrabold' : ''}`}>
+                      <div className="flex items-center justify-between gap-2 truncate">
+                        <span className="truncate" title={f.name}>{f.name}</span>
                         <button
-                          className="btn-close-sm"
+                          className="text-text-muted hover:text-red-500 font-bold text-base bg-transparent border-none cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleCompareSelection(f.id);
                           }}
                           title="Exclude from comparison"
                         >
-                          ×
+                          &times;
                         </button>
                       </div>
                     </th>
@@ -975,14 +979,14 @@ export default function OfficeMeta() {
               </thead>
               <tbody>
                 {COMPARE_FIELDS.map((field, idx) => (
-                  <tr key={idx}>
-                    <td className="compare-field-label">{field.label}</td>
+                  <tr key={idx} className="border-b border-border last:border-0 hover:bg-hover-bg/30">
+                    <td className="p-2.5 px-4 text-xs font-semibold text-text-muted">{field.label}</td>
                     {comparedFiles.map(f => {
                       const val = field.fn(f);
                       return (
                         <td 
                           key={f.id} 
-                          className={`${f.id === selectedFileId ? 'active-col' : ''} ${!val ? 'not-available' : ''}`}
+                          className={`p-2.5 px-4 text-xs text-text-main ${f.id === selectedFileId ? 'bg-accent-light/5' : ''} ${!val ? 'text-text-muted italic' : ''}`}
                         >
                           {val || '—'}
                         </td>
@@ -993,9 +997,9 @@ export default function OfficeMeta() {
               </tbody>
             </table>
           ) : (
-            <div className="compare-empty-state">
+            <div className="p-8 text-center text-text-muted italic">
               <p>No documents selected for comparison.</p>
-              <p className="small text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+              <p className="text-xs text-text-muted/75 mt-1">
                 Use the checkboxes on the thumbnails bar above to select files to compare.
               </p>
             </div>
@@ -1043,26 +1047,28 @@ export default function OfficeMeta() {
       if (filtered.length === 0 && query) return null;
 
       return (
-        <div className="officemeta-group-card card-glass">
-          <h3 className="officemeta-group-title">{title}</h3>
-          <table className="imgmeta-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item, idx) => (
-                <tr key={idx}>
-                  <td>{item.description || item.label}</td>
-                  <td title={item.value}>
-                    {item.value || <span className="text-muted">—</span>}
-                  </td>
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
+          <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-1">{title}</h3>
+          <div className="overflow-hidden rounded-xl border border-border">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="bg-app border-b border-border">
+                  <th className="p-2.5 px-4 font-semibold text-text-muted w-[40%]">Description</th>
+                  <th className="p-2.5 px-4 font-semibold text-text-muted">Value</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((item, idx) => (
+                  <tr key={idx} className="border-b border-border last:border-0 hover:bg-hover-bg/30">
+                    <td className="p-2.5 px-4 text-text-muted font-medium">{item.description || item.label}</td>
+                    <td className="p-2.5 px-4 text-text-main font-semibold break-all" title={item.value}>
+                      {item.value || <span className="text-text-muted font-normal italic">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       );
     };
@@ -1099,7 +1105,7 @@ export default function OfficeMeta() {
     };
 
     return (
-      <div className="officemeta-groups-layout">
+      <div className="flex flex-col gap-4">
         {renderFormatSpecific()}
         {renderMetaTable("Core Properties", coreItems)}
         {renderMetaTable("Application Properties", appItems)}
@@ -1118,7 +1124,7 @@ export default function OfficeMeta() {
         id: 'core',
         label: 'Core Properties',
         icon: (
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
@@ -1128,7 +1134,7 @@ export default function OfficeMeta() {
         id: 'app',
         label: 'Application Properties',
         icon: (
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
@@ -1138,7 +1144,7 @@ export default function OfficeMeta() {
         id: 'format',
         label: 'Format-Specific Properties',
         icon: (
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <line x1="18" y1="20" x2="18" y2="10"></line>
             <line x1="12" y1="20" x2="12" y2="4"></line>
             <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -1149,7 +1155,7 @@ export default function OfficeMeta() {
         id: 'custom',
         label: 'Custom Properties',
         icon: (
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
           </svg>
         )
@@ -1158,20 +1164,20 @@ export default function OfficeMeta() {
 
     if (matchCount === 0) {
       return (
-        <div className="officemeta-empty-message">No matching parameters found.</div>
+        <div className="p-4 text-center text-text-muted italic">No matching parameters found.</div>
       );
     }
 
     return (
-      <div className="imgmeta-advanced-wrapper">
-        <div className="advanced-toolbar">
-          <span className="match-count">Found {matchCount} metadata parameters</span>
-          <button className="btn-secondary btn-sm" onClick={toggleExpandAll}>
+      <div className="flex flex-col gap-3.5">
+        <div className="flex justify-between items-center bg-card border border-border rounded-xl p-3 px-4">
+          <span className="text-xs font-semibold text-text-muted">Found {matchCount} metadata parameters</span>
+          <Button variant="secondary" size="sm" onClick={toggleExpandAll}>
             {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
-          </button>
+          </Button>
         </div>
         
-        <div className="advanced-groups-list">
+        <div className="flex flex-col gap-3">
           {advancedGroups.map(g => {
             const list = groups[g.id] || [];
             if (list.length === 0) return null;
@@ -1179,37 +1185,44 @@ export default function OfficeMeta() {
             const isCollapsed = collapsedGroups[g.id];
             
             return (
-              <div key={g.id} className={`advanced-group-card ${isCollapsed ? 'collapsed' : ''}`}>
-                <div
-                  className="advanced-group-header"
+              <div key={g.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                <button
+                  className="flex items-center justify-between w-full p-4 bg-transparent border-none cursor-pointer text-left transition-colors hover:bg-hover-bg/30"
                   onClick={() => setCollapsedGroups(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
+                  id={`officemeta-group-${g.id}`}
                 >
-                  <div className="header-label">
-                    <span className="group-icon">{g.icon}</span>
-                    <span className="group-name">{g.label}</span>
-                    <span className="group-count">({list.length})</span>
+                  <div className="flex items-center gap-2 text-sm font-bold text-text-main">
+                    <span className="text-accent">{g.icon}</span>
+                    <span>{g.label}</span>
+                    <span className="text-xs text-text-muted bg-app px-2 py-0.5 rounded-full ml-1">{list.length}</span>
                   </div>
-                  <span className="collapse-arrow">{isCollapsed ? '▼' : '▲'}</span>
-                </div>
+                  <svg
+                    className={`text-text-muted shrink-0 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
                 
                 {!isCollapsed && (
-                  <div className="advanced-group-body">
-                    <table className="imgmeta-table">
+                  <div className="border-t border-border overflow-x-auto">
+                    <table className="w-full border-collapse text-left text-xs">
                       <thead>
-                        <tr>
-                          <th>Parameter Name</th>
-                          <th>Value</th>
-                          <th>Description</th>
+                        <tr className="bg-app border-b border-border">
+                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[30%]">Parameter Name</th>
+                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[35%]">Value</th>
+                          <th className="p-2.5 px-4 font-semibold text-text-muted">Description</th>
                         </tr>
                       </thead>
                       <tbody>
                         {list.map(tag => (
-                          <tr key={tag.name}>
-                            <td>{tag.name}</td>
-                            <td title={tag.value}>
-                              {tag.value || <span className="text-muted">—</span>}
+                          <tr key={tag.name} className="border-b border-border last:border-0 hover:bg-hover-bg/30">
+                            <td className="p-2.5 px-4 text-text-main font-semibold">{tag.name}</td>
+                            <td className="p-2.5 px-4 text-text-main break-all" title={tag.value}>
+                              {tag.value || <span className="text-text-muted font-normal italic">—</span>}
                             </td>
-                            <td title={tag.description}>{tag.description || '—'}</td>
+                            <td className="p-2.5 px-4 text-text-muted font-medium break-words" title={tag.description}>{tag.description || '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1225,14 +1238,14 @@ export default function OfficeMeta() {
   };
 
   return (
-    <article id="tool-officemeta" className="tool-card tool-card--wide active">
-      <h2>Office Metadata Reader</h2>
-      <p className="tool-intro">
-        Extract, inspect and analyze core properties, application properties, custom metadata, and format structures from Word, Excel, and PowerPoint files locally.
-      </p>
+    <Card id="tool-officemeta" variant="tool" size="wide">
+      <ToolHeader 
+        title="Office Metadata Reader" 
+        description="Extract, inspect and analyze core properties, application properties, custom metadata, and format structures from Word, Excel, and PowerPoint files locally." 
+      />
 
       <div 
-        className="imgmeta-container"
+        className="relative mt-4 flex flex-col gap-4"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -1249,28 +1262,26 @@ export default function OfficeMeta() {
 
         {/* Drag over overlay when files exist */}
         {dragOver && files.length > 0 && (
-          <div className="imgmeta-drag-overlay">
-            <div className="overlay-content">
-              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}>
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-              <p>Drop Office files to analyze</p>
-            </div>
+          <div className="absolute inset-0 bg-accent/15 border-2 border-dashed border-accent rounded-xl flex flex-col items-center justify-center gap-3 z-50 backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-accent animate-bounce">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <p className="text-lg font-bold text-text-main">Drop Office files to analyze</p>
           </div>
         )}
 
         {/* Upload bar (matching ImgMeta) */}
         {files.length > 0 && (
-          <div className="imgmeta-top-bar card-glass">
-            <div className="thumbnails-scroll-container">
+          <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-1 divide-x divide-border scrollbar-thin">
               {files.map(file => {
                 const badge = getFileBadge(file.type);
                 const isSelected = file.id === selectedFileId;
                 return (
                   <div
                     key={file.id}
-                    className={`thumbnail-card ${isSelected ? 'selected' : ''}`}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border border-transparent shrink-0 relative group ${isSelected ? 'bg-accent-light/10 border-accent/20' : 'hover:bg-hover-bg/50'}`}
                     onClick={() => {
                       setSelectedFileId(file.id);
                       setCompareMode(false); // Switch back to detail view when selecting another file
@@ -1279,7 +1290,7 @@ export default function OfficeMeta() {
                     {files.length > 1 && (
                       <input
                         type="checkbox"
-                        className="thumb-compare-checkbox"
+                        className="rounded border-border text-accent focus:ring-accent w-4 h-4 mr-1 cursor-pointer shrink-0"
                         checked={compareSelectedIds.includes(file.id)}
                         onChange={(e) => {
                           e.stopPropagation();
@@ -1289,95 +1300,105 @@ export default function OfficeMeta() {
                         title="Include in comparison"
                       />
                     )}
-                    <div className="thumb-img-wrapper" style={{ background: 'transparent' }}>
-                      <div className={`thumb-file-icon ${badge.colorClass}`} style={{ width: '100%', height: '100%', borderRadius: 0 }}>
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-app relative border border-border/50">
+                      <div className={`w-full h-full flex items-center justify-center ${badge.colorClass}`}>
                         {badge.icon}
                       </div>
                       <button
-                        className="thumb-remove-btn"
+                        className="absolute -top-1 -right-1 hidden group-hover:flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold border-none cursor-pointer hover:bg-red-600"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveFile(file.id);
                         }}
                         title="Remove file"
                       >
-                        ×
+                        &times;
                       </button>
                     </div>
-                    <div className="thumb-info">
-                      <span className="thumb-name" title={file.name}>{file.name}</span>
-                      <span className="thumb-size">{file.strippedInfo ? file.strippedInfo.formattedSize : file.formattedSize}</span>
+                    <div className="flex flex-col gap-0.5 min-w-0 max-w-[120px]">
+                      <span className="text-xs font-semibold text-text-main truncate" title={file.name}>{file.name}</span>
+                      <span className="text-[10px] text-text-muted">{file.strippedInfo ? file.strippedInfo.formattedSize : file.formattedSize}</span>
                     </div>
                   </div>
                 );
               })}
               
-              <div className="thumbnail-add-card" onClick={handleDropzoneClick}>
-                <div className="add-icon">+</div>
+              <div 
+                className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-dashed border-border hover:border-accent hover:bg-accent-light/5 cursor-pointer shrink-0 text-xs font-bold text-text-muted hover:text-accent transition-all" 
+                onClick={handleDropzoneClick}
+              >
+                <div className="text-lg leading-none">+</div>
                 <span>Add More</span>
               </div>
             </div>
 
-            <div className="top-bar-actions">
+            <div className="flex flex-wrap gap-4 items-center justify-between border-t border-border pt-4">
               {/* Metadata Stripping inline */}
               {activeFile && (
-                <div className="top-bar-stripper">
+                <div className="flex flex-wrap gap-2 items-center">
                   {!activeFile.strippedInfo ? (
                     <>
-                      <span className="stripper-mini-label">Strip:</span>
-                      <button
-                        className="btn-accent btn-sm"
+                      <span className="text-xs font-bold text-text-muted uppercase tracking-wider mr-2">Strip Tags:</span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleStripMetadata(activeFile, 'private')}
                         title="Remove personal/private authoring metadata"
                       >
                         🔒 Private
-                      </button>
-                      <button
-                        className="btn-accent-outline btn-sm"
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleStripMetadata(activeFile, 'all')}
                         title="Remove all metadata including software details and templates"
                       >
                         🗑️ All
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <span className="stripper-mini-status">
-                        ✓ {activeFile.strippedInfo.mode === 'private' ? 'Private' : 'All'}
+                      <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 mr-2">
+                        ✓ {activeFile.strippedInfo.mode === 'private' ? 'Private' : 'All'} Tags Stripped
                       </span>
-                      <button
-                        className="btn-primary btn-sm"
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => downloadStrippedFile(activeFile)}
                         title="Download the stripped document"
                       >
                         💾 Download
-                      </button>
-                      <button
-                        className="btn-secondary btn-sm"
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleRestoreOriginal(activeFile.id)}
                         title="Restore original metadata details"
                       >
                         🔄 Restore
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
               )}
 
-              <button 
-                className={`btn-secondary ${compareMode ? 'active' : ''}`}
-                onClick={() => setCompareMode(!compareMode)}
-                title="Toggle side-by-side comparison"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-              >
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
-                </svg>
-                Compare {files.length > 1 ? `(${compareSelectedIds.length})` : ''}
-              </button>
-              <button className="btn-secondary" onClick={handleClearAll}>
-                Clear All
-              </button>
+              <div className="flex gap-2 ml-auto">
+                <Button 
+                  variant={compareMode ? 'primary' : 'secondary'}
+                  size="sm"
+                  onClick={() => setCompareMode(!compareMode)}
+                  title="Toggle side-by-side comparison"
+                  className="flex items-center gap-1.5"
+                >
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
+                  </svg>
+                  <span>Compare {files.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleClearAll}>
+                  Clear All
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -1385,35 +1406,35 @@ export default function OfficeMeta() {
         {/* Dropzone for initially empty state */}
         {files.length === 0 && (
           <div 
-            className={`imgmeta-dropzone ${dragOver ? 'dragover' : ''}`}
+            className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[220px] hover:border-accent hover:bg-accent-light/5"
             onClick={handleDropzoneClick}
           >
-            <div className="dropzone-content">
-              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>
+            <div className="flex flex-col items-center gap-3">
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="12" y1="18" x2="12" y2="12"></line>
                 <polyline points="9 15 12 12 15 15"></polyline>
               </svg>
-              <p className="dropzone-title">Drag &amp; drop Microsoft Office documents here</p>
-              <p className="dropzone-or">or</p>
-              <button 
+              <p className="text-lg font-bold text-text-main">Drag &amp; drop Microsoft Office documents here</p>
+              <p className="text-sm text-text-muted">or</p>
+              <Button 
                 type="button" 
-                className="btn-secondary" 
+                variant="secondary" 
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
               >
                 Browse Files
-              </button>
-              <p className="dropzone-note">Supports Word (.docx), Excel (.xlsx), and PowerPoint (.pptx)</p>
+              </Button>
+              <p className="text-xs text-text-muted mt-2">Supports Word (.docx), Excel (.xlsx), and PowerPoint (.pptx)</p>
             </div>
           </div>
         )}
 
         {/* Error/Status Banner */}
         {status && (
-          <div className="officemeta-status-banner card-glass">
-            <span className="status-dot"></span>
-            <span className="status-text">{status}</span>
+          <div className="flex items-center gap-3 bg-accent-light/10 border border-accent/20 rounded-xl p-3.5 text-sm text-accent">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse shrink-0"></span>
+            <span className="font-semibold">{status}</span>
           </div>
         )}
 
@@ -1423,85 +1444,86 @@ export default function OfficeMeta() {
             renderCompareView()
           ) : (
             activeFile && (
-              <div id="officemeta-results" className="imgmeta-results-grid" style={{ display: 'grid' }}>
+              <div id="officemeta-results" className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
                 {/* Left Column: File Info & Preview & Actions */}
-                <div className="imgmeta-preview-col">
-                  <div className="card-glass imgmeta-preview-card">
-                    <div className="imgmeta-img-container" style={{ minHeight: '180px' }}>
+                <div className="flex flex-col gap-4">
+                  <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden border border-border flex items-center justify-center bg-app shrink-0 shadow-inner">
                       {activeFile.thumbnail ? (
-                        <img id="officemeta-preview-img" alt="Preview" src={activeFile.thumbnail} style={{ display: 'block' }} />
+                        <img id="officemeta-preview-img" alt="Preview" src={activeFile.thumbnail} className="w-full h-full object-contain" />
                       ) : (
                         <div 
-                          className="imgmeta-raw-icon" 
+                          className="flex flex-col items-center gap-2.5" 
                           style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            gap: '12px',
                             color: activeFile.type === 'docx' ? '#2563eb' : activeFile.type === 'xlsx' ? '#10b981' : activeFile.type === 'pptx' ? '#f97316' : '#6b7280'
                           }}
                         >
                           {getFileIcon(activeFile.type, 48)}
-                          <span>{getFileBadge(activeFile.type).label}</span>
+                          <span className="text-xs font-bold uppercase tracking-wider">{getFileBadge(activeFile.type).label}</span>
                         </div>
                       )}
                     </div>
-                    <div className="imgmeta-file-meta">
-                      <h3 id="officemeta-file-name">{activeFile.name}</h3>
-                      <p><span className="label">Format:</span> <span>{activeFile.type.toUpperCase()}</span></p>
-                      <p><span className="label">Size:</span> <span>{displayFile.formattedSize}</span></p>
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <h3 id="officemeta-file-name" className="text-base font-bold text-text-main break-words" title={activeFile.name}>{activeFile.name}</h3>
+                      <div className="flex flex-col gap-1 text-xs">
+                        <p className="flex justify-between border-b border-border/50 py-1"><span className="text-text-muted font-medium">Format:</span> <span className="font-semibold text-text-main">{activeFile.type.toUpperCase()}</span></p>
+                        <p className="flex justify-between py-1"><span className="text-text-muted font-medium">Size:</span> <span className="font-semibold text-text-main">{displayFile.formattedSize}</span></p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="imgmeta-actions">
-                    <button
+                  <div className="flex gap-2">
+                    <Button
                       id="officemeta-download-json"
-                      className="btn-primary flex-1"
+                      variant="primary"
+                      className="flex-1 flex items-center justify-center gap-1.5"
                       onClick={handleExportJson}
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                       </svg>
-                      Export JSON
-                    </button>
-                    <button id="officemeta-clear" className="btn-secondary" onClick={() => handleRemoveFile(activeFile.id)}>Remove</button>
+                      <span>Export JSON</span>
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleRemoveFile(activeFile.id)}>Remove</Button>
                   </div>
                 </div>
 
                 {/* Right Column: Metadata Tabs & Table */}
-                <div className="imgmeta-data-col">
-                  <div className="imgmeta-header-actions">
-                    <div className="imgmeta-tabs">
-                      <button 
-                        className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                <div className="flex flex-col gap-4 min-w-0">
+                  <div className="flex flex-wrap gap-4 items-center justify-between pb-3 border-b border-border">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant={activeTab === 'overview' ? 'primary' : 'secondary'}
+                        size="sm"
                         onClick={() => setActiveTab('overview')}
                       >
                         Overview
-                      </button>
-                      <button 
-                        className={`tab-btn ${activeTab === 'all-parameters' ? 'active' : ''}`}
+                      </Button>
+                      <Button 
+                        variant={activeTab === 'all-parameters' ? 'primary' : 'secondary'}
+                        size="sm"
                         onClick={() => setActiveTab('all-parameters')}
                       >
                         All Parameters
-                      </button>
+                      </Button>
                     </div>
-                    <div className="imgmeta-search-wrapper">
+                    <div className="relative w-full max-w-[240px]">
                       <input
                         type="text"
                         placeholder="Search tags..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-card border border-border rounded-lg p-2 px-3 text-xs text-text-main outline-none focus:border-accent placeholder-text-muted/50"
                       />
                     </div>
                   </div>
 
                   {loading ? (
-                    <div className="officemeta-loading">
-                      <div className="spinner"></div>
-                      <p>Analyzing document...</p>
+                    <div className="flex flex-col items-center justify-center p-8 gap-3 bg-card border border-border rounded-xl">
+                      <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin"></div>
+                      <p className="text-sm text-text-muted font-medium">Analyzing document...</p>
                     </div>
                   ) : (
                     activeTab === 'overview' ? renderOverviewTab() : renderAllParametersTab()
@@ -1512,6 +1534,6 @@ export default function OfficeMeta() {
           )
         )}
       </div>
-    </article>
+    </Card>
   );
 }

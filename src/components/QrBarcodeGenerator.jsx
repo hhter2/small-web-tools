@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 // Helper to escape WiFi strings for standard encoding format
 const escapeWifiString = (str) => {
@@ -74,6 +78,25 @@ const renderCustomQR = (canvas, text, options) => {
     logoImg = null,
     logoScale = 0.18,
     logoBgShape = 'circle',
+    
+    // Custom text overlay options
+    textLabel = '',
+    textLabelMode = 'none',
+    labelPosition = 'bottom',
+    embeddedPosition = 'center',
+    textXOffset = 0,
+    textYOffset = 0,
+    textSize = 24,
+    textColor = '#111827',
+    textFont = 'sans-serif',
+    textWeight = 'bold',
+    textStyle = 'normal',
+    textBgEnabled = false,
+    textBgColor = '#ffffff',
+    textBgPadding = 6,
+    textStrokeEnabled = false,
+    textStrokeColor = '#ffffff',
+    textStrokeWidth = 3,
   } = options;
 
   const ctx = canvas.getContext('2d');
@@ -92,13 +115,29 @@ const renderCustomQR = (canvas, text, options) => {
   const totalModules = numModules + margin * 2;
   const moduleSize = size / totalModules;
 
-  canvas.width = size;
-  canvas.height = size;
+  // Calculate layout offsets for external label
+  const hasLabel = (textLabelMode === 'label' || textLabelMode === 'both') && textLabel;
+  const labelHeight = hasLabel ? (textSize + moduleSize * 0.5) : 0;
+  const totalHeight = size + labelHeight;
+  const qrYOffset = (hasLabel && labelPosition === 'top') ? labelHeight : 0;
 
-  ctx.clearRect(0, 0, size, size);
+  // Calculate label Y coordinate
+  let labelY = 0;
+  if (hasLabel) {
+    if (labelPosition === 'top') {
+      labelY = margin * moduleSize + textSize / 2;
+    } else {
+      labelY = (margin + numModules) * moduleSize + moduleSize * 0.5 + textSize / 2;
+    }
+  }
+
+  canvas.width = size;
+  canvas.height = totalHeight;
+
+  ctx.clearRect(0, 0, size, totalHeight);
   if (bgColor !== 'transparent') {
     ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, size, totalHeight);
   }
 
   const applyFgStyle = () => {
@@ -107,12 +146,12 @@ const renderCustomQR = (canvas, text, options) => {
       if (fgGradient.type === 'linear') {
         const angleRad = (fgGradient.angle * Math.PI) / 180;
         const x1 = size / 2 - (Math.cos(angleRad) * size) / 2;
-        const y1 = size / 2 - (Math.sin(angleRad) * size) / 2;
+        const y1 = (size / 2 + qrYOffset) - (Math.sin(angleRad) * size) / 2;
         const x2 = size / 2 + (Math.cos(angleRad) * size) / 2;
-        const y2 = size / 2 + (Math.sin(angleRad) * size) / 2;
+        const y2 = (size / 2 + qrYOffset) + (Math.sin(angleRad) * size) / 2;
         grad = ctx.createLinearGradient(x1, y1, x2, y2);
       } else {
-        grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.05, size / 2, size / 2, size * 0.7);
+        grad = ctx.createRadialGradient(size / 2, size / 2 + qrYOffset, size * 0.05, size / 2, size / 2 + qrYOffset, size * 0.7);
       }
       grad.addColorStop(0, fgGradient.color1);
       grad.addColorStop(1, fgGradient.color2);
@@ -140,15 +179,54 @@ const renderCustomQR = (canvas, text, options) => {
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
   };
 
+  // Calculate text bounding box for clearing modules behind embedded text
+  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
+  let textMinX = 0, textMaxX = 0, textMinY = 0, textMaxY = 0;
+  if (hasEmbed) {
+    ctx.save();
+    ctx.font = `${textStyle} ${textWeight} ${textSize}px ${textFont}`;
+    const textWidth = ctx.measureText(textLabel).width;
+    ctx.restore();
+
+    let embedX = size / 2;
+    let embedY = size / 2; // relative to QR square (without qrYOffset)
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size;
+    }
+
+    const padX = textBgPadding + moduleSize * 0.3;
+    const padY = textBgPadding + moduleSize * 0.3;
+    const textHeight = textSize;
+
+    textMinX = embedX - textWidth / 2 - padX;
+    textMaxX = embedX + textWidth / 2 + padX;
+    textMinY = embedY - textHeight / 2 - padY;
+    textMaxY = embedY + textHeight / 2 + padY;
+  }
+
+  const isInsideTextArea = (r, c) => {
+    if (!hasEmbed) return false;
+    const modX = (margin + c) * moduleSize;
+    const modY = (margin + r) * moduleSize;
+    return (modX + moduleSize >= textMinX && modX <= textMaxX && modY + moduleSize >= textMinY && modY <= textMaxY);
+  };
+
   // Draw Dots
   for (let r = 0; r < numModules; r++) {
     for (let c = 0; c < numModules; c++) {
       if (modules.data[r * numModules + c] === 0) continue;
       if (isEye(r, c)) continue;
       if (isInsideLogoArea(r, c)) continue;
+      if (isInsideTextArea(r, c)) continue;
 
       const x = (margin + c) * moduleSize;
-      const y = (margin + r) * moduleSize;
+      const y = (margin + r) * moduleSize + qrYOffset;
 
       ctx.beginPath();
       if (dotsStyle === 'circle') {
@@ -247,23 +325,23 @@ const renderCustomQR = (canvas, text, options) => {
   };
 
   // Render the three corner eyes
-  drawEye(margin * moduleSize, margin * moduleSize);
-  drawEye((margin + numModules - 7) * moduleSize, margin * moduleSize);
-  drawEye(margin * moduleSize, (margin + numModules - 7) * moduleSize);
+  drawEye(margin * moduleSize, margin * moduleSize + qrYOffset);
+  drawEye((margin + numModules - 7) * moduleSize, margin * moduleSize + qrYOffset);
+  drawEye(margin * moduleSize, (margin + numModules - 7) * moduleSize + qrYOffset);
 
   // Draw Logo
   if (logoImg) {
     const centerPx = size / 2;
     const logoPx = size * logoScale;
     const logoX = centerPx - logoPx / 2;
-    const logoY = centerPx - logoPx / 2;
+    const logoY = centerPx - logoPx / 2 + qrYOffset;
     const padding = moduleSize * 0.5;
 
     if (logoBgShape !== 'none') {
       ctx.fillStyle = bgColor === 'transparent' ? '#ffffff' : bgColor;
       ctx.beginPath();
       if (logoBgShape === 'circle') {
-        ctx.arc(centerPx, centerPx, logoPx / 2 + padding, 0, Math.PI * 2);
+        ctx.arc(centerPx, centerPx + qrYOffset, logoPx / 2 + padding, 0, Math.PI * 2);
         ctx.fill();
       } else if (logoBgShape === 'square') {
         ctx.fillRect(logoX - padding, logoY - padding, logoPx + padding * 2, logoPx + padding * 2);
@@ -283,6 +361,91 @@ const renderCustomQR = (canvas, text, options) => {
     ctx.drawImage(logoImg, logoX, logoY, logoPx, logoPx);
     ctx.restore();
   }
+
+  // Draw External Label
+  if (hasLabel) {
+    ctx.save();
+    ctx.font = `${textStyle} ${textWeight} ${textSize}px ${textFont}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const labelX = size / 2;
+    // labelY is precalculated at the top
+
+    if (textBgEnabled) {
+      const textWidth = ctx.measureText(textLabel).width;
+      const bgW = textWidth + textBgPadding * 2;
+      const bgH = textSize + textBgPadding * 2;
+      const bgX = labelX - bgW / 2;
+      const bgY = labelY - bgH / 2;
+      ctx.fillStyle = textBgColor;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(bgX, bgY, bgW, bgH, 4);
+      } else {
+        ctx.rect(bgX, bgY, bgW, bgH);
+      }
+      ctx.fill();
+    }
+
+    if (textStrokeEnabled) {
+      ctx.strokeStyle = textStrokeColor;
+      ctx.lineWidth = textStrokeWidth;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(textLabel, labelX, labelY);
+    }
+
+    ctx.fillStyle = textColor;
+    ctx.fillText(textLabel, labelX, labelY);
+    ctx.restore();
+  }
+
+  // Draw Embedded Text
+  if (hasEmbed) {
+    ctx.save();
+    ctx.font = `${textStyle} ${textWeight} ${textSize}px ${textFont}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    let embedX = size / 2;
+    let embedY = size / 2 + qrYOffset;
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25 + qrYOffset;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75 + qrYOffset;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size + qrYOffset;
+    }
+
+    if (textBgEnabled) {
+      const textWidth = ctx.measureText(textLabel).width;
+      const bgW = textWidth + textBgPadding * 2;
+      const bgH = textSize + textBgPadding * 2;
+      const bgX = embedX - bgW / 2;
+      const bgY = embedY - bgH / 2;
+      ctx.fillStyle = textBgColor;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(bgX, bgY, bgW, bgH, 4);
+      } else {
+        ctx.rect(bgX, bgY, bgW, bgH);
+      }
+      ctx.fill();
+    }
+
+    if (textStrokeEnabled) {
+      ctx.strokeStyle = textStrokeColor;
+      ctx.lineWidth = textStrokeWidth;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(textLabel, embedX, embedY);
+    }
+
+    ctx.fillStyle = textColor;
+    ctx.fillText(textLabel, embedX, embedY);
+    ctx.restore();
+  }
 };
 
 // SVG Generator String for QR Code
@@ -299,6 +462,25 @@ const generateQRSVG = (text, options) => {
     logoImgData = null, // base64
     logoScale = 0.18,
     logoBgShape = 'circle',
+    
+    // Custom text overlay options
+    textLabel = '',
+    textLabelMode = 'none',
+    labelPosition = 'bottom',
+    embeddedPosition = 'center',
+    textXOffset = 0,
+    textYOffset = 0,
+    textSize = 24,
+    textColor = '#111827',
+    textFont = 'sans-serif',
+    textWeight = 'bold',
+    textStyle = 'normal',
+    textBgEnabled = false,
+    textBgColor = '#ffffff',
+    textBgPadding = 6,
+    textStrokeEnabled = false,
+    textStrokeColor = '#ffffff',
+    textStrokeWidth = 3,
   } = options;
 
   let qr;
@@ -314,10 +496,26 @@ const generateQRSVG = (text, options) => {
   const size = 500;
   const moduleSize = size / totalModules;
 
+  // Calculate layout offsets for external label
+  const hasLabel = (textLabelMode === 'label' || textLabelMode === 'both') && textLabel;
+  const labelHeight = hasLabel ? (textSize + moduleSize * 0.5) : 0;
+  const totalHeight = size + labelHeight;
+  const qrYOffset = (hasLabel && labelPosition === 'top') ? labelHeight : 0;
+
+  // Calculate label Y coordinate
+  let labelY = 0;
+  if (hasLabel) {
+    if (labelPosition === 'top') {
+      labelY = margin * moduleSize + textSize / 2;
+    } else {
+      labelY = (margin + numModules) * moduleSize + moduleSize * 0.5 + textSize / 2;
+    }
+  }
+
   let svgContent = '';
 
   if (bgColor !== 'transparent') {
-    svgContent += `<rect width="${size}" height="${size}" fill="${bgColor}" />\n`;
+    svgContent += `<rect width="${size}" height="${totalHeight}" fill="${bgColor}" />\n`;
   }
 
   let fillAttr = fgColor;
@@ -359,6 +557,40 @@ const generateQRSVG = (text, options) => {
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
   };
 
+  // Calculate text bounding box for clearing modules behind embedded text
+  const hasEmbed = (textLabelMode === 'embedded' || textLabelMode === 'both') && textLabel;
+  let textMinX = 0, textMaxX = 0, textMinY = 0, textMaxY = 0;
+  if (hasEmbed) {
+    const textWidth = estimateTextWidth(textLabel, textSize, textWeight);
+    let embedX = size / 2;
+    let embedY = size / 2; // relative to QR square (without qrYOffset)
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size;
+    }
+
+    const padX = textBgPadding + moduleSize * 0.3;
+    const padY = textBgPadding + moduleSize * 0.3;
+    const textHeight = textSize;
+
+    textMinX = embedX - textWidth / 2 - padX;
+    textMaxX = embedX + textWidth / 2 + padX;
+    textMinY = embedY - textHeight / 2 - padY;
+    textMaxY = embedY + textHeight / 2 + padY;
+  }
+
+  const isInsideTextArea = (r, c) => {
+    if (!hasEmbed) return false;
+    const modX = (margin + c) * moduleSize;
+    const modY = (margin + r) * moduleSize;
+    return (modX + moduleSize >= textMinX && modX <= textMaxX && modY + moduleSize >= textMinY && modY <= textMaxY);
+  };
+
   // Draw Dots
   let pathD = '';
   for (let r = 0; r < numModules; r++) {
@@ -366,9 +598,10 @@ const generateQRSVG = (text, options) => {
       if (modules.data[r * numModules + c] === 0) continue;
       if (isEye(r, c)) continue;
       if (isInsideLogoArea(r, c)) continue;
+      if (isInsideTextArea(r, c)) continue;
 
       const x = (margin + c) * moduleSize;
-      const y = (margin + r) * moduleSize;
+      const y = (margin + r) * moduleSize + qrYOffset;
 
       if (dotsStyle === 'circle') {
         const cx = x + moduleSize / 2;
@@ -420,20 +653,20 @@ const generateQRSVG = (text, options) => {
     }
   };
 
-  drawEyeSVG(margin * moduleSize, margin * moduleSize);
-  drawEyeSVG((margin + numModules - 7) * moduleSize, margin * moduleSize);
-  drawEyeSVG(margin * moduleSize, (margin + numModules - 7) * moduleSize);
+  drawEyeSVG(margin * moduleSize, margin * moduleSize + qrYOffset);
+  drawEyeSVG((margin + numModules - 7) * moduleSize, margin * moduleSize + qrYOffset);
+  drawEyeSVG(margin * moduleSize, (margin + numModules - 7) * moduleSize + qrYOffset);
 
   if (logoImgData) {
     const centerPx = size / 2;
     const logoPx = size * logoScale;
     const logoX = centerPx - logoPx / 2;
-    const logoY = centerPx - logoPx / 2;
+    const logoY = centerPx - logoPx / 2 + qrYOffset;
     const padding = moduleSize * 0.5;
 
     if (logoBgShape === 'circle') {
       const bgFill = bgColor === 'transparent' ? '#ffffff' : bgColor;
-      svgContent += `<circle cx="${centerPx}" cy="${centerPx}" r="${logoPx / 2 + padding}" fill="${bgFill}" />\n`;
+      svgContent += `<circle cx="${centerPx}" cy="${centerPx + qrYOffset}" r="${logoPx / 2 + padding}" fill="${bgFill}" />\n`;
     } else if (logoBgShape === 'square') {
       const bgFill = bgColor === 'transparent' ? '#ffffff' : bgColor;
       svgContent += `<rect x="${logoX - padding}" y="${logoY - padding}" width="${logoPx + padding * 2}" height="${logoPx + padding * 2}" fill="${bgFill}" />\n`;
@@ -447,14 +680,70 @@ const generateQRSVG = (text, options) => {
     svgContent += `<image x="${logoX}" y="${logoY}" width="${logoPx}" height="${logoPx}" href="${logoImgData}" clip-path="url(#${clipId})" />\n`;
   }
 
-  return `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">\n${svgContent}</svg>`;
+  const estimateTextWidth = (text, size, weight) => {
+    const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
+    return text.length * size * k;
+  };
+
+  // Draw External Label SVG
+  if (hasLabel) {
+    const labelX = size / 2;
+    // labelY is precalculated at the top
+
+    if (textBgEnabled) {
+      const estW = estimateTextWidth(textLabel, textSize, textWeight) + textBgPadding * 2;
+      const estH = textSize + textBgPadding * 2;
+      const bgX = labelX - estW / 2;
+      const bgY = labelY - estH / 2;
+      svgContent += `<rect x="${bgX}" y="${bgY}" width="${estW}" height="${estH}" rx="4" ry="4" fill="${textBgColor}" />\n`;
+    }
+
+    let strokeAttrs = '';
+    if (textStrokeEnabled) {
+      strokeAttrs = `stroke="${textStrokeColor}" stroke-width="${textStrokeWidth}" paint-order="stroke fill" stroke-linejoin="round"`;
+    }
+
+    svgContent += `<text x="${labelX}" y="${labelY}" font-family="${textFont}" font-size="${textSize}" font-weight="${textWeight}" font-style="${textStyle}" text-anchor="middle" dominant-baseline="central" fill="${textColor}" ${strokeAttrs}>${textLabel}</text>\n`;
+  }
+
+  // Draw Embedded Text SVG
+  if (hasEmbed) {
+    let embedX = size / 2;
+    let embedY = size / 2 + qrYOffset;
+
+    if (embeddedPosition === 'top') {
+      embedY = size * 0.25 + qrYOffset;
+    } else if (embeddedPosition === 'bottom') {
+      embedY = size * 0.75 + qrYOffset;
+    } else if (embeddedPosition === 'custom') {
+      embedX = size / 2 + (textXOffset / 100) * size;
+      embedY = size / 2 + (textYOffset / 100) * size + qrYOffset;
+    }
+
+    if (textBgEnabled) {
+      const estW = estimateTextWidth(textLabel, textSize, textWeight) + textBgPadding * 2;
+      const estH = textSize + textBgPadding * 2;
+      const bgX = embedX - estW / 2;
+      const bgY = embedY - estH / 2;
+      svgContent += `<rect x="${bgX}" y="${bgY}" width="${estW}" height="${estH}" rx="4" ry="4" fill="${textBgColor}" />\n`;
+    }
+
+    let strokeAttrs = '';
+    if (textStrokeEnabled) {
+      strokeAttrs = `stroke="${textStrokeColor}" stroke-width="${textStrokeWidth}" paint-order="stroke fill" stroke-linejoin="round"`;
+    }
+
+    svgContent += `<text x="${embedX}" y="${embedY}" font-family="${textFont}" font-size="${textSize}" font-weight="${textWeight}" font-style="${textStyle}" text-anchor="middle" dominant-baseline="central" fill="${textColor}" ${strokeAttrs}>${textLabel}</text>\n`;
+  }
+
+  return `<svg width="100%" height="100%" viewBox="0 0 ${size} ${totalHeight}" xmlns="http://www.w3.org/2000/svg">\n${svgContent}</svg>`;
 };
 
 export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // ================= QR State =================
-  const [qrType, setQrType] = useState('url'); // 'text' | 'url' | 'wifi' | 'email' | 'phone' | 'sms'
+  const [qrType, setQrType] = useState('text'); // 'text' | 'wifi'
   const [qrText, setQrText] = useState('');
   const [qrUrl, setQrUrl] = useState('');
   const [qrPhone, setQrPhone] = useState('');
@@ -495,6 +784,102 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const [logoScale, setLogoScale] = useState(0.18);
   const [logoBgShape, setLogoBgShape] = useState('circle');
 
+  // QR Text Label states
+  const [qrTextLabel, setQrTextLabel] = useState('');
+  const [qrTextLabelMode, setQrTextLabelMode] = useState('none'); // 'none' | 'label' | 'embedded' | 'both'
+  const [qrLabelPosition, setQrLabelPosition] = useState('bottom'); // 'top' | 'bottom'
+  const [qrEmbeddedPosition, setQrEmbeddedPosition] = useState('center'); // 'center' | 'top' | 'bottom' | 'custom'
+  const [qrTextXOffset, setQrTextXOffset] = useState(0); // -50 to 50 (%)
+  const [qrTextYOffset, setQrTextYOffset] = useState(0); // -50 to 50 (%)
+  const [qrTextSize, setQrTextSize] = useState(24);
+  const [qrTextColor, setQrTextColor] = useState('#111827');
+  const [qrTextFont, setQrTextFont] = useState('sans-serif');
+  const [qrTextWeight, setQrTextWeight] = useState('bold'); // 'normal' | 'bold'
+  const [qrTextStyle, setQrTextStyle] = useState('normal'); // 'normal' | 'italic'
+  const [qrTextBgEnabled, setQrTextBgEnabled] = useState(true);
+  const [qrTextBgColor, setQrTextBgColor] = useState('#ffffff');
+  const [qrTextBgPadding, setQrTextBgPadding] = useState(6);
+  const [qrTextStrokeEnabled, setQrTextStrokeEnabled] = useState(false);
+  const [qrTextStrokeColor, setQrTextStrokeColor] = useState('#ffffff');
+  const [qrTextStrokeWidth, setQrTextStrokeWidth] = useState(3);
+
+  // ================= Color Helper Functions =================
+  const isValidHex = (val) => /^#[0-9a-fA-F]{6}$/.test(val);
+
+  const handleColorInputChange = (setter) => (e) => {
+    setter(e.target.value);
+  };
+
+  const handleColorInputBlur = (value, setter, defaultColor = '#000000') => () => {
+    if (!value) {
+      setter(defaultColor);
+      return;
+    }
+    let val = value.trim();
+    let clean = val.replace(/[^0-9a-fA-F]/g, '');
+    if (clean.length === 3) {
+      val = '#' + clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2];
+    } else if (clean.length === 6) {
+      val = '#' + clean;
+    } else {
+      val = defaultColor;
+    }
+    setter(val);
+  };
+
+  const PRESET_COLORS = [
+    '#000000', '#ffffff', '#4f46e5', '#3b82f6',
+    '#10b981', '#f59e0b', '#ef4444', '#ec4899',
+    '#8b5cf6', '#06b6d4', '#6b7280', '#111827'
+  ];
+
+  const [activeColorPicker, setActiveColorPicker] = useState(null); // null | 'fg' | 'grad1' | 'grad2' | 'bg' | 'text' | 'textBg' | 'textStroke' | 'bcLine' | 'bcBg'
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (activeColorPicker && !e.target.closest('.color-picker-container')) {
+        setActiveColorPicker(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [activeColorPicker]);
+
+  const ColorPickerSwatch = ({ pickerKey, color, setter, defaultColor }) => {
+    const isOpen = activeColorPicker === pickerKey;
+    return (
+      <div className="color-picker-container relative shrink-0">
+        <button
+          type="button"
+          className="w-10 h-10 rounded border border-border cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          style={{ backgroundColor: isValidHex(color) ? color : defaultColor }}
+          onClick={() => setActiveColorPicker(isOpen ? null : pickerKey)}
+        />
+        {isOpen && (
+          <div className="absolute left-0 mt-1 p-2 bg-card border border-border rounded-lg shadow-xl z-50 grid grid-cols-4 gap-1 w-32">
+            {PRESET_COLORS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className="w-6 h-6 rounded border border-border cursor-pointer transition-transform hover:scale-110"
+                style={{ backgroundColor: preset }}
+                title={preset}
+                onClick={() => {
+                  setter(preset);
+                  setActiveColorPicker(null);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Accordion state — which QR advanced section is open
+  const [openSection, setOpenSection] = useState(null); // null | 'style' | 'logo' | 'text'
+  const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
+
   // Copy status
   const [copied, setCopied] = useState(false);
 
@@ -516,7 +901,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   const barcodeSvgRef = useRef(null);
 
   const resetQR = () => {
-    setQrType('url');
+    setQrType('text');
     setQrText('');
     setQrUrl('');
     setQrPhone('');
@@ -546,6 +931,24 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     setLogoImg(null);
     setLogoScale(0.18);
     setLogoBgShape('circle');
+    setQrTextLabel('');
+    setQrTextLabelMode('none');
+    setQrLabelPosition('bottom');
+    setQrEmbeddedPosition('center');
+    setQrTextXOffset(0);
+    setQrTextYOffset(0);
+    setQrTextSize(24);
+    setQrTextColor('#111827');
+    setQrTextFont('sans-serif');
+    setQrTextWeight('bold');
+    setQrTextStyle('normal');
+    setQrTextBgEnabled(true);
+    setQrTextBgColor('#ffffff');
+    setQrTextBgPadding(6);
+    setQrTextStrokeEnabled(false);
+    setQrTextStrokeColor('#ffffff');
+    setQrTextStrokeWidth(3);
+    setOpenSection(null);
   };
 
   const resetBarcode = () => {
@@ -566,6 +969,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       case 'url':
         return qrUrl;
       case 'wifi':
+        if (!qrWifiSsid || !qrWifiSsid.trim()) return '';
         const ssidEsc = escapeWifiString(qrWifiSsid);
         const passEsc = escapeWifiString(qrWifiPassword);
         const hidden = qrWifiHidden ? 'true' : 'false';
@@ -591,7 +995,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       const renderOptions = {
         size: qrExportSize,
         margin: 4,
-        errorCorrectionLevel: logoImg ? 'H' : qrErrorCorrection, // force high recovery if logo is present
+        errorCorrectionLevel: (logoImg || qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') ? 'H' : qrErrorCorrection, // force high recovery if logo or text overlay is present
         dotsStyle: qrDotsStyle,
         eyesStyle: qrEyesStyle,
         fgType: qrFgType,
@@ -606,6 +1010,25 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         logoImg: logoImg,
         logoScale: Number(logoScale),
         logoBgShape: logoBgShape,
+        
+        // Text options
+        textLabel: qrTextLabel,
+        textLabelMode: qrTextLabelMode,
+        labelPosition: qrLabelPosition,
+        embeddedPosition: qrEmbeddedPosition,
+        textXOffset: Number(qrTextXOffset),
+        textYOffset: Number(qrTextYOffset),
+        textSize: Number(qrTextSize),
+        textColor: qrTextColor,
+        textFont: qrTextFont,
+        textWeight: qrTextWeight,
+        textStyle: qrTextStyle,
+        textBgEnabled: qrTextBgEnabled,
+        textBgColor: qrTextBgColor,
+        textBgPadding: Number(qrTextBgPadding),
+        textStrokeEnabled: qrTextStrokeEnabled,
+        textStrokeColor: qrTextStrokeColor,
+        textStrokeWidth: Number(qrTextStrokeWidth)
       };
 
       try {
@@ -622,7 +1045,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     qrDotsStyle, qrEyesStyle, qrFgType, qrFgColor,
     qrGradType, qrGradColor1, qrGradColor2, qrGradAngle,
     qrBgColor, qrBgTransparent, qrErrorCorrection,
-    logoImg, logoScale, logoBgShape, qrExportSize
+    logoImg, logoScale, logoBgShape, qrExportSize,
+    qrTextLabel, qrTextLabelMode, qrLabelPosition, qrEmbeddedPosition,
+    qrTextXOffset, qrTextYOffset, qrTextSize, qrTextColor, qrTextFont,
+    qrTextWeight, qrTextStyle, qrTextBgEnabled, qrTextBgColor, qrTextBgPadding,
+    qrTextStrokeEnabled, qrTextStrokeColor, qrTextStrokeWidth
   ]);
 
   // Render Barcode inside useEffect
@@ -701,7 +1128,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     const value = getQRValue();
     const svgString = generateQRSVG(value, {
       margin: 4,
-      errorCorrectionLevel: logoImg ? 'H' : qrErrorCorrection,
+      errorCorrectionLevel: (logoImg || qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') ? 'H' : qrErrorCorrection,
       dotsStyle: qrDotsStyle,
       eyesStyle: qrEyesStyle,
       fgType: qrFgType,
@@ -716,6 +1143,25 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       logoImgData: logoBase64,
       logoScale: Number(logoScale),
       logoBgShape: logoBgShape,
+      
+      // Text options
+      textLabel: qrTextLabel,
+      textLabelMode: qrTextLabelMode,
+      labelPosition: qrLabelPosition,
+      embeddedPosition: qrEmbeddedPosition,
+      textXOffset: Number(qrTextXOffset),
+      textYOffset: Number(qrTextYOffset),
+      textSize: Number(qrTextSize),
+      textColor: qrTextColor,
+      textFont: qrTextFont,
+      textWeight: qrTextWeight,
+      textStyle: qrTextStyle,
+      textBgEnabled: qrTextBgEnabled,
+      textBgColor: qrTextBgColor,
+      textBgPadding: Number(qrTextBgPadding),
+      textStrokeEnabled: qrTextStrokeEnabled,
+      textStrokeColor: qrTextStrokeColor,
+      textStrokeWidth: Number(qrTextStrokeWidth)
     });
 
     const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -766,63 +1212,94 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     URL.revokeObjectURL(url);
   };
 
+  // Reusable accordion header button
+  const AccordionHeader = ({ sectionKey, label, badge }) => (
+    <button
+      type="button"
+      onClick={() => toggleSection(sectionKey)}
+      className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card hover:bg-nav-hover-bg transition-colors text-left group"
+    >
+      <span className="flex items-center gap-2">
+        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{label}</span>
+        {badge && (
+          <span className="text-[10px] font-bold bg-accent/15 text-accent px-1.5 py-0.5 rounded-full">{badge}</span>
+        )}
+      </span>
+      <svg
+        viewBox="0 0 24 24" width="14" height="14"
+        stroke="currentColor" strokeWidth="2.5" fill="none"
+        strokeLinecap="round" strokeLinejoin="round"
+        className={`text-text-muted transition-transform duration-200 shrink-0 ${openSection === sectionKey ? 'rotate-180' : ''}`}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  );
+
   return (
-    <article id="tool-qrbarcode" className="tool-card tool-card--wide active">
-      <h2>QR Code &amp; Barcode Generator</h2>
-      
-      {/* Primary Generator Tabs */}
-      <div className="generator-tabs">
-        <button 
-          className={`gen-tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
-          onClick={() => setActiveTab('qr')}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <rect x="7" y="7" width="3" height="3"></rect>
-            <rect x="14" y="7" width="3" height="3"></rect>
-            <rect x="7" y="14" width="3" height="3"></rect>
-          </svg>
-          QR Code Generator
-        </button>
-        <button 
-          className={`gen-tab-btn ${activeTab === 'barcode' ? 'active' : ''}`}
-          onClick={() => setActiveTab('barcode')}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="5" x2="3" y2="19"></line>
-            <line x1="6" y1="5" x2="6" y2="19"></line>
-            <line x1="10" y1="5" x2="10" y2="19"></line>
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="15" y1="5" x2="15" y2="19"></line>
-            <line x1="18" y1="5" x2="18" y2="19"></line>
-            <line x1="21" y1="5" x2="21" y2="19"></line>
-          </svg>
-          Barcode Generator
-        </button>
+    <Card id="tool-qrbarcode" variant="tool" size="wide" className="!gap-3 !p-4">
+      <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
+        <ToolHeader 
+          title="QR Code &amp; Barcode Generator" 
+        />
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant={activeTab === 'qr' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setActiveTab('qr')}
+            className="flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="3"></rect>
+              <rect x="14" y="7" width="3" height="3"></rect>
+              <rect x="7" y="14" width="3" height="3"></rect>
+            </svg>
+            <span>QR Code</span>
+          </Button>
+          <Button
+            variant={activeTab === 'barcode' ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setActiveTab('barcode')}
+            className="flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <line x1="3" y1="5" x2="3" y2="19"></line>
+              <line x1="6" y1="5" x2="6" y2="19"></line>
+              <line x1="10" y1="5" x2="10" y2="19"></line>
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="15" y1="5" x2="15" y2="19"></line>
+              <line x1="18" y1="5" x2="18" y2="19"></line>
+              <line x1="21" y1="5" x2="21" y2="19"></line>
+            </svg>
+            <span>Barcode</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="generator-layout">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-5">
         
         {/* ================= LEFT SIDE: CONFIG PANEL ================= */}
-        <div className="config-panel">
+        <div className="custom-scrollbar flex flex-col gap-4 pr-3 lg:col-span-3 lg:max-h-[400px] lg:overflow-y-auto">
           
           {activeTab === 'qr' ? (
             <>
               {/* QR TYPE SELECTOR */}
-              <div className="form-group">
-                <label>Content Type</label>
-                <div className="qr-type-grid">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-text-main">Content Type</span>
+                <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'url', name: 'Web Address' },
                     { id: 'text', name: 'Plain Text' },
-                    { id: 'wifi', name: 'WiFi Network' },
-                    { id: 'email', name: 'Email Address' },
-                    { id: 'phone', name: 'Phone Link' },
-                    { id: 'sms', name: 'SMS message' }
+                    { id: 'wifi', name: 'WiFi Network' }
                   ].map(t => (
                     <button 
                       key={t.id}
-                      className={`qr-type-btn ${qrType === t.id ? 'active' : ''}`}
+                      type="button"
+                      className={`px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer text-center ${
+                        qrType === t.id 
+                          ? 'bg-accent border-accent text-white shadow-sm' 
+                          : 'bg-card border-border text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
                       onClick={() => setQrType(t.id)}
                     >
                       {t.name}
@@ -832,61 +1309,44 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               </div>
 
               {/* DYNAMIC CONTENT INPUTS */}
-              <div className="content-inputs-card">
-                {qrType === 'url' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-url">URL Address</label>
-                    <input 
-                      id="qr-url"
-                      type="url"
-                      placeholder="https://example.com"
-                      value={qrUrl}
-                      onChange={(e) => setQrUrl(e.target.value)}
-                    />
-                  </div>
-                )}
-
+              <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 shadow-sm">
                 {qrType === 'text' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-text">Plain Text Content</label>
-                    <textarea 
-                      id="qr-text"
-                      rows="3"
-                      placeholder="Type your text content here..."
-                      value={qrText}
-                      onChange={(e) => setQrText(e.target.value)}
-                    />
-                  </div>
+                  <FieldInput 
+                    as="textarea"
+                    id="qr-text"
+                    label="Plain Text Content"
+                    rows="3"
+                    placeholder="Type your text content here..."
+                    value={qrText}
+                    onChange={(e) => setQrText(e.target.value)}
+                  />
                 )}
 
                 {qrType === 'wifi' && (
-                  <div className="wifi-inputs">
-                    <div className="form-group">
-                      <label htmlFor="wifi-ssid">Network Name (SSID)</label>
-                      <input 
-                        id="wifi-ssid"
-                        type="text"
-                        placeholder="SSID Name"
-                        value={qrWifiSsid}
-                        onChange={(e) => setQrWifiSsid(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="wifi-password">Password</label>
-                      <input 
-                        id="wifi-password"
-                        type="text"
-                        placeholder="Network Password"
-                        disabled={qrWifiAuth === 'nopass'}
-                        value={qrWifiPassword}
-                        onChange={(e) => setQrWifiPassword(e.target.value)}
-                      />
-                    </div>
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="wifi-auth">Security</label>
+                  <div className="flex flex-col gap-4">
+                    <FieldInput 
+                      id="wifi-ssid"
+                      type="text"
+                      label="Network Name (SSID)"
+                      placeholder="SSID Name"
+                      value={qrWifiSsid}
+                      onChange={(e) => setQrWifiSsid(e.target.value)}
+                    />
+                    <FieldInput 
+                      id="wifi-password"
+                      type="text"
+                      label="Password"
+                      placeholder="Network Password"
+                      disabled={qrWifiAuth === 'nopass'}
+                      value={qrWifiPassword}
+                      onChange={(e) => setQrWifiPassword(e.target.value)}
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="wifi-auth" className="text-sm font-semibold text-text-main">Security</label>
                         <select 
                           id="wifi-auth"
+                          className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                           value={qrWifiAuth}
                           onChange={(e) => setQrWifiAuth(e.target.value)}
                         >
@@ -895,10 +1355,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           <option value="nopass">Unsecured (No Password)</option>
                         </select>
                       </div>
-                      <div className="form-group col-checkbox">
-                        <label className="checkbox-label">
+                      <div className="flex items-center mt-6">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                           <input 
                             type="checkbox"
+                            className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
                             checked={qrWifiHidden}
                             onChange={(e) => setQrWifiHidden(e.target.checked)}
                           />
@@ -908,478 +1369,714 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     </div>
                   </div>
                 )}
-
-                {qrType === 'email' && (
-                  <div className="email-inputs">
-                    <div className="form-group">
-                      <label htmlFor="email-to">Recipient Email</label>
-                      <input 
-                        id="email-to"
-                        type="email"
-                        placeholder="hello@example.com"
-                        value={qrEmailTo}
-                        onChange={(e) => setQrEmailTo(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email-subject">Subject</label>
-                      <input 
-                        id="email-subject"
-                        type="text"
-                        placeholder="Subject Line"
-                        value={qrEmailSubject}
-                        onChange={(e) => setQrEmailSubject(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email-body">Body Text</label>
-                      <textarea 
-                        id="email-body"
-                        rows="3"
-                        placeholder="Email contents..."
-                        value={qrEmailBody}
-                        onChange={(e) => setQrEmailBody(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {qrType === 'phone' && (
-                  <div className="form-group">
-                    <label htmlFor="qr-phone">Phone Number</label>
-                    <input 
-                      id="qr-phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
-                      value={qrPhone}
-                      onChange={(e) => setQrPhone(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                {qrType === 'sms' && (
-                  <div className="sms-inputs">
-                    <div className="form-group">
-                      <label htmlFor="sms-phone">Phone Number</label>
-                      <input 
-                        id="sms-phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                        value={qrSmsPhone}
-                        onChange={(e) => setQrSmsPhone(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="sms-msg">Message</label>
-                      <textarea 
-                        id="sms-msg"
-                        rows="2"
-                        placeholder="Type SMS text..."
-                        value={qrSmsMessage}
-                        onChange={(e) => setQrSmsMessage(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* QR STYLE CUSTOMIZATION */}
-              <div className="section-divider">Style Customization</div>
-
-              <div className="style-card">
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-dots-style">Dots Style</label>
-                    <select id="qr-dots-style" value={qrDotsStyle} onChange={(e) => setQrDotsStyle(e.target.value)}>
-                      <option value="square">Classic Square</option>
-                      <option value="circle">Rounded Circles</option>
-                    </select>
-                  </div>
-                  <div className="form-group col">
-                    <label htmlFor="qr-eyes-style">Corner Eyes Style</label>
-                    <select id="qr-eyes-style" value={qrEyesStyle} onChange={(e) => setQrEyesStyle(e.target.value)}>
-                      <option value="square">Standard Square</option>
-                      <option value="rounded">Smooth Rounded</option>
-                      <option value="circle">Circular Rings</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Foreground Color Type</label>
-                  <div className="radio-group">
-                    <label className="radio-label">
-                      <input 
-                        type="radio" 
-                        name="fgType" 
-                        value="solid" 
-                        checked={qrFgType === 'solid'} 
-                        onChange={() => setQrFgType('solid')}
-                      />
-                      Solid Color
-                    </label>
-                    <label className="radio-label">
-                      <input 
-                        type="radio" 
-                        name="fgType" 
-                        value="gradient" 
-                        checked={qrFgType === 'gradient'} 
-                        onChange={() => setQrFgType('gradient')}
-                      />
-                      Gradient Color
-                    </label>
-                  </div>
-                </div>
-
-                {qrFgType === 'solid' ? (
-                  <div className="form-group">
-                    <label htmlFor="qr-fg-color">Foreground Color</label>
-                    <div className="color-picker-input">
-                      <input 
-                        id="qr-fg-color"
-                        type="color" 
-                        value={qrFgColor} 
-                        onChange={(e) => setQrFgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="color-hex-text"
-                        value={qrFgColor.toUpperCase()} 
-                        onChange={(e) => setQrFgColor(e.target.value)}
-                      />
+              {/* ── ACCORDION: STYLE CUSTOMIZATION ── */}
+              <AccordionHeader sectionKey="style" label="Style Customization" />
+              {openSection === 'style' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Dots Style</label>
+                      <select 
+                        id="qr-dots-style" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrDotsStyle} 
+                        onChange={(e) => setQrDotsStyle(e.target.value)}
+                      >
+                        <option value="square">Classic Square</option>
+                        <option value="circle">Rounded Circles</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Corner Eyes Style</label>
+                      <select 
+                        id="qr-eyes-style" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrEyesStyle} 
+                        onChange={(e) => setQrEyesStyle(e.target.value)}
+                      >
+                        <option value="square">Standard Square</option>
+                        <option value="rounded">Smooth Rounded</option>
+                        <option value="circle">Circular Rings</option>
+                      </select>
                     </div>
                   </div>
-                ) : (
-                  <div className="gradient-inputs">
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-1">Start Color</label>
-                        <div className="color-picker-input">
-                          <input 
-                            id="qr-grad-1"
-                            type="color" 
-                            value={qrGradColor1} 
-                            onChange={(e) => setQrGradColor1(e.target.value)}
-                          />
-                          <input 
-                            type="text" 
-                            className="color-hex-text"
-                            value={qrGradColor1.toUpperCase()} 
-                            onChange={(e) => setQrGradColor1(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-2">End Color</label>
-                        <div className="color-picker-input">
-                          <input 
-                            id="qr-grad-2"
-                            type="color" 
-                            value={qrGradColor2} 
-                            onChange={(e) => setQrGradColor2(e.target.value)}
-                          />
-                          <input 
-                            type="text" 
-                            className="color-hex-text"
-                            value={qrGradColor2.toUpperCase()} 
-                            onChange={(e) => setQrGradColor2(e.target.value)}
-                          />
-                        </div>
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color Type</span>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="fgType" 
+                          className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          value="solid" 
+                          checked={qrFgType === 'solid'} 
+                          onChange={() => setQrFgType('solid')}
+                        />
+                        Solid Color
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="fgType" 
+                          className="text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          value="gradient" 
+                          checked={qrFgType === 'gradient'} 
+                          onChange={() => setQrFgType('gradient')}
+                        />
+                        Gradient Color
+                      </label>
+                    </div>
+                  </div>
+
+                  {qrFgType === 'solid' ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="fg" color={qrFgColor} setter={setQrFgColor} defaultColor="#111827" />
+                        <input 
+                          id="qr-fg-color"
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                          value={qrFgColor} 
+                          onChange={handleColorInputChange(setQrFgColor)}
+                          onBlur={handleColorInputBlur(qrFgColor, setQrFgColor, '#111827')}
+                        />
                       </div>
                     </div>
-                    
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="qr-grad-style">Gradient Shape</label>
-                        <select id="qr-grad-style" value={qrGradType} onChange={(e) => setQrGradType(e.target.value)}>
-                          <option value="linear">Linear</option>
-                          <option value="radial">Radial</option>
-                        </select>
-                      </div>
-                      {qrGradType === 'linear' && (
-                        <div className="form-group col">
-                          <label htmlFor="qr-grad-angle">Angle ({qrGradAngle}°)</label>
-                          <input 
-                            id="qr-grad-angle"
-                            type="range" 
-                            min="0" 
-                            max="360" 
-                            step="15"
-                            value={qrGradAngle} 
-                            onChange={(e) => setQrGradAngle(e.target.value)}
-                          />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
+                          <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="grad1" color={qrGradColor1} setter={setQrGradColor1} defaultColor="#4f46e5" />
+                            <input 
+                              id="qr-grad-1"
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                              value={qrGradColor1} 
+                              onChange={handleColorInputChange(setQrGradColor1)}
+                              onBlur={handleColorInputBlur(qrGradColor1, setQrGradColor1, '#4f46e5')}
+                            />
+                          </div>
                         </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
+                          <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="grad2" color={qrGradColor2} setter={setQrGradColor2} defaultColor="#06b6d4" />
+                            <input 
+                              id="qr-grad-2"
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                              value={qrGradColor2} 
+                              onChange={handleColorInputChange(setQrGradColor2)}
+                              onBlur={handleColorInputBlur(qrGradColor2, setQrGradColor2, '#06b6d4')}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Gradient Shape</label>
+                          <select 
+                            id="qr-grad-style" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrGradType} 
+                            onChange={(e) => setQrGradType(e.target.value)}
+                          >
+                            <option value="linear">Linear</option>
+                            <option value="radial">Radial</option>
+                          </select>
+                        </div>
+                        {qrGradType === 'linear' && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">Angle ({qrGradAngle}°)</label>
+                            <input 
+                              id="qr-grad-angle"
+                              type="range" 
+                              min="0" 
+                              max="360" 
+                              step="15"
+                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                              value={qrGradAngle} 
+                              onChange={(e) => setQrGradAngle(e.target.value)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bg" color={qrBgColor} setter={setQrBgColor} defaultColor="#ffffff" />
+                        <input 
+                          id="qr-bg-color"
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                          disabled={qrBgTransparent}
+                          value={qrBgColor} 
+                          onChange={handleColorInputChange(setQrBgColor)}
+                          onBlur={handleColorInputBlur(qrBgColor, setQrBgColor, '#ffffff')}
+                          style={{ opacity: qrBgTransparent ? 0.4 : 1 }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center mt-6">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          checked={qrBgTransparent}
+                          onChange={(e) => setQrBgTransparent(e.target.checked)}
+                        />
+                        Transparent BG
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">Error Correction</label>
+                      <select 
+                        id="qr-error-correct" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        disabled={logoImg !== null}
+                        value={logoImg ? 'H' : qrErrorCorrection} 
+                        onChange={(e) => setQrErrorCorrection(e.target.value)}
+                      >
+                        <option value="L">Low (7% recovery)</option>
+                        <option value="M">Medium (15% recovery)</option>
+                        <option value="Q">Quartile (25% recovery)</option>
+                        <option value="H">High (30% recovery)</option>
+                      </select>
+                      {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">Locked to HIGH (H) to support center logo.</span>}
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Resolution</label>
+                      <select 
+                        id="qr-export-size" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrExportSize} 
+                        onChange={(e) => setQrExportSize(Number(e.target.value))}
+                      >
+                        <option value={256}>256 x 256 px</option>
+                        <option value={512}>512 x 512 px</option>
+                        <option value={1024}>1024 x 1024 px</option>
+                        <option value={2048}>2048 x 2048 px</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ACCORDION: EMBED LOGO ── */}
+              <AccordionHeader sectionKey="logo" label="Embed Logo / Image" badge={logoImg ? '1 logo' : null} />
+              {openSection === 'logo' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Upload Logo</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label htmlFor="logo-file-picker">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm select-none">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          {logoFile ? 'Change Logo' : 'Choose Logo'}
+                        </span>
+                      </label>
+                      <input 
+                        id="logo-file-picker"
+                        type="file" 
+                        accept="image/png, image/jpeg, image/svg+xml"
+                        onChange={handleLogoChange}
+                        className="hidden"
+                      />
+                      {logoFile && (
+                        <span className="bg-app border border-border text-text-muted px-2.5 py-1 rounded-md text-xs font-mono max-w-[200px] truncate">
+                          {logoFile.name}
+                        </span>
+                      )}
+                      {logoImg && (
+                        <Button variant="secondary" size="sm" className="text-red-500 hover:text-red-600 font-bold ml-auto" onClick={removeLogo}>
+                          Remove Logo
+                        </Button>
                       )}
                     </div>
                   </div>
-                )}
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-bg-color">Background Color</label>
-                    <div className="color-picker-input" style={{ opacity: qrBgTransparent ? 0.4 : 1 }}>
-                      <input 
-                        id="qr-bg-color"
-                        type="color" 
-                        disabled={qrBgTransparent}
-                        value={qrBgColor} 
-                        onChange={(e) => setQrBgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="color-hex-text"
-                        disabled={qrBgTransparent}
-                        value={qrBgColor.toUpperCase()} 
-                        onChange={(e) => setQrBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group col col-checkbox">
-                    <label className="checkbox-label" style={{ marginTop: '28px' }}>
-                      <input 
-                        type="checkbox"
-                        checked={qrBgTransparent}
-                        onChange={(e) => setQrBgTransparent(e.target.checked)}
-                      />
-                      Transparent BG
-                    </label>
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="qr-error-correct">Error Correction</label>
-                    <select 
-                      id="qr-error-correct" 
-                      disabled={logoImg !== null}
-                      value={logoImg ? 'H' : qrErrorCorrection} 
-                      onChange={(e) => setQrErrorCorrection(e.target.value)}
-                    >
-                      <option value="L">Low (7% recovery)</option>
-                      <option value="M">Medium (15% recovery)</option>
-                      <option value="Q">Quartile (25% recovery)</option>
-                      <option value="H">High (30% recovery)</option>
-                    </select>
-                    {logoImg && <span className="small note warning-note">Locked to HIGH (H) to support center logo.</span>}
-                  </div>
-                  <div className="form-group col">
-                    <label htmlFor="qr-export-size">Resolution</label>
-                    <select id="qr-export-size" value={qrExportSize} onChange={(e) => setQrExportSize(Number(e.target.value))}>
-                      <option value={256}>256 x 256 px</option>
-                      <option value={512}>512 x 512 px</option>
-                      <option value={1024}>1024 x 1024 px</option>
-                      <option value={2048}>2048 x 2048 px</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* QR LOGO UPLOAD */}
-              <div className="section-divider">Embed Logo / Image</div>
-              
-              <div className="logo-card">
-                <div className="form-group">
-                  <label>Upload Logo</label>
-                  <div className="logo-upload-controls">
-                    <label htmlFor="logo-file-picker" className="btn btn-secondary btn-small file-upload-btn">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                      </svg>
-                      {logoFile ? 'Change Logo' : 'Choose Logo'}
-                    </label>
-                    <input 
-                      id="logo-file-picker"
-                      type="file" 
-                      accept="image/png, image/jpeg, image/svg+xml"
-                      onChange={handleLogoChange}
-                      style={{ display: 'none' }}
-                    />
-                    {logoFile && (
-                      <span className="uploaded-file-name">
-                        {logoFile.name}
-                      </span>
-                    )}
-                    {logoImg && (
-                      <button className="btn btn-secondary btn-small danger-text" style={{ marginLeft: 'auto' }} onClick={removeLogo}>
-                        Remove Logo
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {logoImg && (
-                  <div className="logo-details">
-                    <div className="row">
-                      <div className="form-group col">
-                        <label htmlFor="logo-scale">Logo Size ({Math.round(logoScale * 100)}%)</label>
-                        <input 
-                          id="logo-scale"
-                          type="range" 
-                          min="0.10" 
-                          max="0.25" 
-                          step="0.01"
-                          value={logoScale} 
-                          onChange={(e) => setLogoScale(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group col">
-                        <label htmlFor="logo-bg-shape">Logo Background</label>
-                        <select id="logo-bg-shape" value={logoBgShape} onChange={(e) => setLogoBgShape(e.target.value)}>
-                          <option value="none">None (Overlaid)</option>
-                          <option value="circle">White Circle</option>
-                          <option value="square">White Square</option>
-                        </select>
+                  {logoImg && (
+                    <div className="border-t border-border pt-4 mt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Size ({Math.round(logoScale * 100)}%)</label>
+                          <input 
+                            id="logo-scale"
+                            type="range" 
+                            min="0.10" 
+                            max="0.25" 
+                            step="0.01"
+                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                            value={logoScale} 
+                            onChange={(e) => setLogoScale(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Background</label>
+                          <select 
+                            id="logo-bg-shape" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={logoBgShape} 
+                            onChange={(e) => setLogoBgShape(e.target.value)}
+                          >
+                            <option value="none">None (Overlaid)</option>
+                            <option value="circle">White Circle</option>
+                            <option value="square">White Square</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── ACCORDION: TEXT OVERLAY ── */}
+              <AccordionHeader sectionKey="text" label="Text Overlay & Labels" badge={qrTextLabelMode !== 'none' ? qrTextLabelMode : null} />
+              {openSection === 'text' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
+                  <FieldInput 
+                    id="qr-text-label-input"
+                    type="text"
+                    label="Text Content (Words)"
+                    placeholder="e.g., SCAN ME, JOIN NOW"
+                    value={qrTextLabel}
+                    onChange={(e) => setQrTextLabel(e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-text-label-mode" className="text-xs font-bold text-text-muted uppercase tracking-wider">Display Mode</label>
+                      <select 
+                        id="qr-text-label-mode" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        value={qrTextLabelMode} 
+                        onChange={(e) => setQrTextLabelMode(e.target.value)}
+                      >
+                        <option value="none">None (Disabled)</option>
+                        <option value="label">External Label Only</option>
+                        <option value="embedded">Embedded Text Only</option>
+                        <option value="both">Both (Label + Embedded)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="qr-text-font" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Family</label>
+                      <select 
+                        id="qr-text-font" 
+                        className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                        disabled={qrTextLabelMode === 'none'}
+                        value={qrTextFont} 
+                        onChange={(e) => setQrTextFont(e.target.value)}
+                      >
+                        <option value="sans-serif">Sans-Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Verdana">Verdana</option>
+                      </select>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div style={{ marginTop: '24px' }}>
-                <button className="btn btn-secondary" onClick={resetQR} style={{ width: '100%' }}>
+
+                  {qrTextLabelMode !== 'none' && (
+                    <div className="border-t border-border pt-4 flex flex-col gap-4">
+                      
+                      {/* Size and Color */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({qrTextSize}px)</label>
+                          <input 
+                            id="qr-text-size"
+                            type="range" 
+                            min="12" 
+                            max="64" 
+                            step="1"
+                            className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                            value={qrTextSize} 
+                            onChange={(e) => setQrTextSize(parseInt(e.target.value))}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Text Color</label>
+                          <div className="flex items-center gap-2">
+                            <ColorPickerSwatch pickerKey="text" color={qrTextColor} setter={setQrTextColor} defaultColor="#111827" />
+                            <input 
+                              id="qr-text-color"
+                              type="text" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                              value={qrTextColor} 
+                              onChange={handleColorInputChange(setQrTextColor)}
+                              onBlur={handleColorInputBlur(qrTextColor, setQrTextColor, '#111827')}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Weight and Style */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-weight" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Weight</label>
+                          <select 
+                            id="qr-text-weight" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrTextWeight} 
+                            onChange={(e) => setQrTextWeight(e.target.value)}
+                          >
+                            <option value="normal">Normal</option>
+                            <option value="bold">Bold</option>
+                            <option value="bolder">Extra Bold</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label htmlFor="qr-text-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Style</label>
+                          <select 
+                            id="qr-text-style" 
+                            className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                            value={qrTextStyle} 
+                            onChange={(e) => setQrTextStyle(e.target.value)}
+                          >
+                            <option value="normal">Normal</option>
+                            <option value="italic">Italic</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Positions */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4">
+                        {(qrTextLabelMode === 'label' || qrTextLabelMode === 'both') && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-label-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Label Position</label>
+                            <select 
+                              id="qr-label-pos" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                              value={qrLabelPosition} 
+                              onChange={(e) => setQrLabelPosition(e.target.value)}
+                            >
+                              <option value="bottom">Below QR Code</option>
+                              <option value="top">Above QR Code</option>
+                            </select>
+                          </div>
+                        )}
+                        {(qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-embed-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Embedded Position</label>
+                            <select 
+                              id="qr-embed-pos" 
+                              className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
+                              value={qrEmbeddedPosition} 
+                              onChange={(e) => setQrEmbeddedPosition(e.target.value)}
+                            >
+                              <option value="center">Center</option>
+                              <option value="top">Top Third</option>
+                              <option value="bottom">Bottom Third</option>
+                              <option value="custom">Custom Coordinates</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Custom coordinates offset */}
+                      {qrEmbeddedPosition === 'custom' && (qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-text-x" className="text-xs font-bold text-text-muted uppercase tracking-wider">Horizontal Position ({qrTextXOffset}%)</label>
+                            <input 
+                              id="qr-text-x"
+                              type="range" 
+                              min="-50" 
+                              max="50" 
+                              step="1"
+                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                              value={qrTextXOffset} 
+                              onChange={(e) => setQrTextXOffset(parseInt(e.target.value))}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="qr-text-y" className="text-xs font-bold text-text-muted uppercase tracking-wider">Vertical Position ({qrTextYOffset}%)</label>
+                            <input 
+                              id="qr-text-y"
+                              type="range" 
+                              min="-50" 
+                              max="50" 
+                              step="1"
+                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                              value={qrTextYOffset} 
+                              onChange={(e) => setQrTextYOffset(parseInt(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Background block settings */}
+                      <div className="border-t border-border pt-4 flex flex-col gap-3">
+                        <div className="flex items-center">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                              checked={qrTextBgEnabled}
+                              onChange={(e) => setQrTextBgEnabled(e.target.checked)}
+                            />
+                            Draw Background Behind Text
+                          </label>
+                        </div>
+
+                        {qrTextBgEnabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                              <div className="flex items-center gap-2">
+                                <ColorPickerSwatch pickerKey="textBg" color={qrTextBgColor} setter={setQrTextBgColor} defaultColor="#ffffff" />
+                                <input 
+                                  id="qr-text-bg-color"
+                                  type="text" 
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                                  value={qrTextBgColor} 
+                                  onChange={handleColorInputChange(setQrTextBgColor)}
+                                  onBlur={handleColorInputBlur(qrTextBgColor, setQrTextBgColor, '#ffffff')}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-bg-pad" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Padding ({qrTextBgPadding}px)</label>
+                              <input 
+                                id="qr-text-bg-pad"
+                                type="range" 
+                                min="0" 
+                                max="30" 
+                                step="1"
+                                className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                                value={qrTextBgPadding} 
+                                onChange={(e) => setQrTextBgPadding(parseInt(e.target.value))}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Stroke Outline settings */}
+                      <div className="border-t border-border pt-4 flex flex-col gap-3">
+                        <div className="flex items-center">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                              checked={qrTextStrokeEnabled}
+                              onChange={(e) => setQrTextStrokeEnabled(e.target.checked)}
+                            />
+                            Add Text Outline (Stroke)
+                          </label>
+                        </div>
+
+                        {qrTextStrokeEnabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Color</label>
+                              <div className="flex items-center gap-2">
+                                <ColorPickerSwatch pickerKey="textStroke" color={qrTextStrokeColor} setter={setQrTextStrokeColor} defaultColor="#ffffff" />
+                                <input 
+                                  id="qr-text-stroke-color"
+                                  type="text" 
+                                  className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                                  value={qrTextStrokeColor} 
+                                  onChange={handleColorInputChange(setQrTextStrokeColor)}
+                                  onBlur={handleColorInputBlur(qrTextStrokeColor, setQrTextStrokeColor, '#ffffff')}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <label htmlFor="qr-text-stroke-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Thickness ({qrTextStrokeWidth}px)</label>
+                              <input 
+                                id="qr-text-stroke-width"
+                                type="range" 
+                                min="1" 
+                                max="8" 
+                                step="1"
+                                className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2"
+                                value={qrTextStrokeWidth} 
+                                onChange={(e) => setQrTextStrokeWidth(parseInt(e.target.value))}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-2">
+                <Button variant="secondary" className="w-full" onClick={resetQR}>
                   Reset QR Settings to Default
-                </button>
+                </Button>
               </div>
             </>
           ) : (
             // ================= BARCODE INPUTS & STYLING =================
             <>
-              <div className="form-group">
-                <label htmlFor="barcode-val">Barcode Value</label>
-                <input 
+              <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 shadow-sm">
+                <FieldInput 
                   id="barcode-val"
                   type="text" 
+                  label="Barcode Value"
                   value={barcodeValue} 
                   onChange={(e) => setBarcodeValue(e.target.value)}
+                  error={barcodeError}
                 />
-                {barcodeError && <span className="error-text">{barcodeError}</span>}
+
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label htmlFor="barcode-format" className="text-sm font-semibold text-text-main">Format</label>
+                  <select 
+                    id="barcode-format" 
+                    className="bg-app border border-border rounded-lg px-3 py-2.5 text-sm text-text-main outline-none focus:border-accent"
+                    value={barcodeFormat} 
+                    onChange={(e) => setBarcodeFormat(e.target.value)}
+                  >
+                    <option value="CODE128">Code 128 (Standard ASCII)</option>
+                    <option value="EAN13">EAN-13 (13 Digits)</option>
+                    <option value="EAN8">EAN-8 (8 Digits)</option>
+                    <option value="UPC">UPC-A (12 Digits)</option>
+                    <option value="CODE39">Code 39 (Alphanumeric)</option>
+                    <option value="ITF">ITF (Interleaved 2 of 5)</option>
+                    <option value="CODABAR">Codabar</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="barcode-format">Format</label>
-                <select id="barcode-format" value={barcodeFormat} onChange={(e) => setBarcodeFormat(e.target.value)}>
-                  <option value="CODE128">Code 128 (Standard ASCII)</option>
-                  <option value="EAN13">EAN-13 (13 Digits)</option>
-                  <option value="EAN8">EAN-8 (8 Digits)</option>
-                  <option value="UPC">UPC-A (12 Digits)</option>
-                  <option value="CODE39">Code 39 (Alphanumeric)</option>
-                  <option value="ITF">ITF (Interleaved 2 of 5)</option>
-                  <option value="CODABAR">Codabar</option>
-                </select>
-              </div>
-
-              <div className="section-divider">Barcode Styling</div>
-
-              <div className="style-card">
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-line-color">Line Color</label>
-                    <div className="color-picker-input">
-                      <input 
-                        id="bc-line-color"
-                        type="color" 
-                        value={barcodeLineColor} 
-                        onChange={(e) => setBarcodeLineColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="color-hex-text"
-                        value={barcodeLineColor.toUpperCase()} 
-                        onChange={(e) => setBarcodeLineColor(e.target.value)}
-                      />
+              <AccordionHeader sectionKey="barcode-style" label="Barcode Styling" />
+              {openSection === 'barcode-style' && (
+                <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bcLine" color={barcodeLineColor} setter={setBarcodeLineColor} defaultColor="#111827" />
+                        <input 
+                          id="bc-line-color"
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                          value={barcodeLineColor} 
+                          onChange={handleColorInputChange(setBarcodeLineColor)}
+                          onBlur={handleColorInputBlur(barcodeLineColor, setBarcodeLineColor, '#111827')}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerSwatch pickerKey="bcBg" color={barcodeBgColor} setter={setBarcodeBgColor} defaultColor="#ffffff" />
+                        <input 
+                          id="bc-bg-color"
+                          type="text" 
+                          className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent font-mono w-full uppercase"
+                          value={barcodeBgColor} 
+                          onChange={handleColorInputChange(setBarcodeBgColor)}
+                          onBlur={handleColorInputBlur(barcodeBgColor, setBarcodeBgColor, '#ffffff')}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="form-group col">
-                    <label htmlFor="bc-bg-color">Background Color</label>
-                    <div className="color-picker-input">
-                      <input 
-                        id="bc-bg-color"
-                        type="color" 
-                        value={barcodeBgColor} 
-                        onChange={(e) => setBarcodeBgColor(e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        className="color-hex-text"
-                        value={barcodeBgColor.toUpperCase()} 
-                        onChange={(e) => setBarcodeBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-width">Bar Width ({barcodeWidth}px)</label>
-                    <input 
-                      id="bc-width"
-                      type="range" 
-                      min="1" 
-                      max="4" 
-                      step="1"
-                      value={barcodeWidth} 
-                      onChange={(e) => setBarcodeWidth(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group col">
-                    <label htmlFor="bc-height">Bar Height ({barcodeHeight}px)</label>
-                    <input 
-                      id="bc-height"
-                      type="range" 
-                      min="40" 
-                      max="150" 
-                      step="5"
-                      value={barcodeHeight} 
-                      onChange={(e) => setBarcodeHeight(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="form-group col col-checkbox">
-                    <label className="checkbox-label" style={{ marginTop: '28px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Width ({barcodeWidth}px)</label>
                       <input 
-                        type="checkbox"
-                        checked={barcodeDisplayValue}
-                        onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
-                      />
-                      Show Text Label
-                    </label>
-                  </div>
-                  {barcodeDisplayValue && (
-                    <div className="form-group col">
-                      <label htmlFor="bc-font-size">Font Size ({barcodeFontSize}px)</label>
-                      <input 
-                        id="bc-font-size"
+                        id="bc-width"
                         type="range" 
-                        min="10" 
-                        max="24" 
+                        min="1" 
+                        max="4" 
                         step="1"
-                        value={barcodeFontSize} 
-                        onChange={(e) => setBarcodeFontSize(e.target.value)}
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeWidth} 
+                        onChange={(e) => setBarcodeWidth(parseInt(e.target.value))}
                       />
                     </div>
-                  )}
-                </div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Height ({barcodeHeight}px)</label>
+                      <input 
+                        id="bc-height"
+                        type="range" 
+                        min="40" 
+                        max="150" 
+                        step="5"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeHeight} 
+                        onChange={(e) => setBarcodeHeight(parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
 
-                <div className="row">
-                  <div className="form-group col">
-                    <label htmlFor="bc-margin">Outer Margin ({barcodeMargin}px)</label>
-                    <input 
-                      id="bc-margin"
-                      type="range" 
-                      min="0" 
-                      max="40" 
-                      step="5"
-                      value={barcodeMargin} 
-                      onChange={(e) => setBarcodeMargin(e.target.value)}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center mt-6">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
+                          checked={barcodeDisplayValue}
+                          onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
+                        />
+                        Show Text Label
+                      </label>
+                    </div>
+                    {barcodeDisplayValue && (
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                        <input 
+                          id="bc-font-size"
+                          type="range" 
+                          min="10" 
+                          max="24" 
+                          step="1"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                          value={barcodeFontSize} 
+                          onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outer Margin ({barcodeMargin}px)</label>
+                      <input 
+                        id="bc-margin"
+                        type="range" 
+                        min="0" 
+                        max="40" 
+                        step="5"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeMargin} 
+                        onChange={(e) => setBarcodeMargin(parseInt(e.target.value))}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div style={{ marginTop: '24px' }}>
-                <button className="btn btn-secondary" onClick={resetBarcode} style={{ width: '100%' }}>
+              )}
+
+              <div className="mt-2">
+                <Button variant="secondary" className="w-full" onClick={resetBarcode}>
                   Reset Barcode Settings to Default
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -1387,32 +2084,32 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
         {/* ================= RIGHT SIDE: STICKY PREVIEW CARD ================= */}
-        <div className="preview-panel">
-          <div className="sticky-preview-card">
-            <h3>Live Preview</h3>
+        <div className="flex flex-col gap-3 lg:sticky lg:top-3 lg:col-span-2">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+            <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">Live Preview</h3>
 
-            <div className="preview-area-container">
+            <div className="flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
               {activeTab === 'qr' ? (
-                <div className="canvas-wrapper">
+                <div className="flex items-center justify-center h-full w-full">
                   {!getQRValue() ? (
-                    <div className="preview-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <rect x="7" y="7" width="3" height="3"></rect>
                         <rect x="14" y="7" width="3" height="3"></rect>
                         <rect x="7" y="14" width="3" height="3"></rect>
                       </svg>
-                      <p>Enter content to generate QR Code</p>
+                      <p className="text-xs font-medium">Enter content to generate QR Code</p>
                     </div>
                   ) : (
-                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="preview-element" />
+                    <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="max-h-full max-w-full bg-transparent border border-border/30 rounded-lg shadow-sm" />
                   )}
                 </div>
               ) : (
-                <div className="canvas-wrapper barcode-wrapper">
+                <div className="flex items-center justify-center h-full w-full">
                   {!barcodeValue ? (
-                    <div className="preview-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-text-muted/60 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 animate-pulse">
                         <line x1="3" y1="5" x2="3" y2="19"></line>
                         <line x1="6" y1="5" x2="6" y2="19"></line>
                         <line x1="10" y1="5" x2="10" y2="19"></line>
@@ -1421,63 +2118,57 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <line x1="18" y1="5" x2="18" y2="19"></line>
                         <line x1="21" y1="5" x2="21" y2="19"></line>
                       </svg>
-                      <p>Enter value to generate Barcode</p>
+                      <p className="text-xs font-medium">Enter value to generate Barcode</p>
                     </div>
                   ) : barcodeError ? (
-                    <div className="preview-error-placeholder">
-                      <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex flex-col items-center gap-2 text-red-500/70 text-center">
+                      <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-80">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                       </svg>
-                      <p>{barcodeError}</p>
+                      <p className="text-xs font-semibold">{barcodeError}</p>
                     </div>
                   ) : (
-                    <>
-                      <canvas ref={barcodeCanvasRef} className="preview-element barcode-canvas" />
+                    <div className="max-h-full max-w-full flex justify-center overflow-x-auto p-1 bg-white rounded-lg">
+                      <canvas ref={barcodeCanvasRef} className="max-h-full max-w-full object-contain" />
                       {/* Hidden SVG reference specifically for high-fidelity export */}
                       <svg ref={barcodeSvgRef} style={{ display: 'none' }} />
-                    </>
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
             {/* ACTION BUTTONS */}
-            <div className="preview-actions">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {activeTab === 'qr' ? (
                 <>
-                  <button className="btn btn-primary" disabled={!getQRValue()} onClick={handleQrDownloadPNG}>
+                  <Button variant="primary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadPNG} className="w-full">
                     Download PNG
-                  </button>
-                  <button className="btn btn-secondary" disabled={!getQRValue()} onClick={handleQrDownloadSVG}>
-                    Download SVG (Vector)
-                  </button>
-                  <button className={`btn btn-secondary btn-copy ${copied ? 'copied' : ''}`} disabled={!getQRValue()} onClick={handleQrCopy}>
-                    {copied ? 'Copied Image!' : 'Copy to Clipboard'}
-                  </button>
+                  </Button>
+                  <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadSVG} className="w-full">
+                    Download SVG
+                  </Button>
+                  <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrCopy} className="col-span-2 w-full sm:col-span-1">
+                    {copied ? 'Copied!' : 'Copy Image'}
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-primary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG}>
+                  <Button variant="primary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG} className="w-full">
                     Download PNG
-                  </button>
-                  <button className="btn btn-secondary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG}>
-                    Download SVG (Vector)
-                  </button>
+                  </Button>
+                  <Button variant="secondary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG} className="w-full">
+                    Download SVG
+                  </Button>
                 </>
               )}
             </div>
-            
-            <p className="small note center-text">
-              {activeTab === 'qr' 
-                ? "Scannable with any mobile camera. Transparent background works best on light sites."
-                : "Vector SVG format provides crisp line borders for barcode scanners at any size."}
-            </p>
           </div>
         </div>
 
       </div>
-    </article>
+    </Card>
   );
 }

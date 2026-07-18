@@ -11,33 +11,57 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
   const canEdit = item.status === 'ready' || item.status === 'error';
 
   return (
-    <li className="mediasplit-queue-item">
+    <li className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-card relative">
       {/* Top right actions & status */}
-      <div className="mediasplit-queue-item-actions">
-        {item.status === 'ready' && <span className="mediasplit-status-badge status-ready">Ready</span>}
-        {isBusy && <span className="mediasplit-status-badge status-processing">Processing {item.progress}%</span>}
-        {item.status === 'done' && <span className="mediasplit-status-badge status-done">Done</span>}
-        {item.status === 'error' && <span className="mediasplit-status-badge status-error">Error</span>}
-        
+      <div className="absolute top-5 right-5 flex items-center gap-3">
+        {item.status === 'ready' && (
+          <span className="inline-flex items-center px-2.5 py-1 text-[0.725rem] font-bold rounded-full uppercase tracking-[0.05em] leading-none bg-app text-text-muted border border-border">
+            Ready
+          </span>
+        )}
+        {isBusy && (
+          <span className="inline-flex items-center px-2.5 py-1 text-[0.725rem] font-bold rounded-full uppercase tracking-[0.05em] leading-none bg-accent/10 text-accent border border-accent/20 animate-[mediasplit-pulse_2.5s_infinite]">
+            Processing {item.progress}%
+          </span>
+        )}
+        {item.status === 'done' && (
+          <span className="inline-flex items-center px-2.5 py-1 text-[0.725rem] font-bold rounded-full uppercase tracking-[0.05em] leading-none bg-[rgba(16,185,129,0.1)] text-[#10b981] border border-[rgba(16,185,129,0.2)]">
+            Done
+          </span>
+        )}
+        {item.status === 'error' && (
+          <span className="inline-flex items-center px-2.5 py-1 text-[0.725rem] font-bold rounded-full uppercase tracking-[0.05em] leading-none bg-red-50 text-red-500 border border-red-200">
+            Error
+          </span>
+        )}
         <button
           type="button"
           onClick={() => onRemove(item.id)}
           disabled={isBusy}
-          className="mediasplit-btn-danger"
+          className="inline-flex items-center justify-center px-3 py-1.5 text-[0.8rem] font-semibold rounded-md border border-transparent cursor-pointer bg-transparent text-text-muted transition-all duration-150 hover:enabled:bg-red-50 hover:enabled:text-red-500 disabled:text-text-muted disabled:cursor-not-allowed"
         >
           Remove
         </button>
       </div>
 
-      <div className="mediasplit-queue-item-header">
-        <video src={sourcePreviewURL} controls muted className="mediasplit-queue-item-preview" />
-        <div className="mediasplit-queue-item-meta">
-          <p className="mediasplit-queue-item-filename">{item.file.name}</p>
-          <p className="mediasplit-queue-item-size">{formatBytes(item.file.size)}</p>
+      <div className="flex items-center gap-4 pr-[180px]">
+        <video
+          src={sourcePreviewURL}
+          controls
+          muted
+          className="w-32 h-[4.5rem] rounded-md object-cover bg-app border border-border"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="m-0 mb-1 text-[0.95rem] font-semibold text-text-main overflow-hidden text-ellipsis whitespace-nowrap">
+            {item.file.name}
+          </p>
+          <p className="m-0 text-[0.8rem] text-text-muted">
+            {formatBytes(item.file.size)}
+          </p>
         </div>
       </div>
 
-      <div className="mediasplit-queue-item-formats">
+      <div className="flex gap-6 flex-wrap p-4 bg-app rounded-lg">
         <MediaSeparatorFormatSelect
           label="Audio Output Format"
           value={item.audioFormat}
@@ -55,18 +79,22 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
       </div>
 
       {isBusy && (
-        <div className="mediasplit-queue-item-progress">
-          <progress value={item.progress} max={100} />
+        <div className="flex items-center gap-3">
+          <progress
+            value={item.progress}
+            max={100}
+            className="flex-1 h-2 rounded overflow-hidden border-none [&::-webkit-progress-bar]:bg-border [&::-webkit-progress-value]:bg-accent [&::-moz-progress-bar]:bg-accent"
+          />
         </div>
       )}
 
       {item.status === 'error' && (
-        <div className="mediasplit-queue-item-error">
+        <div className="flex items-center gap-3 text-red-500 bg-red-50/50 px-3 py-2 rounded-md border border-red-100">
           <span>Error: {item.error}</span>
           <button
             type="button"
             onClick={() => onRetry(item.id)}
-            className="mediasplit-btn-secondary"
+            className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-border cursor-pointer bg-card text-text-main transition-all duration-150 hover:bg-app hover:border-border-hover"
           >
             Retry
           </button>
@@ -74,18 +102,33 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
       )}
 
       {item.status === 'done' && (
-        <div className="mediasplit-queue-item-results">
-          <div className="mediasplit-queue-item-result result-audio">
-            <p className="mediasplit-queue-item-result-title">Audio Track</p>
-            <MediaSeparatorWaveform audioURL={item.audioURL} className="mediasplit-waveform-container" />
-            <a href={item.audioURL} download={buildDownloadName(item, 'audio')} className="mediasplit-download-link">
+        <div className="flex flex-col gap-6 pt-4 border-t border-dashed border-border">
+          <div className="flex flex-col gap-2 w-full">
+            <p className="m-0 mb-1 text-[0.85rem] font-bold text-text-main uppercase tracking-[0.05em]">Audio Track</p>
+            <MediaSeparatorWaveform
+              audioURL={item.audioURL}
+              className="bg-app border border-border rounded-lg p-3"
+            />
+            <a
+              href={item.audioURL}
+              download={buildDownloadName(item, 'audio')}
+              className="inline-flex items-center justify-center py-2 px-4 text-[0.85rem] font-semibold no-underline rounded-md bg-accent-light text-accent-hover border border-transparent transition-all duration-200 text-center hover:bg-accent hover:text-white"
+            >
               Download Audio
             </a>
           </div>
-          <div className="mediasplit-queue-item-result result-video">
-            <p className="mediasplit-queue-item-result-title">Silent Video</p>
-            <video src={item.videoURL} controls className="mediasplit-result-video" />
-            <a href={item.videoURL} download={buildDownloadName(item, 'video')} className="mediasplit-download-link">
+          <div className="flex flex-col gap-2 w-full max-w-[560px] mx-auto items-center">
+            <p className="m-0 mb-1 text-[0.85rem] font-bold text-text-main uppercase tracking-[0.05em]">Silent Video</p>
+            <video
+              src={item.videoURL}
+              controls
+              className="w-full h-[315px] bg-black rounded-lg border border-border object-contain shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            />
+            <a
+              href={item.videoURL}
+              download={buildDownloadName(item, 'video')}
+              className="inline-flex items-center justify-center py-2 px-4 text-[0.85rem] font-semibold no-underline rounded-md bg-accent-light text-accent-hover border border-transparent transition-all duration-200 text-center hover:bg-accent hover:text-white w-full max-w-[240px]"
+            >
               Download Video
             </a>
           </div>

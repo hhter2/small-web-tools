@@ -99,12 +99,13 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
   return (
     <div className={className}>
       <audio ref={audioRef} src={audioURL} onEnded={() => setIsPlaying(false)} />
-      <div className="media-separator-waveform-row">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={togglePlay}
           disabled={!peaks || !peaks.length}
           title={isPlaying ? 'Pause' : 'Play'}
+          className="bg-accent text-white border-none rounded-full w-8 h-8 inline-flex items-center justify-center cursor-pointer transition-colors duration-200 flex-shrink-0 hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPlaying ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -122,16 +123,16 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
           width={1000}
           height={80}
           onClick={seekTo}
-          className="media-separator-waveform-canvas"
+          className="h-12 flex-1 bg-transparent text-accent min-w-0"
           style={{ cursor: peaks && peaks.length ? 'pointer' : 'default' }}
         />
-        <span className="media-separator-waveform-time">
+        <span className="font-mono text-xs text-text-muted whitespace-nowrap">
           {formatTime(duration * progress)} / {formatTime(duration)}
         </span>
       </div>
-      {peaks === null && <p className="media-separator-waveform-status">Analyzing audio waveform...</p>}
+      {peaks === null && <p className="mt-1.5 text-xs text-text-muted italic">Analyzing audio waveform...</p>}
       {peaks && peaks.length === 0 && (
-        <p className="media-separator-waveform-status">This browser cannot decode this format to display the waveform, but downloads are unaffected.</p>
+        <p className="mt-1.5 text-xs text-text-muted italic">This browser cannot decode this format to display the waveform, but downloads are unaffected.</p>
       )}
     </div>
   );

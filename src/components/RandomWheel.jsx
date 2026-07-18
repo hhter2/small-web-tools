@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 const colors = [
   "hsl(224, 76%, 60%)",  // indigo
@@ -182,6 +186,15 @@ export default function RandomWheel() {
     drawWheel(rotationAngle);
   }, [items, rotationAngle]);
 
+  // Cleanup animation frame only on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
   // Handle key listeners and redraw on theme change
   useEffect(() => {
     // Redraw on theme toggles
@@ -225,9 +238,6 @@ export default function RandomWheel() {
         toggleBtn.removeEventListener("click", handleThemeChange);
       }
       window.removeEventListener("keydown", handleKeyDown);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, [items, isSpinning, allowDuplicate]);
 
@@ -255,11 +265,13 @@ export default function RandomWheel() {
     const targetAngle = 2 * Math.PI * spinsCount - targetSectorCenter;
 
     const startAngleVal = rotationAngleRef.current % (2 * Math.PI);
-    const startTime = performance.now();
+    let startTime = null;
     const duration = 4000; // 4 seconds
 
     const animate = (time) => {
-      const elapsed = time - startTime;
+      const currentTime = time || performance.now();
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
       // quintic ease-out deceleration curve
@@ -307,32 +319,38 @@ export default function RandomWheel() {
   };
 
   return (
-    <article id="tool-wheel" className="tool-card tool-card--wide active">
-      <div className="wheel-layout">
+    <Card id="tool-wheel" variant="tool" size="wide" className="!gap-3 !p-4">
+      <ToolHeader 
+        title="Random Decision Wheel" 
+      />
+
+      <div className="grid w-full grid-cols-1 items-start gap-4 lg:grid-cols-[1.1fr_1fr]">
         
         {/* Left side: Wheel Canvas & Win Banner */}
-        <div className="wheel-canvas-container">
-          <div className="wheel-title-pill" id="wheel-display-title">{title}</div>
-          <div className="wheel-canvas-wrapper" id="wheel-canvas-wrapper">
-            <canvas ref={canvasRef} id="wheel-canvas" width="450" height="450" onClick={spin}></canvas>
-            <div className="wheel-pointer" onClick={spin}>
+        <div className="relative flex min-h-[390px] w-full flex-col items-center justify-center rounded-2xl border border-border bg-app p-4 max-[768px]:min-h-0 max-[768px]:p-[20px_12px]">
+          <div className="z-[5] mb-3 select-none rounded-full border border-white/10 bg-slate-900/75 px-6 py-2 text-center font-display text-base font-bold tracking-wide text-white shadow-lg backdrop-blur-md dark:bg-black/75 max-[768px]:mb-4 max-[768px]:px-6 max-[768px]:py-2 max-[768px]:text-[1.1rem]" id="wheel-display-title">
+            {title}
+          </div>
+          <div className="relative aspect-square w-full max-w-[300px] cursor-pointer overflow-visible rounded-full bg-card shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
+            <canvas ref={canvasRef} id="wheel-canvas" className="w-full h-full block" width="450" height="450" onClick={spin}></canvas>
+            <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 flex items-center drop-shadow-md pointer-events-none" onClick={spin}>
               <svg viewBox="0 0 24 24" width="28" height="28" fill="red">
                 <polygon points="24,12 0,4 0,20" />
               </svg>
             </div>
-            <div className="wheel-spin-btn-center" id="wheel-spin-btn-center" onClick={spin}>
+            <div className="absolute left-1/2 top-1/2 z-[8] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center rounded-full border-4 border-accent bg-gradient-to-br from-card to-app font-display text-[0.85rem] font-extrabold tracking-wider text-accent shadow-[0_4px_12px_rgba(0,0,0,0.15),_inset_0_2px_4px_rgba(255,255,255,0.2)] transition-all duration-200 hover:scale-108 hover:border-white hover:bg-accent hover:text-white hover:shadow-[0_6px_18px_rgba(79,70,229,0.4)] active:scale-96 max-[768px]:h-[50px] max-[768px]:w-[50px] max-[768px]:text-[0.7rem]" id="wheel-spin-btn-center" onClick={spin}>
               <span>SPIN</span>
             </div>
           </div>
 
           {/* Result overlay banner */}
           {showWinnerBanner && winner && (
-            <div id="wheel-result-banner" className="wheel-result-banner" style={{ display: 'flex' }}>
-              <span className="result-banner-title">Winning Selection</span>
-              <strong id="wheel-result-text">{winner.text}</strong>
+            <div id="wheel-result-banner" className="mt-6 w-full max-w-[420px] bg-accent-light border-2 border-accent rounded-xl p-[16px_20px] flex items-center justify-between gap-4 animate-[bannerPopIn_0.35s_cubic-bezier(0.34,1.56,0.64,1)]" style={{ display: 'flex' }}>
+              <span className="text-[0.75rem] uppercase font-bold text-text-muted tracking-wider">Winning Selection</span>
+              <strong className="text-xl md:text-2xl font-bold text-accent font-display flex-grow text-center word-break break-all" id="wheel-result-text">{winner.text}</strong>
               <button
                 id="wheel-result-close"
-                className="result-banner-close"
+                className="background-transparent border-none text-text-muted text-2xl cursor-pointer transition-colors duration-200 px-1 line-height-none hover:text-text-main"
                 aria-label="Close banner"
                 onClick={() => setShowWinnerBanner(false)}
               >
@@ -343,25 +361,25 @@ export default function RandomWheel() {
         </div>
 
         {/* Right side: Controls & Options */}
-        <div className="wheel-controls-panel">
-          <div className="wheel-actions-row">
-            <button id="wheel-spin-btn" className="btn-primary" onClick={spin} disabled={isSpinning}>Spin</button>
-            <button id="wheel-reset-btn" className="btn-secondary" onClick={resetItems} disabled={isSpinning}>Reset</button>
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-sidebar p-4 max-[768px]:p-4">
+          <div className="flex gap-3 w-full">
+            <Button id="wheel-spin-btn" className="flex-1" variant="primary" onClick={spin} disabled={isSpinning}>Spin</Button>
+            <Button id="wheel-reset-btn" className="flex-1" variant="secondary" onClick={resetItems} disabled={isSpinning}>Reset</Button>
           </div>
 
           {/* Options Box with View Mode and Edit Mode */}
-          <div className="wheel-options-container">
-            <div className="wheel-list-container">
+          <div className="flex min-h-[190px] flex-col overflow-hidden rounded-xl border border-border bg-app">
+            <div className="flex-grow flex flex-col">
               {/* View Mode (List View) */}
               {!isEditing && (
-                <div id="wheel-list-view" className="wheel-list-view scrollable">
+                <div id="wheel-list-view" className="flex h-[190px] flex-col gap-2 overflow-y-auto p-3">
                   {items.length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '12px', fontSize: '0.9rem', textAlign: 'center' }}>
+                    <div className="text-text-muted italic p-3 text-sm text-center">
                       No options typed. Press Edit to add options.
                     </div>
                   ) : (
                     items.map(item => (
-                      <div key={item.id} className={`wheel-list-item ${item.disabled ? 'eliminated' : ''}`}>
+                      <div key={item.id} className={`p-[8px_12px] rounded-lg text-[0.95rem] bg-card border border-border text-text-main font-medium transition-all duration-200 break-all text-left ${item.disabled ? '!bg-slate-500/5 dark:!bg-slate-400/5 !border-border !text-text-muted line-through opacity-65' : ''}`}>
                         {item.text}
                       </div>
                     ))
@@ -372,8 +390,7 @@ export default function RandomWheel() {
               {isEditing && (
                 <textarea
                   id="wheel-text-input"
-                  className="wheel-text-input"
-                  rows="12"
+                  className="h-[190px] w-full resize-none border-none bg-transparent p-3 font-sans text-[0.95rem] leading-relaxed text-text-main outline-none"
                   placeholder="Type options here, one per line..."
                   value={textareaVal}
                   onChange={(e) => handleTextareaChange(e.target.value)}
@@ -381,48 +398,51 @@ export default function RandomWheel() {
               )}
             </div>
             
-            <div className="wheel-options-footer" style={{ alignItems: 'center' }}>
-              <label className="toggle-switch" style={{ marginRight: 'auto' }}>
+            <div className="flex gap-2 p-2 justify-end items-center border-t border-border bg-card">
+              <label className="flex items-center gap-2 cursor-pointer select-none mr-auto">
                 <input
                   type="checkbox"
                   id="wheel-allow-duplicate"
+                  className="w-auto cursor-pointer"
                   checked={allowDuplicate}
                   onChange={(e) => setAllowDuplicate(e.target.checked)}
                 />
-                <span className="toggle-slider"></span>
-                <span className="toggle-label" style={{ fontSize: '0.8rem' }}>Allow duplicates</span>
+                <span className="text-xs text-text-muted font-medium">Allow duplicates</span>
               </label>
 
-              <button
+              <Button
                 id="wheel-title-btn"
-                className="btn-secondary-sm"
+                size="sm"
+                variant="secondary"
                 onClick={() => setShowTitleInput(prev => !prev)}
               >
                 Title
-              </button>
-              <button
+              </Button>
+              <Button
                 id="wheel-edit-btn"
-                className={`btn-secondary-sm ${isEditing ? 'btn-primary-sm' : ''}`}
+                size="sm"
+                variant={isEditing ? 'primary' : 'secondary'}
                 onClick={() => setIsEditing(prev => !prev)}
               >
                 {isEditing ? 'Done' : 'Edit'}
-              </button>
-              <button
+              </Button>
+              <Button
                 id="wheel-clear-btn"
-                className="btn-secondary-sm"
+                size="sm"
+                variant="secondary"
                 onClick={() => !isSpinning && setShowClearModal(true)}
                 disabled={isSpinning}
               >
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
 
           {showTitleInput && (
-            <div id="wheel-title-input-group" className="form-group" style={{ display: 'block', transition: 'all 0.3s ease' }}>
-              <label htmlFor="wheel-title-input">Edit Wheel Title</label>
-              <input
+            <div id="wheel-title-input-group" className="flex flex-col gap-2 w-full">
+              <FieldInput
                 id="wheel-title-input"
+                label="Edit Wheel Title"
                 type="text"
                 placeholder="Random Wheel"
                 value={title}
@@ -431,34 +451,27 @@ export default function RandomWheel() {
             </div>
           )}
 
-          {/* Keyboard shortcuts reminder */}
-          <div className="keyboard-shortcuts-card">
-            <h4>Keyboard Shortcuts</h4>
-            <ul>
-              <li><kbd>Space</kbd> Spin the wheel</li>
-              <li><kbd>E</kbd> Toggle Edit/View mode</li>
-              <li><kbd>R</kbd> Reset wheel items</li>
-              <li><kbd>C</kbd> Clear all text (requires confirmation)</li>
-            </ul>
-          </div>
+          <p className="text-center text-[0.72rem] text-text-muted">
+            Shortcuts: Space spin · E edit · R reset · C clear
+          </p>
         </div>
 
       </div>
 
       {/* Confirmation Clear Modal */}
       {showClearModal && (
-        <div id="wheel-clear-modal" className="custom-modal" style={{ display: 'flex' }}>
-          <div id="wheel-clear-modal-backdrop" className="modal-backdrop" onClick={() => setShowClearModal(false)}></div>
-          <div className="modal-content">
-            <h3>Clear All Options?</h3>
-            <p>Are you sure you want to clear all the typed options? This action cannot be undone.</p>
-            <div className="modal-actions">
-              <button id="wheel-confirm-clear-btn" className="btn-danger-confirm" onClick={confirmClear}>Yes, Clear All</button>
-              <button id="wheel-cancel-clear-btn" className="btn-secondary" onClick={() => setShowClearModal(false)}>Cancel</button>
+        <div id="wheel-clear-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-5" style={{ display: 'flex' }}>
+          <div id="wheel-clear-modal-backdrop" className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowClearModal(false)}></div>
+          <div className="relative bg-card border border-border rounded-2xl p-7 max-w-[420px] w-full shadow-2xl z-[1001] flex flex-col gap-4 animate-[modalSlideIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
+            <h3 className="font-display text-lg font-bold text-text-main">Clear All Options?</h3>
+            <p className="text-sm text-text-muted leading-relaxed">Are you sure you want to clear all the typed options? This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end mt-2">
+              <Button id="wheel-confirm-clear-btn" variant="dangerConfirm" onClick={confirmClear}>Yes, Clear All</Button>
+              <Button id="wheel-cancel-clear-btn" variant="secondary" onClick={() => setShowClearModal(false)}>Cancel</Button>
             </div>
           </div>
         </div>
       )}
-    </article>
+    </Card>
   );
 }

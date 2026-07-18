@@ -1,75 +1,86 @@
-import React, { useState } from 'react';
+import React from 'react';
+import AutoDetectConverter from './ui/AutoDetectConverter';
 
-function textToUnicode(text) {
+function encodeUnicode(text) {
   return Array.from(text)
-    .map((char) => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`)
-    .join(" ");
+    .map((char) => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`)
+    .join(' ');
 }
 
-function unicodeToText(codes) {
-  if (!codes.trim()) {
-    return { text: "", error: null };
-  }
-
-  const values = codes.split(/[\s,]+/).filter(Boolean);
+function decodeUnicode(codes) {
+  const values = codes.trim().split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const raw of values) {
-    const cleaned = raw.replace(/^U\+/i, "").replace(/^0x/i, "");
+    const cleaned = raw.replace(/^U\+/i, '').replace(/^0x/i, '');
+    if (!/^[0-9A-F]+$/i.test(cleaned)) {
+      return { output: '', error: `"${raw}" is not a hexadecimal Unicode code point.` };
+    }
+
     const codePoint = Number.parseInt(cleaned, 16);
-    if (Number.isNaN(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
-      return { text: "", error: "Unicode values must be valid hex code points." };
+    const isSurrogate = codePoint >= 0xd800 && codePoint <= 0xdfff;
+    if (codePoint > 0x10ffff || isSurrogate) {
+      return { output: '', error: `"${raw}" is not a valid Unicode scalar value.` };
     }
     chars.push(String.fromCodePoint(codePoint));
   }
 
-  return { text: chars.join(""), error: null };
+  return { output: chars.join(''), error: null };
+}
+
+function looksLikeUnicodeCodes(text) {
+  const values = text.trim().split(/[\s,]+/).filter(Boolean);
+  if (!values.length) return false;
+
+  const hasExplicitPrefix = values.some((value) => /^(?:U\+|0x)/i.test(value));
+  if (hasExplicitPrefix) return true;
+
+  return values.length > 1
+    && values.every((value) => /^[0-9A-F]{2,6}$/i.test(value))
+    && values.some((value) => /\d/.test(value));
+}
+
+function analyzeUnicode(input) {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      sourceLabel: 'Text or code points',
+      targetLabel: '',
+      output: '',
+      outputPlaceholder: 'The converted result appears here.',
+      error: null,
+    };
+  }
+
+  if (looksLikeUnicodeCodes(trimmed)) {
+    const decoded = decodeUnicode(trimmed);
+    return {
+      sourceLabel: 'Unicode code points',
+      targetLabel: 'Plain text',
+      output: decoded.output,
+      outputPlaceholder: 'Decoded text appears here.',
+      error: decoded.error,
+    };
+  }
+
+  return {
+    sourceLabel: 'Plain text',
+    targetLabel: 'Unicode code points',
+    output: encodeUnicode(input),
+    outputPlaceholder: 'Unicode code points appear here.',
+    error: null,
+  };
 }
 
 export default function UnicodeConverter() {
-  const [textVal, setTextVal] = useState('');
-  const [codesVal, setCodesVal] = useState('');
-
-  const textToUnicodeOutput = textToUnicode(textVal);
-  const codesToTextResult = unicodeToText(codesVal);
-
   return (
-    <article id="tool-unicode" className="tool-card active">
-      <h2>Unicode Converter</h2>
-      <div className="form-group">
-        <label htmlFor="unicode-text">Text to Unicode</label>
-        <textarea
-          id="unicode-text"
-          rows="3"
-          placeholder="Hello"
-          value={textVal}
-          onChange={(e) => setTextVal(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="unicode-codes">Unicode codes</label>
-        <textarea
-          id="unicode-codes"
-          rows="3"
-          readOnly
-          value={textToUnicodeOutput}
-        />
-      </div>
-      <div className="form-group border-top">
-        <label htmlFor="unicode-codes-input">Unicode codes to text</label>
-        <input
-          id="unicode-codes-input"
-          type="text"
-          placeholder="U+4F60 U+597D"
-          value={codesVal}
-          onChange={(e) => setCodesVal(e.target.value)}
-        />
-      </div>
-      <div className="result-banner">
-        <span className="banner-label">Decoded Text:</span>
-        <strong id="unicode-text-output">{codesToTextResult.text || "—"}</strong>
-      </div>
-      <p className="small status-msg" id="unicode-status">{codesToTextResult.error || ""}</p>
-    </article>
+    <AutoDetectConverter
+      toolId="tool-unicode"
+      title="Unicode Converter"
+      description="Convert between text and hexadecimal Unicode code points with automatic format detection."
+      inputPlaceholder={'Hello 👋\nor\nU+0048 U+0065 U+006C U+006C U+006F'}
+      emptyTargetLabel="Converted result"
+      analyze={analyzeUnicode}
+    />
   );
 }

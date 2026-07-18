@@ -19,13 +19,17 @@
 
 ```
 small-web-tools/
+├── .agents/
+│   └── AGENTS.md                # Agent instructions & styling migration status (king file)
 ├── CODEBASE.md                  # ← This file (AI agent reference)
 ├── README.md                    # User-facing documentation & changelog
 ├── TODO.md                      # Human-maintained tasks & issues (do not edit; read only on request)
-├── package.json                 # Project metadata, scripts, and dependencies
 
+├── package.json                 # Project metadata, scripts, and dependencies
 ├── package-lock.json            # Lockfile (auto-generated, do not edit)
 ├── vite.config.js               # Vite build config (also contains dev-server IP lookup proxy)
+├── tailwind.config.js           # Tailwind CSS v3 config — theme mapped to existing CSS variables
+├── postcss.config.js            # PostCSS config (tailwindcss + autoprefixer)
 ├── .gitignore                   # Git ignore rules
 ├── index.html                   # SPA entry point (Vite root)
 │
@@ -35,8 +39,16 @@ small-web-tools/
 ├── src/                         # React application source
 │   ├── main.jsx                 # React DOM mount point (renders <App />)
 │   ├── App.jsx                  # Root component: routing, layout, all tool metadata & categories
-│   └── styles.css               # Global stylesheet (design system, all component styles)
+│   ├── styles.css               # Global stylesheet — @tailwind directives, colors, resets, scrollbar, keyframes
 │   └── components/              # Individual tool components (one file per tool)
+│       ├── ui/                  # Shared UI primitives (Phase 6 — Tailwind-based)
+│       │   ├── Card.jsx         # Card wrapper: variant="tool" | "home"
+│       │   ├── Button.jsx       # Button: variant="primary" | "secondary" | "danger" (danger=placeholder)
+│       │   ├── FieldInput.jsx   # Input/textarea with label, hint, error affordances
+│       │   ├── ToolHeader.jsx   # <h2> title block with optional description
+│       │   ├── ToggleSwitch.jsx # Toggle switch: replaces .toggle-switch/.toggle-slider/.toggle-label
+│       │   ├── Spinner.jsx      # Animated ring: size="default"|"small", container + label mode
+│       │   └── ResultDisplay.jsx # Accent-bg result card: label + large value display
 │       ├── HomeGrid.jsx         # Dashboard / home page grid of all tools
 │       ├── SlashesConverter.jsx # Path slashes converter (Windows → web)
 │       ├── CasingSwitcher.jsx   # Text casing conversion (invert, sentence, title, terms)
@@ -95,19 +107,18 @@ React DOM entry — calls `ReactDOM.createRoot(...).render(<App />)`. Imports `s
 
 ### `src/App.jsx`
 The central hub of the application:
-- Defines `toolDetails` (id → `{ title, desc }` for every tool)
+- Defines `navItems` array containing tool route IDs, names/tooltips, categories, and SVG icons
 - Defines `categories` (grouping tools by type: Text, Developer, Network, Media, File, Game, Bio)
-- Defines `tools` array with route ID, component reference, category, tags
 - Manages client-side routing via `useState` (no React Router; URL hash `#tool-id` is used)
 - Renders the top navigation bar, sidebar, breadcrumb, and the active tool component
 - Injects version info via Vite `define` globals (`__APP_VERSION__`, `__SHOW_CHANNEL_ALERT__`, `__APP_CHANNEL__`)
 
 ### `src/styles.css`
-Monolithic global stylesheet (~190 KB). Contains:
+Global stylesheet (~2,400 lines). Contains:
+- Tailwind CSS directives (`@tailwind base/components/utilities`) at the top
 - CSS custom properties (design tokens: colors, spacing, typography)
 - Base reset and typography
 - Layout styles for sidebar, navbar, content area
-- Per-tool component styles (scoped by class name convention)
 - Responsive breakpoints and dark-mode support
 
 ### `vite.config.js`
@@ -182,6 +193,9 @@ Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, e
 | `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
 | `@ffmpeg/ffmpeg` | ^0.12.15 | Client-side ffmpeg runner |
 | `@ffmpeg/util` | ^0.12.2 | Utilities for loading and handling ffmpeg.wasm |
+| `tailwindcss` | ^3.4 | Utility-first CSS framework (Phase 1 migration) |
+| `postcss` | ^8.5 | CSS transformation pipeline (Tailwind peer dependency) |
+| `autoprefixer` | ^10.4 | Automatic vendor prefixes via PostCSS |
 
 ---
 
@@ -206,11 +220,12 @@ npm run preview
 ## Adding a New Tool — Checklist
 
 1. Create `src/components/<ToolName>.jsx`
-2. Import and register the component in `src/App.jsx`:
-   - Add entry to `toolDetails` (id, title, desc)
-   - Add entry to `tools` array (id, component, category, tags)
+2. Register and import the component in `src/App.jsx`:
    - Add `import` statement at the top
-3. Add the tool's card thumbnail/icon to `HomeGrid.jsx` if needed
-4. Add styles to `src/styles.css`
+   - Add entry to the `navItems` array (id, name, tooltip, category, icon)
+   - Add a case inside `renderActiveTool` function to return the component
+3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
+4. Style the tool using Tailwind utility classes and the shared primitives in
+   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`). Do not add new rules to `src/styles.css`.
 5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
 6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
 
 // ── Supported format labels for display ──────────────────────────────────────
 const FORMAT_LABELS = {
@@ -103,18 +106,18 @@ function ResultWidget({ parsed }) {
 
   if (type === 'url') {
     return (
-      <div className="qrscan-result-widget qrscan-url-widget">
-        <div className="qrscan-widget-icon">
+      <div className="flex gap-3.5 items-start">
+        <div className="w-9.5 h-9.5 rounded-lg bg-nav-active-bg text-accent flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
           </svg>
         </div>
-        <div className="qrscan-widget-content">
-          <div className="qrscan-widget-label">URL Detected</div>
-          <div className="qrscan-widget-value qrscan-url-text">{parsed.url}</div>
-          <div className="qrscan-widget-actions">
-            <a href={parsed.url} target="_blank" rel="noopener noreferrer" className="qrscan-action-btn qrscan-action-primary">
+        <div className="flex-1 min-w-0">
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">URL Detected</div>
+          <div className="text-[0.9rem] text-accent underline underline-offset-2 cursor-pointer break-all leading-normal mb-2.5">{parsed.url}</div>
+          <div className="flex gap-2 flex-wrap">
+            <a href={parsed.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                 <polyline points="15 3 21 3 21 9"/>
@@ -122,13 +125,13 @@ function ResultWidget({ parsed }) {
               </svg>
               Open Link
             </a>
-            <button className="qrscan-action-btn" onClick={() => copyText(parsed.url)}>
+            <Button variant="secondary" size="sm" onClick={() => copyText(parsed.url)}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
               </svg>
               {copied ? 'Copied!' : 'Copy'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -137,8 +140,8 @@ function ResultWidget({ parsed }) {
 
   if (type === 'wifi') {
     return (
-      <div className="qrscan-result-widget qrscan-wifi-widget">
-        <div className="qrscan-widget-icon qrscan-wifi-icon">
+      <div className="flex gap-3.5 items-start">
+        <div className="w-9.5 h-9.5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
             <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
@@ -146,25 +149,25 @@ function ResultWidget({ parsed }) {
             <line x1="12" y1="20" x2="12.01" y2="20"/>
           </svg>
         </div>
-        <div className="qrscan-widget-content">
-          <div className="qrscan-widget-label">Wi-Fi Network</div>
-          <div className="qrscan-wifi-table">
-            <div className="qrscan-wifi-row">
-              <span className="qrscan-wifi-key">Network (SSID)</span>
-              <span className="qrscan-wifi-val">{parsed.ssid || '(hidden)'}</span>
+        <div className="flex-1 min-w-0">
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Wi-Fi Network</div>
+          <div className="flex flex-col gap-1.5 mb-2.5">
+            <div className="flex gap-2.5 items-baseline">
+              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Network (SSID)</span>
+              <span className="text-[0.88rem] text-text-main break-all">{parsed.ssid || '(hidden)'}</span>
             </div>
-            <div className="qrscan-wifi-row">
-              <span className="qrscan-wifi-key">Security</span>
-              <span className="qrscan-wifi-val">{parsed.security || 'None'}</span>
+            <div className="flex gap-2.5 items-baseline">
+              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Security</span>
+              <span className="text-[0.88rem] text-text-main break-all">{parsed.security || 'None'}</span>
             </div>
             {parsed.password && (
-              <div className="qrscan-wifi-row">
-                <span className="qrscan-wifi-key">Password</span>
-                <span className="qrscan-wifi-val qrscan-wifi-pass-row">
-                  <span className="qrscan-wifi-password">
+              <div className="flex gap-2.5 items-baseline">
+                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Password</span>
+                <span className="text-[0.88rem] text-text-main break-all inline-flex items-center gap-1.5">
+                  <span className="font-mono text-[0.9rem] tracking-wider">
                     {showPassword ? parsed.password : '•'.repeat(parsed.password.length)}
                   </span>
-                  <button className="qrscan-icon-btn" onClick={() => setShowPassword(v => !v)} title={showPassword ? 'Hide' : 'Show'}>
+                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => setShowPassword(v => !v)} title={showPassword ? 'Hide' : 'Show'}>
                     {showPassword ? (
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -178,7 +181,7 @@ function ResultWidget({ parsed }) {
                       </svg>
                     )}
                   </button>
-                  <button className="qrscan-icon-btn" onClick={() => copyText(parsed.password)} title="Copy Password">
+                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => copyText(parsed.password)} title="Copy Password">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -188,9 +191,9 @@ function ResultWidget({ parsed }) {
               </div>
             )}
             {parsed.hidden && (
-              <div className="qrscan-wifi-row">
-                <span className="qrscan-wifi-key">Hidden</span>
-                <span className="qrscan-wifi-val">Yes</span>
+              <div className="flex gap-2.5 items-baseline">
+                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Hidden</span>
+                <span className="text-[0.88rem] text-text-main break-all">Yes</span>
               </div>
             )}
           </div>
@@ -201,22 +204,22 @@ function ResultWidget({ parsed }) {
 
   if (type === 'email') {
     return (
-      <div className="qrscan-result-widget qrscan-email-widget">
-        <div className="qrscan-widget-icon qrscan-email-icon">
+      <div className="flex gap-3.5 items-start">
+        <div className="w-9.5 h-9.5 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
             <polyline points="22,6 12,13 2,6"/>
           </svg>
         </div>
-        <div className="qrscan-widget-content">
-          <div className="qrscan-widget-label">Email Detected</div>
-          <div className="qrscan-email-table">
-            {parsed.to && <div className="qrscan-email-row"><span className="qrscan-email-key">To</span><span className="qrscan-email-val">{parsed.to}</span></div>}
-            {parsed.subject && <div className="qrscan-email-row"><span className="qrscan-email-key">Subject</span><span className="qrscan-email-val">{parsed.subject}</span></div>}
-            {parsed.body && <div className="qrscan-email-row"><span className="qrscan-email-key">Body</span><span className="qrscan-email-val">{parsed.body}</span></div>}
+        <div className="flex-1 min-w-0">
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Email Detected</div>
+          <div className="flex flex-col gap-1.5 mb-2.5">
+            {parsed.to && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">To</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.to}</span></div>}
+            {parsed.subject && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Subject</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.subject}</span></div>}
+            {parsed.body && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Body</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.body}</span></div>}
           </div>
-          <div className="qrscan-widget-actions">
-            <a href={parsed.raw} className="qrscan-action-btn qrscan-action-primary">
+          <div className="flex gap-2 flex-wrap">
+            <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -231,25 +234,25 @@ function ResultWidget({ parsed }) {
 
   if (type === 'phone') {
     return (
-      <div className="qrscan-result-widget qrscan-phone-widget">
-        <div className="qrscan-widget-icon qrscan-phone-icon">
+      <div className="flex gap-3.5 items-start">
+        <div className="w-9.5 h-9.5 rounded-lg bg-emerald-500/10 text-accent flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42 2 2 0 0 1 3.6 1.25h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16.92z"/>
           </svg>
         </div>
-        <div className="qrscan-widget-content">
-          <div className="qrscan-widget-label">Phone Number</div>
-          <div className="qrscan-widget-value">{parsed.phone}</div>
-          <div className="qrscan-widget-actions">
-            <a href={parsed.raw} className="qrscan-action-btn qrscan-action-primary">
+        <div className="flex-1 min-w-0">
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Phone Number</div>
+          <div className="text-[0.9rem] text-text-main break-all leading-normal mb-2.5">{parsed.phone}</div>
+          <div className="flex gap-2 flex-wrap">
+            <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12"/>
               </svg>
               Call
             </a>
-            <button className="qrscan-action-btn" onClick={() => copyText(parsed.phone)}>
+            <Button variant="secondary" size="sm" onClick={() => copyText(parsed.phone)}>
               {copied ? 'Copied!' : 'Copy Number'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -258,20 +261,20 @@ function ResultWidget({ parsed }) {
 
   if (type === 'sms') {
     return (
-      <div className="qrscan-result-widget qrscan-sms-widget">
-        <div className="qrscan-widget-icon qrscan-sms-icon">
+      <div className="flex gap-3.5 items-start">
+        <div className="w-9.5 h-9.5 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
         </div>
-        <div className="qrscan-widget-content">
-          <div className="qrscan-widget-label">SMS Message</div>
-          <div className="qrscan-email-table">
-            {parsed.phone && <div className="qrscan-email-row"><span className="qrscan-email-key">To</span><span className="qrscan-email-val">{parsed.phone}</span></div>}
-            {parsed.message && <div className="qrscan-email-row"><span className="qrscan-email-key">Message</span><span className="qrscan-email-val">{parsed.message}</span></div>}
+        <div className="flex-1 min-w-0">
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">SMS Message</div>
+          <div className="flex flex-col gap-1.5 mb-2.5">
+            {parsed.phone && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">To</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.phone}</span></div>}
+            {parsed.message && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Message</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.message}</span></div>}
           </div>
-          <div className="qrscan-widget-actions">
-            <a href={parsed.raw} className="qrscan-action-btn qrscan-action-primary">Send SMS</a>
+          <div className="flex gap-2 flex-wrap">
+            <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">Send SMS</a>
           </div>
         </div>
       </div>
@@ -280,8 +283,8 @@ function ResultWidget({ parsed }) {
 
   // Default: plain text
   return (
-    <div className="qrscan-result-widget qrscan-text-widget">
-      <div className="qrscan-widget-icon">
+    <div className="flex gap-3.5 items-start">
+      <div className="w-9.5 h-9.5 rounded-lg bg-nav-active-bg text-accent flex items-center justify-center shrink-0">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="17" y1="10" x2="3" y2="10"/>
           <line x1="21" y1="6" x2="3" y2="6"/>
@@ -289,17 +292,17 @@ function ResultWidget({ parsed }) {
           <line x1="17" y1="18" x2="3" y2="18"/>
         </svg>
       </div>
-      <div className="qrscan-widget-content">
-        <div className="qrscan-widget-label">Text / Data</div>
-        <pre className="qrscan-text-pre">{parsed.raw}</pre>
-        <div className="qrscan-widget-actions">
-          <button className="qrscan-action-btn qrscan-action-primary" onClick={() => copyText(parsed.raw)}>
+      <div className="flex-1 min-w-0">
+        <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Text / Data</div>
+        <pre className="font-mono text-[0.84rem] whitespace-pre-wrap break-all bg-card border border-border rounded-lg p-2.5 px-3 mb-2.5 max-h-[160px] overflow-y-auto text-text-main leading-relaxed">{parsed.raw}</pre>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="primary" size="sm" onClick={() => copyText(parsed.raw)}>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
             {copied ? 'Copied!' : 'Copy Text'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -510,74 +513,78 @@ export default function QrBarcodeScanner() {
   };
 
   const clearHistory = () => setHistory([]);
-
-  const parsed = lastResult ? parseQRPayload(lastResult.text) : null;
-
   return (
-    <article id="tool-qrbarcodescan" className="tool-card tool-card--wide active">
-      <h2>QR &amp; Barcode Scanner</h2>
-
-      {/* Mode Tabs — matching the generator tab style */}
-      <div className="generator-tabs">
-        <button
-          id="qrscan-tab-camera"
-          className={`gen-tab-btn ${scanMode === SCAN_MODE_CAMERA ? 'active' : ''}`}
-          onClick={() => switchMode(SCAN_MODE_CAMERA)}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-          Camera Scan
-        </button>
-        <button
-          id="qrscan-tab-file"
-          className={`gen-tab-btn ${scanMode === SCAN_MODE_FILE ? 'active' : ''}`}
-          onClick={() => switchMode(SCAN_MODE_FILE)}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          Upload Image
-        </button>
+    <Card variant="tool" size="wide" id="tool-qrbarcodescan" className="active">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
+        <ToolHeader 
+          title="QR &amp; Barcode Scanner" 
+          description="Scan QR codes and barcodes using your camera or by uploading an image. All parsing is done locally in your browser." 
+        />
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant={scanMode === SCAN_MODE_CAMERA ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => switchMode(SCAN_MODE_CAMERA)}
+            className="flex items-center gap-1.5"
+            id="qrscan-tab-camera"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span>Camera Scan</span>
+          </Button>
+          <Button
+            variant={scanMode === SCAN_MODE_FILE ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => switchMode(SCAN_MODE_FILE)}
+            className="flex items-center gap-1.5"
+            id="qrscan-tab-file"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span>Upload Image</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="qrscan-main-layout">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-7 items-start">
         {/* ── Left: Scanner / Upload Panel ── */}
-        <div className="qrscan-scanner-col">
+        <div className="flex flex-col gap-4">
 
           {/* ──── Camera Mode ──── */}
           {scanMode === SCAN_MODE_CAMERA && (
-            <div className="qrscan-camera-panel">
+            <div className="flex flex-col gap-3">
               {!permissionRequested ? (
-                <div className="qrscan-permission-prompt">
-                  <div className="qrscan-perm-icon">
+                <div className="bg-card border border-border rounded-2xl p-10 px-6 flex flex-col items-center text-center gap-3">
+                  <div className="text-accent bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mb-1">
                     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                       <circle cx="12" cy="13" r="4"/>
                     </svg>
                   </div>
-                  <p className="qrscan-perm-title">Camera Access Required</p>
-                  <p className="qrscan-perm-desc">Allow camera access to scan QR codes and barcodes in real time. No data is sent to any server.</p>
-                  <button id="qrscan-start-camera-btn" className="qrscan-primary-btn" onClick={requestCamerasAndStart}>
+                  <p className="text-[1.1rem] font-bold text-text-main m-0">Camera Access Required</p>
+                  <p className="text-[0.88rem] text-text-muted max-w-[320px] leading-relaxed m-0">Allow camera access to scan QR codes and barcodes in real time. No data is sent to any server.</p>
+                  <Button id="qrscan-start-camera-btn" variant="primary" className="flex items-center gap-2" onClick={requestCamerasAndStart}>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="23 7 16 12 23 17 23 7"/>
                       <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                     </svg>
                     Enable Camera
-                  </button>
-                  {cameraError && <p className="qrscan-error-msg">{cameraError}</p>}
+                  </Button>
+                  {cameraError && <p className="text-[0.84rem] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 px-3.5 mt-1">{cameraError}</p>}
                 </div>
               ) : (
                 <>
                   {/* Camera controls */}
-                  <div className="qrscan-camera-controls">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     {cameras.length > 1 && (
                       <select
                         id="qrscan-camera-select"
-                        className="qrscan-select"
+                        className="flex-1 min-w-[140px] bg-card border border-border rounded-lg text-text-main text-[0.85rem] px-2.5 py-2 cursor-pointer outline-none focus:border-accent"
                         value={selectedCamera}
                         onChange={handleCameraChange}
                       >
@@ -589,44 +596,44 @@ export default function QrBarcodeScanner() {
                       </select>
                     )}
                     {isScanning ? (
-                      <button id="qrscan-stop-btn" className="qrscan-stop-btn" onClick={stopScanning}>
+                      <Button id="qrscan-stop-btn" variant="secondary" className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:border-red-500/30" onClick={stopScanning}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                           <rect x="6" y="6" width="12" height="12" rx="1"/>
                         </svg>
                         Stop Camera
-                      </button>
+                      </Button>
                     ) : (
-                      <button id="qrscan-start-btn" className="qrscan-primary-btn qrscan-small-btn" onClick={() => startScanning()}>
+                      <Button id="qrscan-start-btn" variant="primary" size="sm" className="flex items-center gap-2" onClick={() => startScanning()}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                           <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
                         Start Camera
-                      </button>
+                      </Button>
                     )}
                   </div>
 
-                  {cameraError && <p className="qrscan-error-msg">{cameraError}</p>}
+                  {cameraError && <p className="text-[0.84rem] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 px-3.5 mt-1">{cameraError}</p>}
 
                   {/* Camera viewfinder */}
-                  <div className="qrscan-viewfinder-wrapper">
-                    <div id={READER_ID} className="qrscan-reader-container" />
+                  <div className="relative rounded-2xl overflow-hidden bg-black max-h-[220px] aspect-square w-full">
+                    <div id={READER_ID} className="w-full h-full" />
                     {isScanning && (
-                      <div className="qrscan-overlay-frame">
-                        <div className="qrscan-corner qrscan-corner-tl" />
-                        <div className="qrscan-corner qrscan-corner-tr" />
-                        <div className="qrscan-corner qrscan-corner-bl" />
-                        <div className="qrscan-corner qrscan-corner-br" />
-                        <div className="qrscan-laser" />
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <div className="absolute w-7 h-7 border-t-[3px] border-l-[3px] border-accent rounded-tl top-4 left-4" />
+                        <div className="absolute w-7 h-7 border-t-[3px] border-r-[3px] border-accent rounded-tr top-4 right-4" />
+                        <div className="absolute w-7 h-7 border-b-[3px] border-l-[3px] border-accent rounded-bl bottom-4 left-4" />
+                        <div className="absolute w-7 h-7 border-b-[3px] border-r-[3px] border-accent rounded-br bottom-4 right-4" />
+                        <div className="absolute left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-transparent via-accent via-[#a3f07a] via-accent to-transparent rounded shadow-[0_0_8px_2px_var(--accent),0_0_16px_4px_rgba(79,185,73,0.4)] animate-[qrscan-laser-sweep_2.2s_ease-in-out_infinite]" />
                       </div>
                     )}
                   </div>
 
                   {!isScanning && !cameraError && (
-                    <p className="qrscan-hint-text">Camera is stopped. Press "Start Camera" to resume.</p>
+                    <p className="text-[0.83rem] text-text-muted text-center mt-1 flex items-center justify-center gap-1.5">Camera is stopped. Press "Start Camera" to resume.</p>
                   )}
                   {isScanning && !lastResult && (
-                    <p className="qrscan-hint-text qrscan-scanning-hint">
-                      <span className="qrscan-pulse-dot" /> Scanning… Point your camera at a QR code or barcode.
+                    <p className="text-[0.83rem] text-accent text-center mt-1 flex items-center justify-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" /> Scanning… Point your camera at a QR code or barcode.
                     </p>
                   )}
                 </>
@@ -636,10 +643,10 @@ export default function QrBarcodeScanner() {
 
           {/* ──── File Upload Mode ──── */}
           {scanMode === SCAN_MODE_FILE && (
-            <div className="qrscan-file-panel">
+            <div className="flex flex-col gap-3">
               <div
                 id="qrscan-dropzone"
-                className={`qrscan-dropzone ${isDragging ? 'qrscan-dropzone-active' : ''}`}
+                className={`border-2 border-dashed border-border rounded-2xl cursor-pointer transition-colors duration-200 max-h-[220px] aspect-square w-full flex items-center justify-center overflow-hidden bg-card relative hover:border-accent hover:bg-accent/5 ${isDragging ? 'border-accent bg-accent/5' : ''}`}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -650,46 +657,46 @@ export default function QrBarcodeScanner() {
                   id="qrscan-file-input"
                   type="file"
                   accept="image/*"
-                  className="qrscan-hidden-input"
+                  className="hidden"
                   onChange={handleFileChange}
                 />
                 {filePreviewUrl ? (
-                  <div className="qrscan-preview-wrapper">
-                    <img src={filePreviewUrl} alt="Uploaded image preview" className="qrscan-preview-img" />
+                  <div className="w-full h-full relative flex items-center justify-center">
+                    <img src={filePreviewUrl} alt="Uploaded image preview" className="w-full h-full object-contain rounded-xl" />
                     {fileScanning && (
-                      <div className="qrscan-file-scanning-overlay">
-                        <div className="qrscan-file-laser" />
+                      <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center gap-3 text-white text-[0.9rem] font-semibold rounded-xl overflow-hidden">
+                        <div className="absolute left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-transparent via-accent via-[#a3f07a] via-accent to-transparent shadow-[0_0_8px_2px_var(--accent)] animate-[qrscan-laser-sweep_1.5s_ease-in-out_infinite]" />
                         <span>Scanning…</span>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="qrscan-dropzone-placeholder">
+                  <div className="flex flex-col items-center gap-2.5 p-6 text-center text-text-muted">
                     <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="7" height="7" rx="1"/>
                       <rect x="14" y="3" width="7" height="7" rx="1"/>
                       <rect x="3" y="14" width="7" height="7" rx="1"/>
                       <rect x="14" y="14" width="7" height="7" rx="1"/>
                     </svg>
-                    <p className="qrscan-dropzone-title">Drop an image here</p>
-                    <p className="qrscan-dropzone-sub">or click to browse files</p>
-                    <p className="qrscan-dropzone-formats">Supports JPEG, PNG, GIF, WebP, BMP</p>
+                    <p className="text-base font-semibold text-text-main m-0">Drop an image here</p>
+                    <p className="text-[0.84rem] m-0">or click to browse files</p>
+                    <p className="text-[0.76rem] m-0 opacity-70">Supports JPEG, PNG, GIF, WebP, BMP</p>
                   </div>
                 )}
               </div>
 
               {filePreviewUrl && (
-                <div className="qrscan-file-actions">
-                  <button className="qrscan-secondary-btn" onClick={() => fileInputRef.current?.click()}>
+                <div className="flex gap-2.5 flex-wrap">
+                  <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
                     Choose Different Image
-                  </button>
-                  <button className="qrscan-ghost-btn" onClick={clearResult}>Clear</button>
+                  </Button>
+                  <Button variant="secondary" onClick={clearResult}>Clear</Button>
                 </div>
               )}
 
               {fileError && (
-                <div className="qrscan-error-box">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="flex items-start gap-2 text-[0.84rem] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 px-3.5 mt-3 leading-normal">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -702,20 +709,20 @@ export default function QrBarcodeScanner() {
         </div>
 
         {/* ── Right: Results Panel ── */}
-        <div className="qrscan-results-col">
+        <div className="flex flex-col gap-4 md:sticky md:top-20">
           {lastResult ? (
-            <div className="qrscan-result-card">
-              <div className="qrscan-result-header">
-                <div className="qrscan-result-badge">
+            <div className="bg-card border border-border rounded-2xl p-4.5 shadow-card animate-[fadeInScale_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
+              <div className="flex items-center gap-2 mb-3.5 flex-wrap">
+                <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-accent rounded-full px-2.5 py-0.5 text-[0.78rem] font-bold tracking-wide">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   Decoded
                 </div>
                 {lastResult.format && lastResult.format !== 'Unknown' && (
-                  <span className="qrscan-format-badge">{FORMAT_LABELS[lastResult.format] || lastResult.format}</span>
+                  <span className="bg-nav-active-bg text-text-muted rounded-full px-2.5 py-0.5 text-[0.78rem] font-semibold">{FORMAT_LABELS[lastResult.format] || lastResult.format}</span>
                 )}
-                <button className="qrscan-clear-result-btn" onClick={clearResult} title="Clear result">
+                <button className="ml-auto bg-transparent border-none text-text-muted cursor-pointer p-1 rounded transition-colors hover:text-red-500" onClick={clearResult} title="Clear result">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -725,15 +732,15 @@ export default function QrBarcodeScanner() {
               {parsed && <ResultWidget parsed={parsed} />}
             </div>
           ) : (
-            <div className="qrscan-empty-result">
+            <div className="bg-card border border-dashed border-border rounded-2xl p-8 px-5 flex flex-col items-center text-center gap-2 text-text-muted">
               <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7" rx="1"/>
                 <rect x="14" y="3" width="7" height="7" rx="1"/>
                 <rect x="3" y="14" width="7" height="7" rx="1"/>
                 <path d="M14 14h3v3m0 4h4m0 0v-4m-7 4h3"/>
               </svg>
-              <p className="qrscan-empty-title">No result yet</p>
-              <p className="qrscan-empty-desc">
+              <p className="text-[0.95rem] font-semibold text-text-main m-0">No result yet</p>
+              <p className="text-[0.83rem] m-0 leading-relaxed">
                 {scanMode === SCAN_MODE_CAMERA
                   ? 'Start the camera and point it at a QR code or barcode.'
                   : 'Upload an image containing a QR code or barcode.'}
@@ -742,38 +749,38 @@ export default function QrBarcodeScanner() {
           )}
 
           {/* Supported Formats */}
-          <div className="qrscan-formats-card">
-            <div className="qrscan-formats-title">Supported Formats</div>
-            <div className="qrscan-formats-grid">
-              <span className="qrscan-format-chip qrscan-chip-2d">QR Code</span>
-              <span className="qrscan-format-chip qrscan-chip-2d">Data Matrix</span>
-              <span className="qrscan-format-chip qrscan-chip-2d">Aztec</span>
-              <span className="qrscan-format-chip qrscan-chip-2d">PDF 417</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">Code 128</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">Code 39</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">Code 93</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">EAN-13</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">EAN-8</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">UPC-A</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">UPC-E</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">ITF</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">Codabar</span>
-              <span className="qrscan-format-chip qrscan-chip-1d">RSS 14</span>
+          <div className="bg-card border border-border rounded-2xl p-4 px-4.5">
+            <div className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted mb-2.5">Supported Formats</div>
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">QR Code</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">Data Matrix</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">Aztec</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">PDF 417</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">Code 128</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">Code 39</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">Code 93</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">EAN-13</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">EAN-8</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">UPC-A</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">UPC-E</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">ITF</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">Codabar</span>
+              <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">RSS 14</span>
             </div>
-            <div className="qrscan-formats-legend">
-              <span className="qrscan-legend-item"><span className="qrscan-legend-dot qrscan-dot-2d" />2D Codes</span>
-              <span className="qrscan-legend-item"><span className="qrscan-legend-dot qrscan-dot-1d" />1D Barcodes</span>
+            <div className="flex gap-3.5 mt-1.5">
+              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-accent" />2D Codes</span>
+              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-indigo-500" />1D Barcodes</span>
             </div>
           </div>
 
           {/* Scan History */}
           {history.length > 0 && (
-            <div className="qrscan-history-card">
-              <div className="qrscan-history-header">
-                <span className="qrscan-history-title">Scan History</span>
-                <button className="qrscan-ghost-btn qrscan-ghost-sm" onClick={clearHistory}>Clear</button>
+            <div className="bg-card border border-border rounded-2xl p-4 px-4.5">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted">Scan History</span>
+                <Button variant="secondary" size="sm" className="px-2.5 py-1 text-[0.78rem]" onClick={clearHistory}>Clear</Button>
               </div>
-              <ul className="qrscan-history-list">
+              <ul className="list-none m-0 p-0 flex flex-col gap-1">
                 {history.map((item, idx) => {
                   const p = parseQRPayload(item.text);
                   const typeIcon = {
@@ -785,9 +792,9 @@ export default function QrBarcodeScanner() {
                     text: '📄',
                   }[p.type] || '📄';
                   return (
-                    <li key={idx} className="qrscan-history-item" onClick={() => setLastResult(item)} title="Click to view">
-                      <span className="qrscan-history-icon">{typeIcon}</span>
-                      <span className="qrscan-history-text">{item.text.length > 60 ? item.text.slice(0, 60) + '…' : item.text}</span>
+                    <li key={idx} className="flex items-center gap-2 p-1.5 px-2.5 rounded-lg cursor-pointer transition-all border border-transparent hover:bg-nav-hover-bg hover:border-border" onClick={() => setLastResult(item)} title="Click to view">
+                      <span className="text-base shrink-0">{typeIcon}</span>
+                      <span className="text-[0.82rem] text-text-muted truncate">{item.text.length > 60 ? item.text.slice(0, 60) + '…' : item.text}</span>
                     </li>
                   );
                 })}
@@ -796,6 +803,6 @@ export default function QrBarcodeScanner() {
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }

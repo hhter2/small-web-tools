@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 // Preset templates
 const PRESETS = {
@@ -7,12 +11,6 @@ const PRESETS = {
     'Success is not final, failure is not fatal: it is the courage to continue that counts. In the end, we will remember not the words of our enemies, but the silence of our friends. Believe you can and you are halfway there.',
     'Life is what happens when you are busy making other plans. The future belongs to those who believe in the beauty of their dreams. Do not go where the path may lead, go instead where there is no path and leave a trail.',
     'To live is the rarest thing in the world. Most people exist, that is all. You only live once, but if you do it right, once is enough. In three words I can sum up everything I have learned about life: it goes on.'
-  ],
-  chinese: [
-    '天將降大任於是人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。學而時習之，不亦說乎？有朋自遠方來，不亦樂乎？人不知而不慍，不亦君子乎？',
-    '北國風光，千里冰封，萬里雪飄。望長城內外，惟餘莽莽；大河上下，頓失滔滔。山舞銀蛇，原馳蠟象，欲與天公試比高。須晴日，看紅裝素裹，分外妖嬈。江山如此多嬌，引無數英雄競折腰。',
-    '大學之道，在明明德，在親民，在止於至善。知止而後有定，定而後能靜，靜而後能安，安而後能慮，慮而後能得。物有本末，事有終始，知所先後，則近道矣。古之欲明明德於天下者，先治其國。',
-    '世有伯樂，然後有千里馬。千里馬常有，而伯樂不常有。故雖有名馬，祗辱於奴隸人之手，駢死於槽櫨之間，不以千里稱也。馬之千里者，一食或盡粟一石。食馬者不知其能千里而食也。'
   ]
 };
 
@@ -326,7 +324,7 @@ export default function TypingSpeedTest() {
   const [duration, setDuration] = useState('30'); // '15', '30', '60'
   const [freeStopMode, setFreeStopMode] = useState('manual'); // 'manual' | 'time' | 'words'
   const [freeWordTarget, setFreeWordTarget] = useState('100'); // word limit for free mode
-  const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'chinese', 'code', 'custom'
+  const [selectedPreset, setSelectedPreset] = useState('english'); // 'english', 'code', 'custom'
   const [customText, setCustomText] = useState('');
   
   const [showPunctuation, setShowPunctuation] = useState(true);
@@ -426,7 +424,6 @@ export default function TypingSpeedTest() {
   // Determine active language (automatically preset-based or content-detected)
   const activeLang = useMemo(() => {
     if (selectedPreset === 'english' || selectedPreset === 'code') return 'english';
-    if (selectedPreset === 'chinese') return 'chinese';
     return detectLanguage(mode === 'free' ? typedText : rawTemplateText);
   }, [mode, typedText, rawTemplateText, selectedPreset]);
 
@@ -933,190 +930,216 @@ export default function TypingSpeedTest() {
   };
 
   return (
-    <article id="tool-typing" className="tool-card tool-card--wide active">
-      <div className="typing-header-row">
-        <h2>Typing Speed Test</h2>
-        <div className="typing-modes-tabs">
-          <button
-            className={`tab-btn ${mode === 'template' ? 'active' : ''}`}
+    <Card id="tool-typing" variant="tool" size="wide" className="!gap-3 !p-4">
+      <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
+        <ToolHeader 
+          title="Typing Speed Test" 
+        />
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant={mode === 'template' ? 'primary' : 'secondary'}
+            size="sm"
             onClick={() => setMode('template')}
           >
             Template Mode
-          </button>
-          <button
-            className={`tab-btn ${mode === 'free' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant={mode === 'free' ? 'primary' : 'secondary'}
+            size="sm"
             onClick={() => setMode('free')}
           >
             Free Typing
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Settings Panel styled like Monkeytype */}
       {!isTesting && !testFinished && (
-        <div className="typing-config-container">
-          <div className="typing-config-bar">
-            {/* Preset Selector */}
-            <div className="config-group">
-              {['english', 'chinese', 'code', 'custom'].map((preset) => (
-                <div
+        <div className="flex select-none flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+          {/* Preset Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
+            <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1 shrink-0">
+              {['english', 'code', 'custom'].map((preset) => (
+                <button
+                  type="button"
                   key={preset}
-                  className={`config-item ${selectedPreset === preset ? 'active' : ''}`}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                    selectedPreset === preset
+                      ? 'bg-accent text-white shadow-sm'
+                      : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                  }`}
                   onClick={() => setSelectedPreset(preset)}
                 >
                   {preset === 'custom' && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px', marginRight: '4px' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 inline-block mr-1">
                       <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                     </svg>
                   )}
                   <span>{preset.charAt(0).toUpperCase() + preset.slice(1)}</span>
-                </div>
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* Sub Configuration Bar for extra settings */}
-          {!(selectedPreset === 'custom' && mode === 'template') && (
-            <div className="typing-sub-config-bar">
-              {/* Programming Language Selector (Only when code preset is selected) */}
-              {selectedPreset === 'code' && (
-                <>
-                  <div className="config-group code-languages-group">
-                    {['javascript', 'python', 'cpp', 'java', 'r', 'html', 'css'].map((lang) => (
-                      <div
-                        key={lang}
-                        className={`config-item ${selectedCodeLanguage === lang ? 'active' : ''}`}
-                        onClick={() => setSelectedCodeLanguage(lang)}
-                      >
-                        <span>{lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang.toUpperCase()}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="config-separator"></div>
-                </>
-              )}
-
-              {/* Punctuation & Numbers (Only in Template Mode and when not code preset) */}
+            {/* Test Targets (Time/Words selection) */}
+            <div className="flex items-center gap-3">
               {mode === 'template' && selectedPreset !== 'code' && (
-                <>
-                  <div className="config-group">
-                    <div 
-                      className={`config-item ${showPunctuation ? 'active' : ''}`}
-                      onClick={() => setShowPunctuation(!showPunctuation)}
-                    >
-                      <span className="icon">@</span>
-                      <span>punctuation</span>
-                    </div>
-                    <div 
-                      className={`config-item ${showNumbers ? 'active' : ''}`}
-                      onClick={() => setShowNumbers(!showNumbers)}
-                    >
-                      <span className="icon">#</span>
-                      <span>numbers</span>
-                    </div>
-                  </div>
-                  <div className="config-separator"></div>
-                </>
-              )}
-
-              {/* Test Modes (Template Mode vs Free Mode) */}
-              {mode === 'template' ? (
-                <div className="config-group">
-                  <div 
-                    className={`config-item ${testType === 'time' ? 'active' : ''}`}
+                <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1">
+                  <button
+                    type="button"
+                    className={`px-2.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      testType === 'time'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                    }`}
                     onClick={() => setTestType('time')}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
                       <circle cx="12" cy="12" r="10"></circle>
                       <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                     <span>time</span>
-                  </div>
-                  <div 
-                    className={`config-item ${testType === 'words' ? 'active' : ''}`}
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-2.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      testType === 'words'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                    }`}
                     onClick={() => setTestType('words')}
                   >
-                    <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
+                    <span className="font-extrabold">A</span>
                     <span>words</span>
-                  </div>
-                </div>
-              ) : (
-                /* Free mode stop mode selector */
-                <div className="config-group">
-                  <div
-                    className={`config-item ${freeStopMode === 'manual' ? 'active' : ''}`}
-                    onClick={() => setFreeStopMode('manual')}
-                  >
-                    <span>Manual</span>
-                  </div>
-                  <div
-                    className={`config-item ${freeStopMode === 'time' ? 'active' : ''}`}
-                    onClick={() => setFreeStopMode('time')}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', marginRight: '4px' }}>
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Timer</span>
-                  </div>
-                  <div
-                    className={`config-item ${freeStopMode === 'words' ? 'active' : ''}`}
-                    onClick={() => setFreeStopMode('words')}
-                  >
-                    <span style={{ fontWeight: '800', fontSize: '0.85rem', marginRight: '4px' }}>A</span>
-                    <span>Words</span>
-                  </div>
+                  </button>
                 </div>
               )}
 
-              <div className="config-separator"></div>
+              {mode === 'free' && (
+                <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1">
+                  {['manual', 'time', 'words'].map((sm) => (
+                    <button
+                      type="button"
+                      key={sm}
+                      className={`px-2.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                        freeStopMode === sm
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
+                      onClick={() => setFreeStopMode(sm)}
+                    >
+                      {sm === 'time' && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                      )}
+                      {sm === 'words' && <span className="font-extrabold">A</span>}
+                      <span>{sm.charAt(0).toUpperCase() + sm.slice(1)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-              {/* Test Targets */}
-              <div className="config-group">
-                {/* Template time mode or free mode timer */}
-                {((mode === 'template' && testType === 'time') || (mode === 'free' && freeStopMode === 'time')) && (
-                  <>
-                    {['15', '30', '60'].map((t) => (
-                      <div
-                        key={t}
-                        className={`config-item ${duration === t ? 'active' : ''}`}
-                        onClick={() => setDuration(t)}
+          {/* Sub config bar */}
+          {!(selectedPreset === 'custom' && mode === 'template') && (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {selectedPreset === 'code' && (
+                  <div className="flex flex-wrap items-center gap-1.5 bg-app border border-border rounded-lg p-1">
+                    {['javascript', 'python', 'cpp', 'java', 'r', 'html', 'css'].map((lang) => (
+                      <button
+                        type="button"
+                        key={lang}
+                        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          selectedCodeLanguage === lang
+                            ? 'bg-accent text-white shadow-sm'
+                            : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                        }`}
+                        onClick={() => setSelectedCodeLanguage(lang)}
                       >
-                        <span>{t}</span>
-                      </div>
+                        {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang.toUpperCase()}
+                      </button>
                     ))}
-                  </>
+                  </div>
                 )}
 
-                {/* Template word mode word targets */}
-                {mode === 'template' && testType === 'words' && (
-                  <>
-                    {['10', '25', '50', '100', '250', '500'].map((w) => (
-                      <div
-                        key={w}
-                        className={`config-item ${wordTarget === w ? 'active' : ''}`}
-                        onClick={() => setWordTarget(w)}
-                      >
-                        <span>{w}</span>
-                      </div>
-                    ))}
-                  </>
+                {mode === 'template' && selectedPreset !== 'code' && (
+                  <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1">
+                    <button
+                      type="button"
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                        showPunctuation ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg border border-transparent'
+                      }`}
+                      onClick={() => setShowPunctuation(!showPunctuation)}
+                    >
+                      <span>@</span>
+                      <span>punctuation</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                        showNumbers ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg border border-transparent'
+                      }`}
+                      onClick={() => setShowNumbers(!showNumbers)}
+                    >
+                      <span>#</span>
+                      <span>numbers</span>
+                    </button>
+                  </div>
                 )}
+              </div>
 
-                {/* Free mode word targets */}
-                {mode === 'free' && freeStopMode === 'words' && (
-                  <>
-                    {['50', '100', '200', '500'].map((w) => (
-                      <div
-                        key={w}
-                        className={`config-item ${freeWordTarget === w ? 'active' : ''}`}
-                        onClick={() => setFreeWordTarget(w)}
-                      >
-                        <span>{w}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
+              {/* Targets */}
+              <div className="flex items-center gap-1 bg-app border border-border rounded-lg p-1">
+                {((mode === 'template' && testType === 'time') || (mode === 'free' && freeStopMode === 'time')) &&
+                  ['15', '30', '60'].map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        duration === t
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
+                      onClick={() => setDuration(t)}
+                    >
+                      {t}s
+                    </button>
+                  ))}
+
+                {mode === 'template' && testType === 'words' &&
+                  ['10', '25', '50', '100', '250', '500'].map((w) => (
+                    <button
+                      type="button"
+                      key={w}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        wordTarget === w
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
+                      onClick={() => setWordTarget(w)}
+                    >
+                      {w}
+                    </button>
+                  ))}
+
+                {mode === 'free' && freeStopMode === 'words' &&
+                  ['50', '100', '200', '500'].map((w) => (
+                    <button
+                      type="button"
+                      key={w}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        freeWordTarget === w
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-text-muted hover:text-text-main hover:bg-nav-hover-bg'
+                      }`}
+                      onClick={() => setFreeWordTarget(w)}
+                    >
+                      {w}
+                    </button>
+                  ))}
               </div>
             </div>
           )}
@@ -1124,55 +1147,59 @@ export default function TypingSpeedTest() {
       )}
 
       {!isTesting && !testFinished && mode === 'template' && selectedPreset === 'custom' && (
-        <div className="custom-template-input-container">
-          <div className="form-group">
-            <label htmlFor="custom-paste-text">Paste Custom Template Text</label>
-            <textarea
-              id="custom-paste-text"
-              rows="3"
-              placeholder="Paste template text here..."
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-            />
-          </div>
-          <div className="file-upload-group">
-            <span className="upload-label">Or upload a TXT file:</span>
-            <label htmlFor="template-file-picker" className="btn-secondary btn-small file-upload-btn">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
-              Browse File
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+          <FieldInput
+            as="textarea"
+            id="custom-paste-text"
+            label="Paste Custom Template Text"
+            placeholder="Paste template text here..."
+            value={customText}
+            onChange={(e) => setCustomText(e.target.value)}
+          />
+          <div className="flex items-center gap-3 text-xs md:text-sm font-semibold text-text-muted">
+            <span>Or upload a TXT file:</span>
+            <label htmlFor="template-file-picker">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                Browse File
+              </span>
             </label>
             <input
               type="file"
               id="template-file-picker"
               accept=".txt"
               onChange={handleFileUpload}
-              style={{ display: 'none' }}
+              className="hidden"
             />
-            {uploadedFileName && <span className="uploaded-file-name">{uploadedFileName}</span>}
+            {uploadedFileName && (
+              <span className="bg-app border border-border text-text-muted px-2.5 py-1 rounded-md text-xs font-mono">
+                {uploadedFileName}
+              </span>
+            )}
           </div>
         </div>
       )}
 
       {/* Main Test Interface */}
       {!testFinished ? (
-        <div className="typing-stage-area">
+        <div className="flex flex-col gap-3">
           {/* Active stats display */}
           {isTesting && (
-            <div className="live-indicators">
-              <div className="live-timer-container">
-                <span className="live-timer">
+            <div className="flex justify-between items-center bg-card border border-border rounded-xl px-5 py-3 shadow-sm select-none gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl md:text-2xl font-bold text-accent font-mono">
                   {/* Template time mode */}
                   {mode === 'template' && testType === 'time' && selectedPreset !== 'custom' && `${timeLeft}`}
                   {/* Template custom preset mode (progress & time) */}
                   {mode === 'template' && selectedPreset === 'custom' && (
-                    <>
-                      <span style={{ fontSize: '1.2rem', color: 'var(--sub-color)', marginRight: '10px' }}>
+                    <span className="flex items-center gap-2">
+                      <span className="text-sm text-text-muted font-sans font-medium">
                         {activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`}
                       </span>
-                      {`${elapsedTime}s`}
-                    </>
+                      <span>{`${elapsedTime}s`}</span>
+                    </span>
                   )}
                   {/* Template words mode */}
                   {mode === 'template' && testType === 'words' && selectedPreset !== 'custom' && (activeLang === 'chinese' ? `${currentIndex}/${templateText.length}` : `${activeWordIdx}/${wordsList.length}`)}
@@ -1188,26 +1215,26 @@ export default function TypingSpeedTest() {
                   {mode === 'free' && freeStopMode === 'manual' && `${elapsedTime}s`}
                 </span>
               </div>
-              <div className="live-stat-badges">
-                <div className="badge">
-                  WPM: <span className="val">{wpm}</span>
+              <div className="flex flex-wrap gap-2 md:gap-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-text-muted">
+                <div className="bg-app border border-border px-2.5 py-1 rounded-md">
+                  WPM: <span className="text-text-main font-mono text-sm">{wpm}</span>
                 </div>
                 {activeLang !== 'chinese' && cpm !== null && (
-                  <div className="badge">
-                    CPM: <span className="val">{cpm}</span>
+                  <div className="bg-app border border-border px-2.5 py-1 rounded-md">
+                    CPM: <span className="text-text-main font-mono text-sm">{cpm}</span>
                   </div>
                 )}
                 {mode === 'template' && (
-                  <div className="badge">
-                    Accuracy: <span className="val">{accuracy}%</span>
+                  <div className="bg-app border border-border px-2.5 py-1 rounded-md">
+                    Accuracy: <span className="text-text-main font-mono text-sm">{accuracy}%</span>
                   </div>
                 )}
-                <div className="badge">
-                  Corrections: <span className="val">{backspacesPressed}</span>
+                <div className="bg-app border border-border px-2.5 py-1 rounded-md">
+                  Corrections: <span className="text-text-main font-mono text-sm">{backspacesPressed}</span>
                 </div>
                 {testType !== 'time' && (
-                  <div className="badge">
-                    Time: <span className="val">{elapsedTime}s</span>
+                  <div className="bg-app border border-border px-2.5 py-1 rounded-md">
+                    Time: <span className="text-text-main font-mono text-sm">{elapsedTime}s</span>
                   </div>
                 )}
               </div>
@@ -1217,7 +1244,7 @@ export default function TypingSpeedTest() {
           {/* Hidden input catcher */}
           <textarea
             ref={inputRef}
-            className="typing-input-catcher"
+            className="absolute -top-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none"
             value={typedText}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
@@ -1232,13 +1259,15 @@ export default function TypingSpeedTest() {
           {mode === 'template' ? (
             /* Template typing container */
             <div 
-              className={`typing-template-container ${isInputFocused ? 'focused' : ''} ${isCodeMode ? 'code-mode-editor' : ''}`}
+              className={`relative flex h-[240px] cursor-text flex-col justify-center overflow-y-auto rounded-2xl border border-border bg-card p-5 transition-all duration-300 md:h-[220px] md:p-6 ${
+                isInputFocused ? 'ring-2 ring-accent/30 border-accent' : ''
+              } ${isCodeMode ? 'bg-[#0f141c] dark:bg-[#0f141c] border-indigo-500/20' : ''}`}
               onClick={focusInput}
             >
               {!isInputFocused && !isTesting && (
-                <div className="focus-overlay">
-                  <div className="focus-message">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center z-20 cursor-pointer select-none transition-all duration-300">
+                  <div className="flex flex-col items-center gap-2 text-white font-semibold text-center px-4">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" className="animate-bounce">
                       <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path>
                     </svg>
                     <span>Click here to focus and start typing</span>
@@ -1248,81 +1277,85 @@ export default function TypingSpeedTest() {
 
               {isCodeMode ? (
                 /* IDE Code Mode Layout */
-                <div className="typing-code-block">
-                  <div className="code-lang-badge">{codeLanguage}</div>
-                  {codeLines.map((line) => (
-                    <div key={line.lineIndex} className="code-line">
-                      <span className="line-number">{line.lineIndex + 1}</span>
-                      <span className="line-content">
-                        {line.chars.map((charObj) => {
-                          const { char, globalIdx, isNewline } = charObj;
+                <div className="font-mono text-left w-full relative">
+                  <div className="absolute top-[-12px] right-[-12px] md:top-[-20px] md:right-[-20px] text-[10px] font-bold text-slate-400 bg-white/10 dark:bg-black/20 px-2 py-0.5 rounded border border-border uppercase tracking-wider z-10 select-none">
+                    {codeLanguage}
+                  </div>
+                  <div className="flex flex-col gap-0.5 font-mono text-sm leading-relaxed">
+                    {codeLines.map((line) => (
+                      <div key={line.lineIndex} className="flex items-start w-full">
+                        <span className="w-9 text-right mr-5 text-slate-500 font-mono text-xs select-none opacity-60 shrink-0">{line.lineIndex + 1}</span>
+                        <span className="flex-1 whitespace-pre-wrap break-all">
+                          {line.chars.map((charObj) => {
+                            const { char, globalIdx, isNewline } = charObj;
 
-                          let charClass = 'untyped';
-                          if (globalIdx < typedText.length) {
-                            charClass = typedText[globalIdx] === char ? 'correct' : 'incorrect';
-                          }
+                            let charStyle = 'text-slate-500';
+                            if (globalIdx < typedText.length) {
+                              charStyle = typedText[globalIdx] === char ? 'text-slate-100' : 'text-red-500 bg-red-500/15 rounded-sm';
+                            }
 
-                          const isCursorHere = globalIdx === typedText.length;
+                            const isCursorHere = globalIdx === typedText.length;
 
-                          if (isNewline) {
-                            return (
-                              <span 
-                                key={globalIdx} 
-                                className={`char newline-char ${charClass}`}
-                              >
-                                {isCursorHere && isInputFocused && (
-                                  <span className="caret">
-                                    {compositionText && (
-                                      <span className="ime-composition">{compositionText}</span>
-                                    )}
-                                  </span>
-                                )}
-                                ↵
-                              </span>
-                            );
-                          }
-
-                          if (char === ' ') {
-                            return (
-                              <span 
-                                key={globalIdx} 
-                                className={`char space-char ${charClass}`}
-                              >
-                                {isCursorHere && isInputFocused && (
-                                  <span className="caret">
-                                    {compositionText && (
-                                      <span className="ime-composition">{compositionText}</span>
-                                    )}
-                                  </span>
-                                )}
-                                &nbsp;
-                              </span>
-                            );
-                          }
-
-                          return (
-                            <span 
-                              key={globalIdx} 
-                              className={`char ${charClass}`}
-                            >
-                              {isCursorHere && isInputFocused && (
-                                <span className="caret">
-                                  {compositionText && (
-                                    <span className="ime-composition">{compositionText}</span>
+                            if (isNewline) {
+                              return (
+                                <span 
+                                  key={globalIdx} 
+                                  className={`relative inline-block font-bold ml-0.5 text-xs text-slate-500 select-none opacity-40 ${charStyle}`}
+                                >
+                                  {isCursorHere && isInputFocused && (
+                                    <span className="absolute left-0 top-[10%] h-[80%] w-[2.5px] bg-accent animate-pulse">
+                                      {compositionText && (
+                                        <span className="absolute left-0 top-full bg-slate-900 border-b-2 border-dashed border-accent text-xs leading-none p-1 rounded text-accent whitespace-nowrap z-10">{compositionText}</span>
+                                      )}
+                                    </span>
                                   )}
+                                  ↵
                                 </span>
-                              )}
-                              {char}
-                            </span>
-                          );
-                        })}
-                      </span>
-                    </div>
-                  ))}
+                              );
+                            }
+
+                            if (char === ' ') {
+                              return (
+                                <span 
+                                  key={globalIdx} 
+                                  className={`relative inline-block ${charStyle}`}
+                                >
+                                  {isCursorHere && isInputFocused && (
+                                    <span className="absolute left-0 top-[10%] h-[80%] w-[2.5px] bg-accent animate-pulse">
+                                      {compositionText && (
+                                        <span className="absolute left-0 top-full bg-slate-900 border-b-2 border-dashed border-accent text-xs leading-none p-1 rounded text-accent whitespace-nowrap z-10">{compositionText}</span>
+                                      )}
+                                    </span>
+                                  )}
+                                  &nbsp;
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <span 
+                                key={globalIdx} 
+                                className={`relative inline-block ${charStyle}`}
+                              >
+                                {isCursorHere && isInputFocused && (
+                                  <span className="absolute left-0 top-[10%] h-[80%] w-[2.5px] bg-accent animate-pulse">
+                                    {compositionText && (
+                                      <span className="absolute left-0 top-full bg-slate-900 border-b-2 border-dashed border-accent text-xs leading-none p-1 rounded text-accent whitespace-nowrap z-10">{compositionText}</span>
+                                    )}
+                                  </span>
+                                )}
+                                {char}
+                              </span>
+                            );
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 /* Standard Word-wrapping Layout */
-                <div className="typing-text-wrapper">
+                <div className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-lg md:text-xl leading-relaxed select-none break-words text-left relative">
                   {wordsList.map((word) => {
                     const isActive = activeWordIdx === word.id;
                     
@@ -1345,33 +1378,35 @@ export default function TypingSpeedTest() {
                     return (
                       <span
                         key={word.id}
-                        className={`typing-word ${isActive ? 'active' : ''} ${hasError ? 'error' : ''}`}
+                        className={`relative rounded px-0.5 transition-all ${
+                          isActive ? 'bg-accent/5' : ''
+                        } ${hasError ? 'border-b-2 border-red-500/50' : ''}`}
                       >
-                        {/* Typo floating tooltip popup matching screenshot layout */}
+                        {/* Typo floating tooltip popup */}
                         {isActive && typedWordPrefix.length > 0 && (
-                          <div className="typing-tooltip">
-                            <span className="tooltip-typed">{typedWordPrefix}</span>
-                            <span className="tooltip-divider">🏰</span>
-                            <span className="tooltip-expected">{expectedWord}</span>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 dark:bg-slate-950 text-white border border-border/20 text-[10px] md:text-xs rounded px-2.5 py-1 shadow-lg flex items-center gap-1.5 z-35 animate-fade-in pointer-events-none whitespace-nowrap">
+                            <span className="text-red-400 line-through">{typedWordPrefix}</span>
+                            <span className="text-text-muted opacity-50">🏰</span>
+                            <span className="text-green-400 font-bold">{expectedWord}</span>
                           </div>
                         )}
 
                         {/* Word characters */}
                         {word.chars.map((char, charIdx) => {
                           const globalIdx = word.start + charIdx;
-                          let charClass = 'untyped';
+                          let charStyle = 'text-slate-400 dark:text-slate-600';
                           if (globalIdx < typedText.length) {
-                            charClass = typedText[globalIdx] === char ? 'correct' : 'incorrect';
+                            charStyle = typedText[globalIdx] === char ? 'text-text-main' : 'text-red-500 bg-red-500/10 rounded-sm';
                           }
                           
                           const isCursorHere = globalIdx === typedText.length;
 
                           return (
-                            <span key={charIdx} className={`char ${charClass}`}>
+                            <span key={charIdx} className={`relative inline-block transition-colors ${charStyle}`}>
                               {isCursorHere && isInputFocused && (
-                                <span className="caret">
+                                <span className="absolute left-0 top-[10%] h-[80%] w-[2.5px] bg-accent animate-pulse">
                                   {compositionText && (
-                                    <span className="ime-composition">{compositionText}</span>
+                                    <span className="absolute left-0 top-full bg-sidebar border-b-2 border-dashed border-accent text-xs leading-none p-1 rounded text-accent whitespace-nowrap z-10">{compositionText}</span>
                                   )}
                                 </span>
                               )}
@@ -1383,18 +1418,18 @@ export default function TypingSpeedTest() {
                         {/* Spacer space rendering */}
                         {word.hasSpaceAfter && (() => {
                           const spaceIdx = word.end;
-                          let spaceClass = 'untyped';
+                          let spaceStyle = 'text-slate-400 dark:text-slate-600';
                           if (spaceIdx < typedText.length) {
-                            spaceClass = typedText[spaceIdx] === ' ' ? 'correct' : 'incorrect';
+                            spaceStyle = typedText[spaceIdx] === ' ' ? 'text-text-main' : 'text-red-500 bg-red-500/25 rounded-sm';
                           }
                           const isCursorHere = spaceIdx === typedText.length;
 
                           return (
-                            <span className={`char space ${spaceClass}`}>
+                            <span className={`relative inline-block ${spaceStyle}`}>
                               {isCursorHere && isInputFocused && (
-                                <span className="caret">
+                                <span className="absolute left-0 top-[10%] h-[80%] w-[2.5px] bg-accent animate-pulse">
                                   {compositionText && (
-                                    <span className="ime-composition">{compositionText}</span>
+                                    <span className="absolute left-0 top-full bg-sidebar border-b-2 border-dashed border-accent text-xs leading-none p-1 rounded text-accent whitespace-nowrap z-10">{compositionText}</span>
                                   )}
                                 </span>
                               )}
@@ -1410,15 +1445,15 @@ export default function TypingSpeedTest() {
             </div>
           ) : (
             /* Free typing container */
-            <div className={`free-typing-container ${paused ? 'paused' : ''}`}>
+            <div className={`relative border border-border rounded-2xl p-1 bg-card overflow-hidden ${paused ? 'pointer-events-none' : ''}`}>
               {paused && (
-                <div className="free-typing-paused-overlay">
-                  <span>⏸ Paused</span>
-                  <span className="paused-hint">Press Ctrl+Enter or click Resume to continue</span>
+                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center text-white select-none gap-2">
+                  <span className="text-xl font-bold">⏸ Paused</span>
+                  <span className="text-xs text-slate-300">Press Ctrl+Enter or click Resume to continue</span>
                 </div>
               )}
               <textarea
-                className="free-typing-textarea"
+                className="w-full bg-transparent border-none text-text-main outline-none resize-none p-5 font-mono text-base placeholder-text-muted/40 min-h-[140px]"
                 rows="6"
                 placeholder="Start typing here... Timer will begin automatically on the first keystroke."
                 value={typedText}
@@ -1432,107 +1467,109 @@ export default function TypingSpeedTest() {
             </div>
           )}
 
-          {/* New Text Refresh Button (Visible in all modes, when not finished and not currently actively testing) */}
+          {/* New Text Refresh Button */}
           {!testFinished && !isTesting && (
-            <div className="template-refresh-row">
-              <button 
-                className="btn-secondary btn-small" 
+            <div className="flex justify-center">
+              <Button 
+                variant="secondary" 
+                size="sm"
                 onClick={refreshTemplate} 
                 title="Refresh template text (loads a new text)"
+                className="flex items-center gap-1.5"
               >
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                 </svg>
                 <span>New Text</span>
-              </button>
+              </Button>
             </div>
           )}
 
           {/* Test controls */}
           {(isTesting || typedText.length > 0) && (
-            <div className="test-control-actions">
+            <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
               {isTesting && (
-                <button className="btn-secondary" onClick={() => setPaused(!paused)} title={mode === 'free' ? 'Ctrl+Enter to toggle pause' : ''}>
-                  {paused ? 'Resume' : 'Pause'}
-                  {mode === 'free' && !paused && <span style={{ opacity: 0.5, fontSize: '0.75rem', marginLeft: '6px' }}>Ctrl+↵</span>}
-                </button>
+                <Button variant="secondary" onClick={() => setPaused(!paused)} title={mode === 'free' ? 'Ctrl+Enter to toggle pause' : ''}>
+                  <span>{paused ? 'Resume' : 'Pause'}</span>
+                  {mode === 'free' && !paused && <span className="opacity-50 text-[10px] ml-1.5 font-mono bg-white/10 px-1 rounded">Ctrl+↵</span>}
+                </Button>
               )}
               {(isTesting || typedText.length > 0) && (
-                <button className="btn-primary" onClick={() => {
+                <Button variant="primary" onClick={() => {
                   const currentElapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
                   finishTest(typedText, currentElapsed);
                 }}>
                   Stop &amp; Complete
-                </button>
+                </Button>
               )}
-              <button className="btn-secondary" onClick={resetTest}>
+              <Button variant="secondary" onClick={resetTest}>
                 Restart Test
-              </button>
+              </Button>
             </div>
           )}
         </div>
       ) : (
         /* Results screen */
-        <div className="typing-results-dashboard">
-          <div className="results-card">
-            <h3>Test Completed!</h3>
-            <div className="metrics-grid">
-              <div className="metric-box">
-                <span className="label">WPM (Net Speed)</span>
-                <span className="value accent-val">{wpm}</span>
+        <div className="flex flex-col gap-6 items-center">
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl flex flex-col gap-6 shadow-sm">
+            <h3 className="text-lg font-bold text-text-main text-center border-b border-border pb-3">Test Completed!</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">WPM (Net Speed)</span>
+                <span className="text-3xl font-extrabold text-accent font-mono">{wpm}</span>
               </div>
               {activeLang !== 'chinese' && cpm !== null && (
-                <div className="metric-box">
-                  <span className="label">CPM (Char Speed)</span>
-                  <span className="value">{cpm}</span>
+                <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">CPM (Char Speed)</span>
+                  <span className="text-2xl font-extrabold text-text-main font-mono">{cpm}</span>
                 </div>
               )}
               {mode === 'template' && (
-                <div className="metric-box">
-                  <span className="label">Accuracy</span>
-                  <span className="value">{accuracy}%</span>
+                <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Accuracy</span>
+                  <span className="text-2xl font-extrabold text-text-main font-mono">{accuracy}%</span>
                 </div>
               )}
-              <div className="metric-box">
-                <span className="label">Time Spent</span>
-                <span className="value">{elapsedTime}s</span>
+              <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Time Spent</span>
+                <span className="text-2xl font-extrabold text-text-main font-mono">{elapsedTime}s</span>
               </div>
-              <div className="metric-box">
-                <span className="label">Corrections</span>
-                <span className="value">{backspacesPressed}</span>
+              <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Corrections</span>
+                <span className="text-2xl font-extrabold text-text-main font-mono">{backspacesPressed}</span>
               </div>
-              <div className="metric-box">
-                <span className="label">Correction Rate</span>
-                <span className="value">{correctionRate}%</span>
+              <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Correction Rate</span>
+                <span className="text-2xl font-extrabold text-text-main font-mono">{correctionRate}%</span>
               </div>
             </div>
 
-            <div className="results-actions">
-              <button
-                className="btn-primary"
+            <div className="flex items-center justify-center gap-3 border-t border-border pt-4">
+              <Button
+                variant="primary"
                 onClick={saveResult}
                 disabled={resultsSaved}
               >
                 {resultsSaved ? 'Result Saved!' : 'Save Result'}
-              </button>
-              <button className="btn-secondary" onClick={resetTest}>
+              </Button>
+              <Button variant="secondary" onClick={resetTest}>
                 Try Again
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {/* History Dashboard */}
-      <div className="typing-history-section">
-        <div className="history-header">
-          <h3>Recent typing test results</h3>
+      <div className={`${history.length === 0 ? 'hidden' : 'mt-2 flex' } flex-col gap-2 border-t border-border pt-3`}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h3 className="text-sm font-bold text-text-main">Recent typing test results</h3>
           {history.length > 0 && (
-            <div className="history-actions">
-              <button className="text-action-btn" onClick={exportHistory}>
+            <div className="flex items-center gap-3">
+              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={exportHistory}>
                 Export History (JSON)
               </button>
-              <button className="text-action-btn danger" onClick={clearHistory}>
+              <button className="text-xs font-bold text-red-500 hover:text-red-600 cursor-pointer bg-transparent border-none" onClick={clearHistory}>
                 Clear All
               </button>
             </div>
@@ -1540,35 +1577,35 @@ export default function TypingSpeedTest() {
         </div>
 
         {history.length === 0 ? (
-          <p className="no-history-msg">No recent results found. Complete a test and click "Save Result" to build your log.</p>
+          <p className="rounded-xl border border-dashed border-border bg-card py-3 text-center text-xs text-text-muted">No recent results yet.</p>
         ) : (
-          <div className="history-table-wrapper">
-            <table className="history-table">
+          <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
+            <table className="w-full border-collapse text-left text-xs text-text-main">
               <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Mode</th>
-                  <th>Language</th>
-                  <th>WPM</th>
-                  <th>CPM</th>
-                  <th>Accuracy</th>
-                  <th>Backspaces</th>
-                  <th>Correction Rate</th>
-                  <th>Time</th>
+                <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted select-none">
+                  <th className="p-3.5 pl-4">Date</th>
+                  <th className="p-3.5">Mode</th>
+                  <th className="p-3.5">Language</th>
+                  <th className="p-3.5">WPM</th>
+                  <th className="p-3.5">CPM</th>
+                  <th className="p-3.5">Accuracy</th>
+                  <th className="p-3.5">Backspaces</th>
+                  <th className="p-3.5">Correction Rate</th>
+                  <th className="p-3.5 pr-4">Time</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {history.map((h) => (
-                  <tr key={h.id}>
-                    <td>{h.date}</td>
-                    <td>{h.mode}</td>
-                    <td>{h.language}</td>
-                    <td className="wpm-td">{h.wpm}</td>
-                    <td>{h.cpm}</td>
-                    <td>{h.accuracy}</td>
-                    <td>{h.corrections}</td>
-                    <td>{h.correctionRate}</td>
-                    <td>{h.duration}</td>
+                  <tr key={h.id} className="hover:bg-app/20 transition-colors">
+                    <td className="p-3.5 pl-4 text-text-muted whitespace-nowrap">{h.date}</td>
+                    <td className="p-3.5 capitalize">{h.mode}</td>
+                    <td className="p-3.5 capitalize">{h.language}</td>
+                    <td className="p-3.5 font-bold font-mono text-accent text-sm">{h.wpm}</td>
+                    <td className="p-3.5 font-mono">{h.cpm}</td>
+                    <td className="p-3.5 font-mono">{h.accuracy}%</td>
+                    <td className="p-3.5 font-mono text-text-muted">{h.corrections}</td>
+                    <td className="p-3.5 font-mono text-text-muted">{h.correctionRate}%</td>
+                    <td className="p-3.5 font-mono pr-4">{h.duration}s</td>
                   </tr>
                 ))}
               </tbody>
@@ -1576,6 +1613,6 @@ export default function TypingSpeedTest() {
           </div>
         )}
       </div>
-    </article>
+    </Card>
   );
 }

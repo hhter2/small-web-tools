@@ -1,4 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CODON DATA — authoritative JSON mapping (RNA codons)
@@ -139,13 +142,34 @@ function useRipple() {
 function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
-  const cls = [
-    'ct-codon-btn',
-    codonClass(codon),
-    isSelected    ? 'is-selected'    : '',
-    isHighlighted ? 'is-highlighted' : '',
-    isDimmed      ? 'is-dimmed'      : '',
-  ].filter(Boolean).join(' ');
+
+  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
+
+  if (data?.type === 'start') {
+    cls += ' text-emerald-600 font-bold hover:bg-emerald-500/15 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
+    if (isSelected) {
+      cls += ' !bg-emerald-600 !border-emerald-600 !text-white shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
+    } else if (isHighlighted) {
+      cls += ' border-emerald-600 shadow-[0_0_10px_rgba(22,163,74,0.4)] bg-emerald-500/8';
+    }
+  } else if (data?.type === 'stop') {
+    cls += ' text-red-600 font-bold hover:bg-red-500/12 hover:border-red-600 hover:text-red-600 hover:shadow-[0_0_0_3px_rgba(220,38,38,0.15)]';
+    if (isSelected) {
+      cls += ' !bg-red-600 !border-red-600 !text-white shadow-[0_0_0_3px_rgba(220,38,38,0.15)]';
+    } else if (isHighlighted) {
+      cls += ' border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)] bg-red-500/8';
+    }
+  } else {
+    if (isSelected) {
+      cls += ' !bg-accent !border-accent !text-white font-bold shadow-[0_0_0_3px_var(--focus-ring),0_2px_10px_rgba(99,102,241,0.35)] animate-[ct-pulse-glow_2s_ease-in-out_infinite]';
+    } else if (isHighlighted) {
+      cls += ' bg-accent-light border-accent text-accent';
+    }
+  }
+
+  if (isDimmed) {
+    cls += ' opacity-20 grayscale-[40%]';
+  }
 
   const handleClick = (e) => {
     triggerRipple(e);
@@ -156,12 +180,17 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
     <button
       id={`codon-${codon}`}
       className={cls}
+      style={isSelected ? {
+        backgroundColor: data?.type === 'start' ? '#059669' : data?.type === 'stop' ? '#dc2626' : 'var(--accent)',
+        borderColor: data?.type === 'start' ? '#059669' : data?.type === 'stop' ? '#dc2626' : 'var(--accent)',
+        color: '#fff'
+      } : undefined}
       onClick={handleClick}
       aria-label={`Codon ${codon} encodes ${data?.full ?? 'unknown'}`}
       aria-pressed={isSelected}
       title={`${codon} → ${data?.full ?? '?'} (${data?.abbr ?? '?'})`}
     >
-      <span className="ct-codon-letters">{codon}</span>
+      <span className={isHighlighted ? 'font-extrabold' : ''}>{codon}</span>
     </button>
   );
 }
@@ -175,13 +204,29 @@ function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
   if (!data) return null;
 
   const aaColor = AA_COLORS[data.aa];
-  let cls = 'ct-aa-btn';
-  if (data.type === 'start') cls += ' ct-aa-start';
-  else if (data.type === 'stop') cls += ' ct-aa-stop';
-  if (isHighlighted) cls += ' is-highlighted';
-  if (isDimmed) cls += ' is-dimmed';
+  let cls = 'font-sans text-[0.6rem] sm:text-[0.78rem] font-bold leading-none py-0 px-0.5 rounded-md border border-transparent bg-transparent cursor-pointer text-center whitespace-nowrap relative overflow-hidden w-full text-text-muted hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-[1.06] hover:z-[2] active:scale-96';
 
-  const inlineStyle = aaColor ? { color: aaColor } : {};
+  if (data.type === 'start') {
+    cls += ' text-emerald-600 hover:bg-emerald-500/12 hover:border-emerald-600';
+    if (isHighlighted) {
+      cls += ' border-emerald-600 shadow-[0_0_10px_rgba(22,163,74,0.4)] bg-emerald-500/8';
+    }
+  } else if (data.type === 'stop') {
+    cls += ' text-red-600 hover:bg-red-500/10 hover:border-red-600';
+    if (isHighlighted) {
+      cls += ' border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)] bg-red-500/8';
+    }
+  } else {
+    if (isHighlighted) {
+      cls += ' bg-accent-light border-accent text-accent';
+    }
+  }
+
+  if (isDimmed) {
+    cls += ' opacity-20 grayscale-[40%]';
+  }
+
+  const inlineStyle = (aaColor && !isHighlighted && !isDimmed) ? { color: aaColor } : {};
 
   const handleClick = (e) => {
     triggerRipple(e);
@@ -534,41 +579,41 @@ function FischerProjection({ aa, customGroups = [] }) {
   const groupText = allMatched.length > 0 ? allMatched.join(', ') : details.type;
 
   return (
-    <div className="ct-fischer-container">
-      <span className="ct-fischer-title">Fischer Projection (L-Form)</span>
-      <div className="ct-fischer-layout">
-        <svg className="ct-fischer-svg" width={width} height={height} viewBox={`0 0 160 ${baseHeight}`}>
+    <div className="flex flex-col gap-2.5 p-3.5 px-4 rounded-xl bg-app border border-border mt-1">
+      <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Fischer Projection (L-Form)</span>
+      <div className="flex flex-col items-center gap-3 w-full">
+        <svg className="shrink-0 bg-card rounded-lg border border-border p-2" width={width} height={height} viewBox={`0 0 160 ${baseHeight}`}>
           {/* Main Backbone Bonds */}
-          <line x1="50" y1="45" x2="70" y2="45" className="ct-fisc-main-bond" />
-          <line x1="90" y1="45" x2="110" y2="45" className="ct-fisc-main-bond" />
-          <line x1="80" y1="22" x2="80" y2="35" className="ct-fisc-main-bond" />
+          <line x1="50" y1="45" x2="70" y2="45" className="stroke-text-muted stroke-[2.4px] [stroke-linecap:round] opacity-85" />
+          <line x1="90" y1="45" x2="110" y2="45" className="stroke-text-muted stroke-[2.4px] [stroke-linecap:round] opacity-85" />
+          <line x1="80" y1="22" x2="80" y2="35" className="stroke-text-muted stroke-[2.4px] [stroke-linecap:round] opacity-85" />
           
           {/* Top Label: Carboxyl Group */}
-          <text x="80" y="12" textAnchor="middle" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">COO⁻</text>
+          <text x="80" y="12" textAnchor="middle" dominantBaseline="central" className="font-mono text-[1.08rem] fill-text-muted font-bold fill-text-main text-[1.14rem]">COO⁻</text>
           
           {/* Left Label: Amino Group (or Imino for Proline) */}
-          <text x="40" y="45" textAnchor="end" dominantBaseline="central" className="ct-fisc-text ct-fisc-main">
+          <text x="40" y="45" textAnchor="end" dominantBaseline="central" className="font-mono text-[1.08rem] fill-text-muted font-bold fill-text-main text-[1.14rem]">
             {aa === 'Pro' ? 'H₂N⁺' : 'H₃N⁺'}
           </text>
 
           {/* Right Label: Hydrogen */}
-          <text x="120" y="45" textAnchor="start" dominantBaseline="central" className="ct-fisc-text">H</text>
+          <text x="120" y="45" textAnchor="start" dominantBaseline="central" className="font-mono text-[1.08rem] fill-text-muted">H</text>
 
           {/* Center Carbon */}
-          <text x="80" y="45" textAnchor="middle" dominantBaseline="central" className="ct-fisc-c">C</text>
+          <text x="80" y="45" textAnchor="middle" dominantBaseline="central" className="font-mono text-[1.14rem] font-bold fill-accent">C</text>
 
           {/* Side Chain R Group */}
           {renderSideChain(aa)}
         </svg>
 
-        <div className="ct-fischer-info">
-          <div className="ct-fisc-field">
-            <span className="ct-fisc-lbl">Side Chain:</span>
-            <span className="ct-fisc-val">{details.name}</span>
+        <div className="flex flex-col gap-1.5 w-full border-t border-dashed border-border pt-2.5">
+          <div className="flex gap-2 items-center justify-center text-center">
+            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">Side Chain:</span>
+            <span className="text-[0.82rem] font-semibold text-text-main">{details.name}</span>
           </div>
-          <div className="ct-fisc-field">
-            <span className="ct-fisc-lbl">Group Type:</span>
-            <span className="ct-fisc-val">{groupText}</span>
+          <div className="flex gap-2 items-center justify-center text-center">
+            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">Group Type:</span>
+            <span className="text-[0.82rem] font-semibold text-text-main">{groupText}</span>
           </div>
         </div>
       </div>
@@ -662,7 +707,8 @@ function InfoPanel({
   handleDeleteCustomGroup,
   handleToggleAAInNewGroup,
   handleCreateCustomGroup,
-  setSelectedCodon
+  setSelectedCodon,
+  panelRef
 }) {
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
@@ -673,11 +719,11 @@ function InfoPanel({
 
   const bgClass = data
     ? (data.type === 'start'
-      ? 'ct-panel--start'
+      ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/[0.06] to-card'
       : data.type === 'stop'
-      ? 'ct-panel--stop'
-      : 'ct-panel--normal')
-    : 'ct-panel--empty';
+      ? 'border-red-500/50 bg-gradient-to-br from-red-500/[0.05] to-card'
+      : '')
+    : '';
 
   const handleCardClick = () => {
     if (inputRef.current) {
@@ -692,14 +738,14 @@ function InfoPanel({
   const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
 
   return (
-    <div className="ct-sidebar-container">
+    <div className="contents">
       
       {/* ── Filter by Groups Block ────────────────── */}
-      <div className="ct-sidebar-group-panel">
-        <span className="ct-section-title">Filter by Group</span>
-        <div className="ct-group-wrapper">
+      <div className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] lg:col-start-2 lg:row-start-1 xl:col-start-1">
+        <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
+        <div className="flex flex-col gap-2.5">
           
-          <div className="ct-group-dropdown-row">
+          <div className="flex gap-2 items-center w-full">
             <select
               value={selectedGroup}
               onChange={(e) => {
@@ -708,7 +754,7 @@ function InfoPanel({
                 setHighlightedAA(null);
                 setSelectedCodon(null);
               }}
-              className="ct-group-dropdown"
+              className="min-w-0 flex-1 cursor-pointer rounded-lg border border-border bg-black/20 px-2.5 py-1.5 text-[0.8rem] text-text-main outline-none focus:border-accent"
               style={{
                 borderLeft: activeGroupColor ? `4px solid ${activeGroupColor}` : '1px solid var(--border-color)',
                 paddingLeft: activeGroupColor ? '0.5rem' : '0.75rem'
@@ -731,11 +777,11 @@ function InfoPanel({
               )}
             </select>
 
-            <div className="ct-group-control-btns">
+            <div className="flex gap-1.5 shrink-0">
               {selectedGroup.startsWith('custom-') && (
                 <button
                   type="button"
-                  className="ct-dropdown-action-btn ct-btn-delete"
+                  className="cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-red-500/40 hover:bg-red-500/15 hover:text-red-500 active:scale-96"
                   onClick={() => handleDeleteCustomGroup(parseInt(selectedGroup.split('-')[1], 10))}
                   title="Delete active custom group"
                 >
@@ -744,7 +790,7 @@ function InfoPanel({
               )}
               <button
                 type="button"
-                className={`ct-dropdown-action-btn ${isCreatingGroup ? 'is-active' : ''}`}
+                className={`cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-text-muted hover:bg-white/8 active:scale-96 ${isCreatingGroup ? 'bg-accent border-accent text-white shadow-[0_1px_6px_rgba(99, 102, 241, 0.25)]' : ''}`}
                 onClick={() => setIsCreatingGroup(prev => !prev)}
               >
                 {isCreatingGroup ? 'Close' : '+ Custom'}
@@ -754,16 +800,16 @@ function InfoPanel({
 
           {/* Custom Group Creator Panel */}
           {isCreatingGroup && (
-            <div className="ct-custom-creator-panel">
-              <span className="ct-creator-title">Create Custom Group</span>
-              <div className="ct-creator-form">
+            <div className="flex flex-col gap-4 bg-white/2 border border-border rounded-lg p-4 mt-1 animate-[ct-fade-in_0.25s_ease-out]">
+              <span className="text-[0.9rem] font-bold text-text-main uppercase tracking-wider border-b border-dashed border-border pb-2">Create Custom Group</span>
+              <div className="flex flex-col gap-4">
                 
                 {/* Name Input */}
-                <div className="ct-creator-field">
-                  <label className="ct-creator-label">Group Name</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Group Name</label>
                   <input
                     type="text"
-                    className="ct-creator-input"
+                    className="bg-black/20 border border-border rounded-lg p-2 px-3 text-text-main text-[0.85rem] outline-none focus:border-accent transition-colors"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="e.g. My Favorite AAs"
@@ -772,16 +818,16 @@ function InfoPanel({
                 </div>
 
                 {/* Color Picker */}
-                <div className="ct-creator-field">
-                  <label className="ct-creator-label">Label Color</label>
-                  <div className="ct-creator-colors">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Label Color</label>
+                  <div className="flex gap-2.5 flex-wrap">
                     {[
                       '#d97706', '#e11d48', '#059669', '#4f46e5', '#ea580c', '#06b6d4', '#db2777'
                     ].map(color => (
                       <button
                         key={color}
                         type="button"
-                        className={`ct-color-circle ${newGroupColor === color ? 'is-selected' : ''}`}
+                        className={`w-6 h-6 rounded-full border-2 border-transparent cursor-pointer transition-all hover:scale-115 ${newGroupColor === color ? 'border-white shadow-[0_0_8px_rgba(255, 255, 255, 0.5)] scale-110' : ''}`}
                         style={{ backgroundColor: color }}
                         onClick={() => setNewGroupColor(color)}
                       />
@@ -790,9 +836,9 @@ function InfoPanel({
                 </div>
 
                 {/* Amino Acid Selector Grid */}
-                <div className="ct-creator-field">
-                  <label className="ct-creator-label">Select Amino Acids ({newGroupAAs.length} chosen)</label>
-                  <div className="ct-creator-aa-grid">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Select Amino Acids ({newGroupAAs.length} chosen)</label>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-1.5">
                     {Object.keys(AMINO_ACID_DETAILS).map(aa => {
                       const isChosen = newGroupAAs.includes(aa);
                       const aaColor = AA_COLORS[aa] || 'var(--accent)';
@@ -802,16 +848,17 @@ function InfoPanel({
                         <button
                           key={aa}
                           type="button"
-                          className={`ct-creator-aa-btn ${isChosen ? 'is-chosen' : ''}`}
+                          className="flex items-center justify-center gap-1 border border-border rounded-lg bg-white/1 p-1.5 cursor-pointer transition-all text-[0.75rem] hover:border-[var(--aa-color)] hover:bg-white/5 active:scale-96"
                           style={{
+                            '--aa-color': aaColor,
                             borderColor: isChosen ? aaColor : 'var(--border-color)',
                             backgroundColor: isChosen ? `${aaColor}15` : 'transparent',
                             color: isChosen ? 'var(--text-main)' : 'var(--text-muted)'
                           }}
                           onClick={() => handleToggleAAInNewGroup(aa)}
                         >
-                          <span className="ct-creator-aa-code" style={{ color: aaColor, fontWeight: 'bold' }}>{aa}</span>
-                          <span className="ct-creator-aa-letter">[{oneLetter}]</span>
+                          <span className="font-bold" style={{ color: aaColor }}>{aa}</span>
+                          <span className="text-[0.65rem] opacity-70">[{oneLetter}]</span>
                         </button>
                       );
                     })}
@@ -819,10 +866,10 @@ function InfoPanel({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="ct-creator-actions">
+                <div className="flex justify-end gap-3 mt-2 border-t border-dashed border-border pt-3">
                   <button
                     type="button"
-                    className="ct-creator-btn-save"
+                    className="bg-accent border border-accent text-white rounded-lg p-2 px-4 text-[0.8rem] font-semibold cursor-pointer transition-all hover:brightness-95 active:scale-96 disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={handleCreateCustomGroup}
                     disabled={!newGroupName.trim() || newGroupAAs.length === 0}
                   >
@@ -830,7 +877,7 @@ function InfoPanel({
                   </button>
                   <button
                     type="button"
-                    className="ct-creator-btn-cancel"
+                    className="bg-transparent border border-border text-text-muted rounded-lg p-2 px-4 text-[0.8rem] font-semibold cursor-pointer transition-all hover:bg-white/5 hover:text-text-main active:scale-96"
                     onClick={() => {
                       setIsCreatingGroup(false);
                       setNewGroupName('');
@@ -847,9 +894,9 @@ function InfoPanel({
 
           {/* AA chips in active group */}
           {selectedGroup !== 'all' && activeGroup && (
-            <div className="ct-group-chips-wrapper">
-              <span className="ct-chips-label">Amino acids in group:</span>
-              <div className="ct-group-chips">
+            <div className="flex flex-col gap-1.5 animate-[ct-fade-in_0.25s_ease-out]">
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">Amino acids in group:</span>
+              <div className="flex flex-wrap gap-1.5">
                 {activeGroup.aas.map(aa => {
                   const isSelected = highlightedAA === aa;
                   const aaColor = AA_COLORS[aa] || 'var(--accent)';
@@ -858,9 +905,8 @@ function InfoPanel({
                   return (
                     <button
                       key={aa}
-                      className={`ct-aa-chip ${isSelected ? 'is-selected' : ''}`}
+                      className="inline-flex items-center gap-1.5 border border-border rounded-lg p-1.5 px-2.5 cursor-pointer transition-all font-semibold hover:scale-105 active:scale-96"
                       style={{
-                        '--aa-chip-color': aaColor,
                         borderColor: isSelected ? aaColor : 'var(--border-color)',
                         color: isSelected ? '#ffffff' : 'var(--text-main)',
                         backgroundColor: isSelected ? aaColor : 'rgba(255, 255, 255, 0.03)'
@@ -878,8 +924,8 @@ function InfoPanel({
                         });
                       }}
                     >
-                      <span className="ct-aa-chip-abbr">{aa}</span>
-                      <span className="ct-aa-chip-full">[{oneLetter}]</span>
+                      <span>{aa}</span>
+                      <span className="text-[0.68rem] opacity-80 font-normal">[{oneLetter}]</span>
                     </button>
                   );
                 })}
@@ -891,13 +937,13 @@ function InfoPanel({
       </div>
 
       {/* ── Codon Lookup Block ────────────────── */}
-      <div className={`ct-info-panel ${bgClass}`} role="status" aria-live="polite">
+      <div ref={panelRef} className={`relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 ${bgClass}`} role="status" aria-live="polite">
         
         {/* Hidden input for capturing keys */}
         <input
           ref={inputRef}
           type="text"
-          className="ct-typer-input-hidden"
+          className="absolute w-0 h-0 opacity-0 pointer-events-none"
           value={typedCodon}
           onChange={(e) => onType(e.target.value)}
           placeholder="Type codon"
@@ -905,49 +951,49 @@ function InfoPanel({
         />
 
         {/* Header section */}
-        <div className="ct-panel-header-merged">
+        <div className="flex min-h-[1.75rem] items-center justify-between pr-7">
           {data ? (
             <>
-              <div className="ct-panel-header-title">
-                <span className="ct-panel-aa">{data.full}</span>
+              <div className="flex items-center gap-2.5 flex-nowrap">
+                <span className="text-[1.65rem] font-bold text-text-main tracking-tight">{data.full}</span>
                 {data.aa !== 'Stop' && (
-                  <div className="ct-panel-header-badges">
-                    <span className="ct-panel-abbr-badge">{data.aa}</span>
-                    <span className="ct-panel-abbr-badge">{data.abbr}</span>
+                  <div className="flex gap-1 flex-nowrap items-center shrink-0">
+                    <span className="p-1 px-2.5 rounded-lg text-[0.95rem] font-bold bg-app border border-border text-text-main font-mono transition-all dark:bg-white/5">{data.aa}</span>
+                    <span className="p-1 px-2.5 rounded-lg text-[0.95rem] font-bold bg-app border border-border text-text-main font-mono transition-all dark:bg-white/5">{data.abbr}</span>
                   </div>
                 )}
-                {data.type === 'start' && <span className="ct-badge ct-badge--start">START ★</span>}
-                {data.type === 'stop'  && <span className="ct-badge ct-badge--stop">STOP ■</span>}
+                {data.type === 'start' && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-emerald-500/20 text-emerald-600 bg-emerald-500/10">START ★</span>}
+                {data.type === 'stop'  && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-red-500/20 text-red-600 bg-red-500/[0.08]">STOP ■</span>}
               </div>
-              <button className="ct-panel-close" onClick={onClear} aria-label="Clear selection">✕</button>
+              <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label="Clear selection">✕</button>
             </>
           ) : (
             <>
-              <span className="ct-panel-title-empty">Codon Lookup</span>
+              <span className="text-xl font-bold tracking-tight text-text-main">Codon Lookup</span>
               {typedCodon.length > 0 && (
-                <button className="ct-panel-close" onClick={onClear} aria-label="Clear typing">✕</button>
+                <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label="Clear typing">✕</button>
               )}
             </>
           )}
         </div>
 
         {/* The 3 passcode typing cards */}
-        <div className="ct-typer-cards-row ct-typer-cards-row--sidebar">
+        <div className="my-2 flex w-full justify-center gap-2.5">
           {['1ST', '2ND', '3RD'].map((posName, idx) => {
             const char = typedCodon[idx] || '';
             const isActive = typedCodon.length === idx;
-            const charColorClass = char ? `ct-base-${char}` : '';
+            const charColorClass = char === 'U' ? 'text-purple-400' : char === 'C' ? 'text-sky-400' : char === 'A' ? 'text-amber-400' : char === 'G' ? 'text-emerald-400' : '';
             return (
               <div
                 key={idx}
-                className={`ct-typer-card ${isActive ? 'is-active' : ''} ${char ? 'has-value' : ''}`}
+                className={`flex h-[68px] min-w-0 max-w-[96px] flex-1 cursor-pointer select-none flex-col items-center justify-center rounded-xl border-2 border-border bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-white/[0.05] ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
                 onClick={handleCardClick}
                 title="Click to type codon (U, C, A, G)"
               >
-                <span className="ct-typer-card-pos">{posName}</span>
-                <span className={`ct-typer-card-val ${charColorClass}`}>
+                <span className="text-[0.65rem] font-bold text-text-muted mb-1 tracking-wider">{posName}</span>
+                <span className={`flex h-6 items-center justify-center font-mono text-2xl font-bold leading-none ${charColorClass}`}>
                   {char || '—'}
-                  {isActive && <span className="ct-typer-cursor"></span>}
+                  {isActive && <span className="inline-block w-[2px] h-[1.8rem] bg-accent ml-0.5 animate-[ct-blink-anim_1s_step-end_infinite]"></span>}
                 </span>
               </div>
             );
@@ -956,14 +1002,14 @@ function InfoPanel({
 
         {/* Display result/prompt depending on state */}
         {data ? (
-          <div className="ct-panel-details-scroll">
+          <div className="flex flex-col gap-4">
             {/* Synonymous codons */}
             {synonyms.length > 0 && (
-              <div className="ct-panel-synonyms">
-                <span className="ct-panel-syn-label">Synonymous codons:</span>
-                <div className="ct-panel-syn-list">
+              <div className="flex flex-col gap-2">
+                <span className="text-[0.78rem] font-bold uppercase tracking-wider text-text-muted">Synonymous codons:</span>
+                <div className="flex flex-wrap gap-1.5">
                   {synonyms.map(s => (
-                    <span key={s} className="ct-syn-chip">{s}</span>
+                    <span key={s} className="font-mono text-[0.85rem] p-1 px-2.5 rounded-lg bg-app border border-border text-text-muted">{s}</span>
                   ))}
                 </div>
               </div>
@@ -975,13 +1021,13 @@ function InfoPanel({
             )}
           </div>
         ) : (
-          <div className="ct-panel-prompt">
+          <div className="flex min-h-[48px] items-center justify-center rounded-lg border border-dashed border-border bg-white/[0.01] p-2 text-center">
             {typedCodon.length > 0 ? (
-              <span className="ct-result-prompt">
+              <span className="text-accent text-[0.85rem] font-semibold">
                 Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
               </span>
             ) : (
-              <span className="ct-result-placeholder">
+              <span className="text-text-muted text-[0.85rem] italic">
                 Click cards above to type a codon sequence (e.g. UAU, AUG) or select a codon from the table.
               </span>
             )}
@@ -1197,14 +1243,14 @@ export default function CodonTable() {
   }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
-    <article id="tool-codon" className="tool-card tool-card--wide active ct-root">
+    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full !gap-2.5 !p-3 font-sans">
 
       {/* ── Header ───────────────────────────────────────────────── */}
-      <div className="ct-header">
+      <div className="flex flex-col gap-2.5 w-full">
         
         {/* Title & Filter Bar on same line */}
-        <div className="ct-header-top">
-          <h2 className="ct-title">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <h2 className="mb-0 flex items-center gap-2 text-[1.3rem] font-bold text-text-main">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
               <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"/>
@@ -1214,16 +1260,20 @@ export default function CodonTable() {
           </h2>
 
           {/* Filter Buttons */}
-          <div className="ct-filter-bar" role="group" aria-label="Filter codons">
+          <div className="flex gap-2 flex-wrap" role="group" aria-label="Filter codons">
             {[
-              { key: 'all',   label: 'All Codons' },
-              { key: 'start', label: '★ Start' },
-              { key: 'stop',  label: '■ Stop' },
-            ].map(({ key, label }) => (
+              { key: 'all',   label: 'All Codons', activeClass: 'bg-accent border-accent text-white shadow-[0_2px_8px_rgba(99,102,241,0.35)]' },
+              { key: 'start', label: '★ Start', activeClass: 'bg-emerald-600 border-emerald-600 text-white shadow-[0_2px_8px_rgba(22,163,74,0.35)]' },
+              { key: 'stop',  label: '■ Stop', activeClass: 'bg-red-600 border-red-600 text-white shadow-[0_2px_8px_rgba(220,38,38,0.35)]' },
+            ].map(({ key, label, activeClass }) => (
               <button
                 key={key}
                 id={`ct-filter-${key}`}
-                className={`ct-filter-btn ct-filter-btn--${key} ${filterMode === key ? 'is-active' : ''}`}
+                className={`px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold border cursor-pointer transition-all duration-200 tracking-wide hover:border-accent hover:text-accent hover:-translate-y-px ${
+                  filterMode === key 
+                    ? activeClass 
+                    : 'border-border bg-card text-text-muted'
+                }`}
                 onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
                 aria-pressed={filterMode === key}
               >
@@ -1233,156 +1283,150 @@ export default function CodonTable() {
           </div>
         </div>
 
-        {/* Subtitle & Legend on same line below */}
-        <div className="ct-subtitle-row">
-          <p className="ct-subtitle">
-            Click any codon or amino acid to explore synonyms, properties, and base positions.
-          </p>
-          <div className="ct-legend" role="note" aria-label="Legend">
-            <span className="ct-legend-item ct-legend-item--start">★ Start Codon</span>
-            <span className="ct-legend-item ct-legend-item--stop">■ Stop Codon</span>
-            <span className="ct-legend-item ct-legend-item--highlight">Highlighted = same amino acid</span>
-          </div>
-        </div>
-
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="ct-workspace">
-        <div className="ct-table-container">
+      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(220px,0.7fr)_minmax(560px,1.7fr)_minmax(320px,1fr)]">
+        <div className="w-full min-w-0 max-w-full lg:row-span-2 xl:col-start-2 xl:row-span-1 xl:row-start-1">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
-          <div className="ct-outer-grid">
+          <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
 
             {/* Left axis: "First Codon" vertical label */}
-            <div className="ct-axis-label ct-axis-label--left" aria-label="First codon position">
-              <span>First Codon (5')</span>
+            <div className="col-start-1 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-r border-border flex items-center justify-center rotate-180" aria-label="First codon position">
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">First Codon (5')</span>
             </div>
 
             {/* Top axis: "Second Codon" horizontal label */}
-            <div className="ct-axis-label ct-axis-label--top" aria-label="Second codon position">
-              <span>Second Codon</span>
+            <div className="col-start-2 row-start-1 bg-gradient-to-r from-accent/8 to-accent/4 border-b border-border flex items-center justify-center" aria-label="Second codon position">
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">Second Codon</span>
             </div>
 
             {/* Right axis: "Third Codon" vertical label */}
-            <div className="ct-axis-label ct-axis-label--right" aria-label="Third codon position">
-              <span>Third Codon (3')</span>
+            <div className="col-start-3 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-l border-border flex items-center justify-center" aria-label="Third codon position">
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">Third Codon (3')</span>
             </div>
 
             {/* Inner: top axis + table */}
-            <div className="ct-inner-wrapper">
+            <div className="col-start-2 row-start-2 flex flex-col">
 
               {/* Top axis: Second Base */}
-              <div className="ct-axis-top" role="row">
+              <div className="grid grid-cols-[28px_repeat(4,1fr)_36px] border-b border-border bg-app" role="row">
                 <div className="ct-axis-corner"></div>
-                {SECOND_BASES.map(b2 => (
-                  <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`} role="columnheader">
-                    <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
-                  </div>
-                ))}
+                {SECOND_BASES.map(b2 => {
+                  const colorClass = b2 === 'U' ? 'text-purple-400' : b2 === 'C' ? 'text-sky-400' : b2 === 'A' ? 'text-amber-400' : b2 === 'G' ? 'text-emerald-400' : '';
+                  return (
+                    <div key={b2} className="flex flex-col items-center justify-center border-l border-border px-0.5 py-1" role="columnheader">
+                      <span className={`font-mono text-base font-bold ${colorClass}`}>{b2}</span>
+                    </div>
+                  );
+                })}
                 <div className="ct-axis-corner"></div>
               </div>
 
               {/* Main table body */}
-              <div className="ct-table-body">
+              <div className="flex flex-col relative">
 
-                {/* Right axis: Third Base — one row per third-base letter, aligned via grid */}
-                <div className="ct-axis-right-container" aria-label="Third base in codon">
-                  {THIRD_BASES.map(b3 => (
-                    <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd ct-base-row-${b3}`} role="rowheader">
-                      <span className={`ct-axis-base ct-base-${b3}`}>{b3}</span>
-                    </div>
-                  ))}
-                </div>
 
-                {BASES.map(b1 => (
-                  <div key={b1} className={`ct-row-group ct-b1-${b1}`} role="rowgroup">
+                {BASES.map(b1 => {
+                  const b1ColorClass = b1 === 'U' ? 'text-purple-400' : b1 === 'C' ? 'text-sky-400' : b1 === 'A' ? 'text-amber-400' : b1 === 'G' ? 'text-emerald-400' : '';
+                  const b1BgHeaderClass = b1 === 'U' ? 'bg-purple-500/10' : b1 === 'C' ? 'bg-sky-500/10' : b1 === 'A' ? 'bg-amber-500/10' : b1 === 'G' ? 'bg-emerald-500/10' : '';
+                  return (
+                    <div key={b1} className="grid grid-cols-[28px_1fr_36px] border-t border-border first:border-t-0" role="rowgroup">
 
-                    {/* Left row header: first base letter */}
-                    <div className={`ct-row-header ct-base-${b1}`} role="rowheader" aria-label={`First base: ${b1}`}>
-                      <span>{b1}</span>
-                    </div>
+                      {/* Left row header: first base letter */}
+                      <div className={`flex items-center justify-center border-r border-border p-0.5 font-mono text-base font-bold ${b1ColorClass} ${b1BgHeaderClass}`} role="rowheader" aria-label={`First base: ${b1}`}>
+                        <span>{b1}</span>
+                      </div>
 
-                    {/* 4 columns (second base) × 4 rows (third base) */}
-                    <div className="ct-row-cells">
-                      {SECOND_BASES.map(b2 => {
-                        const cellCodons = THIRD_BASES.map(b3 => `${b1}${b2}${b3}`);
-                        // Find the group of consecutive identical AAs to render a shared label
-                        const aaGroups = [];
-                        cellCodons.forEach((codon, idx) => {
-                          const aa = CODON_MAP[codon]?.aa;
-                          const last = aaGroups[aaGroups.length - 1];
-                          if (last && last.aa === aa && CODON_MAP[codon]?.type === last.type) {
-                            last.codons.push(codon);
-                          } else {
-                            aaGroups.push({ aa, type: CODON_MAP[codon]?.type, codons: [codon], startIdx: idx });
-                          }
-                        });
+                      {/* 4 columns (second base) × 4 rows (third base) */}
+                      <div className="grid grid-cols-4">
+                        {SECOND_BASES.map(b2 => {
+                          const cellCodons = THIRD_BASES.map(b3 => `${b1}${b2}${b3}`);
+                          const cellB2Bg = b2 === 'U' ? 'bg-purple-500/[0.04]' : b2 === 'C' ? 'bg-sky-500/[0.04]' : b2 === 'A' ? 'bg-amber-500/[0.04]' : b2 === 'G' ? 'bg-emerald-500/[0.04]' : '';
+                          // Find the group of consecutive identical AAs to render a shared label
+                          const aaGroups = [];
+                          cellCodons.forEach((codon, idx) => {
+                            const aa = CODON_MAP[codon]?.aa;
+                            const last = aaGroups[aaGroups.length - 1];
+                            if (last && last.aa === aa && CODON_MAP[codon]?.type === last.type) {
+                              last.codons.push(codon);
+                            } else {
+                              aaGroups.push({ aa, type: CODON_MAP[codon]?.type, codons: [codon], startIdx: idx });
+                            }
+                          });
 
-                        return (
-                          <div key={b2} className={`ct-cell ct-cell-b2-${b2}`} role="group" aria-label={`${b1}${b2}x group`}>
-                            {cellCodons.map((codon, rowIdx) => {
-                              const isHidden = !isCodonVisible(codon);
-                              return (
-                                <div
-                                  key={codon}
-                                  className={`ct-codon-row ${isHidden ? 'ct-hidden' : ''}`}
-                                  role="row"
-                                >
-                                  <CodonButton
-                                    codon={codon}
-                                    isSelected={selectedCodon === codon}
-                                    isHighlighted={isCodonHighlighted(codon)}
-                                    isDimmed={isCodonDimmed(codon)}
-                                    onSelect={handleSelectCodon}
-                                  />
-                                </div>
-                              );
-                            })}
+                          return (
+                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-12 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
+                              {cellCodons.map((codon) => {
+                                const isHidden = !isCodonVisible(codon);
+                                return (
+                                  <div
+                                    key={codon}
+                                    className={`flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px] ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
+                                    role="row"
+                                  >
+                                    <CodonButton
+                                      codon={codon}
+                                      isSelected={selectedCodon === codon}
+                                      isHighlighted={isCodonHighlighted(codon)}
+                                      isDimmed={isCodonDimmed(codon)}
+                                      onSelect={handleSelectCodon}
+                                    />
+                                  </div>
+                                );
+                              })}
 
-                            {/* AA labels — one per consecutive group, vertically centered */}
-                            <div className="ct-aa-labels" aria-label={`Amino acids for ${b1}${b2}x`}>
-                              {aaGroups.map((group, gi) => (
-                                <div
-                                  key={gi}
-                                  className="ct-aa-label-slot"
-                                  style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
-                                >
-                                  <AminoAcidButton
-                                    codon={group.codons[0]}
-                                    isHighlighted={isCodonHighlighted(group.codons[0])}
-                                    isDimmed={isCodonDimmed(group.codons[0])}
-                                    onSelect={handleSelectCodon}
-                                  />
-                                </div>
-                              ))}
+                              {/* AA labels — one per consecutive group, vertically centered */}
+                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-12" aria-label={`Amino acids for ${b1}${b2}x`}>
+                                {aaGroups.map((group, gi) => (
+                                  <div
+                                    key={gi}
+                                    className="flex items-center justify-center p-px"
+                                    style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
+                                  >
+                                    <AminoAcidButton
+                                      codon={group.codons[0]}
+                                      isHighlighted={isCodonHighlighted(group.codons[0])}
+                                      isDimmed={isCodonDimmed(group.codons[0])}
+                                      onSelect={handleSelectCodon}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
 
-                    {/* Repeating right axis per row group: U C A G */}
-                    <div className="ct-row-right-axis">
-                      {THIRD_BASES.map(b3 => (
-                        <div key={b3} className={`ct-axis-cell ct-axis-cell--3rd-inline ct-base-${b3}`}>
-                          <span>{b3}</span>
-                        </div>
-                      ))}
-                    </div>
+                      {/* Repeating right axis per row group: U C A G */}
+                      <div className="grid grid-rows-4 border-l border-border">
+                        {THIRD_BASES.map(b3 => {
+                          const b3ColorClass = b3 === 'U' ? 'text-purple-400' : b3 === 'C' ? 'text-sky-400' : b3 === 'A' ? 'text-amber-400' : b3 === 'G' ? 'text-emerald-400' : '';
+                          return (
+                            <div key={b3} className={`flex items-center justify-center border-b border-border p-0 font-mono text-[0.8rem] font-bold last:border-b-0 ${b3ColorClass}`}>
+                              <span>{b3}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
 
               </div>
 
               {/* Bottom axis: Second Base (repeated) */}
-              <div className="ct-axis-bottom" role="row" aria-hidden="true">
+              <div className="grid grid-cols-[28px_repeat(4,1fr)_36px] border-t border-border bg-app" role="row" aria-hidden="true">
                 <div className="ct-axis-corner"></div>
-                {SECOND_BASES.map(b2 => (
-                  <div key={b2} className={`ct-axis-cell ct-axis-cell--2nd ct-base-col-${b2}`}>
-                    <span className={`ct-axis-base ct-base-${b2}`}>{b2}</span>
-                  </div>
-                ))}
+                {SECOND_BASES.map(b2 => {
+                  const b2ColorClass = b2 === 'U' ? 'text-purple-400' : b2 === 'C' ? 'text-sky-400' : b2 === 'A' ? 'text-amber-400' : b2 === 'G' ? 'text-emerald-400' : '';
+                  return (
+                    <div key={b2} className="flex flex-col items-center justify-center border-l border-border px-0.5 py-1">
+                      <span className={`font-mono text-base font-bold ${b2ColorClass}`}>{b2}</span>
+                    </div>
+                  );
+                })}
                 <div className="ct-axis-corner"></div>
               </div>
             </div>
@@ -1390,36 +1434,34 @@ export default function CodonTable() {
           </div>
         </div>
 
-        {/* ── Info Panel Sidebar ───────────────────────────────────── */}
-        <div className="ct-side-panel" ref={panelRef}>
-          <InfoPanel
-            typedCodon={typedCodon}
-            selectedCodon={selectedCodon}
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            customGroups={customGroups}
-            highlightedAA={highlightedAA}
-            setHighlightedAA={setHighlightedAA}
-            isCreatingGroup={isCreatingGroup}
-            setIsCreatingGroup={setIsCreatingGroup}
-            newGroupName={newGroupName}
-            setNewGroupName={setNewGroupName}
-            newGroupAAs={newGroupAAs}
-            setNewGroupAAs={setNewGroupAAs}
-            newGroupColor={newGroupColor}
-            setNewGroupColor={setNewGroupColor}
-            onType={handleTypeCodon}
-            onClear={handleClearSelection}
-            inputRef={inputRef}
-            handleDeleteCustomGroup={handleDeleteCustomGroup}
-            handleToggleAAInNewGroup={handleToggleAAInNewGroup}
-            handleCreateCustomGroup={handleCreateCustomGroup}
-            setSelectedCodon={setSelectedCodon}
-          />
-        </div>
+        {/* ── Group Filter + Codon Lookup ───────────────────────────── */}
+        <InfoPanel
+          typedCodon={typedCodon}
+          selectedCodon={selectedCodon}
+          selectedGroup={selectedGroup}
+          setSelectedGroup={setSelectedGroup}
+          customGroups={customGroups}
+          highlightedAA={highlightedAA}
+          setHighlightedAA={setHighlightedAA}
+          isCreatingGroup={isCreatingGroup}
+          setIsCreatingGroup={setIsCreatingGroup}
+          newGroupName={newGroupName}
+          setNewGroupName={setNewGroupName}
+          newGroupAAs={newGroupAAs}
+          setNewGroupAAs={setNewGroupAAs}
+          newGroupColor={newGroupColor}
+          setNewGroupColor={setNewGroupColor}
+          onType={handleTypeCodon}
+          onClear={handleClearSelection}
+          inputRef={inputRef}
+          handleDeleteCustomGroup={handleDeleteCustomGroup}
+          handleToggleAAInNewGroup={handleToggleAAInNewGroup}
+          handleCreateCustomGroup={handleCreateCustomGroup}
+          setSelectedCodon={setSelectedCodon}
+          panelRef={panelRef}
+        />
       </div>
 
-
-    </article>
+    </Card>
   );
 }

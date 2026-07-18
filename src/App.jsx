@@ -33,120 +33,7 @@ const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
 const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '';
 
-const toolDetails = {
-  "tool-home": {
-    title: "Dashboard",
-    desc: "A premium dashboard of handy utility tools."
-  },
-  "tool-slash": {
-    title: "Slashes Converter",
-    desc: "Normalize Windows paths to web-friendly forward slashes."
-  },
-  "tool-casing": {
-    title: "Casing Switcher",
-    desc: "Convert text casing with combine-able switches: invert case, sentence case, specific terms, and title case."
-  },
-  "tool-wc": {
-    title: "Word & Character Counter",
-    desc: "Calculate words, character lengths, and line endings in real time."
-  },
-  "tool-date": {
-    title: "Date Counter",
-    desc: "Calculate the exact number of days between two specified dates."
-  },
-  "tool-currency": {
-    title: "Currency Converter & Counter",
-    desc: "Convert global currencies (e.g. TWD to USD) for single amounts or bulk lists."
-  },
-  "tool-color": {
-    title: "Color Code Converter",
-    desc: "Seamlessly translate colors between HEX, RGB, and HSL formats."
-  },
-  "tool-ascii": {
-    title: "ASCII Converter",
-    desc: "Convert text characters to their ASCII codes and vice versa."
-  },
-  "tool-unicode": {
-    title: "Unicode Converter",
-    desc: "Encode text to Unicode code points or decode raw code points to text."
-  },
-  "tool-base": {
-    title: "Base Converter",
-    desc: "Interconvert numbers between binary, octal, decimal, hexadecimal, and sexagesimal."
-  },
-  "tool-dna": {
-    title: "DNA/RNA Direction Transfer",
-    desc: "Perform sequence base complementation, reversing, and swap 5'/3' strand orientations."
-  },
-  "tool-iplookup": {
-    title: "IP Address Lookup",
-    desc: "Identify geographical location, timezone, ISP, and coordinates for any IP address."
-  },
-  "tool-imgmeta": {
-    title: "Image Metadata",
-    desc: "Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally."
-  },
-  "tool-wheel": {
-    title: "Random Wheel",
-    desc: "Set options, spin the wheel, and draw random items with optional single-draw elimination."
-  },
-  "tool-typing": {
-    title: "Typing Speed Test",
-    desc: "Test and improve your typing speed in English or Chinese with custom templates."
-  },
-  "tool-codon": {
-    title: "RNA Codon Table",
-    desc: "Interactive standard genetic code table — click any codon or amino acid to explore synonyms and properties."
-  },
-  "tool-qrcode": {
-    title: "QR Code Generator",
-    desc: "Create highly customizable QR codes with dot styles, custom eyes, gradients, and embedded logos."
-  },
-  "tool-barcode": {
-    title: "Barcode Generator",
-    desc: "Generate barcodes in multiple formats (CODE128, EAN, UPC, ITF) with live input validation."
-  },
-  "tool-speedtest": {
-    title: "Network Speed Test",
-    desc: "Test your network latency (ping) and download speed in real-time."
-  },
-  "tool-password": {
-    title: "Secure Password Generator",
-    desc: "Generate cryptographically secure random passwords using CSPRNG and unbiased rejection sampling."
-  },
-  "tool-pwstrength": {
-    title: "Password Strength Checker",
-    desc: "Analyze password complexity, calculate entropy, estimate cracking time, and check character rules."
-  },
-  "tool-officemeta": {
-    title: "Office Metadata Reader",
-    desc: "Extract, inspect and analyze core properties, application properties, and format-specific structures from Word, Excel, and PowerPoint files locally."
-  },
-  "tool-fontextractor": {
-    title: "Website Font Extractor",
-    desc: "Scan any website URL to extract web font families, preview them in real-time, download the font files, and find similar Google Fonts alternatives."
-  },
-  "tool-qrbarcodescan": {
-    title: "QR & Barcode Scanner",
-    desc: "Scan QR codes and barcodes instantly using your camera or by uploading an image. Supports 14+ formats including QR Code, Code 128, EAN, UPC, Data Matrix, and more."
-  },
-  "tool-audiometa": {
-    title: "Audio Metadata Reader",
-    desc: "Extract and analyze metadata tags, technical parameters, and cover art from MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA files entirely in-browser with full privacy."
-  },
-  "tool-videometa": {
-    title: "Video Metadata Reader",
-    desc: "Extract and analyze encoding format, resolution, frame rate, audio tracks, timecode, color primaries, and subtitle information from MP4, MOV, and log files entirely in-browser with full privacy."
-  },
-  "tool-mediasplit": {
-    title: "Media Splitter",
-    desc: "Split a video's audio track and silent video track locally."
-  },
-  "tool-folder-analyzer": {
-    title: "Folder Structure Analyzer",
-    desc: "Scan and map folder structures, calculate file metrics, and count code lines entirely client-side."
-  }
-};
+
 const categories = [
   {
     id: 'text',
@@ -213,12 +100,31 @@ const categories = [
   }
 ];
 
+const staticTools = [
+  'tool-casing',
+  'tool-ascii',
+  'tool-unicode',
+  'tool-base',
+  'tool-fontextractor',
+  'tool-speedtest',
+  'tool-color',
+  'tool-dna',
+  'tool-currency',
+  'tool-qrcode',
+  'tool-barcode',
+  'tool-password',
+  'tool-pwstrength',
+  'tool-qrbarcodescan',
+  'tool-wheel'
+];
+
 const navItems = [
   {
     id: 'tool-slash',
     name: 'Slashes Converter',
     tooltip: 'Slashes Converter',
     category: 'developer',
+    desc: 'Switch \\ to /.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="6" y1="18" x2="18" y2="6"></line>
@@ -231,6 +137,7 @@ const navItems = [
     name: 'Word Counter',
     tooltip: 'Word Counter',
     category: 'text',
+    desc: 'Calculate words, characters, sentences, and reading time.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
@@ -242,6 +149,7 @@ const navItems = [
     name: 'Casing Switcher',
     tooltip: 'Casing Switcher',
     category: 'text',
+    desc: 'Support full sentence, single  words, specific term, etc.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 20L9 5l5 15" />
@@ -256,6 +164,7 @@ const navItems = [
     name: 'Typing Speed Test',
     tooltip: 'Typing Speed Test',
     category: 'text',
+    desc: 'Test and improve your typing speed with English prose, code, or custom templates.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
@@ -276,6 +185,7 @@ const navItems = [
     name: 'Color Converter',
     tooltip: 'Color Converter',
     category: 'media',
+    desc: 'Transfer and select colors between HEX, RGB, and other formats.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
@@ -291,6 +201,7 @@ const navItems = [
     name: 'ASCII Converter',
     tooltip: 'ASCII Converter',
     category: 'developer',
+    desc: 'Text to ASCII codes; ASCII codes to text.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 17 10 11 4 5"></polyline>
@@ -303,6 +214,7 @@ const navItems = [
     name: 'Unicode Converter',
     tooltip: 'Unicode Converter',
     category: 'developer',
+    desc: 'Text to Unicode; Unicode to text.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -316,6 +228,7 @@ const navItems = [
     name: 'Font Extractor',
     tooltip: 'Website Font Extractor',
     category: 'developer',
+    desc: 'Scan and extract font of any URLs. Also download them and find the similarities.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 7 4 4 20 4 20 7"></polyline>
@@ -331,6 +244,7 @@ const navItems = [
     name: 'Base Converter',
     tooltip: 'Base Converter',
     category: 'developer',
+    desc: 'Base conversion between binary, octal, decimal, and hexadecimal.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="4" y1="9" x2="20" y2="9"></line>
@@ -345,6 +259,7 @@ const navItems = [
     name: 'Folder Analyzer',
     tooltip: 'Folder Structure Analyzer',
     category: 'developer',
+    desc: 'Obtain the folder structure by one click.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -358,6 +273,7 @@ const navItems = [
     name: 'DNA/RNA Converter',
     tooltip: 'DNA/RNA Converter',
     category: 'bioinfo',
+    desc: "Swap 5'/3' directions and show the anti-sense brand. Support with the figure.",
     icon: <DnaRnaIcon />
   },
   {
@@ -365,6 +281,7 @@ const navItems = [
     name: 'Codon Table',
     tooltip: 'RNA Codon Table',
     category: 'bioinfo',
+    desc: 'Find and learn amino acid with interactive.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"></rect>
@@ -380,6 +297,7 @@ const navItems = [
     name: 'IP Lookup',
     tooltip: 'IP Lookup',
     category: 'network',
+    desc: 'Identify geographical location, timezone, ISP, and coordinates for any IP address.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -392,6 +310,7 @@ const navItems = [
     name: 'Speed Test',
     tooltip: 'Network Speed Test',
     category: 'network',
+    desc: 'Test the real-time network speed and latency.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -405,6 +324,7 @@ const navItems = [
     name: 'Image Metadata',
     tooltip: 'Image Metadata',
     category: 'media',
+    desc: 'Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -417,6 +337,7 @@ const navItems = [
     name: 'Office Metadata',
     tooltip: 'Office Metadata Reader',
     category: 'media',
+    desc: 'Show the metadata from office files.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -432,6 +353,7 @@ const navItems = [
     name: 'Audio Metadata',
     tooltip: 'Audio Metadata Reader',
     category: 'media',
+    desc: 'Extract and analyze metadata tags, technical parameters entirely locally without upload.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 18V5l12-2v13"/>
@@ -445,6 +367,7 @@ const navItems = [
     name: 'Video Metadata',
     tooltip: 'Video Metadata Reader',
     category: 'media',
+    desc: 'Extract and analyze encoding format, resolution, and other parameters entirely locally without upload.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="23 7 16 12 23 17 23 7"></polygon>
@@ -457,6 +380,7 @@ const navItems = [
     name: 'Media Splitter',
     tooltip: 'Media Splitter',
     category: 'media',
+    desc: "Split a video's audio track and silent video track locally.",
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
@@ -470,6 +394,7 @@ const navItems = [
     tooltip: 'Barcode Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Generate multiple format barcodes.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
@@ -482,6 +407,7 @@ const navItems = [
     tooltip: 'Currency Converter & Counter',
     category: 'utilities',
     subGroup: 'Calculation',
+    desc: 'Resource by Live API.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -495,6 +421,7 @@ const navItems = [
     tooltip: 'Date Counter',
     category: 'utilities',
     subGroup: 'Calculation',
+    desc: 'Calculate for the dates.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -510,6 +437,7 @@ const navItems = [
     tooltip: 'Secure Password Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Generate secure passwords. Use CSPRNG for generating.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -523,6 +451,7 @@ const navItems = [
     tooltip: 'Password Strength Checker',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Check the passward is strengh or not.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -536,6 +465,7 @@ const navItems = [
     tooltip: 'QR Code Generator',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Create fully custimized QR code for free.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -551,6 +481,7 @@ const navItems = [
     tooltip: 'QR & Barcode Scanner',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Scan the QR and barcodes. Support upload and camera.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -564,6 +495,7 @@ const navItems = [
     tooltip: 'Random Wheel',
     category: 'utilities',
     subGroup: 'Utilities',
+    desc: 'Set options, spin the wheel, and draw random items with optional single-draw elimination.',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -651,7 +583,7 @@ export default function App() {
     const handleKeyDown = (e) => {
       if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
         e.preventDefault();
-        const searchInput = document.querySelector('.header-search-container input');
+        const searchInput = document.querySelector('.header-search-input');
         if (searchInput) {
           searchInput.focus();
           searchInput.select();
@@ -722,7 +654,7 @@ export default function App() {
   const renderActiveTool = () => {
     switch (activeTool) {
       case 'tool-home':
-        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
       case 'tool-slash':
         return <SlashesConverter />;
       case 'tool-wc':
@@ -778,552 +710,658 @@ export default function App() {
       case 'tool-folder-analyzer':
         return <FolderAnalyzer />;
       default:
-        return <HomeGrid onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
   };
 
-  const activeDetails = toolDetails[activeTool] || toolDetails['tool-home'];
+  const activeTitle = activeTool === 'tool-home'
+    ? 'Dashboard'
+    : (navItems.find(item => item.id === activeTool)?.name || '');
+
+  // --banner-height is 0px by default, 36px when SHOW_CHANNEL_ALERT is true
+  // We must use inline styles for calc() expressions using this CSS variable
+  const bannerHeightStyle = { marginTop: 'var(--banner-height)' };
+  const sidebarHeightStyle = {
+    height: 'calc(100vh - var(--banner-height))',
+    top: 'var(--banner-height)',
+  };
+  const mainContentHeightStyle = { height: 'calc(100vh - var(--banner-height))' };
+
+  // Nav item — shared classes
+  const navItemBase =
+    'flex items-center gap-[9px] py-[7px] px-[10px] border-none bg-transparent rounded-sm text-text-sidebar-muted cursor-pointer text-left transition-[background,color] duration-150 ease-linear font-medium text-[0.84rem] font-sans w-full [&_svg]:w-[15px] [&_svg]:h-[15px] [&_svg]:flex-shrink-0 [&_svg]:opacity-70';
+  const navItemActive =
+    'bg-nav-active-bg text-nav-active-text font-semibold border border-[rgba(16,185,129,0.25)] shadow-[0_0_10px_rgba(16,185,129,0.08)] [&_svg]:opacity-100 [&_svg]:text-nav-active-text';
+  const navItemHover =
+    'hover:bg-nav-hover-bg hover:text-text-sidebar [&:hover_svg]:opacity-100';
 
   return (
-    <div className={`app-container ${SHOW_CHANNEL_ALERT ? 'has-banner' : ''}`}>
+    <div className={SHOW_CHANNEL_ALERT ? 'has-banner' : ''}>
+      {/* Warning Banner */}
       {SHOW_CHANNEL_ALERT && (
-        <div className="channel-alert-banner" id="channel-alert-banner">
-          <svg className="alert-banner-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <div
+          id="channel-alert-banner"
+          className="fixed top-0 left-0 right-0 h-9 bg-warning-bg border-b border-warning-border text-warning-text flex items-center justify-center gap-2 text-[0.82rem] font-semibold z-[9999] px-4 box-border"
+        >
+          <svg
+            className="flex-shrink-0"
+            viewBox="0 0 24 24" width="16" height="16"
+            stroke="currentColor" strokeWidth="2.5" fill="none"
+            strokeLinecap="round" strokeLinejoin="round"
+          >
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          <span className="banner-text-desktop">
+          {/* Desktop text */}
+          <span className="hidden sm:inline">
             This site is running on a {APP_CHANNEL} version ({APP_VERSION}). May provide wrong information. Check before using.
           </span>
-          <span className="banner-text-mobile">
+          {/* Mobile text */}
+          <span className="sm:hidden">
             {APP_CHANNEL} version ({APP_VERSION}) - Site may provide wrong info.
           </span>
         </div>
       )}
-      <div className={`app-layout ${isSidebarCollapsed ? 'collapsed-sidebar' : ''}`}>
-      
-      {/* Mobile Header */}
-      <header className="mobile-header">
-        <button
-          id="sidebar-toggle"
-          className="icon-btn"
-          aria-label="Toggle Sidebar"
-          onClick={() => setMobileSidebarOpen(prev => !prev)}
-        >
-          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-        <span className="mobile-logo-text">Small Web Tools</span>
-      </header>
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${mobileSidebarOpen ? 'open' : ''}`} id="sidebar">
-        <div className="sidebar-brand">
-          <div
-            className="brand-logo-container"
-            id="brand-logo-btn"
-            title="Go to Home"
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-            onClick={() => {
-              handleNavClick('tool-home');
-              setSelectedHomeTab('all');
-            }}
-          >
-            <div className="brand-icon-box">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
-            <span className="brand-text">Small Web Tools</span>
-          </div>
-          
+      {/* App layout: flex row, offset below banner */}
+      <div
+        className={`flex overflow-x-hidden ${isSidebarCollapsed ? 'collapsed-sidebar' : ''}`}
+        style={{ ...bannerHeightStyle, minHeight: 'calc(100vh - var(--banner-height))' }}
+      >
+
+        {/* Mobile Header — hidden on desktop (md+) */}
+        <header
+          className="hidden max-md:flex bg-sidebar border-b border-border-sidebar px-5 py-3 items-center gap-4 fixed left-0 right-0 z-[90] h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+          style={{ top: 'var(--banner-height)' }}
+        >
           <button
-            id="sidebar-collapse-btn"
-            className="sidebar-collapse-btn"
-            aria-label="Collapse Sidebar"
-            onClick={toggleSidebarCollapse}
+            id="sidebar-toggle"
+            className="bg-transparent border-none text-text-main cursor-pointer p-1 flex items-center justify-center rounded-sm transition-colors duration-200 hover:bg-accent-light hover:text-accent"
+            aria-label="Toggle Sidebar"
+            onClick={() => setMobileSidebarOpen(prev => !prev)}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
-        </div>
+          <span className="font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
+        </header>
 
-        <div className="sidebar-search-container">
-          <div className="search-wrapper">
-            <svg className="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              type="text"
-              id="tool-search"
-              placeholder="Search tools..."
-              aria-label="Search tools"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          {searchQuery.trim() !== '' ? (
-            filteredNavItems.map(item => (
-              <button
-                key={item.id}
-                className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
-                data-tool={item.id}
-                data-tooltip={item.tooltip}
-                onClick={() => handleNavClick(item.id)}
-                onMouseEnter={(e) => handleMouseEnter(e, item)}
-                onMouseLeave={handleMouseLeave}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </button>
-            ))
-          ) : (
-            categories.map(cat => {
-              const catItems = filteredNavItems.filter(item => item.category === cat.id);
-              if (catItems.length === 0) return null;
-              
-              if (cat.id === 'utilities') {
-                const subGroups = {};
-                catItems.forEach(item => {
-                  const sg = item.subGroup || 'Utilities';
-                  if (!subGroups[sg]) subGroups[sg] = [];
-                  subGroups[sg].push(item);
-                });
-                const sortedSubGroupNames = Object.keys(subGroups).sort();
-                
-                return (
-                  <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
-                    <div className="sidebar-category-header">
-                      <span className="cat-header-icon">{cat.icon}</span>
-                      <span className="sidebar-category-title">{cat.name}</span>
-                      <svg className="chevron-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-                    {sortedSubGroupNames.map(sgName => (
-                      <div key={sgName} className="sidebar-subcategory-group">
-                        <div className="sidebar-subcategory-header">
-                          <span className="sidebar-subcategory-title">{sgName}</span>
-                        </div>
-                        {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                          <button
-                            key={item.id}
-                            className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
-                            data-tool={item.id}
-                            data-tooltip={item.tooltip}
-                            onClick={() => handleNavClick(item.id)}
-                            onMouseEnter={(e) => handleMouseEnter(e, item)}
-                            onMouseLeave={handleMouseLeave}
-                          >
-                            {item.icon}
-                            <span>{item.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              return (
-                <div key={cat.id} className="sidebar-category-group" data-category={cat.id}>
-                  <div className="sidebar-category-header">
-                    <span className="cat-header-icon">{cat.icon}</span>
-                    <span className="sidebar-category-title">{cat.name}</span>
-                    <svg className="chevron-icon" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  {catItems.map(item => (
-                    <button
-                      key={item.id}
-                      className={`nav-item ${activeTool === item.id ? 'active' : ''}`}
-                      data-tool={item.id}
-                      data-tooltip={item.tooltip}
-                      onClick={() => handleNavClick(item.id)}
-                      onMouseEnter={(e) => handleMouseEnter(e, item)}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      {item.icon}
-                      <span>{item.name}</span>
-                    </button>
-                  ))}
-                </div>
-              );
-            })
-          )}
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="theme-switch-wrapper">
-            <span className="theme-label">Theme</span>
-            <button
-              id="theme-toggle"
-              className="theme-toggle-btn"
-              aria-label="Toggle dark/light mode"
-              onClick={toggleTheme}
-            >
-              {theme === 'dark' ? (
-                <svg className="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              ) : (
-                <svg className="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Sidebar Overlay for mobile */}
-      <div
-        className={`sidebar-overlay ${mobileSidebarOpen ? 'visible' : ''}`}
-        id="sidebar-overlay"
-        onClick={() => setMobileSidebarOpen(false)}
-      ></div>
-      {/* Main Content Area */}
-      <main className={`main-content ${activeTool !== 'tool-home' ? 'no-header' : ''}`}>
-
-        {/* Desktop Top Header (Hidden on Mobile) */}
-        <header className="desktop-header">
-          <div className="desktop-header-left">
+        {/* Sidebar — hidden on desktop (md+), slide-in on mobile */}
+        <aside
+          id="sidebar"
+          className={`
+            w-[260px] flex-shrink-0 bg-sidebar border-r border-border-sidebar flex flex-col
+            shadow-sidebar z-[100]
+            transition-[left,width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+            md:hidden
+            max-md:fixed max-md:bottom-0
+            ${mobileSidebarOpen ? 'max-md:left-0 max-md:shadow-[10px_0_30px_rgba(0,0,0,0.15)]' : 'max-md:-left-[280px]'}
+          `}
+          style={sidebarHeightStyle}
+        >
+          {/* Sidebar Brand */}
+          <div className={`px-[18px] py-4 flex items-center justify-between border-b border-border-sidebar gap-3 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:flex-col md:justify-center md:px-0 md:py-4 md:gap-[10px]' : ''}`}>
             <div
-              className="brand-logo-container"
+              className={`flex items-center gap-[10px] cursor-pointer ${isSidebarCollapsed ? 'md:justify-center' : ''}`}
+              id="brand-logo-btn"
               title="Go to Home"
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => {
                 handleNavClick('tool-home');
                 setSelectedHomeTab('all');
               }}
             >
-              <div className="brand-icon-box">
+              {/* Brand Icon Box */}
+              <div className="bg-accent-gradient text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.15)] flex-shrink-0 [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:[stroke-width:2.2]">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
               </div>
-              <span className="brand-text">Small Web Tools</span>
-            </div>
-          </div>
-
-          <nav className="desktop-header-nav">
-            {categories.map(cat => {
-              const catItems = navItems.filter(item => item.category === cat.id);
-              if (catItems.length === 0) return null;
-              const isOpen = openDropdown === cat.id;
-              return (
-                <div
-                  key={cat.id}
-                  className="nav-dropdown"
-                  onMouseEnter={() => setOpenDropdown(cat.id)}
-                  onMouseLeave={() => setOpenDropdown(null)}
-                >
-                  <button
-                    className={`nav-dropdown-trigger ${isOpen ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTool('tool-home');
-                      setSelectedHomeTab(cat.id);
-                      setOpenDropdown(null);
-                    }}
-                  >
-                    <span className="cat-icon">{cat.icon}</span>
-                    <span className="cat-name">{cat.name}</span>
-                    <span className={`triangle-icon ${isOpen ? 'open' : ''}`}>
-                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </span>
-                  </button>
-
-                  <div className={`dropdown-menu ${isOpen ? 'show' : ''}`}>
-                    {cat.id === 'utilities' ? (
-                      (() => {
-                        const subGroups = {};
-                        catItems.forEach(item => {
-                          const sg = item.subGroup || 'Utilities';
-                          if (!subGroups[sg]) subGroups[sg] = [];
-                          subGroups[sg].push(item);
-                        });
-                        const sortedSubGroupNames = Object.keys(subGroups).sort();
-                        return sortedSubGroupNames.map(sgName => (
-                          <div key={sgName} className="dropdown-subcategory-section">
-                            <div className="dropdown-subcategory-header">{sgName}</div>
-                            {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                              <button
-                                key={item.id}
-                                className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
-                                onClick={() => {
-                                  handleNavClick(item.id);
-                                  setOpenDropdown(null);
-                                }}
-                              >
-                                <span className="item-icon">{item.icon}</span>
-                                <span className="item-name">{item.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        ));
-                      })()
-                    ) : (
-                      catItems.map(item => (
-                        <button
-                          key={item.id}
-                          className={`dropdown-item ${activeTool === item.id ? 'active' : ''}`}
-                          onClick={() => {
-                            handleNavClick(item.id);
-                            setOpenDropdown(null);
-                          }}
-                        >
-                          <span className="item-icon">{item.icon}</span>
-                          <span className="item-name">{item.name}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-
-          <div className="desktop-header-right">
-            <div className="header-search-container" onClick={(e) => e.stopPropagation()}>
-              <div className="search-wrapper">
-                <svg className="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search tools..."
-                  aria-label="Search tools"
-                  autoComplete="off"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <kbd className="search-badge">/</kbd>
-              </div>
-              {searchQuery.trim() !== '' && (
-                <div className="header-search-results">
-                  {filteredNavItems.length > 0 ? (
-                    filteredNavItems.map(item => (
-                      <button
-                        key={item.id}
-                        className="search-result-item"
-                        onClick={() => {
-                          handleNavClick(item.id);
-                          setSearchQuery('');
-                        }}
-                      >
-                        <span className="item-icon">{item.icon}</span>
-                        <span>{item.name}</span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="no-results">No tools found</div>
-                  )}
-                </div>
-              )}
+              {/* Brand Text — hidden when collapsed on desktop */}
+              <span className={`font-display text-[0.95rem] font-extrabold tracking-[-0.02em] text-text-sidebar ${isSidebarCollapsed ? 'md:hidden' : ''}`}>Small Web Tools</span>
             </div>
 
-            <div 
-              className={`language-selector-container ${langDropdownOpen ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setLangDropdownOpen(!langDropdownOpen);
-                setOpenDropdown(null); // Close other dropdowns
-              }}
-            >
-              <svg className="lang-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              <span className="language-text">English</span>
-              <svg className="lang-chevron" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-
-              {langDropdownOpen && (
-                <div className="dropdown-menu show" style={{ marginTop: '8px' }}>
-                  <button className="dropdown-item active">
-                    English
-                  </button>
-                </div>
-              )}
-            </div>
-
+            {/* Collapse button — hidden on mobile */}
             <button
-              className="theme-toggle-btn"
-              aria-label="Toggle dark/light mode"
-              onClick={toggleTheme}
+              id="sidebar-collapse-btn"
+              className={`
+                hidden md:flex bg-transparent border-none text-text-sidebar-muted cursor-pointer
+                w-[30px] h-[30px] rounded-sm items-center justify-center
+                transition-all duration-200
+                hover:bg-nav-hover-bg hover:text-text-sidebar
+                ${isSidebarCollapsed ? 'md:bg-accent md:text-white md:rotate-180 hover:md:bg-accent-hover hover:md:text-white hover:md:scale-105' : ''}
+              `}
+              aria-label="Collapse Sidebar"
+              onClick={toggleSidebarCollapse}
             >
-              {theme === 'dark' ? (
-                <svg className="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              ) : (
-                <svg className="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-              )}
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
             </button>
           </div>
-        </header>
 
-        {/* Mobile Top Bar (Hidden on Desktop) */}
-        <div className="top-bar mobile-top-bar">
-          <div className="top-bar-left">
-            <div
-              className="brand-logo"
-              id="top-brand-logo"
-              title="Go to Home"
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                handleNavClick('tool-home');
-                setSelectedHomeTab('all');
-              }}
-            >
-              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          {/* Sidebar Search — hidden when collapsed on desktop */}
+          <div className={`px-4 pt-[10px] pb-[6px] ${isSidebarCollapsed ? 'md:hidden' : ''}`}>
+            <div className="relative flex items-center">
+              <svg className="absolute left-[10px] text-text-muted pointer-events-none" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
+              <input
+                type="text"
+                id="tool-search"
+                className="w-full !py-2 !pl-8 !pr-3 text-[0.83rem] rounded-[7px] bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar outline-none transition-all duration-200 placeholder:text-text-sidebar-muted focus:border-accent focus:shadow-[0_0_0_2px_var(--focus-ring)]"
+                placeholder="Search tools..."
+                aria-label="Search tools"
+                autoComplete="off"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            {activeTool !== 'tool-home' && (
-              <>
+          </div>
+
+          {/* Sidebar Nav */}
+          <nav className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded-[3px]">
+            {searchQuery.trim() !== '' ? (
+              filteredNavItems.map(item => (
                 <button
-                  className="top-bar-back-btn"
-                  onClick={() => handleNavClick('tool-home')}
-                  title="Back to Home"
+                  key={item.id}
+                  className={`${navItemBase} ${navItemHover} ${activeTool === item.id ? navItemActive : ''} ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-2' : ''}`}
+                  data-tool={item.id}
+                  data-tooltip={item.tooltip}
+                  onClick={() => handleNavClick(item.id)}
+                  onMouseEnter={(e) => handleMouseEnter(e, item)}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                  </svg>
-                  Home
+                  {item.icon}
+                  <span className={isSidebarCollapsed ? 'md:hidden' : ''}>{item.name}</span>
                 </button>
-                <span className="top-bar-sep">/</span>
-              </>
-            )}
-            <span className="top-bar-title">{activeDetails.title}</span>
-          </div>
-          <div className="top-bar-right">
-          </div>
-        </div>
+              ))
+            ) : (
+              categories.map(cat => {
+                const catItems = filteredNavItems.filter(item => item.category === cat.id);
+                if (catItems.length === 0) return null;
 
+                if (cat.id === 'utilities') {
+                  const subGroups = {};
+                  catItems.forEach(item => {
+                    const sg = item.subGroup || 'Utilities';
+                    if (!subGroups[sg]) subGroups[sg] = [];
+                    subGroups[sg].push(item);
+                  });
+                  const sortedSubGroupNames = Object.keys(subGroups).sort();
 
-
-        <section className="tool-stage">
-          {renderActiveTool()}
-        </section>
-
-        <footer className="shiny-footer">
-          <div className="footer-links-section">
-            {categories.map(cat => {
-              const catItems = navItems.filter(item => item.category === cat.id);
-              if (catItems.length === 0) return null;
-              return (
-                <div key={cat.id} className="footer-col">
-                  <button
-                    className="footer-col-title"
-                    onClick={() => {
-                      setActiveTool('tool-home');
-                      setSelectedHomeTab(cat.id);
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                  {cat.id === 'utilities' ? (
-                    (() => {
-                      const subGroups = {};
-                      catItems.forEach(item => {
-                        const sg = item.subGroup || 'Utilities';
-                        if (!subGroups[sg]) subGroups[sg] = [];
-                        subGroups[sg].push(item);
-                      });
-                      const sortedSubGroupNames = Object.keys(subGroups).sort();
-                      return sortedSubGroupNames.map(sgName => (
-                        <div key={sgName} className="footer-subcategory-group">
-                          <span className="footer-subcategory-title">{sgName}</span>
+                  return (
+                    <div key={cat.id} className={`flex flex-col gap-0.5 mb-3 last:mb-0 ${isSidebarCollapsed ? 'md:mb-2 md:relative md:after:content-[""] md:after:block md:after:w-6 md:after:h-px md:after:bg-border-sidebar md:after:mx-auto md:after:mt-2 md:after:opacity-50 md:last:after:hidden' : ''}`} data-category={cat.id}>
+                      {/* Category Header — hidden when collapsed on desktop */}
+                      <div className={`flex items-center gap-[10px] px-3 pt-[10px] pb-[6px] text-text-sidebar-muted font-display select-none ${isSidebarCollapsed ? 'md:hidden' : ''}`}>
+                        <span className="inline-flex items-center justify-center w-[15px] h-[15px] text-text-sidebar-muted opacity-80 [&_svg]:w-full [&_svg]:h-full">
+                          {cat.icon}
+                        </span>
+                        <span className="text-[0.82rem] font-semibold text-text-sidebar-muted flex-1 capitalize tracking-normal">{cat.name}</span>
+                        <svg className="w-3 h-3 text-text-sidebar-muted opacity-60" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                      {sortedSubGroupNames.map(sgName => (
+                        <div key={sgName} className={`flex flex-col gap-0.5 mt-1 ${isSidebarCollapsed ? 'md:mt-0' : ''}`}>
+                          {/* Subcategory header — hidden when collapsed on desktop */}
+                          <div className={`px-3 py-[2px] flex items-center select-none ${isSidebarCollapsed ? 'md:hidden' : ''}`}>
+                            <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-sidebar-muted opacity-55">
+                              {sgName}
+                            </span>
+                          </div>
                           {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
                             <button
                               key={item.id}
-                              className="footer-col-link"
+                              className={`${navItemBase} ${navItemHover} pl-5 ${activeTool === item.id ? navItemActive : ''} ${isSidebarCollapsed ? 'md:justify-center md:pl-0 md:px-0 md:py-2' : ''}`}
+                              data-tool={item.id}
+                              data-tooltip={item.tooltip}
                               onClick={() => handleNavClick(item.id)}
+                              onMouseEnter={(e) => handleMouseEnter(e, item)}
+                              onMouseLeave={handleMouseLeave}
                             >
-                              {item.name}
+                              {item.icon}
+                              <span className={isSidebarCollapsed ? 'md:hidden' : ''}>{item.name}</span>
                             </button>
                           ))}
                         </div>
-                      ));
-                    })()
-                  ) : (
-                    catItems.map(item => (
+                      ))}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={cat.id} className={`flex flex-col gap-0.5 mb-3 last:mb-0 ${isSidebarCollapsed ? 'md:mb-2 md:relative md:after:content-[""] md:after:block md:after:w-6 md:after:h-px md:after:bg-border-sidebar md:after:mx-auto md:after:mt-2 md:after:opacity-50 md:last:after:hidden' : ''}`} data-category={cat.id}>
+                    {/* Category Header — hidden when collapsed on desktop */}
+                    <div className={`flex items-center gap-[10px] px-3 pt-[10px] pb-[6px] text-text-sidebar-muted font-display select-none ${isSidebarCollapsed ? 'md:hidden' : ''}`}>
+                      <span className="inline-flex items-center justify-center w-[15px] h-[15px] text-text-sidebar-muted opacity-80 [&_svg]:w-full [&_svg]:h-full">
+                        {cat.icon}
+                      </span>
+                      <span className="text-[0.82rem] font-semibold text-text-sidebar-muted flex-1 capitalize tracking-normal">{cat.name}</span>
+                      <svg className="w-3 h-3 text-text-sidebar-muted opacity-60" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    {catItems.map(item => (
                       <button
                         key={item.id}
-                        className="footer-col-link"
+                        className={`${navItemBase} ${navItemHover} ${activeTool === item.id ? navItemActive : ''} ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-2' : ''}`}
+                        data-tool={item.id}
+                        data-tooltip={item.tooltip}
                         onClick={() => handleNavClick(item.id)}
+                        onMouseEnter={(e) => handleMouseEnter(e, item)}
+                        onMouseLeave={handleMouseLeave}
                       >
-                        {item.name}
+                        {item.icon}
+                        <span className={isSidebarCollapsed ? 'md:hidden' : ''}>{item.name}</span>
                       </button>
-                    ))
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className="shiny-footer-content">
-            <div className="footer-left-placeholder"></div>
-            <div className="footer-brand-container">
-              <span className="footer-brand-name">Small Web Tools</span>
-              <span className="footer-sep">&nbsp;·&nbsp;</span>
-              <span className="footer-copyright">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
-            </div>
-            <div className="footer-social-row">
-              <button className="footer-social-btn" title="GitHub" aria-label="GitHub">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                    ))}
+                  </div>
+                );
+              })
+            )}
+          </nav>
+
+          {/* Sidebar Footer */}
+          <div className={`px-[14px] py-3 border-t border-border-sidebar flex flex-col gap-[10px] transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:px-0 md:items-center' : ''}`}>
+            <div className={`flex items-center justify-between ${isSidebarCollapsed ? 'md:justify-center md:w-full' : ''}`}>
+              {/* Theme label — hidden when collapsed on desktop */}
+              <span className={`text-[0.82rem] font-medium text-text-sidebar-muted ${isSidebarCollapsed ? 'md:hidden' : ''}`}>Theme</span>
+              <button
+                id="theme-toggle"
+                className="bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar-muted cursor-pointer w-[34px] h-[34px] rounded flex items-center justify-center transition-all duration-200 hover:bg-nav-hover-bg hover:text-text-sidebar"
+                aria-label="Toggle dark/light mode"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                  </svg>
+                )}
               </button>
             </div>
           </div>
-        </footer>
-      </main>
+        </aside>
 
-      {/* Collapsed Sidebar Hover Tooltip */}
-      {tooltipState.visible && (
+        {/* Sidebar Overlay for mobile */}
         <div
-          className="sidebar-tooltip visible"
-          style={{ top: `${tooltipState.top}px`, left: `${tooltipState.left}px` }}
+          id="sidebar-overlay"
+          className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(15,23,42,0.5)] backdrop-blur-[4px] z-[95] transition-opacity duration-300 ${mobileSidebarOpen ? 'block opacity-100' : 'hidden opacity-0'}`}
+          style={{ top: 'var(--banner-height)' }}
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+
+        {/* Main Content Area */}
+        <main
+          className={`flex-1 min-w-0 p-0 flex flex-col overflow-x-hidden ${staticTools.includes(activeTool) ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-auto'}`}
+          style={mainContentHeightStyle}
         >
-          {tooltipState.text}
-        </div>
-      )}
+          {/* Desktop Top Header — hidden on mobile (max-md) */}
+          <header className="hidden md:flex items-center justify-between px-12 py-[6px] border-b border-border min-h-[48px] bg-header backdrop-blur-[10px] z-[1000] transition-all duration-300">
+            {/* Left: Brand */}
+            <div className="flex items-center">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85"
+                title="Go to Home"
+                onClick={() => {
+                  handleNavClick('tool-home');
+                  setSelectedHomeTab('all');
+                }}
+              >
+                <div className="bg-accent-gradient text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.15)] flex-shrink-0 [&_svg]:w-[18px] [&_svg]:[stroke-width:2.2]">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <span className="font-['TASA_Orbiter',sans-serif] font-bold text-[0.95rem] tracking-[-0.02em] text-accent">Small Web Tools</span>
+              </div>
+            </div>
+
+            {/* Center: Nav Dropdowns */}
+            <nav className="flex items-center gap-2">
+              {categories.map(cat => {
+                const catItems = navItems.filter(item => item.category === cat.id);
+                if (catItems.length === 0) return null;
+                const isOpen = openDropdown === cat.id;
+                return (
+                  <div
+                    key={cat.id}
+                    className="relative"
+                    onMouseEnter={() => setOpenDropdown(cat.id)}
+                    onMouseLeave={() => setOpenDropdown(null)}
+                  >
+                    <button
+                      className={`flex items-center gap-2 bg-transparent border-none px-3 py-[6px] rounded text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-200 font-sans ${isOpen ? 'bg-accent-light text-accent' : ''} hover:bg-accent-light hover:text-accent`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTool('tool-home');
+                        setSelectedHomeTab(cat.id);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      {/* Cat Icon */}
+                      <span className="inline-flex items-center justify-center w-4 h-4 [&_svg]:w-full [&_svg]:h-full">
+                        {cat.icon}
+                      </span>
+                      {/* Cat Name */}
+                      <span className="font-display font-semibold">{cat.name}</span>
+                      {/* Triangle Icon */}
+                      <span className={`inline-flex items-center justify-center ml-0.5 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-text-muted [&_svg]:w-[10px] [&_svg]:h-[10px] ${isOpen ? 'rotate-180 text-accent' : ''}`}>
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </span>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <div
+                      className={`absolute top-full left-0 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-2 min-w-[200px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1 transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'opacity-100 visible translate-y-1' : 'opacity-0 invisible translate-y-[10px]'}`}
+                    >
+                      {cat.id === 'utilities' ? (
+                        (() => {
+                          const subGroups = {};
+                          catItems.forEach(item => {
+                            const sg = item.subGroup || 'Utilities';
+                            if (!subGroups[sg]) subGroups[sg] = [];
+                            subGroups[sg].push(item);
+                          });
+                          const sortedSubGroupNames = Object.keys(subGroups).sort();
+                          return sortedSubGroupNames.map(sgName => (
+                            <div key={sgName} className="flex flex-col gap-0.5 border-b border-border pb-1 mb-1 last:border-b-0 last:pb-0 last:mb-0">
+                              <div className="px-3 py-[2px] pt-1 text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50">
+                                {sgName}
+                              </div>
+                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                                <button
+                                  key={item.id}
+                                  className={`flex items-center gap-[10px] w-full pl-[18px] pr-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
+                                  onClick={() => {
+                                    handleNavClick(item.id);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  <span className="item-icon">{item.icon}</span>
+                                  <span className="font-medium">{item.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        catItems.map(item => (
+                          <button
+                            key={item.id}
+                            className={`flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
+                            onClick={() => {
+                              handleNavClick(item.id);
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            <span className="item-icon">{item.icon}</span>
+                            <span className="font-medium">{item.name}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Right: Search + Language + Theme */}
+            <div className="flex items-center gap-4">
+              {/* Header Search */}
+              <div
+                className="relative w-[180px] focus-within:w-[240px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative flex items-center">
+                  <svg className="absolute left-[10px] text-text-muted pointer-events-none" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input
+                    type="text"
+                    className="header-search-input w-full !h-8 !pl-8 !pr-8 !py-0 border border-border rounded bg-[var(--bg-search-sidebar)] text-text-main text-[0.8rem] outline-none font-sans transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
+                    placeholder="Search tools..."
+                    aria-label="Search tools"
+                    autoComplete="off"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {/* Keyboard badge */}
+                  <kbd className="absolute right-[10px] top-1/2 -translate-y-1/2 bg-[rgba(255,255,255,0.05)] border border-border text-text-muted rounded-[4px] px-[5px] py-[1px] text-[0.65rem] font-sans font-semibold pointer-events-none transition-opacity duration-150 [.header-search-input:focus~&]:opacity-0 html:not([data-theme='dark'])_&:bg-white">
+                    /
+                  </kbd>
+                </div>
+                {searchQuery.trim() !== '' && (
+                  <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-md w-[280px] max-h-[300px] overflow-y-auto shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] p-[6px] z-[1200] flex flex-col gap-0.5">
+                    {filteredNavItems.length > 0 ? (
+                      filteredNavItems.map(item => (
+                        <button
+                          key={item.id}
+                          className="flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] text-text-main cursor-pointer text-left font-sans transition-colors duration-150 hover:bg-accent-light hover:text-accent [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon]:text-text-muted [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:[&_.item-icon]:text-accent"
+                          onClick={() => {
+                            handleNavClick(item.id);
+                            setSearchQuery('');
+                          }}
+                        >
+                          <span className="item-icon">{item.icon}</span>
+                          <span>{item.name}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-[0.8rem] text-text-muted">No tools found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Language Selector */}
+              <div
+                className={`flex items-center gap-[6px] bg-app border border-border pl-[10px] pr-2 rounded h-8 text-text-muted transition-all duration-150 cursor-pointer relative hover:border-border-hover ${langDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)] text-text-main' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLangDropdownOpen(!langDropdownOpen);
+                  setOpenDropdown(null);
+                }}
+              >
+                <svg className="flex-shrink-0 opacity-80 text-text-muted" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span className="text-[0.8rem] font-medium text-text-main select-none">English</span>
+                <svg className="flex-shrink-0 opacity-50 text-text-muted pointer-events-none ml-0.5" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+
+                {langDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-1 min-w-full box-border shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1">
+                    <button className="w-full text-center px-0 py-[6px] bg-transparent border-none rounded-sm text-[0.8rem] font-medium text-accent cursor-pointer bg-accent-light">
+                      English
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Theme Toggle (Desktop Header) */}
+              <button
+                className="bg-transparent border border-border rounded-full w-8 h-8 flex items-center justify-center text-text-muted cursor-pointer transition-all duration-150 hover:border-accent hover:text-accent hover:bg-accent-light"
+                aria-label="Toggle dark/light mode"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </header>
+
+          {/* Mobile Top Bar — shown only on mobile (max-md) */}
+          <div className="hidden max-md:flex items-center justify-between py-3 border-b border-border min-h-[52px] sticky bg-app z-10 px-4" style={{ top: 'calc(60px + var(--banner-height))' }}>
+            <div className="flex items-center gap-2">
+              {/* Brand logo for mobile breadcrumb */}
+              <div
+                id="top-brand-logo"
+                className="cursor-pointer"
+                title="Go to Home"
+                style={{ cursor: 'pointer' }}
+                onClick={() => {
+                  handleNavClick('tool-home');
+                  setSelectedHomeTab('all');
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              {activeTool !== 'tool-home' && (
+                <>
+                  <button
+                    className="flex items-center gap-1 bg-transparent border-none text-text-muted cursor-pointer text-[0.82rem] font-sans px-2 py-1 rounded-sm transition-[color,background] duration-150 hover:text-accent hover:bg-accent-light"
+                    onClick={() => handleNavClick('tool-home')}
+                    title="Back to Home"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Home
+                  </button>
+                  <span className="text-text-muted text-[0.82rem] opacity-50">/</span>
+                </>
+              )}
+              <span className="text-[0.9rem] font-semibold text-text-main">{activeTitle}</span>
+            </div>
+            <div className="flex items-center gap-[10px]"></div>
+          </div>
+
+          {/* Tool Stage */}
+          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'tool-stage--static py-4 md:py-1.5 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
+            {renderActiveTool()}
+          </section>
+
+          {/* Footer */}
+          <footer className="mt-auto w-full bg-footer border-t border-border">
+            {/* Footer Links Grid */}
+            {activeTool === 'tool-home' && (
+              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
+                {categories.map(cat => {
+                  const catItems = navItems.filter(item => item.category === cat.id);
+                  if (catItems.length === 0) return null;
+                  return (
+                    <div key={cat.id} className="flex flex-col gap-[10px]">
+                      <button
+                        className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
+                        onClick={() => {
+                          setActiveTool('tool-home');
+                          setSelectedHomeTab(cat.id);
+                        }}
+                      >
+                        {cat.name}
+                      </button>
+                      {cat.id === 'utilities' ? (
+                        (() => {
+                          const subGroups = {};
+                          catItems.forEach(item => {
+                            const sg = item.subGroup || 'Utilities';
+                            if (!subGroups[sg]) subGroups[sg] = [];
+                            subGroups[sg].push(item);
+                          });
+                          const sortedSubGroupNames = Object.keys(subGroups).sort();
+                          return sortedSubGroupNames.map(sgName => (
+                            <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
+                              <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
+                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                                <button
+                                  key={item.id}
+                                  className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
+                                  onClick={() => handleNavClick(item.id)}
+                                >
+                                  {item.name}
+                                </button>
+                              ))}
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        catItems.map(item => (
+                          <button
+                            key={item.id}
+                            className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
+                            onClick={() => handleNavClick(item.id)}
+                          >
+                            {item.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Footer Bottom Bar */}
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-2 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-md:py-3 max-[500px]:px-4 max-[500px]:py-[10px]">
+              {/* Left spacer */}
+              <div></div>
+              {/* Center: Brand & Copyright */}
+              <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
+                <span className="font-display font-bold text-text-main">Small Web Tools</span>
+                <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
+                <span className="text-text-muted">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
+              </div>
+              {/* Right: Social Links */}
+              <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
+                <button className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="GitHub" aria-label="GitHub">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                </button>
+              </div>
+            </div>
+          </footer>
+        </main>
+
+        {/* Collapsed Sidebar Hover Tooltip */}
+        {tooltipState.visible && (
+          <div
+            className="fixed bg-card text-text-main px-3 py-[6px] rounded text-[0.8rem] font-semibold whitespace-nowrap border border-border shadow-card opacity-100 pointer-events-none -translate-y-1/2 z-[1000] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{ top: `${tooltipState.top}px`, left: `${tooltipState.left}px` }}
+          >
+            {tooltipState.text}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
   );
 }

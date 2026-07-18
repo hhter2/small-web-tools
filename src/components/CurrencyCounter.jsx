@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
+import ToolHeader from './ui/ToolHeader';
+import ResultDisplay from './ui/ResultDisplay';
 
 const currencyDetails = {
   USD: { name: "US Dollar", locale: "en-US", symbol: "$", flag: "🇺🇸" },
@@ -168,19 +171,27 @@ export default function CurrencyCounter() {
   };
 
   return (
-    <article id="tool-currency" className="tool-card active">
-      <h2>Currency Converter &amp; Counter</h2>
+    <Card id="tool-currency" variant="tool" className="!gap-2.5 !p-4">
+      <ToolHeader title="Currency Converter & Counter" />
 
       {/* Tabs */}
-      <div className="tool-tabs" style={{ marginBottom: '12px' }}>
+      <div className="tool-tabs flex gap-2">
         <button
-          className={`tab-btn ${activeTab === 'single' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md border text-[0.85rem] font-semibold cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] font-sans ${
+            activeTab === 'single'
+              ? 'bg-accent text-white border-accent shadow-[0_4px_14px_rgba(16,185,129,0.3)]'
+              : 'border-border bg-card text-text-muted hover:border-accent hover:text-accent hover:bg-nav-hover-bg'
+          }`}
           onClick={() => setActiveTab('single')}
         >
           Quick Convert
         </button>
         <button
-          className={`tab-btn ${activeTab === 'bulk' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md border text-[0.85rem] font-semibold cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] font-sans ${
+            activeTab === 'bulk'
+              ? 'bg-accent text-white border-accent shadow-[0_4px_14px_rgba(16,185,129,0.3)]'
+              : 'border-border bg-card text-text-muted hover:border-accent hover:text-accent hover:bg-nav-hover-bg'
+          }`}
           onClick={() => setActiveTab('bulk')}
         >
           Bulk Convert &amp; Count
@@ -188,7 +199,7 @@ export default function CurrencyCounter() {
       </div>
 
       {/* API Banner / Status Info */}
-      <div className="status-msg" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '6px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="text-xs min-h-[18px] text-text-muted font-medium px-3 py-1.5 rounded bg-app border border-border flex justify-between flex-wrap gap-2">
         <span>
           <strong>Rate Source:</strong> {isManualRate ? "Custom Manual Rate" : (apiError ? "Offline Fallback" : "Live API")}
         </span>
@@ -198,16 +209,17 @@ export default function CurrencyCounter() {
       </div>
 
       {apiError && !isManualRate && (
-        <p className="small status-msg" style={{ color: 'var(--text-muted)', margin: 0, padding: '4px 8px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
+        <p className="text-xs text-text-muted m-0 p-1 px-2 rounded bg-red-500/5 border border-red-500/15">
           ⚠️ {apiError}
         </p>
       )}
 
       {/* Manual Rate Override Accordion/Input */}
-      <div className="currency-manual-rate-container">
+      <div className="flex items-center gap-3 rounded border border-dashed border-border bg-app px-3 py-2 max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-2">
         <input
           type="checkbox"
           id="toggle-manual-rate"
+          className="w-auto cursor-pointer"
           checked={isManualRate}
           onChange={(e) => {
             setIsManualRate(e.target.checked);
@@ -221,22 +233,22 @@ export default function CurrencyCounter() {
             }
           }}
         />
-        <label htmlFor="toggle-manual-rate">Enable Manual Rate Override</label>
+        <label htmlFor="toggle-manual-rate" className="cursor-pointer select-none text-sm text-text-main font-semibold">Enable Manual Rate Override</label>
         
         {isManualRate && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <div className="flex items-center gap-2 ml-auto max-[480px]:ml-0 max-[480px]:mt-1">
+            <span className="text-xs text-text-muted">
               1 {activeTab === 'single' ? fromCurrency : bulkFromCurrency} =
             </span>
             <input
               type="number"
               step="any"
-              className="currency-manual-rate-input"
+              className="max-w-[120px] px-2.5 py-1.5 text-sm rounded border border-border bg-card text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
               value={manualRate}
               onChange={(e) => setManualRate(e.target.value)}
               placeholder="Rate"
             />
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <span className="text-xs text-text-muted">
               {activeTab === 'single' ? toCurrency : bulkToCurrency}
             </span>
           </div>
@@ -245,13 +257,14 @@ export default function CurrencyCounter() {
 
       {/* Tab Content: Quick Convert */}
       {activeTab === 'single' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="row">
-            <div className="form-group flex-1">
-              <label htmlFor="currency-amount">Amount</label>
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4 w-full">
+            <div className="flex flex-col gap-2 w-full flex-1">
+              <label className="text-sm font-semibold text-text-main" htmlFor="currency-amount">Amount</label>
               <input
                 type="number"
                 id="currency-amount"
+                className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
                 value={singleAmount}
                 onChange={(e) => setSingleAmount(e.target.value)}
                 placeholder="100"
@@ -259,11 +272,12 @@ export default function CurrencyCounter() {
             </div>
           </div>
 
-          <div className="row" style={{ alignItems: 'flex-end' }}>
-            <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="from-currency">From</label>
+          <div className="flex gap-4 w-full items-end max-md:flex-col max-md:items-stretch">
+            <div className="flex flex-col gap-2 w-full flex-[2]">
+              <label className="text-sm font-semibold text-text-main" htmlFor="from-currency">From</label>
               <select
                 id="from-currency"
+                className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
                 value={fromCurrency}
                 onChange={(e) => setFromCurrency(e.target.value)}
               >
@@ -277,17 +291,18 @@ export default function CurrencyCounter() {
 
             <button
               type="button"
-              className="currency-swap-btn"
+              className="inline-flex items-center justify-center w-[42px] h-[42px] min-w-[42px] rounded-full border border-border bg-card text-text-muted cursor-pointer self-end mb-0.5 transition-all duration-200 hover:border-accent hover:text-accent hover:rotate-180 max-md:self-center max-md:my-1"
               onClick={handleSwap}
               title="Swap Currencies"
             >
               ⇄
             </button>
 
-            <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="to-currency">To</label>
+            <div className="flex flex-col gap-2 w-full flex-[2]">
+              <label className="text-sm font-semibold text-text-main" htmlFor="to-currency">To</label>
               <select
                 id="to-currency"
+                className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
                 value={toCurrency}
                 onChange={(e) => setToCurrency(e.target.value)}
               >
@@ -300,14 +315,14 @@ export default function CurrencyCounter() {
             </div>
           </div>
 
-          <div className="currency-result-display">
-            <div className="currency-result-value">
+          <div className="rounded-lg border border-border bg-app p-3 text-center">
+            <div className="text-[1.3rem] min-[480px]:text-2xl md:text-[2rem] font-bold text-accent mb-2 break-all font-display">
               {formatCurrency(convertedAmount, toCurrency)}
             </div>
-            <div className="currency-result-rate">
+            <div className="text-sm text-text-muted">
               {formatCurrency(1, fromCurrency)} = {formatCurrency(currentRate, toCurrency)}
               <br />
-              <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+              <span className="text-xs opacity-85">
                 {formatCurrency(1, toCurrency)} = {formatCurrency(1 / currentRate, fromCurrency)}
               </span>
             </div>
@@ -317,12 +332,13 @@ export default function CurrencyCounter() {
 
       {/* Tab Content: Bulk Convert & Count */}
       {activeTab === 'bulk' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="row" style={{ alignItems: 'flex-end' }}>
-            <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="bulk-from-currency">Source Currency</label>
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4 w-full items-end max-md:flex-col max-md:items-stretch">
+            <div className="flex flex-col gap-2 w-full flex-[2]">
+              <label className="text-sm font-semibold text-text-main" htmlFor="bulk-from-currency">Source Currency</label>
               <select
                 id="bulk-from-currency"
+                className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
                 value={bulkFromCurrency}
                 onChange={(e) => setBulkFromCurrency(e.target.value)}
               >
@@ -336,17 +352,18 @@ export default function CurrencyCounter() {
 
             <button
               type="button"
-              className="currency-swap-btn"
+              className="inline-flex items-center justify-center w-[42px] h-[42px] min-w-[42px] rounded-full border border-border bg-card text-text-muted cursor-pointer self-end mb-0.5 transition-all duration-200 hover:border-accent hover:text-accent hover:rotate-180 max-md:self-center max-md:my-1"
               onClick={handleBulkSwap}
               title="Swap Currencies"
             >
               ⇄
             </button>
 
-            <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="bulk-to-currency">Target Currency</label>
+            <div className="flex flex-col gap-2 w-full flex-[2]">
+              <label className="text-sm font-semibold text-text-main" htmlFor="bulk-to-currency">Target Currency</label>
               <select
                 id="bulk-to-currency"
+                className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
                 value={bulkToCurrency}
                 onChange={(e) => setBulkToCurrency(e.target.value)}
               >
@@ -359,40 +376,47 @@ export default function CurrencyCounter() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="currency-bulk-input">Amounts (one per line, e.g. $100, 250.50, 3,000)</label>
+          <div className="flex flex-col gap-2 w-full">
+            <label className="text-sm font-semibold text-text-main" htmlFor="currency-bulk-input">Amounts (one per line, e.g. $100, 250.50, 3,000)</label>
             <textarea
               id="currency-bulk-input"
-              rows="5"
+              className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
+              rows="3"
               placeholder={"100\n250.50\n3000"}
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
             />
           </div>
 
-          <div className="row count-results">
-            <div className="result-box">
-              <span className="result-label">Total ({bulkFromCurrency})</span>
-              <span className="result-val" id="currency-source-total">{formatCurrency(sourceTotal, bulkFromCurrency)}</span>
-            </div>
-            <div className="result-box">
-              <span className="result-label">Total ({bulkToCurrency})</span>
-              <span className="result-val" id="currency-target-total" style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{formatCurrency(convertedTotal, bulkToCurrency)}</span>
-            </div>
-            <div className="result-box">
-              <span className="result-label">Lines Counted</span>
-              <span className="result-val" id="currency-line-count">{lineCount}</span>
-            </div>
+          <div className="flex flex-col md:flex-row gap-4 w-full mt-2">
+            <ResultDisplay
+              label={`Total (${bulkFromCurrency})`}
+              value={formatCurrency(sourceTotal, bulkFromCurrency)}
+              className="flex-1"
+              id="currency-source-total"
+            />
+            <ResultDisplay
+              label={`Total (${bulkToCurrency})`}
+              value={formatCurrency(convertedTotal, bulkToCurrency)}
+              className="flex-1"
+              id="currency-target-total"
+            />
+            <ResultDisplay
+              label="Lines Counted"
+              value={lineCount}
+              className="flex-1"
+              id="currency-line-count"
+            />
           </div>
 
           {parsedAmounts.length > 0 && (
-            <div>
-              <label style={{ fontSize: '0.85rem', marginBottom: '4px', display: 'block' }}>Line Breakdown</label>
-              <div className="currency-bulk-list">
+            <div className="mt-2">
+              <label className="text-xs font-semibold text-text-main mb-1 block">Line Breakdown</label>
+              <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto mt-3 p-3 bg-app border border-border rounded-md font-mono text-sm">
                 {parsedAmounts.map((amt, idx) => (
-                  <div key={idx} className="currency-bulk-item">
+                  <div key={idx} className="flex justify-between border-b border-black/5 dark:border-white/5 pb-1">
                     <span>Line {idx + 1}: {formatCurrency(amt, bulkFromCurrency)}</span>
-                    <span style={{ color: 'var(--accent)' }}>⇄ {formatCurrency(amt * bulkRate, bulkToCurrency)}</span>
+                    <span className="text-accent">⇄ {formatCurrency(amt * bulkRate, bulkToCurrency)}</span>
                   </div>
                 ))}
               </div>
@@ -400,6 +424,6 @@ export default function CurrencyCounter() {
           )}
         </div>
       )}
-    </article>
+    </Card>
   );
 }

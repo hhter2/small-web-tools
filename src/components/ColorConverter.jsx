@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
+import FieldInput from './ui/FieldInput';
 
 function parseHexColor(value) {
   const match = value.trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
@@ -888,25 +892,22 @@ export default function ColorConverter() {
 
   const renderSlider = (label, value, min, max, gradient, onChange) => {
     return (
-      <div className="slider-item" key={label}>
-        <div className="slider-header-row">
-          <span className="slider-label">{label}</span>
-          <span className="slider-value">{value}</span>
-        </div>
-        <div className="slider-input-container">
-          <input
-            type="range"
-            className="interactive-slider-input"
-            min={min}
-            max={max}
-            value={value}
-            onChange={onChange}
-            style={{
-              '--track-background': gradient,
-              '--thumb-color': `rgb(${activeRgb.r}, ${activeRgb.g}, ${activeRgb.b})`
-            }}
-          />
-        </div>
+      <div className="grid grid-cols-[76px_minmax(0,1fr)_36px] items-center gap-2 text-[0.78rem]" key={label}>
+        <span className="truncate font-semibold text-text-muted">{label}</span>
+        <input
+          type="range"
+          className="interactive-slider-input min-w-0"
+          min={min}
+          max={max}
+          value={value}
+          onChange={onChange}
+          aria-label={label}
+          style={{
+            '--track-background': gradient,
+            '--thumb-color': `rgb(${activeRgb.r}, ${activeRgb.g}, ${activeRgb.b})`
+          }}
+        />
+        <span className="text-right font-mono font-medium text-text-main">{value}</span>
       </div>
     );
   };
@@ -1039,16 +1040,16 @@ export default function ColorConverter() {
     }
 
     return (
-      <div className="interactive-sliders-card">
-        <div className="interactive-sliders-body">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
+        <div className="flex flex-col gap-2">
           {sliders}
         </div>
-        <div className="interactive-sliders-footer">
-          <div className="model-dropdown-wrapper">
+        <div className="flex items-center justify-between border-t border-border pt-2">
+          <div className="relative">
             <select
               value={sliderModel}
               onChange={(e) => setSliderModel(e.target.value)}
-              className="model-select"
+              className="px-3 py-1.5 rounded-md bg-app border border-border text-text-main font-sans text-sm cursor-pointer outline-none hover:bg-border-hover"
             >
               <option value="HSB">HSB</option>
               <option value="HSL">HSL</option>
@@ -1057,22 +1058,25 @@ export default function ColorConverter() {
               <option value="LAB">LAB</option>
             </select>
           </div>
-          <div className="footer-actions">
+          <div className="flex gap-2">
             {hasEyeDropper && (
-              <button
+              <Button
                 type="button"
-                className="action-btn"
+                size="sm"
+                variant="secondary"
                 onClick={handleEyeDropper}
                 title="Pick color from screen"
+                className="p-1.5"
               >
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 22l6-6M8 16l4 4M19.5 4.5a3.53 3.53 0 0 1 0 5L12 17l-5-5 7.5-7.5a3.53 3.53 0 0 1 5 0z"></path>
                 </svg>
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="button"
-              className="action-btn"
+              size="sm"
+              variant="secondary"
               onClick={() => {
                 let copyStr = '';
                 if (sliderModel === 'HSB') copyStr = formatHsb(activeHsb);
@@ -1083,12 +1087,13 @@ export default function ColorConverter() {
                 navigator.clipboard.writeText(copyStr);
               }}
               title="Copy color code"
+              className="p-1.5"
             >
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1096,20 +1101,23 @@ export default function ColorConverter() {
   };
 
   return (
-    <article id="tool-color" className="tool-card tool-card--wide active">
-      <h2>Color Code Converter & HSL Selector</h2>
+    <Card id="tool-color" variant="tool" size="wide" className="!gap-2 !p-2.5">
+      <ToolHeader 
+        title="Color Code Converter & HSL Selector" 
+      />
       
-      <div className="color-tool-layout">
+      <div className="grid w-full grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
         
         {/* Panel 1: Code Converter Inputs/Outputs */}
-        <div className="color-converter-section">
-          <h3>Code Converter</h3>
-          <div className="form-group">
-            <label htmlFor="color-input">HEX, RGB, or HSL Code</label>
-            <div className="input-with-button">
+        <div className="flex w-full flex-col gap-2.5">
+          <h3 className="border-b border-border pb-2 text-[0.95rem] uppercase tracking-wider text-text-muted">Code Converter</h3>
+          <div className="flex w-full flex-col gap-1.5">
+            <label htmlFor="color-input" className="text-xs font-semibold text-text-main">HEX, RGB, or HSL Code</label>
+            <div className="flex gap-2 w-full">
               <input
                 id="color-input"
                 type="text"
+                className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-2 text-text-main outline-none transition-all placeholder:text-text-muted/50 focus:border-accent focus:ring-4 focus:ring-accent-light/20"
                 placeholder="#4F46E5 or rgb(79, 70, 229) or hsl(244, 76%, 59%)"
                 value={input}
                 onChange={handleUserTextChange}
@@ -1117,35 +1125,35 @@ export default function ColorConverter() {
                 onBlur={handleInputBlur}
               />
               {hasEyeDropper && (
-                <button
+                <Button
                   type="button"
-                  className="eyedropper-btn"
+                  variant="secondary"
                   title="Pick color from screen"
                   onClick={handleEyeDropper}
+                  className="h-10 w-10 p-0"
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M2 22l6-6M8 16l4 4M19.5 4.5a3.53 3.53 0 0 1 0 5L12 17l-5-5 7.5-7.5a3.53 3.53 0 0 1 5 0z"></path>
                   </svg>
-                </button>
+                </Button>
               )}
             </div>
           </div>
           
           <div
-            className="color-preview-bar"
+            className="h-9 w-full rounded-lg border border-border shadow-inner"
             id="color-preview-swatch"
             style={{ backgroundColor: swatchBg }}
           />
           
-          <div className="row outputs outputs-grid-two">
-            <div className="form-group">
-              <label htmlFor="color-hex">HEX</label>
-              <input id="color-hex" type="text" readOnly value={hexVal} />
+          <div className="flex w-full gap-3">
+            <div className="flex-1">
+              <FieldInput id="color-hex" label="HEX" type="text" readOnly value={hexVal} />
             </div>
-            <div className="form-group">
-              <label htmlFor="color-selected-format">{sliderModel}</label>
-              <input 
+            <div className="flex-1">
+              <FieldInput 
                 id="color-selected-format" 
+                label={sliderModel}
                 type="text" 
                 readOnly 
                 value={
@@ -1159,17 +1167,17 @@ export default function ColorConverter() {
             </div>
           </div>
           
-          <p className="small status-msg" id="color-status">{statusText}</p>
+          {statusText && <p className="text-xs font-medium text-red-500" id="color-status">{statusText}</p>}
 
-          <div className="interactive-sliders-wrapper">
+          <div>
             {renderInteractiveSliders()}
           </div>
         </div>
 
         {/* Panel 2: Visual Swatches Grid Selector */}
-        <div className="color-picker-section">
-          <div className="section-header-row">
-            <h3>HSL Swatches</h3>
+        <div className="flex flex-col gap-3 w-full">
+          <div className="flex justify-between items-center w-full pb-2 border-b border-border">
+            <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider">HSL Swatches</h3>
             <button
               type="button"
               className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
@@ -1180,7 +1188,7 @@ export default function ColorConverter() {
             </button>
           </div>
           
-          <div className="swatches-block-grid">
+          <div className="grid grid-cols-12 gap-0.5 w-full rounded-lg border border-border bg-app p-1">
             {SWATCH_GRID.map((row, rIdx) => 
               row.map((hex, cIdx) => {
                 const isSelected = swatchSelectedHex.toUpperCase() === hex.toUpperCase();
@@ -1188,7 +1196,7 @@ export default function ColorConverter() {
                   <button
                     key={`${rIdx}-${cIdx}`}
                     type="button"
-                    className={`swatch-block ${isSelected ? 'selected' : ''}`}
+                    className={`aspect-square w-full border-none cursor-pointer relative p-0 rounded-[2px] transition-transform duration-100 hover:scale-125 hover:z-[5] hover:shadow-[0_4px_10px_rgba(0,0,0,0.25)] hover:rounded ${isSelected ? 'outline-[2.5px] outline-solid outline-text-main -outline-offset-[2.5px] shadow-[0_0_0_1.5px_#ffffff,_0_3px_8px_rgba(0,0,0,0.3)] dark:shadow-[0_0_0_1.5px_#1f2937,_0_3px_8px_rgba(0,0,0,0.4)] z-10 rounded scale-110' : ''}`}
                     style={{ backgroundColor: hex }}
                     title={hex}
                     onClick={() => handleSwatchClick(hex)}
@@ -1199,14 +1207,14 @@ export default function ColorConverter() {
           </div>
 
           {/* Standard Palette section */}
-          <div className="swatches-section">
-            <div className="swatches-header">
-              <span className="swatches-label">Standard Palettes</span>
-              <div className="swatches-controls">
+          <div className="flex flex-col gap-2 mt-1">
+            <div className="flex justify-between items-center w-full mb-0.5">
+              <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Standard Palettes</span>
+              <div className="flex gap-1.5 items-center">
                 {!isEditingPresets ? (
                   <button
                     type="button"
-                    className="palette-control-btn"
+                    className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                     onClick={() => setIsEditingPresets(true)}
                   >
                     Customize
@@ -1215,14 +1223,14 @@ export default function ColorConverter() {
                   <>
                     <button
                       type="button"
-                      className="palette-control-btn primary"
+                      className="bg-accent border border-accent text-white rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-accent-hover hover:border-accent-hover"
                       onClick={() => setIsEditingPresets(false)}
                     >
                       Done
                     </button>
                     <button
                       type="button"
-                      className="palette-control-btn danger"
+                      className="bg-card border border-border text-[#ef4444] border-red-500/20 rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-red-500/5 hover:border-red-500"
                       onClick={handleResetPresets}
                       title="Reset to default 12 colors"
                     >
@@ -1230,7 +1238,7 @@ export default function ColorConverter() {
                     </button>
                     <button
                       type="button"
-                      className="palette-control-btn"
+                      className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                       onClick={handleExportPresets}
                       title="Export palette as JSON"
                     >
@@ -1238,7 +1246,7 @@ export default function ColorConverter() {
                     </button>
                     <button
                       type="button"
-                      className="palette-control-btn"
+                      className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                       onClick={() => fileInputRef.current && fileInputRef.current.click()}
                       title="Import palette from JSON"
                     >
@@ -1256,12 +1264,12 @@ export default function ColorConverter() {
               </div>
             </div>
             
-            <div className={`swatches-grid ${isEditingPresets ? 'editing' : ''}`}>
+            <div className={`flex flex-wrap gap-2 ${isEditingPresets ? 'gap-2.5' : ''}`}>
               {presets.map((hex, idx) => (
-                <div key={`${hex}-${idx}`} className="swatch-wrapper">
+                <div key={`${hex}-${idx}`} className="relative inline-block">
                   <button
                     type="button"
-                    className="swatch-btn"
+                    className="w-6 h-6 rounded-md border border-border cursor-pointer shadow-sm transition-transform duration-200 hover:scale-[1.15] hover:shadow-md hover:border-accent"
                     style={{ backgroundColor: hex }}
                     title={hex}
                     onClick={() => !isEditingPresets && handleSwatchClick(hex)}
@@ -1269,7 +1277,7 @@ export default function ColorConverter() {
                   {isEditingPresets && (
                     <button
                       type="button"
-                      className="swatch-delete-btn"
+                      className="absolute -top-1 -right-1 w-[15px] h-[15px] rounded-full bg-[#ef4444] text-white border-none text-[10px] font-bold flex items-center justify-center cursor-pointer shadow-md transition-transform duration-150 hover:scale-120 hover:bg-[#dc2626]"
                       title="Delete color"
                       onClick={() => handleDeletePreset(idx)}
                     >
@@ -1281,7 +1289,7 @@ export default function ColorConverter() {
               {isEditingPresets && swatchBg && swatchBg !== 'transparent' && (
                 <button
                   type="button"
-                  className="swatch-add-btn"
+                  className="w-6 h-6 rounded-md border-2 border-dashed border-border bg-transparent color-text-muted text-[0.95rem] font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-accent hover:color-accent hover:bg-accent-light hover:scale-108"
                   title={`Add current color (${swatchBg})`}
                   onClick={handleAddPreset}
                 >
@@ -1293,24 +1301,24 @@ export default function ColorConverter() {
         </div>
 
         {/* Panel 3: Visual HSL Spectrum Selector */}
-        <div className="color-picker-section">
-          <h3>HSL Spectrum</h3>
+        <div className="flex flex-col gap-3 w-full">
+          <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider mb-1 pb-2 border-b border-border">HSL Spectrum</h3>
           
-          <div className="hsl-picker-container">
+          <div className="flex gap-4 w-full items-stretch">
             {/* 2D Hue-Saturation board */}
             <div
               ref={svRef}
-              className="hsl-picker-board"
+              className="relative flex-1 aspect-[6/5] rounded-xl border border-border overflow-hidden cursor-crosshair shadow-inner"
               onMouseDown={handleSvMouseDown}
               onTouchStart={handleSvTouchStart}
             >
               {/* Rainbow horizontal overlay + gray vertical overlay */}
-              <div className="hsl-picker-board-rainbow" />
-              <div className="hsl-picker-board-saturation" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)' }} />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(128,128,128,0) 0%, rgba(128,128,128,1) 100%)' }} />
               
               {/* Slider marker indicator */}
               <div
-                className="hsl-marker"
+                className="absolute w-[18px] h-[18px] rounded-full border-[2.5px] border-white shadow-[0_0_0_1px_rgba(0,0,0,0.5),_0_2px_6px_rgba(0,0,0,0.4)] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 style={{
                   left: `${(hslState.h / 360) * 100}%`,
                   top: `${100 - hslState.s}%`,
@@ -1320,11 +1328,11 @@ export default function ColorConverter() {
             </div>
 
             {/* Vertical Lightness slider */}
-            <div className="lightness-slider-wrapper">
-              <span className="slider-label">Lightness</span>
+            <div className="flex flex-col items-center gap-1.5 self-stretch">
+              <span className="text-[0.7rem] font-bold uppercase tracking-wider text-text-muted">Lightness</span>
               <div
                 ref={lRef}
-                className="lightness-slider"
+                className="relative w-7 flex-1 rounded-full border border-border cursor-ns-resize shadow-inner"
                 style={{
                   background: `linear-gradient(to top, #000 0%, hsl(${hslState.h}, ${hslState.s}%, 50%) 50%, #fff 100%)`
                 }}
@@ -1333,7 +1341,7 @@ export default function ColorConverter() {
               >
                 {/* Vertical slider handle indicator */}
                 <div
-                  className="lightness-handle"
+                  className="absolute left-[-2px] right-[-2px] h-2 bg-white border-2 border-slate-700 rounded -translate-y-1/2 shadow-md pointer-events-none"
                   style={{
                     top: `${100 - hslState.l}%`
                   }}
@@ -1344,23 +1352,23 @@ export default function ColorConverter() {
 
           {/* Recent Colors section */}
           {recentColors.length > 0 && (
-            <div className="swatches-section recent-colors">
-              <div className="swatches-header">
-                <span className="swatches-label">Recent Colors</span>
+            <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-dashed border-border">
+              <div className="flex justify-between items-center w-full">
+                <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Recent Colors</span>
                 <button
                   type="button"
-                  className="palette-control-btn danger"
+                  className="bg-card border border-border text-[#ef4444] border-red-500/20 rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-red-500/5 hover:border-red-500"
                   onClick={handleClearRecents}
                 >
                   Clear
                 </button>
               </div>
-              <div className="swatches-grid">
+              <div className="flex flex-wrap gap-2">
                 {recentColors.map((hex, idx) => (
                   <button
                     key={`${hex}-${idx}`}
                     type="button"
-                    className="swatch-btn"
+                    className="w-6 h-6 rounded-md border border-border cursor-pointer shadow-sm transition-transform duration-200 hover:scale-[1.15] hover:shadow-md hover:border-accent"
                     style={{ backgroundColor: hex }}
                     title={hex}
                     onClick={() => handleSwatchClick(hex)}
@@ -1372,6 +1380,6 @@ export default function ColorConverter() {
         </div>
 
       </div>
-    </article>
+    </Card>
   );
 }

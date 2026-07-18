@@ -1,47 +1,69 @@
-import React, { useState } from 'react';
+import React from 'react';
+import AutoDetectConverter from './ui/AutoDetectConverter';
+
+function analyzePath(input) {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      sourceLabel: 'Path style',
+      targetLabel: '',
+      output: '',
+      outputPlaceholder: 'The normalized path appears here.',
+      error: null,
+    };
+  }
+
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)) {
+    return {
+      sourceLabel: 'Web URL',
+      targetLabel: 'Web URL',
+      output: input,
+      outputPlaceholder: '',
+      error: null,
+    };
+  }
+
+  const backslashCount = (input.match(/\\/g) || []).length;
+  const forwardSlashCount = (input.match(/\//g) || []).length;
+
+  if (backslashCount > 0 && backslashCount >= forwardSlashCount) {
+    return {
+      sourceLabel: 'Backslash path',
+      targetLabel: 'Forward-slash path',
+      output: input.replace(/\\/g, '/'),
+      outputPlaceholder: '',
+      error: null,
+    };
+  }
+
+  if (forwardSlashCount > 0) {
+    return {
+      sourceLabel: 'Forward-slash path',
+      targetLabel: 'Backslash path',
+      output: input.replace(/\//g, '\\'),
+      outputPlaceholder: '',
+      error: null,
+    };
+  }
+
+  return {
+    sourceLabel: 'Plain text',
+    targetLabel: 'Unchanged text',
+    output: input,
+    outputPlaceholder: '',
+    error: null,
+  };
+}
 
 export default function SlashesConverter() {
-  const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-
-  const handleConvert = (val) => {
-    const newVal = val !== undefined ? val : input;
-    setOutput(newVal.replace(/\\/g, '/'));
-  };
-
   return (
-    <article id="tool-slash" className="tool-card tool-card--compact active">
-      <h2>Slashes Converter</h2>
-      <div className="form-group">
-        <label htmlFor="slash-input">Input Path</label>
-        <textarea
-          id="slash-input"
-          rows="3"
-          placeholder="Paste a Windows path..."
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-            handleConvert(e.target.value);
-          }}
-        />
-      </div>
-      <button
-        id="slash-convert"
-        type="button"
-        className="btn-primary"
-        onClick={() => handleConvert()}
-      >
-        Convert
-      </button>
-      <div className="form-group">
-        <label htmlFor="slash-output">Output Path</label>
-        <textarea
-          id="slash-output"
-          rows="3"
-          readOnly
-          value={output}
-        />
-      </div>
-    </article>
+    <AutoDetectConverter
+      toolId="tool-slash"
+      title="Slashes Converter"
+      description="Normalize file paths automatically. Paste either slash style and copy the converted result."
+      inputPlaceholder={'C:\\Users\\name\\Documents\\report.pdf\nor\n/Users/name/Documents/report.pdf'}
+      emptyTargetLabel="Converted path"
+      analyze={analyzePath}
+    />
   );
 }

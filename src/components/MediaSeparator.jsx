@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
+import Button from './ui/Button';
 import { useMediaSeparator } from './useMediaSeparator';
 import MediaSeparatorQueueItem from './MediaSeparatorQueueItem';
 
@@ -47,7 +48,7 @@ export default function MediaSeparator() {
 
   return (
     <div
-      className="mediasplit-container"
+      className="flex flex-col gap-6 relative w-full"
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -68,8 +69,8 @@ export default function MediaSeparator() {
       />
 
       {dragOver && items.length > 0 && (
-        <div className="mediasplit-drag-overlay">
-          <div className="overlay-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <div className="absolute inset-0 bg-accent/15 backdrop-blur-[4px] border-[2.5px] border-dashed border-accent rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-accent text-[1.2rem]">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -81,35 +82,44 @@ export default function MediaSeparator() {
 
       {items.length === 0 && (
         <div
-          className={`mediasplit-dropzone${dragOver ? ' dragover' : ''}`}
+          className={`border-2 border-dashed rounded-[14px] py-10 px-5 text-center cursor-pointer transition-all duration-300 flex justify-center items-center bg-accent/[0.02] ${dragOver ? 'border-accent bg-accent/[0.06]' : 'border-border hover:border-accent hover:bg-accent/[0.06]'}`}
           onClick={() => inputRef.current?.click()}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
           aria-label="Upload video files"
         >
-          <div className="dropzone-content">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex flex-col items-center">
+            <svg
+              width="44"
+              height="44"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`mb-4 transition-colors duration-300 ${dragOver ? 'text-accent' : 'text-text-muted'}`}
+            >
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
-            <p className="dropzone-title">Drag & drop video files here</p>
-            <p className="dropzone-or">or</p>
-            <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>Browse Files</button>
-            <p className="dropzone-note">Supports MP4, MOV, WebM, MKV, AVI, and other common video formats</p>
+            <p className="text-[1.1rem] font-semibold text-text-main m-0 mb-2">Drag &amp; drop video files here</p>
+            <p className="text-[0.88rem] text-text-muted m-0 mb-3 uppercase tracking-[0.05em]">or</p>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>Browse Files</Button>
+            <p className="text-[0.8rem] text-text-muted mt-3 m-0">Supports MP4, MOV, WebM, MKV, AVI, and other common video formats</p>
           </div>
         </div>
       )}
 
       {items.length > 0 && (
-        <div className="mediasplit-workspace">
-          <div className="mediasplit-actions">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2.5 flex-wrap pb-3 border-b border-border">
             {isProcessing ? (
               <button
                 type="button"
                 onClick={stopQueue}
-                className="mediasplit-btn-secondary mediasplit-btn-stop"
-                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-red-400 cursor-pointer bg-card text-red-500 transition-all duration-150 hover:bg-red-50 hover:border-red-500"
               >
                 Stop Processing
               </button>
@@ -118,7 +128,7 @@ export default function MediaSeparator() {
                 type="button"
                 onClick={runQueue}
                 disabled={!hasPending && !engineLoading}
-                className="mediasplit-btn-primary"
+                className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-transparent cursor-pointer bg-accent text-white transition-colors duration-150 hover:enabled:bg-accent-hover disabled:bg-border disabled:text-text-muted disabled:cursor-not-allowed"
               >
                 {engineLoading ? 'Loading Engine...' : 'Start Processing Queue'}
               </button>
@@ -127,7 +137,7 @@ export default function MediaSeparator() {
               <button
                 type="button"
                 onClick={clearDone}
-                className="mediasplit-btn-secondary"
+                className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-border cursor-pointer bg-card text-text-main transition-all duration-150 hover:bg-app hover:border-border-hover"
               >
                 Clear Completed
               </button>
@@ -136,21 +146,27 @@ export default function MediaSeparator() {
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={isProcessing}
-              className="mediasplit-btn-secondary"
+              className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-border cursor-pointer bg-card text-text-main transition-all duration-150 hover:bg-app hover:border-border-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Add Files
             </button>
-            <span className="mediasplit-count">{items.length} file{items.length !== 1 ? 's' : ''}</span>
+            <span className="ml-auto text-[0.85rem] font-medium text-text-muted">
+              {items.length} file{items.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {isProcessing && (
-            <div className="mediasplit-global-progress">
-              <progress value={globalProgress} max={100} />
+            <div className="flex items-center gap-3 bg-app border border-border px-4 py-3 rounded-lg text-[0.9rem] text-text-main">
+              <progress
+                value={globalProgress}
+                max={100}
+                className="flex-1 h-2.5 rounded overflow-hidden border-none [&::-webkit-progress-bar]:bg-border [&::-webkit-progress-value]:bg-accent [&::-moz-progress-bar]:bg-accent"
+              />
               <span>Overall Queue Progress: {globalProgress}%</span>
             </div>
           )}
 
-          <ul className="mediasplit-queue">
+          <ul className="list-none m-0 p-0 flex flex-col gap-5">
             {items.map((item) => (
               <MediaSeparatorQueueItem
                 key={item.id}

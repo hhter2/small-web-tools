@@ -1229,7 +1229,6 @@ export default function AudioMeta() {
 
       <ToolHeader 
         title="Audio Metadata &amp; Tags Reader" 
-        description="View technical metadata, audio codec info, and ID3 / Vorbis comment tags, compare multiple files, or strip metadata losslessly." 
       />
 
       {/* Full-width drag over overlay when files are already present */}

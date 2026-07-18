@@ -177,7 +177,7 @@ export default function CasingSwitcher() {
   };
 
   return (
-    <Card id="tool-casing" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-casing" variant="tool" size="wide">
       <ToolHeader 
         title="Lowercase &amp; Capital Switcher" 
       />

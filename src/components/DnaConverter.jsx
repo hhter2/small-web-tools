@@ -606,7 +606,7 @@ export default function DnaConverter() {
   };
 
   return (
-    <Card id="tool-dna" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-dna" variant="tool" size="wide">
       <ToolHeader title="DNA/RNA Direction Transfer" />
       
       <div className="flex flex-col md:flex-row gap-4 w-full">

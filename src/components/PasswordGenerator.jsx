@@ -319,7 +319,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   const checkStats = checkPasswordStrength(checkPassword);
   const checkStrength = getStrengthDetails(checkStats.entropy);
   return (
-    <Card id="tool-password" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-password" variant="tool" size="wide">
       <ToolHeader 
         title="Secure Password Utility" 
       />

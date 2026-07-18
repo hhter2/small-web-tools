@@ -1241,7 +1241,6 @@ export default function OfficeMeta() {
     <Card id="tool-officemeta" variant="tool" size="wide">
       <ToolHeader 
         title="Office Metadata Reader" 
-        description="Extract, inspect and analyze core properties, application properties, custom metadata, and format structures from Word, Excel, and PowerPoint files locally." 
       />
 
       <div 

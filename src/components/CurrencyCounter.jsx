@@ -171,7 +171,7 @@ export default function CurrencyCounter() {
   };
 
   return (
-    <Card id="tool-currency" variant="tool" className="!gap-2.5 !p-4">
+    <Card id="tool-currency" variant="tool">
       <ToolHeader title="Currency Converter & Counter" />
 
       {/* Tabs */}

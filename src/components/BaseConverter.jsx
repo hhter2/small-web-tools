@@ -141,7 +141,7 @@ export default function BaseConverter() {
   };
 
   return (
-    <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px] !gap-3 !p-5">
+    <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px]">
       <ToolHeader title="Base Converter" />
 
       <section className="flex flex-col gap-2.5 rounded-xl border border-border bg-app/70 p-3" aria-labelledby="base-conversion-title">

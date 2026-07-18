@@ -1101,7 +1101,7 @@ export default function ColorConverter() {
   };
 
   return (
-    <Card id="tool-color" variant="tool" size="wide" className="!gap-2 !p-2.5">
+    <Card id="tool-color" variant="tool" size="wide">
       <ToolHeader 
         title="Color Code Converter & HSL Selector" 
       />

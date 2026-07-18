@@ -319,7 +319,7 @@ export default function RandomWheel() {
   };
 
   return (
-    <Card id="tool-wheel" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-wheel" variant="tool" size="wide">
       <ToolHeader 
         title="Random Decision Wheel" 
       />

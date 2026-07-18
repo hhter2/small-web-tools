@@ -3,6 +3,7 @@ import { ensureFFmpegLoaded, guessMime } from './mediaSeparatorEngine';
 import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import Card from './ui/Card';
 import Button from './ui/Button';
+import ToolHeader from './ui/ToolHeader';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -762,8 +763,10 @@ export default function VideoMeta() {
   const filteredParamGroups = allParamGroups.map(g => ({ ...g, rows: searchQuery ? g.rows.filter(([k, v]) => k.toLowerCase().includes(searchQuery.toLowerCase()) || String(v).toLowerCase().includes(searchQuery.toLowerCase())) : g.rows })).filter(g => g.rows.length > 0);
 
   return (
-    <Card variant="tool" size="wide" className="flex flex-col gap-5 w-full mt-2 relative" onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}>
+    <Card id="tool-videometa" variant="tool" size="wide" className="relative" onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}>
       <input ref={fileInputRef} type="file" multiple accept={ACCEPTED} style={{ display: 'none' }} onChange={handleFileChange} id="videometa-file-input" />
+
+      <ToolHeader title="Video Metadata Reader" />
 
       {dragOver && files.length > 0 && (
         <div className="absolute inset-0 bg-indigo-500/15 backdrop-blur-sm border-2 border-dashed border-indigo-500 rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-indigo-500 text-2xl">

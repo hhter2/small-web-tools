@@ -20,7 +20,6 @@ function CopyIcon() {
 export default function AutoDetectConverter({
   toolId,
   title,
-  description,
   inputPlaceholder,
   emptyTargetLabel,
   analyze,
@@ -49,8 +48,8 @@ export default function AutoDetectConverter({
   };
 
   return (
-    <Card id={toolId} variant="tool" size="wide" className="max-w-[920px] !gap-3">
-      <ToolHeader title={title} description={description} />
+    <Card id={toolId} variant="tool" size="wide" className="max-w-[920px]">
+      <ToolHeader title={title} />
 
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2">

@@ -440,7 +440,6 @@ export default function NetworkSpeedTest() {
     <Card id="tool-speedtest" variant="tool" size="wide">
       <ToolHeader 
         title="Network Speed Test" 
-        description="Measures your real-time network download & upload speed and server latency. Each phase runs for 10 seconds."
       />
 
       <div className="flex flex-row flex-wrap gap-4 items-end justify-start mb-5">

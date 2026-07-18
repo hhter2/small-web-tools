@@ -518,7 +518,7 @@ export default function QrBarcodeScanner() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
         <ToolHeader 
           title="QR &amp; Barcode Scanner" 
-          description="Scan QR codes and barcodes using your camera or by uploading an image. All parsing is done locally in your browser." 
+          className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
           <Button

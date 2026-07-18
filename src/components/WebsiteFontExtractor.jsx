@@ -464,7 +464,6 @@ export default function WebsiteFontExtractor() {
     <Card id="tool-fontextractor" variant="tool" size="wide">
       <ToolHeader 
         title="Website Font Extractor" 
-        description="Scan a website URL to identify, preview, and download its embedded web fonts, or find similar Google Fonts." 
       />
 
       {/* URL Input section */}

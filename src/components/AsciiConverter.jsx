@@ -144,7 +144,6 @@ export default function AsciiConverter() {
     <AutoDetectConverter
       toolId="tool-ascii"
       title="ASCII Converter"
-      description="Convert between standard ASCII text and decimal character codes with automatic format detection."
       inputPlaceholder={'Hello\nor\n72 101 108 108 111'}
       emptyTargetLabel="Converted result"
       analyze={analyzeAscii}

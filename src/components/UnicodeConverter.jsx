@@ -77,7 +77,6 @@ export default function UnicodeConverter() {
     <AutoDetectConverter
       toolId="tool-unicode"
       title="Unicode Converter"
-      description="Convert between text and hexadecimal Unicode code points with automatic format detection."
       inputPlaceholder={'Hello 👋\nor\nU+0048 U+0065 U+006C U+006C U+006F'}
       emptyTargetLabel="Converted result"
       analyze={analyzeUnicode}

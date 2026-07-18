@@ -1,5 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Button from './ui/Button';
+import Card from './ui/Card';
+import ToolHeader from './ui/ToolHeader';
 import { useMediaSeparator } from './useMediaSeparator';
 import MediaSeparatorQueueItem from './MediaSeparatorQueueItem';
 
@@ -47,8 +49,11 @@ export default function MediaSeparator() {
   const hasDone = items.some((it) => it.status === 'done');
 
   return (
-    <div
-      className="flex flex-col gap-6 relative w-full"
+    <Card
+      id="tool-mediasplit"
+      variant="tool"
+      size="wide"
+      className="relative"
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -67,6 +72,8 @@ export default function MediaSeparator() {
           e.target.value = '';
         }}
       />
+
+      <ToolHeader title="Media Splitter" />
 
       {dragOver && items.length > 0 && (
         <div className="absolute inset-0 bg-accent/15 backdrop-blur-[4px] border-[2.5px] border-dashed border-accent rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-accent text-[1.2rem]">
@@ -180,6 +187,6 @@ export default function MediaSeparator() {
           </ul>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

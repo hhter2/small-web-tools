@@ -268,11 +268,6 @@ html[data-theme="dark"] .copy-btn-inline.copied {
   }
 }
 
-/* Color Converter & HSL Selector Parallel Layout */
-#tool-color {
-  padding: 24px;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    CODON TABLE  ·  ct-* namespace
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -440,33 +435,6 @@ html[data-theme="dark"] .ct-fisc-side-bond {
 }
 /* Keep dense reference tools fully visible on common 768px-high laptop screens. */
 @media (min-width: 768px) and (max-height: 820px) {
-  #tool-ascii,
-  #tool-base {
-    gap: 0.45rem !important;
-    padding: 0.65rem !important;
-  }
-
-  #tool-ascii {
-    padding: 0.45rem !important;
-  }
-
-  #tool-ascii .tool-header,
-  #tool-base .tool-header {
-    padding-bottom: 0.25rem;
-  }
-
-  #tool-ascii .tool-header h2,
-  #tool-base .tool-header h2 {
-    font-size: 1.25rem;
-    line-height: 1.5rem;
-  }
-
-  #tool-ascii .tool-header p {
-    margin-top: 0.1rem;
-    font-size: 0.72rem;
-    line-height: 1rem;
-  }
-
   #tool-ascii [aria-label="Source"] header,
   #tool-ascii [aria-label="Result"] header {
     min-height: 2rem;
@@ -489,11 +457,6 @@ html[data-theme="dark"] .ct-fisc-side-bond {
     min-height: 1.35rem;
     padding-bottom: 0;
     padding-top: 0;
-  }
-
-  #tool-base {
-    gap: 0.25rem !important;
-    padding: 0.4rem !important;
   }
 
   #tool-base > section {

@@ -1304,23 +1304,14 @@ export default function CodonTable() {
   }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
-    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full !gap-2.5 !p-3 font-sans">
+    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full font-sans">
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
-        
-        {/* Title & Filter Bar on same line */}
-        <div className="flex w-full flex-wrap items-center justify-between gap-3">
-          <h2 className="mb-0 flex items-center gap-2 text-[1.3rem] font-bold text-text-main">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
-              <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"/>
-              <line x1="8" y1="7" x2="8" y2="14"/><line x1="12" y1="5.5" x2="12" y2="15.5"/><line x1="16" y1="7" x2="16" y2="14"/>
-            </svg>
-            RNA Codon Table
-          </h2>
+        <ToolHeader title="RNA Codon Table" />
 
-          {/* Filter Buttons */}
+        {/* Filter Buttons */}
+        <div className="flex w-full flex-wrap items-center justify-end gap-3">
           <div className="flex gap-2 flex-wrap" role="group" aria-label="Filter codons">
             {[
               { key: 'all',   label: 'All Codons', activeClass: 'bg-accent border-accent text-white shadow-[0_2px_8px_rgba(99,102,241,0.35)]' },

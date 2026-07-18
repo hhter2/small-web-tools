@@ -1237,10 +1237,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   );
 
   return (
-    <Card id="tool-qrbarcode" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-qrbarcode" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
           title="QR Code &amp; Barcode Generator" 
+          className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
           <Button

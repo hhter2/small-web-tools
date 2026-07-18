@@ -1091,7 +1091,6 @@ export default function FolderAnalyzer() {
         <div className="flex-1 min-w-0">
           <ToolHeader 
             title="Folder Structure Analyzer" 
-            description="Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side." 
           />
           {status === 'success' && activeProject && scannedProjects.length === 1 && (
             <div className="flex flex-wrap gap-3 items-center mt-2.5">

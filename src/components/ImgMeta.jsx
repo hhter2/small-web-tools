@@ -1461,7 +1461,6 @@ export default function ImgMeta() {
     <Card id="tool-imgmeta" variant="tool" size="wide">
       <ToolHeader 
         title="Image Metadata Viewer &amp; Stripper" 
-        description="Extract camera exposure tags (EXIF), colors, GPS data, IPTC, and XMP metadata from your files, or strip sensitive geolocation and camera details cleanly." 
       />
       
       <div 

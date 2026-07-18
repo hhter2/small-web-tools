@@ -85,4 +85,5 @@ npm run preview
 
 ## License
 
-This repository does not currently include a license file. Treat its use and redistribution according to the repository owner's terms until a license is added.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Copyright (c) 2026 Rhosiqs

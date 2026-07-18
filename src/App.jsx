@@ -1014,9 +1014,9 @@ export default function App() {
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
-          <header className="hidden md:flex items-center justify-between px-12 py-[6px] border-b border-border min-h-[48px] bg-header backdrop-blur-[10px] z-[1000] transition-all duration-300">
+          <header className="hidden min-w-0 overflow-hidden border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
             {/* Left: Brand */}
-            <div className="flex items-center">
+            <div className="flex shrink-0 items-center">
               <div
                 className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85"
                 title="Go to Home"
@@ -1030,12 +1030,12 @@ export default function App() {
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
                 </div>
-                <span className="font-['TASA_Orbiter',sans-serif] font-bold text-[0.95rem] tracking-[-0.02em] text-accent">Small Web Tools</span>
+                <span className="hidden font-['TASA_Orbiter',sans-serif] text-[0.95rem] font-bold tracking-[-0.02em] text-accent xl:inline">Small Web Tools</span>
               </div>
             </div>
 
             {/* Center: Nav Dropdowns */}
-            <nav className="flex items-center gap-2">
+            <nav className="flex min-w-0 items-center gap-0 xl:gap-2">
               {categories.map(cat => {
                 const catItems = navItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
@@ -1048,7 +1048,7 @@ export default function App() {
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
                     <button
-                      className={`flex items-center gap-2 bg-transparent border-none px-3 py-[6px] rounded text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-200 font-sans ${isOpen ? 'bg-accent-light text-accent' : ''} hover:bg-accent-light hover:text-accent`}
+                      className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent lg:px-3 lg:gap-2 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveTool('tool-home');
@@ -1061,7 +1061,7 @@ export default function App() {
                         {cat.icon}
                       </span>
                       {/* Cat Name */}
-                      <span className="font-display font-semibold">{cat.name}</span>
+                      <span className="hidden font-display font-semibold lg:inline">{cat.name}</span>
                       {/* Triangle Icon */}
                       <span className={`inline-flex items-center justify-center ml-0.5 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-text-muted [&_svg]:w-[10px] [&_svg]:h-[10px] ${isOpen ? 'rotate-180 text-accent' : ''}`}>
                         <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -1126,10 +1126,10 @@ export default function App() {
             </nav>
 
             {/* Right: Search + Language + Theme */}
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-2 xl:gap-4">
               {/* Header Search */}
               <div
-                className="relative w-[180px] focus-within:w-[240px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] xl:block"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative flex items-center">
@@ -1188,7 +1188,7 @@ export default function App() {
                   <line x1="2" y1="12" x2="22" y2="12"></line>
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
-                <span className="text-[0.8rem] font-medium text-text-main select-none">English</span>
+                <span className="hidden select-none text-[0.8rem] font-medium text-text-main xl:inline">English</span>
                 <svg className="flex-shrink-0 opacity-50 text-text-muted pointer-events-none ml-0.5" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>

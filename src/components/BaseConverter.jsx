@@ -113,9 +113,12 @@ export default function BaseConverter() {
     { base: 60, short: 'BASE 60', label: 'Sexagesimal', value: parsed === null ? '' : formatBase60(parsed) },
   ];
 
-  const useAsInput = (result) => {
-    setInput(result.value);
-    setBaseFrom(result.base);
+  const selectInputBase = (base) => {
+    const matchingResult = results.find((result) => result.base === base);
+    if (parsed !== null && matchingResult?.value) {
+      setInput(matchingResult.value);
+    }
+    setBaseFrom(base);
     setSelectedReferenceValue(null);
     setCopiedBase(null);
   };
@@ -145,7 +148,7 @@ export default function BaseConverter() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 id="base-conversion-title" className="text-sm font-bold text-text-main">Input base &amp; converted values</h3>
-            <p className="text-xs text-text-muted">Choose the source base; values update automatically.</p>
+            <p className="text-xs text-text-muted">Choose an input base to edit the current value in that notation.</p>
           </div>
           <span className="rounded-full border border-accent/25 bg-accent-light px-2.5 py-1 text-xs font-bold text-accent">
             Base {baseFrom}
@@ -160,11 +163,7 @@ export default function BaseConverter() {
                 key={option.base}
                 type="button"
                 aria-pressed={active}
-                onClick={() => {
-                  setBaseFrom(option.base);
-                  setSelectedReferenceValue(null);
-                  setCopiedBase(null);
-                }}
+                onClick={() => selectInputBase(option.base)}
                 className={`rounded-lg border px-2.5 py-1.5 text-left transition-all ${active
                   ? 'border-accent bg-accent text-white shadow-[0_4px_12px_var(--accent-light)]'
                   : 'border-border bg-card text-text-muted hover:border-accent hover:text-text-main'}`}
@@ -248,16 +247,7 @@ export default function BaseConverter() {
               <code className={`min-h-6 break-all font-mono text-[0.9rem] font-semibold leading-6 ${result.value ? 'text-text-main' : 'text-text-muted/45'}`}>
                 {result.value || '—'}
               </code>
-              <div className="flex items-center justify-end gap-1 border-t border-border/70 pt-1">
-                <button
-                  type="button"
-                  disabled={!result.value}
-                  onClick={() => useAsInput(result)}
-                  aria-label={`Use ${result.label} value as input`}
-                  className="rounded-md px-2 py-0.5 text-[0.7rem] font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-accent disabled:cursor-default disabled:opacity-35"
-                >
-                  Set input
-                </button>
+              <div className="flex items-center justify-end border-t border-border/70 pt-1">
                 <button
                   type="button"
                   disabled={!result.value}

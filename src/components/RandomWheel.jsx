@@ -319,27 +319,26 @@ export default function RandomWheel() {
   };
 
   return (
-    <Card id="tool-wheel" variant="tool" size="wide">
+    <Card id="tool-wheel" variant="tool" size="wide" className="!gap-3 !p-4">
       <ToolHeader 
         title="Random Decision Wheel" 
-        description="Type options, customize the title, spin the wheel to select a random item, or reset selections." 
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-6 lg:gap-8 w-full items-start mt-3">
+      <div className="grid w-full grid-cols-1 items-start gap-4 lg:grid-cols-[1.1fr_1fr]">
         
         {/* Left side: Wheel Canvas & Win Banner */}
-        <div className="flex flex-col items-center justify-center relative w-full bg-app border border-border rounded-2xl p-8 min-h-[440px] max-[768px]:p-[20px_12px] max-[768px]:min-h-0">
-          <div className="bg-slate-900/75 dark:bg-black/75 backdrop-blur-md border border-white/10 text-white px-9 py-2.5 rounded-full font-display font-bold text-lg mb-6 text-center shadow-lg select-none z-[5] tracking-wide max-[768px]:px-6 max-[768px]:py-2 max-[768px]:text-[1.1rem] max-[768px]:mb-4" id="wheel-display-title">
+        <div className="relative flex min-h-[390px] w-full flex-col items-center justify-center rounded-2xl border border-border bg-app p-4 max-[768px]:min-h-0 max-[768px]:p-[20px_12px]">
+          <div className="z-[5] mb-3 select-none rounded-full border border-white/10 bg-slate-900/75 px-6 py-2 text-center font-display text-base font-bold tracking-wide text-white shadow-lg backdrop-blur-md dark:bg-black/75 max-[768px]:mb-4 max-[768px]:px-6 max-[768px]:py-2 max-[768px]:text-[1.1rem]" id="wheel-display-title">
             {title}
           </div>
-          <div className="relative w-full max-w-[340px] aspect-square rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-card overflow-visible cursor-pointer transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
+          <div className="relative aspect-square w-full max-w-[300px] cursor-pointer overflow-visible rounded-full bg-card shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
             <canvas ref={canvasRef} id="wheel-canvas" className="w-full h-full block" width="450" height="450" onClick={spin}></canvas>
             <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 flex items-center drop-shadow-md pointer-events-none" onClick={spin}>
               <svg viewBox="0 0 24 24" width="28" height="28" fill="red">
                 <polygon points="24,12 0,4 0,20" />
               </svg>
             </div>
-            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[76px] h-[76px] rounded-full bg-gradient-to-br from-card to-app border-4 border-accent shadow-[0_4px_12px_rgba(0,0,0,0.15),_inset_0_2px_4px_rgba(255,255,255,0.2)] flex items-center justify-center z-[8] font-display font-extrabold text-[0.95rem] color-accent tracking-wider select-none transition-all duration-200 hover:scale-108 hover:bg-accent hover:text-white hover:border-white hover:shadow-[0_6px_18px_rgba(79,70,229,0.4)] active:scale-96 max-[768px]:w-[50px] max-[768px]:h-[50px] max-[768px]:text-[0.7rem]" id="wheel-spin-btn-center" onClick={spin}>
+            <div className="absolute left-1/2 top-1/2 z-[8] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center rounded-full border-4 border-accent bg-gradient-to-br from-card to-app font-display text-[0.85rem] font-extrabold tracking-wider text-accent shadow-[0_4px_12px_rgba(0,0,0,0.15),_inset_0_2px_4px_rgba(255,255,255,0.2)] transition-all duration-200 hover:scale-108 hover:border-white hover:bg-accent hover:text-white hover:shadow-[0_6px_18px_rgba(79,70,229,0.4)] active:scale-96 max-[768px]:h-[50px] max-[768px]:w-[50px] max-[768px]:text-[0.7rem]" id="wheel-spin-btn-center" onClick={spin}>
               <span>SPIN</span>
             </div>
           </div>
@@ -362,18 +361,18 @@ export default function RandomWheel() {
         </div>
 
         {/* Right side: Controls & Options */}
-        <div className="flex flex-col gap-5 bg-sidebar border border-border rounded-2xl p-6 max-[768px]:p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-sidebar p-4 max-[768px]:p-4">
           <div className="flex gap-3 w-full">
             <Button id="wheel-spin-btn" className="flex-1" variant="primary" onClick={spin} disabled={isSpinning}>Spin</Button>
             <Button id="wheel-reset-btn" className="flex-1" variant="secondary" onClick={resetItems} disabled={isSpinning}>Reset</Button>
           </div>
 
           {/* Options Box with View Mode and Edit Mode */}
-          <div className="border border-border rounded-xl bg-app overflow-hidden min-h-[220px] flex flex-col">
+          <div className="flex min-h-[190px] flex-col overflow-hidden rounded-xl border border-border bg-app">
             <div className="flex-grow flex flex-col">
               {/* View Mode (List View) */}
               {!isEditing && (
-                <div id="wheel-list-view" className="p-4 h-[220px] overflow-y-auto flex flex-col gap-2">
+                <div id="wheel-list-view" className="flex h-[190px] flex-col gap-2 overflow-y-auto p-3">
                   {items.length === 0 ? (
                     <div className="text-text-muted italic p-3 text-sm text-center">
                       No options typed. Press Edit to add options.
@@ -391,7 +390,7 @@ export default function RandomWheel() {
               {isEditing && (
                 <textarea
                   id="wheel-text-input"
-                  className="p-4 h-[220px] w-full border-none bg-transparent text-text-main font-sans text-[0.95rem] leading-relaxed resize-none outline-none"
+                  className="h-[190px] w-full resize-none border-none bg-transparent p-3 font-sans text-[0.95rem] leading-relaxed text-text-main outline-none"
                   placeholder="Type options here, one per line..."
                   value={textareaVal}
                   onChange={(e) => handleTextareaChange(e.target.value)}
@@ -452,28 +451,9 @@ export default function RandomWheel() {
             </div>
           )}
 
-          {/* Keyboard shortcuts reminder */}
-          <div className="bg-slate-500/[0.03] dark:bg-slate-400/[0.03] border border-dashed border-border rounded-xl p-4 mt-2">
-            <h4 className="text-[0.8rem] font-bold text-text-muted uppercase tracking-wider mb-2.5">Keyboard Shortcuts</h4>
-            <ul className="list-none p-0 m-0 flex flex-col gap-2">
-              <li className="text-[0.8rem] text-text-muted flex items-center gap-2">
-                <kbd className="bg-card border border-border rounded px-1.5 py-0.5 shadow-sm text-text-main font-bold text-[0.75rem]">Space</kbd> 
-                <span>Spin the wheel</span>
-              </li>
-              <li className="text-[0.8rem] text-text-muted flex items-center gap-2">
-                <kbd className="bg-card border border-border rounded px-1.5 py-0.5 shadow-sm text-text-main font-bold text-[0.75rem]">E</kbd> 
-                <span>Toggle Edit/View mode</span>
-              </li>
-              <li className="text-[0.8rem] text-text-muted flex items-center gap-2">
-                <kbd className="bg-card border border-border rounded px-1.5 py-0.5 shadow-sm text-text-main font-bold text-[0.75rem]">R</kbd> 
-                <span>Reset wheel items</span>
-              </li>
-              <li className="text-[0.8rem] text-text-muted flex items-center gap-2">
-                <kbd className="bg-card border border-border rounded px-1.5 py-0.5 shadow-sm text-text-main font-bold text-[0.75rem]">C</kbd> 
-                <span>Clear all text (requires confirmation)</span>
-              </li>
-            </ul>
-          </div>
+          <p className="text-center text-[0.72rem] text-text-muted">
+            Shortcuts: Space spin · E edit · R reset · C clear
+          </p>
         </div>
 
       </div>

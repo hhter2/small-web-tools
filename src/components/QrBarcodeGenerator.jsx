@@ -1237,11 +1237,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   );
 
   return (
-    <Card id="tool-qrbarcode" variant="tool" size="wide">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
+    <Card id="tool-qrbarcode" variant="tool" size="wide" className="!gap-3 !p-4">
+      <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
           title="QR Code &amp; Barcode Generator" 
-          description="Generate scannable QR Codes with custom colors, shapes, and logos, or high-fidelity barcodes." 
         />
         <div className="flex gap-2 shrink-0">
           <Button
@@ -1278,10 +1277,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-5">
         
         {/* ================= LEFT SIDE: CONFIG PANEL ================= */}
-        <div className="lg:col-span-3 flex flex-col gap-4 lg:max-h-[520px] lg:overflow-y-auto pr-3 custom-scrollbar">
+        <div className="custom-scrollbar flex flex-col gap-4 pr-3 lg:col-span-3 lg:max-h-[400px] lg:overflow-y-auto">
           
           {activeTab === 'qr' ? (
             <>
@@ -2085,11 +2084,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
         {/* ================= RIGHT SIDE: STICKY PREVIEW CARD ================= */}
-        <div className="lg:col-span-2 lg:sticky lg:top-6 flex flex-col gap-4">
-          <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm">
-            <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5 text-center">Live Preview</h3>
+        <div className="flex flex-col gap-3 lg:sticky lg:top-3 lg:col-span-2">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+            <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">Live Preview</h3>
 
-            <div className="flex justify-center items-center bg-app border border-border border-dashed rounded-xl p-4 h-[220px] select-none">
+            <div className="flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
               {activeTab === 'qr' ? (
                 <div className="flex items-center justify-center h-full w-full">
                   {!getQRValue() ? (
@@ -2142,36 +2141,30 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
             </div>
 
             {/* ACTION BUTTONS */}
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {activeTab === 'qr' ? (
                 <>
-                  <Button variant="primary" disabled={!getQRValue()} onClick={handleQrDownloadPNG} className="w-full">
+                  <Button variant="primary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadPNG} className="w-full">
                     Download PNG
                   </Button>
-                  <Button variant="secondary" disabled={!getQRValue()} onClick={handleQrDownloadSVG} className="w-full">
-                    Download SVG (Vector)
+                  <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadSVG} className="w-full">
+                    Download SVG
                   </Button>
-                  <Button variant="secondary" disabled={!getQRValue()} onClick={handleQrCopy} className="w-full">
-                    {copied ? 'Copied Image!' : 'Copy to Clipboard'}
+                  <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrCopy} className="col-span-2 w-full sm:col-span-1">
+                    {copied ? 'Copied!' : 'Copy Image'}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="primary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG} className="w-full">
+                  <Button variant="primary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG} className="w-full">
                     Download PNG
                   </Button>
-                  <Button variant="secondary" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG} className="w-full">
-                    Download SVG (Vector)
+                  <Button variant="secondary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG} className="w-full">
+                    Download SVG
                   </Button>
                 </>
               )}
             </div>
-            
-            <p className="text-[10px] text-text-muted text-center leading-relaxed">
-              {activeTab === 'qr' 
-                ? "Scannable with any mobile camera. Transparent background works best on light sites."
-                : "Vector SVG format provides crisp line borders for barcode scanners at any size."}
-            </p>
           </div>
         </div>
 

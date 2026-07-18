@@ -319,14 +319,13 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   const checkStats = checkPasswordStrength(checkPassword);
   const checkStrength = getStrengthDetails(checkStats.entropy);
   return (
-    <Card id="tool-password" variant="tool" size="wide">
+    <Card id="tool-password" variant="tool" size="wide" className="!gap-3 !p-4">
       <ToolHeader 
         title="Secure Password Utility" 
-        description="Generate cryptographically secure random passwords or check password strength locally." 
       />
       
       {/* Primary Tabs */}
-      <div className="flex border-b border-border mb-6 gap-2">
+      <div className="flex gap-2 border-b border-border pb-2">
         <Button
           variant={activeTab === 'generate' ? 'primary' : 'secondary'}
           size="sm"
@@ -354,9 +353,9 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
       </div>
 
       {activeTab === 'generate' ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           {/* Password Output Panel */}
-          <div className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-inner">
+          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-inner sm:flex-row">
             <div className="w-full overflow-x-auto py-1 text-center sm:text-left select-all scrollbar-none">
               <code className="text-lg font-mono tracking-wider break-all whitespace-pre-wrap select-all">
                 {renderColorCodedPassword(passwordData.password)}
@@ -431,9 +430,9 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
           </div>
 
           {/* Configuration and Strength Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {/* Left Column: Configuration */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
               <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Configuration</h3>
               
               <div className="flex flex-col gap-2 w-full">
@@ -454,7 +453,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 </div>
               </div>
               
-              <div className="flex flex-col gap-4 border-t border-border pt-4">
+              <div className="flex flex-col gap-3 border-t border-border pt-3">
                 <div className="flex flex-col gap-1">
                   <label htmlFor="include-common-special" className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                     <input
@@ -490,7 +489,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
             </div>
 
             {/* Right Column: Strength Analytics */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
               <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Security & Strength</h3>
               
               <div className="flex flex-col gap-1.5">
@@ -505,7 +504,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 </div>
               </div>
               
-              <div className="flex flex-col gap-3.5 mt-2">
+              <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
                   <span>Entropy:</span>
                   <span className="text-text-main font-mono text-sm">{entropy.toFixed(1)} bits</span>
@@ -523,9 +522,9 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           {/* Password Checker Input Panel */}
-          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4 shadow-inner">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-inner">
             <div className="flex-1 flex items-center min-w-0">
               <input
                 type={showCheckPassword ? "text" : "password"}
@@ -569,13 +568,13 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
           </div>
 
           {/* Checker Requirements and Strength Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {/* Left Column: Requirements Checklist */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
               <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Password Analysis</h3>
               
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.length >= 8 ? 'text-green-500' : 'text-red-500'}`}>
                     {checkStats.length >= 8 ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -594,7 +593,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.hasLower ? 'text-green-500' : 'text-text-muted/40'}`}>
                     {checkStats.hasLower ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -611,7 +610,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.hasUpper ? 'text-green-500' : 'text-text-muted/40'}`}>
                     {checkStats.hasUpper ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -628,7 +627,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.hasDigit ? 'text-green-500' : 'text-text-muted/40'}`}>
                     {checkStats.hasDigit ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -645,7 +644,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.hasCommonSpecial ? 'text-green-500' : 'text-text-muted/40'}`}>
                     {checkStats.hasCommonSpecial ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -662,7 +661,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-app/50 transition-colors">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
                   <span className={`shrink-0 flex items-center justify-center ${checkStats.hasRareSpecial ? 'text-green-500' : 'text-text-muted/40'}`}>
                     {checkStats.hasRareSpecial ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -682,7 +681,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
             </div>
 
             {/* Right Column: Strength Analytics */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
               <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Security & Strength</h3>
               
               <div className="flex flex-col gap-1.5">
@@ -697,7 +696,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 </div>
               </div>
               
-              <div className="flex flex-col gap-3.5 mt-2">
+              <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
                   <span>Entropy:</span>
                   <span className="text-text-main font-mono text-sm">{checkStats.entropy.toFixed(1)} bits</span>

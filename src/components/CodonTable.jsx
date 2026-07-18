@@ -1237,7 +1237,7 @@ export default function CodonTable() {
   }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
-    <Card variant="tool" size="wide" id="tool-codon" className="active p-6 md:p-8 flex flex-col gap-6 w-full max-w-full mx-auto font-sans">
+    <Card variant="tool" size="wide" id="tool-codon" className="active !gap-3 !p-4 mx-auto w-full max-w-full font-sans">
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
@@ -1277,25 +1277,13 @@ export default function CodonTable() {
           </div>
         </div>
 
-        {/* Subtitle & Legend on same line below */}
-        <div className="flex items-center justify-between flex-wrap gap-6 w-full mt-1">
-          <p className="text-[0.85rem] text-text-muted leading-relaxed">
-            Click any codon or amino acid to explore synonyms, properties, and base positions.
-          </p>
-          <div className="flex gap-4 flex-wrap text-[0.75rem] text-text-muted" role="note" aria-label="Legend">
-            <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">★ Start Codon</span>
-            <span className="flex items-center gap-1.5 text-red-600 font-semibold">■ Stop Codon</span>
-            <span className="flex items-center gap-1.5 text-accent font-semibold">Highlighted = same amino acid</span>
-          </div>
-        </div>
-
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+      <div className="flex flex-col items-start justify-center gap-3 lg:flex-row">
         <div className="flex-[2.2] min-w-0 max-w-full">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
-          <div className="grid grid-cols-[24px_1fr_24px] sm:grid-cols-[36px_1fr_36px] grid-rows-[28px_auto] sm:grid-rows-[36px_auto] gap-0 items-stretch rounded-xl overflow-hidden border border-border shadow-card bg-card">
+          <div className="grid max-h-[340px] grid-cols-[24px_1fr_24px] grid-rows-[28px_auto] items-stretch gap-0 overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-card shadow-card sm:grid-cols-[36px_1fr_36px] sm:grid-rows-[36px_auto]">
 
             {/* Left axis: "First Codon" vertical label */}
             <div className="col-start-1 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-r border-border flex items-center justify-center rotate-180" aria-label="First codon position">
@@ -1441,7 +1429,7 @@ export default function CodonTable() {
         </div>
 
         {/* ── Info Panel Sidebar ───────────────────────────────────── */}
-        <div className="flex-1 min-w-[300px] lg:sticky lg:top-6 self-start w-full" ref={panelRef}>
+        <div className="w-full min-w-[300px] flex-1 self-start lg:sticky lg:top-3 lg:max-h-[340px] lg:overflow-y-auto lg:pr-1" ref={panelRef}>
           <InfoPanel
             typedCodon={typedCodon}
             selectedCodon={selectedCodon}

@@ -930,11 +930,10 @@ export default function TypingSpeedTest() {
   };
 
   return (
-    <Card id="tool-typing" variant="tool" size="wide">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
+    <Card id="tool-typing" variant="tool" size="wide" className="!gap-3 !p-4">
+      <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
           title="Typing Speed Test" 
-          description="Test your typing speed (WPM) with prose or programming languages." 
         />
         <div className="flex gap-2 shrink-0">
           <Button
@@ -956,7 +955,7 @@ export default function TypingSpeedTest() {
 
       {/* Settings Panel styled like Monkeytype */}
       {!isTesting && !testFinished && (
-        <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-4 mb-6 select-none shadow-sm">
+        <div className="flex select-none flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
           {/* Preset Selector */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
             <div className="flex items-center gap-1.5 bg-app border border-border rounded-lg p-1 shrink-0">
@@ -1148,7 +1147,7 @@ export default function TypingSpeedTest() {
       )}
 
       {!isTesting && !testFinished && mode === 'template' && selectedPreset === 'custom' && (
-        <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 mb-6 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
           <FieldInput
             as="textarea"
             id="custom-paste-text"
@@ -1185,7 +1184,7 @@ export default function TypingSpeedTest() {
 
       {/* Main Test Interface */}
       {!testFinished ? (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3">
           {/* Active stats display */}
           {isTesting && (
             <div className="flex justify-between items-center bg-card border border-border rounded-xl px-5 py-3 shadow-sm select-none gap-4">
@@ -1260,7 +1259,7 @@ export default function TypingSpeedTest() {
           {mode === 'template' ? (
             /* Template typing container */
             <div 
-              className={`relative border border-border rounded-2xl p-6 md:p-8 min-h-[140px] md:min-h-[180px] bg-card flex flex-col justify-center cursor-text transition-all duration-300 ${
+              className={`relative flex h-[240px] cursor-text flex-col justify-center overflow-y-auto rounded-2xl border border-border bg-card p-5 transition-all duration-300 md:h-[220px] md:p-6 ${
                 isInputFocused ? 'ring-2 ring-accent/30 border-accent' : ''
               } ${isCodeMode ? 'bg-[#0f141c] dark:bg-[#0f141c] border-indigo-500/20' : ''}`}
               onClick={focusInput}
@@ -1470,7 +1469,7 @@ export default function TypingSpeedTest() {
 
           {/* New Text Refresh Button */}
           {!testFinished && !isTesting && (
-            <div className="flex justify-center mt-2">
+            <div className="flex justify-center">
               <Button 
                 variant="secondary" 
                 size="sm"
@@ -1562,7 +1561,7 @@ export default function TypingSpeedTest() {
       )}
 
       {/* History Dashboard */}
-      <div className="mt-8 border-t border-border pt-6 flex flex-col gap-4">
+      <div className={`${history.length === 0 ? 'hidden' : 'mt-2 flex' } flex-col gap-2 border-t border-border pt-3`}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h3 className="text-sm font-bold text-text-main">Recent typing test results</h3>
           {history.length > 0 && (
@@ -1578,7 +1577,7 @@ export default function TypingSpeedTest() {
         </div>
 
         {history.length === 0 ? (
-          <p className="text-xs text-text-muted text-center py-6 bg-card border border-border border-dashed rounded-xl">No recent results found. Complete a test and click "Save Result" to build your log.</p>
+          <p className="rounded-xl border border-dashed border-border bg-card py-3 text-center text-xs text-text-muted">No recent results yet.</p>
         ) : (
           <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full border-collapse text-left text-xs text-text-main">

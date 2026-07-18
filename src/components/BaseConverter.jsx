@@ -141,9 +141,12 @@ export default function BaseConverter() {
     <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px] !gap-3 !p-5">
       <ToolHeader title="Base Converter" />
 
-      <section className="flex flex-col gap-3 rounded-xl border border-border bg-app/70 p-3">
+      <section className="flex flex-col gap-2.5 rounded-xl border border-border bg-app/70 p-3" aria-labelledby="base-conversion-title">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-text-main">Choose the input base</p>
+          <div>
+            <h3 id="base-conversion-title" className="text-sm font-bold text-text-main">Input base &amp; converted values</h3>
+            <p className="text-xs text-text-muted">Choose the source base; values update automatically.</p>
+          </div>
           <span className="rounded-full border border-accent/25 bg-accent-light px-2.5 py-1 text-xs font-bold text-accent">
             Base {baseFrom}
           </span>
@@ -211,8 +214,6 @@ export default function BaseConverter() {
             </button>
           </div>
         </div>
-      </section>
-
       <div
         id="base-status"
         role={hasError ? 'alert' : 'status'}
@@ -228,20 +229,13 @@ export default function BaseConverter() {
             : 'Enter a number to generate all base representations automatically.'}</span>
       </div>
 
-      <section className="flex flex-col gap-2.5" aria-labelledby="base-results-title">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h3 id="base-results-title" className="text-sm font-bold text-text-main">Converted values</h3>
-            <p className="text-xs text-text-muted">Copy a result or use it as the next input.</p>
-          </div>
-        </div>
-
+      <div className="flex flex-col gap-2" aria-label="Converted values">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {results.map((result) => (
             <div
               key={result.base}
               data-base-result={result.base}
-              className={`flex min-w-0 flex-col gap-1.5 rounded-xl border p-2.5 transition-colors ${result.base === baseFrom
+              className={`flex min-w-0 flex-col gap-1 rounded-xl border p-2 transition-colors ${result.base === baseFrom
                 ? 'border-accent/40 bg-accent-light/45'
                 : 'border-border bg-card hover:border-border-hover'} ${result.base === 60 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
             >
@@ -254,7 +248,7 @@ export default function BaseConverter() {
               <code className={`min-h-6 break-all font-mono text-[0.9rem] font-semibold leading-6 ${result.value ? 'text-text-main' : 'text-text-muted/45'}`}>
                 {result.value || '—'}
               </code>
-              <div className="flex items-center justify-end gap-1 border-t border-border/70 pt-1.5">
+              <div className="flex items-center justify-end gap-1 border-t border-border/70 pt-1">
                 <button
                   type="button"
                   disabled={!result.value}
@@ -278,6 +272,7 @@ export default function BaseConverter() {
             </div>
           ))}
         </div>
+      </div>
       </section>
 
       <section className="flex flex-col gap-2" aria-labelledby="common-base-reference-title">

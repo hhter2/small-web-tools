@@ -25,6 +25,7 @@ export default function AutoDetectConverter({
   emptyTargetLabel,
   analyze,
   editorMinHeightClass = 'min-h-[210px]',
+  editorRows = 7,
   renderSupplementary,
 }) {
   const [input, setInput] = useState('');
@@ -78,7 +79,7 @@ export default function AutoDetectConverter({
 
             <textarea
               id={`${toolId}-input`}
-              rows={7}
+              rows={editorRows}
               spellCheck={false}
               value={input}
               onChange={(event) => {
@@ -123,7 +124,7 @@ export default function AutoDetectConverter({
 
             <textarea
               id={`${toolId}-output`}
-              rows={7}
+              rows={editorRows}
               readOnly
               value={output}
               placeholder={result.error ? 'Fix the source input to see a result.' : result.outputPlaceholder}

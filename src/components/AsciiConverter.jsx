@@ -112,7 +112,7 @@ function analyzeAscii(input) {
       sourceLabel: 'Text or ASCII codes',
       targetLabel: '',
       output: '',
-      outputPlaceholder: 'The converted result appears here.',
+      outputPlaceholder: '',
       error: null,
     };
   }
@@ -124,7 +124,7 @@ function analyzeAscii(input) {
       sourceLabel: 'ASCII codes',
       targetLabel: 'Plain text',
       output: decoded.output,
-      outputPlaceholder: 'Decoded text appears here.',
+      outputPlaceholder: '',
       error: decoded.error,
     };
   }
@@ -134,7 +134,7 @@ function analyzeAscii(input) {
     sourceLabel: 'Plain text',
     targetLabel: 'ASCII codes',
     output: encoded.output,
-    outputPlaceholder: 'Decimal ASCII codes appear here.',
+    outputPlaceholder: '',
     error: encoded.error,
   };
 }
@@ -148,7 +148,8 @@ export default function AsciiConverter() {
       inputPlaceholder={'Hello\nor\n72 101 108 108 111'}
       emptyTargetLabel="Converted result"
       analyze={analyzeAscii}
-      editorMinHeightClass="min-h-[118px] md:min-h-[132px]"
+      editorMinHeightClass="min-h-[76px] md:min-h-[84px]"
+      editorRows={3}
       renderSupplementary={(props) => <AsciiReferenceTable {...props} />}
     />
   );

@@ -143,7 +143,7 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
 
-  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
+  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-center transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
 
   if (data?.type === 'start') {
     cls += ' text-emerald-600 font-bold hover:bg-emerald-500/15 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
@@ -1286,7 +1286,7 @@ export default function CodonTable() {
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(220px,0.7fr)_minmax(560px,1.7fr)_minmax(320px,1fr)]">
+      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(180px,0.62fr)_minmax(640px,1.85fr)_minmax(280px,0.9fr)]">
         <div className="w-full min-w-0 max-w-full lg:row-span-2 xl:col-start-2 xl:row-span-1 xl:row-start-1">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
           <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
@@ -1356,7 +1356,7 @@ export default function CodonTable() {
                           });
 
                           return (
-                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-12 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
+                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-14 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
                               {cellCodons.map((codon) => {
                                 const isHidden = !isCodonVisible(codon);
                                 return (
@@ -1377,7 +1377,7 @@ export default function CodonTable() {
                               })}
 
                               {/* AA labels — one per consecutive group, vertically centered */}
-                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-12" aria-label={`Amino acids for ${b1}${b2}x`}>
+                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-14" aria-label={`Amino acids for ${b1}${b2}x`}>
                                 {aaGroups.map((group, gi) => (
                                   <div
                                     key={gi}

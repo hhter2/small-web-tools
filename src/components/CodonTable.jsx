@@ -143,7 +143,7 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
 
-  let cls = 'font-mono text-[0.66rem] sm:text-[0.88rem] font-semibold py-0.5 sm:py-1 px-1 sm:px-2 rounded border border-transparent bg-transparent text-text-main cursor-pointer tracking-wider text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
+  let cls = 'font-mono text-[0.66rem] sm:text-[0.82rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
 
   if (data?.type === 'start') {
     cls += ' text-emerald-600 font-bold hover:bg-emerald-500/15 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
@@ -199,7 +199,7 @@ function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
   if (!data) return null;
 
   const aaColor = AA_COLORS[data.aa];
-  let cls = 'font-sans text-[0.58rem] sm:text-[0.8rem] font-bold py-0.5 px-1 rounded border border-transparent bg-transparent cursor-pointer text-center whitespace-nowrap relative overflow-hidden w-full text-text-muted hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-[1.06] hover:z-[2] active:scale-96';
+  let cls = 'font-sans text-[0.58rem] sm:text-[0.72rem] font-bold leading-none py-0 px-0.5 rounded-md border border-transparent bg-transparent cursor-pointer text-center whitespace-nowrap relative overflow-hidden w-full text-text-muted hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-[1.06] hover:z-[2] active:scale-96';
 
   if (data.type === 'start') {
     cls += ' text-emerald-600 hover:bg-emerald-500/12 hover:border-emerald-600';
@@ -732,12 +732,12 @@ function InfoPanel({
   const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="flex w-full flex-col gap-2.5">
       
       {/* ── Filter by Groups Block ────────────────── */}
-      <div className="relative rounded-xl border border-border p-5 px-6 bg-card flex flex-col gap-3.5 shadow-card animate-[ct-panel-slide-in_0.25s_ease]">
-        <span className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted border-b border-border pb-1.5">Filter by Group</span>
-        <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease]">
+        <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
+        <div className="flex flex-col gap-2.5">
           
           <div className="flex gap-2 items-center w-full">
             <select
@@ -748,7 +748,7 @@ function InfoPanel({
                 setHighlightedAA(null);
                 setSelectedCodon(null);
               }}
-              className="flex-1 bg-black/20 border border-border rounded-lg p-2 px-3 text-text-main text-[0.85rem] cursor-pointer outline-none focus:border-accent min-w-0"
+              className="min-w-0 flex-1 cursor-pointer rounded-lg border border-border bg-black/20 px-2.5 py-1.5 text-[0.8rem] text-text-main outline-none focus:border-accent"
               style={{
                 borderLeft: activeGroupColor ? `4px solid ${activeGroupColor}` : '1px solid var(--border-color)',
                 paddingLeft: activeGroupColor ? '0.5rem' : '0.75rem'
@@ -775,7 +775,7 @@ function InfoPanel({
               {selectedGroup.startsWith('custom-') && (
                 <button
                   type="button"
-                  className="bg-white/3 border border-border rounded-lg p-2 px-2.5 text-[0.75rem] font-semibold text-text-main cursor-pointer transition-all hover:bg-red-500/15 hover:border-red-500/40 hover:text-red-500 whitespace-nowrap active:scale-96"
+                  className="cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-red-500/40 hover:bg-red-500/15 hover:text-red-500 active:scale-96"
                   onClick={() => handleDeleteCustomGroup(parseInt(selectedGroup.split('-')[1], 10))}
                   title="Delete active custom group"
                 >
@@ -784,7 +784,7 @@ function InfoPanel({
               )}
               <button
                 type="button"
-                className={`bg-white/3 border border-border rounded-lg p-2 px-2.5 text-[0.75rem] font-semibold text-text-main cursor-pointer transition-all hover:bg-white/8 hover:border-text-muted whitespace-nowrap active:scale-96 ${isCreatingGroup ? 'bg-accent border-accent text-white shadow-[0_1px_6px_rgba(99, 102, 241, 0.25)]' : ''}`}
+                className={`cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-text-muted hover:bg-white/8 active:scale-96 ${isCreatingGroup ? 'bg-accent border-accent text-white shadow-[0_1px_6px_rgba(99, 102, 241, 0.25)]' : ''}`}
                 onClick={() => setIsCreatingGroup(prev => !prev)}
               >
                 {isCreatingGroup ? 'Close' : '+ Custom'}
@@ -931,7 +931,7 @@ function InfoPanel({
       </div>
 
       {/* ── Codon Lookup Block ────────────────── */}
-      <div className={`relative rounded-xl border border-border p-5 px-6 bg-card flex flex-col gap-3.5 shadow-card animate-[ct-panel-slide-in_0.25s_ease] ${bgClass}`} role="status" aria-live="polite">
+      <div className={`relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] ${bgClass}`} role="status" aria-live="polite">
         
         {/* Hidden input for capturing keys */}
         <input
@@ -945,7 +945,7 @@ function InfoPanel({
         />
 
         {/* Header section */}
-        <div className="flex justify-between items-center pr-8 min-h-[2.2rem]">
+        <div className="flex min-h-[1.75rem] items-center justify-between pr-7">
           {data ? (
             <>
               <div className="flex items-center gap-2.5 flex-nowrap">
@@ -963,7 +963,7 @@ function InfoPanel({
             </>
           ) : (
             <>
-              <span className="text-2xl font-bold text-text-main tracking-tight">Codon Lookup</span>
+              <span className="text-xl font-bold tracking-tight text-text-main">Codon Lookup</span>
               {typedCodon.length > 0 && (
                 <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label="Clear typing">✕</button>
               )}
@@ -972,7 +972,7 @@ function InfoPanel({
         </div>
 
         {/* The 3 passcode typing cards */}
-        <div className="flex gap-3 justify-center my-5">
+        <div className="my-2 flex justify-center gap-2">
           {['1ST', '2ND', '3RD'].map((posName, idx) => {
             const char = typedCodon[idx] || '';
             const isActive = typedCodon.length === idx;
@@ -980,12 +980,12 @@ function InfoPanel({
             return (
               <div
                 key={idx}
-                className={`flex flex-col items-center justify-center w-[68px] h-[84px] rounded-xl border-2 border-border bg-white/[0.02] cursor-pointer select-none transition-all hover:border-accent hover:bg-white/[0.05] hover:-translate-y-0.5 ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
+                className={`flex h-[62px] w-[58px] cursor-pointer select-none flex-col items-center justify-center rounded-xl border-2 border-border bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-white/[0.05] ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
                 onClick={handleCardClick}
                 title="Click to type codon (U, C, A, G)"
               >
                 <span className="text-[0.65rem] font-bold text-text-muted mb-1 tracking-wider">{posName}</span>
-                <span className={`font-mono text-3xl font-bold leading-none flex items-center justify-center h-8 ${charColorClass}`}>
+                <span className={`flex h-6 items-center justify-center font-mono text-2xl font-bold leading-none ${charColorClass}`}>
                   {char || '—'}
                   {isActive && <span className="inline-block w-[2px] h-[1.8rem] bg-accent ml-0.5 animate-[ct-blink-anim_1s_step-end_infinite]"></span>}
                 </span>
@@ -1015,7 +1015,7 @@ function InfoPanel({
             )}
           </div>
         ) : (
-          <div className="flex justify-center items-center min-h-[120px] p-6 text-center border border-dashed border-border rounded-lg bg-white/[0.01]">
+          <div className="flex min-h-[48px] items-center justify-center rounded-lg border border-dashed border-border bg-white/[0.01] p-2 text-center">
             {typedCodon.length > 0 ? (
               <span className="text-accent text-[0.85rem] font-semibold">
                 Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
@@ -1237,14 +1237,14 @@ export default function CodonTable() {
   }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
-    <Card variant="tool" size="wide" id="tool-codon" className="active !gap-3 !p-4 mx-auto w-full max-w-full font-sans">
+    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full !gap-2.5 !p-3 font-sans">
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
         
         {/* Title & Filter Bar on same line */}
-        <div className="flex items-center justify-between flex-wrap gap-4 w-full">
-          <h2 className="text-[1.45rem] font-bold text-text-main flex items-center gap-2 mb-0">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <h2 className="mb-0 flex items-center gap-2 text-[1.3rem] font-bold text-text-main">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
               <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"/>
@@ -1280,10 +1280,10 @@ export default function CodonTable() {
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="flex flex-col items-start justify-center gap-3 lg:flex-row">
-        <div className="flex-[2.2] min-w-0 max-w-full">
+      <div className="flex flex-col items-start justify-center gap-2.5 lg:flex-row">
+        <div className="min-w-0 max-w-full flex-[2.5]">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
-          <div className="grid max-h-[340px] grid-cols-[24px_1fr_24px] grid-rows-[28px_auto] items-stretch gap-0 overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-card shadow-card sm:grid-cols-[36px_1fr_36px] sm:grid-rows-[36px_auto]">
+          <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
 
             {/* Left axis: "First Codon" vertical label */}
             <div className="col-start-1 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-r border-border flex items-center justify-center rotate-180" aria-label="First codon position">
@@ -1304,13 +1304,13 @@ export default function CodonTable() {
             <div className="col-start-2 row-start-2 flex flex-col">
 
               {/* Top axis: Second Base */}
-              <div className="grid grid-cols-[36px_repeat(4,1fr)_44px] bg-app border-b border-border" role="row">
+              <div className="grid grid-cols-[28px_repeat(4,1fr)_36px] border-b border-border bg-app" role="row">
                 <div className="ct-axis-corner"></div>
                 {SECOND_BASES.map(b2 => {
                   const colorClass = b2 === 'U' ? 'text-purple-400' : b2 === 'C' ? 'text-sky-400' : b2 === 'A' ? 'text-amber-400' : b2 === 'G' ? 'text-emerald-400' : '';
                   return (
-                    <div key={b2} className="flex flex-col items-center justify-center py-1.5 px-1 border-l border-border" role="columnheader">
-                      <span className={`font-mono text-lg sm:text-xl font-bold ${colorClass}`}>{b2}</span>
+                    <div key={b2} className="flex flex-col items-center justify-center border-l border-border px-0.5 py-1" role="columnheader">
+                      <span className={`font-mono text-base font-bold ${colorClass}`}>{b2}</span>
                     </div>
                   );
                 })}
@@ -1325,10 +1325,10 @@ export default function CodonTable() {
                   const b1ColorClass = b1 === 'U' ? 'text-purple-400' : b1 === 'C' ? 'text-sky-400' : b1 === 'A' ? 'text-amber-400' : b1 === 'G' ? 'text-emerald-400' : '';
                   const b1BgHeaderClass = b1 === 'U' ? 'bg-purple-500/10' : b1 === 'C' ? 'bg-sky-500/10' : b1 === 'A' ? 'bg-amber-500/10' : b1 === 'G' ? 'bg-emerald-500/10' : '';
                   return (
-                    <div key={b1} className="grid grid-cols-[36px_1fr_44px] border-t border-border first:border-t-0" role="rowgroup">
+                    <div key={b1} className="grid grid-cols-[28px_1fr_36px] border-t border-border first:border-t-0" role="rowgroup">
 
                       {/* Left row header: first base letter */}
-                      <div className={`flex items-center justify-center border-r border-border font-mono text-lg sm:text-xl font-bold p-1 ${b1ColorClass} ${b1BgHeaderClass}`} role="rowheader" aria-label={`First base: ${b1}`}>
+                      <div className={`flex items-center justify-center border-r border-border p-0.5 font-mono text-base font-bold ${b1ColorClass} ${b1BgHeaderClass}`} role="rowheader" aria-label={`First base: ${b1}`}>
                         <span>{b1}</span>
                       </div>
 
@@ -1350,13 +1350,13 @@ export default function CodonTable() {
                           });
 
                           return (
-                            <div key={b2} className={`relative border-l border-border grid grid-rows-4 pr-11 sm:pr-16 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
+                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-12 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
                               {cellCodons.map((codon) => {
                                 const isHidden = !isCodonVisible(codon);
                                 return (
                                   <div
                                     key={codon}
-                                    className={`flex items-center p-0.5 px-1 border-b border-border/50 last:border-b-0 min-h-[26px] sm:min-h-[32px] transition-all duration-150 ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
+                                    className={`flex min-h-[22px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
                                     role="row"
                                   >
                                     <CodonButton
@@ -1371,11 +1371,11 @@ export default function CodonTable() {
                               })}
 
                               {/* AA labels — one per consecutive group, vertically centered */}
-                              <div className="absolute right-0 top-0 bottom-0 w-11 sm:w-16 grid grid-rows-4 border-l border-border bg-card" aria-label={`Amino acids for ${b1}${b2}x`}>
+                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-12" aria-label={`Amino acids for ${b1}${b2}x`}>
                                 {aaGroups.map((group, gi) => (
                                   <div
                                     key={gi}
-                                    className="flex items-center justify-center p-0.5"
+                                    className="flex items-center justify-center p-px"
                                     style={{ gridRow: `${group.startIdx + 1} / span ${group.codons.length}` }}
                                   >
                                     <AminoAcidButton
@@ -1397,7 +1397,7 @@ export default function CodonTable() {
                         {THIRD_BASES.map(b3 => {
                           const b3ColorClass = b3 === 'U' ? 'text-purple-400' : b3 === 'C' ? 'text-sky-400' : b3 === 'A' ? 'text-amber-400' : b3 === 'G' ? 'text-emerald-400' : '';
                           return (
-                            <div key={b3} className={`flex items-center justify-center border-b border-border last:border-b-0 font-mono text-[0.9rem] font-bold p-0 ${b3ColorClass}`}>
+                            <div key={b3} className={`flex items-center justify-center border-b border-border p-0 font-mono text-[0.8rem] font-bold last:border-b-0 ${b3ColorClass}`}>
                               <span>{b3}</span>
                             </div>
                           );
@@ -1411,13 +1411,13 @@ export default function CodonTable() {
               </div>
 
               {/* Bottom axis: Second Base (repeated) */}
-              <div className="grid grid-cols-[36px_repeat(4,1fr)_44px] bg-app border-t border-border" role="row" aria-hidden="true">
+              <div className="grid grid-cols-[28px_repeat(4,1fr)_36px] border-t border-border bg-app" role="row" aria-hidden="true">
                 <div className="ct-axis-corner"></div>
                 {SECOND_BASES.map(b2 => {
                   const b2ColorClass = b2 === 'U' ? 'text-purple-400' : b2 === 'C' ? 'text-sky-400' : b2 === 'A' ? 'text-amber-400' : b2 === 'G' ? 'text-emerald-400' : '';
                   return (
-                    <div key={b2} className="flex flex-col items-center justify-center py-1.5 px-1 border-l border-border">
-                      <span className={`font-mono text-lg sm:text-xl font-bold ${b2ColorClass}`}>{b2}</span>
+                    <div key={b2} className="flex flex-col items-center justify-center border-l border-border px-0.5 py-1">
+                      <span className={`font-mono text-base font-bold ${b2ColorClass}`}>{b2}</span>
                     </div>
                   );
                 })}
@@ -1429,7 +1429,7 @@ export default function CodonTable() {
         </div>
 
         {/* ── Info Panel Sidebar ───────────────────────────────────── */}
-        <div className="w-full min-w-[300px] flex-1 self-start lg:sticky lg:top-3 lg:max-h-[340px] lg:overflow-y-auto lg:pr-1" ref={panelRef}>
+        <div className="w-full min-w-[280px] flex-1 self-start lg:sticky lg:top-3" ref={panelRef}>
           <InfoPanel
             typedCodon={typedCodon}
             selectedCodon={selectedCodon}

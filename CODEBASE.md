@@ -1,231 +1,190 @@
-# CODEBASE.md — Small Web Tools
+# Codebase Guide: Small Web Tools
 
-> **For AI agents**: This file is the authoritative reference for the project's architecture.
-> **Update this file** whenever files are added, removed, renamed, or their purpose changes substantially.
+`small-web-tools` is a React 18 and Vite single-page application containing browser-based utility tools. This document is the technical reference for maintaining the current application. Keep it updated when routes, shared components, APIs, or dependencies change.
 
----
+## Documentation roles
 
-## Project Overview
+- `README.md` is the brief manual for people using the site.
+- `TODO.md` is the maintained backlog, completed-work log, and update process.
+- `CODEBASE.md` is this architecture and maintenance reference.
 
-**small-web-tools** is a React + Vite single-page application (SPA) that bundles a collection of browser-based utility tools. All tools run entirely client-side (no data leaves the browser) unless a specific tool requires a serverless API call (see `functions/`). The site is deployed on **Cloudflare Pages**.
+## Quick facts
 
-- **Version**: see `package.json` (`version` field); auto-read from git tags at build time
-- **Framework**: React 18 + Vite 5
-- **Deploy target**: Cloudflare Pages (serverless functions via `functions/api/`)
+| Item | Current implementation |
+| --- | --- |
+| Package | `small-web-tools` |
+| Version fallback | `0.3.0-alpha` from `package.json` |
+| UI framework | React 18 |
+| Build tool | Vite 5 |
+| Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
+| Routing | In-app state synchronized to URL hashes; no React Router |
+| Server functions | Cloudflare Pages-compatible handlers in `functions/api/` |
 
----
+At build/startup, `vite.config.js` prefers the newest git tag for the displayed app version and falls back to `package.json` when no tag is available.
 
-## Directory Structure
+## Repository map
 
-```
+```text
 small-web-tools/
-├── .agents/
-│   └── AGENTS.md                # Agent instructions & styling migration status (king file)
-├── CODEBASE.md                  # ← This file (AI agent reference)
-├── README.md                    # User-facing documentation & changelog
-├── TODO.md                      # Human-maintained tasks & issues (do not edit; read only on request)
-
-├── package.json                 # Project metadata, scripts, and dependencies
-├── package-lock.json            # Lockfile (auto-generated, do not edit)
-├── vite.config.js               # Vite build config (also contains dev-server IP lookup proxy)
-├── tailwind.config.js           # Tailwind CSS v3 config — theme mapped to existing CSS variables
-├── postcss.config.js            # PostCSS config (tailwindcss + autoprefixer)
-├── .gitignore                   # Git ignore rules
-├── index.html                   # SPA entry point (Vite root)
-│
-├── public/                      # Static assets copied verbatim to dist/
-│   └── favicon.svg              # Site favicon
-│
-├── src/                         # React application source
-│   ├── main.jsx                 # React DOM mount point (renders <App />)
-│   ├── App.jsx                  # Root component: routing, layout, all tool metadata & categories
-│   ├── styles.css               # Global stylesheet — @tailwind directives, colors, resets, scrollbar, keyframes
-│   └── components/              # Individual tool components (one file per tool)
-│       ├── ui/                  # Shared UI primitives (Phase 6 — Tailwind-based)
-│       │   ├── Card.jsx         # Card wrapper: variant="tool" | "home"
-│       │   ├── Button.jsx       # Button: variant="primary" | "secondary" | "danger" (danger=placeholder)
-│       │   ├── FieldInput.jsx   # Input/textarea with label, hint, error affordances
-│       │   ├── ToolHeader.jsx   # <h2> title block with optional description
-│       │   ├── ToggleSwitch.jsx # Toggle switch: replaces .toggle-switch/.toggle-slider/.toggle-label
-│       │   ├── Spinner.jsx      # Animated ring: size="default"|"small", container + label mode
-│       │   └── ResultDisplay.jsx # Accent-bg result card: label + large value display
-│       ├── HomeGrid.jsx         # Dashboard / home page grid of all tools
-│       ├── SlashesConverter.jsx # Path slashes converter (Windows → web)
-│       ├── CasingSwitcher.jsx   # Text casing conversion (invert, sentence, title, terms)
-│       ├── WordCounter.jsx      # Word & character counter with line-ending detection
-│       ├── DateCounter.jsx      # Days-between-dates calculator
-│       ├── CurrencyCounter.jsx  # Currency converter & bulk list converter
-│       ├── ColorConverter.jsx   # Color code converter (HEX ↔ RGB ↔ HSL)
-│       ├── AsciiConverter.jsx   # ASCII ↔ text converter
-│       ├── UnicodeConverter.jsx # Unicode code point encoder/decoder
-│       ├── BaseConverter.jsx    # Numeral base converter (bin/oct/dec/hex/sex)
-│       ├── DnaConverter.jsx     # DNA/RNA sequence tools (complement, reverse, strand swap)
-│       ├── DnaRnaIcon.jsx       # SVG icon component for DNA/RNA tool
-│       ├── CodonTable.jsx       # Interactive standard genetic code / RNA codon table
-│       ├── BioinfoIcon.jsx      # SVG icon component for bioinformatics tools
-│       ├── IpLookup.jsx         # IP address geolocation lookup (calls /api/iplookup)
-│       ├── ImgMeta.jsx          # Image metadata reader (EXIF, ICC, GPS — fully local)
-│       ├── OfficeMeta.jsx       # Office file metadata reader (Word/Excel/PPT — fully local)
-│       ├── RandomWheel.jsx      # Spin-the-wheel random picker with elimination mode
-│       ├── TypingSpeedTest.jsx  # Typing speed test (English & Chinese, custom templates)
-│       ├── NetworkSpeedTest.jsx # Network latency (ping) & download speed test
-│       ├── QrBarcodeGenerator.jsx # QR code & barcode generator with customization
-│       ├── QrBarcodeScanner.jsx   # QR & barcode scanner (camera + file upload, 14+ formats)
-│       ├── PasswordGenerator.jsx  # Cryptographically secure password generator & strength checker
-│       ├── AudioMeta.jsx          # Audio metadata reader (MP3/WAV/FLAC/M4A/OGG/AIFF — fully local)
-│       ├── VideoMeta.jsx          # Video metadata reader (MP4/MOV/Log — fully local)
-│       ├── MediaSeparator.jsx     # Main Media Separator / Splitter tool component
-│       ├── MediaSeparatorQueueItem.jsx # Queue item component for Media Separator
-│       ├── MediaSeparatorWaveform.jsx  # Waveform visualization component
-│       ├── MediaSeparatorFormatSelect.jsx # Dropdown select component for format options
-│       ├── mediaSeparatorEngine.js # Merged ffmpeg load client + output format configs
-│       ├── useMediaSeparator.js   # Batch processing queue and states hook
-│       ├── FolderAnalyzer.jsx     # Folder-structure analyzer with dual visualizer & line counts
-│       └── WebsiteFontExtractor.jsx # Website font extractor (calls /api/extract-fonts & /api/font-proxy)
-│
-├── functions/                   # Cloudflare Pages serverless functions
-│   └── api/
-│       ├── iplookup.js          # GET /api/iplookup?ip=… — server-side IP geolocation (bypasses CORS)
-│       ├── extract-fonts.js     # POST /api/extract-fonts — scrapes web fonts from a given URL
-│       └── font-proxy.js        # GET /api/font-proxy?url=…&referer=… — proxies font file downloads
-│
-└── dist/                        # Production build output (auto-generated by `vite build`, gitignored)
-    ├── index.html
-    ├── favicon.svg
-    └── assets/                  # Hashed JS/CSS bundles
+├── README.md                 User-facing site manual
+├── TODO.md                   Backlog, completed work, and update process
+├── CODEBASE.md               Architecture and maintenance reference
+├── package.json              Scripts and dependencies
+├── vite.config.js            Vite config, version injection, local API middleware
+├── tailwind.config.js        Tailwind tokens mapped to CSS custom properties
+├── postcss.config.js         Tailwind and Autoprefixer configuration
+├── index.html                Vite HTML shell and React mount point
+├── public/
+│   └── favicon.svg           Static site icon
+├── src/
+│   ├── main.jsx              React mount and global stylesheet import
+│   ├── App.jsx               Navigation metadata, hash routing, shell, and tool switch
+│   ├── styles.css            Theme tokens, global rules, responsive and component styling
+│   └── components/
+│       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
+│       ├── HomeGrid.jsx      Dashboard tool grid
+│       ├── *.jsx             Individual tool components
+│       ├── useMediaSeparator.js
+│       └── mediaSeparatorEngine.js
+└── functions/
+    └── api/                 Cloudflare Pages API handlers
 ```
 
----
+`dist/` is generated by `npm run build` and is intentionally ignored.
 
-## Key Files — Detailed Purpose
+## Application architecture
 
-### `index.html`
-Minimal Vite SPA shell. Contains the `<div id="root">` mount point and the `<script type="module" src="/src/main.jsx">` entry. Also sets the page `<title>` and viewport meta.
+### Entry and shell
 
-### `src/main.jsx`
-React DOM entry — calls `ReactDOM.createRoot(...).render(<App />)`. Imports `styles.css`.
+`src/main.jsx` mounts `<App />` and imports `src/styles.css`.
 
-### `src/App.jsx`
-The central hub of the application:
-- Defines `navItems` array containing tool route IDs, names/tooltips, categories, and SVG icons
-- Defines `categories` (grouping tools by type: Text, Developer, Network, Media, File, Game, Bio)
-- Manages client-side routing via `useState` (no React Router; URL hash `#tool-id` is used)
-- Renders the top navigation bar, sidebar, breadcrumb, and the active tool component
-- Injects version info via Vite `define` globals (`__APP_VERSION__`, `__SHOW_CHANNEL_ALERT__`, `__APP_CHANNEL__`)
+`src/App.jsx` owns the application shell:
 
-### `src/styles.css`
-Global stylesheet (~2,400 lines). Contains:
-- Tailwind CSS directives (`@tailwind base/components/utilities`) at the top
-- CSS custom properties (design tokens: colors, spacing, typography)
-- Base reset and typography
-- Layout styles for sidebar, navbar, content area
-- Responsive breakpoints and dark-mode support
+- `navItems` is the route metadata source for the sidebar, desktop navigation, dashboard cards, and footer links.
+- `categories` define the six navigation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
+- `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
+- `theme` and `sidebarCollapsed` are persisted in `localStorage`.
+- `renderActiveTool()` maps every `tool-*` route ID to its React component.
 
-### `vite.config.js`
-Vite configuration with multiple responsibilities:
-1. **Version injection**: reads git tag via `git describe --tags` → exposes as `__APP_VERSION__` global
-2. **Channel detection**: flags alpha/beta builds → exposes `__SHOW_CHANNEL_ALERT__` and `__APP_CHANNEL__`
-3. **Dev-server proxy**: during local dev, `/api/iplookup` and `/api/extract-fonts` are handled by in-process Node.js functions (mirrors the Cloudflare Pages behaviour without needing a separate server)
-4. **Build config**: output to `dist/`, React plugin, asset handling
+The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
 
-### `functions/api/iplookup.js`
-Cloudflare Pages Function — `GET /api/iplookup?ip=<address>`  
-Queries multiple geo-IP providers in sequence (api.ip.sb → ipapi.co → fallbacks) with a 5-second timeout each. Returns unified JSON: `{ ip, city, region, country_name, country_code, postal, org, asn, timezone, latitude, longitude }`. Required because some providers block browser-originated requests.
+### Shared tool-page contract
 
-### `functions/api/extract-fonts.js`
-Cloudflare Pages Function — `POST /api/extract-fonts` with body `{ url: "https://..." }`  
-Fetches the target page HTML server-side, parses `<link>` and `@import` for Google Fonts / CSS font-face declarations, and returns font family names + stylesheet URLs. Required to bypass CORS restrictions on third-party pages.
+Every routed tool page uses the shared visual contract established by Image Metadata:
 
-### `functions/api/font-proxy.js`
-Cloudflare Pages Function — `GET /api/font-proxy?url=<fontUrl>&referer=<pageUrl>`  
-Acts as a CORS-friendly reverse proxy for font binary files (`.woff2`, `.ttf`, etc.). Forwards the request with appropriate `Referer` / `Origin` headers and streams the response back with `Access-Control-Allow-Origin: *` and a 1-year cache header.
+1. Use `Card` with `variant="tool"` as the page container.
+2. Render exactly one `ToolHeader` title for the page identity.
+3. Keep page-level descriptions out of `ToolHeader`; helper text belongs inside the feature that needs it.
+4. Preserve the shared desktop card spacing (`p-6`, `gap-4`) and allow the mobile `.tool-card` rules in `styles.css` to handle compact screens.
 
----
+`src/components/ui/AutoDetectConverter.jsx` implements this contract for the Slashes, ASCII, and Unicode converters.
 
-## Tool Inventory
+### Styling and theme
 
-| Tool ID | Component File | Category | Description |
-|---|---|---|---|
-| `tool-home` | `HomeGrid.jsx` | — | Dashboard grid listing all tools |
-| `tool-slash` | `SlashesConverter.jsx` | Text | Windows path → forward slashes |
-| `tool-casing` | `CasingSwitcher.jsx` | Text | Multi-mode text case converter |
-| `tool-wc` | `WordCounter.jsx` | Text | Word / char / line counter |
-| `tool-date` | `DateCounter.jsx` | Text | Days between two dates |
-| `tool-currency` | `CurrencyCounter.jsx` | Text | Currency converter & bulk list |
-| `tool-color` | `ColorConverter.jsx` | Developer | HEX / RGB / HSL / HSB / CMYK / LAB converter |
-| `tool-ascii` | `AsciiConverter.jsx` | Developer | ASCII ↔ text |
-| `tool-unicode` | `UnicodeConverter.jsx` | Developer | Unicode code point en/decoder |
-| `tool-base` | `BaseConverter.jsx` | Developer | Numeral base converter |
-| `tool-iplookup` | `IpLookup.jsx` | Network | IP geolocation (via `/api/iplookup`) |
-| `tool-speedtest` | `NetworkSpeedTest.jsx` | Network | Ping & download speed test |
-| `tool-imgmeta` | `ImgMeta.jsx` | Media | EXIF / ICC / GPS image metadata |
-| `tool-officemeta` | `OfficeMeta.jsx` | Media | Word / Excel / PPT metadata reader |
-| `tool-qrcode` | `QrBarcodeGenerator.jsx` | Developer | QR code generator |
-| `tool-barcode` | `QrBarcodeGenerator.jsx` | Developer | Barcode generator (same component, tab-switched) |
-| `tool-qrbarcodescan` | `QrBarcodeScanner.jsx` | Utilities | QR & barcode scanner (camera + file upload, 14+ formats) |
-| `tool-password` | `PasswordGenerator.jsx` | Developer | Secure password generator |
-| `tool-pwstrength` | `PasswordGenerator.jsx` | Developer | Password strength checker (same component, tab-switched) |
-| `tool-wheel` | `RandomWheel.jsx` | Game | Spin-the-wheel random picker |
-| `tool-typing` | `TypingSpeedTest.jsx` | Game | Typing speed test (EN / ZH) |
-| `tool-dna` | `DnaConverter.jsx` | Bio | DNA/RNA strand tools |
-| `tool-codon` | `CodonTable.jsx` | Bio | RNA codon / amino acid table |
-| `tool-fontextractor` | `WebsiteFontExtractor.jsx` | Developer | Web font extractor & downloader |
-| `tool-audiometa` | `AudioMeta.jsx` | Media | Audio metadata reader (MP3, WAV, FLAC, M4A, OGG, AIFF, WMA) |
-| `tool-videometa` | `VideoMeta.jsx` | Media | Video metadata reader (MP4, MOV, Log) |
-| `tool-mediasplit` | `MediaSeparator.jsx` | Media | Split a video's audio track and silent video track locally |
-| `tool-folder-analyzer` | `FolderAnalyzer.jsx` | Developer | Folder-structure analyzer with dual visualizer & line counts |
+`src/styles.css` defines light and dark CSS custom properties such as `--bg-app`, `--bg-card`, `--text-main`, `--accent`, and `--border-color`. `tailwind.config.js` exposes those tokens as Tailwind color, shadow, and font utilities.
 
----
+Prefer the shared primitives and existing design tokens. Add global CSS only for truly shared behavior or component-specific rules that cannot be expressed clearly with the existing utilities.
+
+## Route inventory
+
+| Route ID | Navigation label | Component | Category |
+| --- | --- | --- | --- |
+| `tool-home` | Dashboard | `HomeGrid.jsx` | Dashboard |
+| `tool-wc` | Word Counter | `WordCounter.jsx` | Text |
+| `tool-casing` | Casing Switcher | `CasingSwitcher.jsx` | Text |
+| `tool-typing` | Typing Speed Test | `TypingSpeedTest.jsx` | Text |
+| `tool-slash` | Slashes Converter | `SlashesConverter.jsx` | Developer |
+| `tool-ascii` | ASCII Converter | `AsciiConverter.jsx` | Developer |
+| `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
+| `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
+| `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |
+| `tool-folder-analyzer` | Folder Analyzer | `FolderAnalyzer.jsx` | Developer |
+| `tool-iplookup` | IP Lookup | `IpLookup.jsx` | Network |
+| `tool-speedtest` | Speed Test | `NetworkSpeedTest.jsx` | Network |
+| `tool-color` | Color Converter | `ColorConverter.jsx` | Media |
+| `tool-imgmeta` | Image Metadata | `ImgMeta.jsx` | Media |
+| `tool-officemeta` | Office Metadata | `OfficeMeta.jsx` | Media |
+| `tool-audiometa` | Audio Metadata | `AudioMeta.jsx` | Media |
+| `tool-videometa` | Video Metadata | `VideoMeta.jsx` | Media |
+| `tool-mediasplit` | Media Splitter | `MediaSeparator.jsx` | Media |
+| `tool-dna` | DNA/RNA Converter | `DnaConverter.jsx` | Bioinfo |
+| `tool-codon` | Codon Table | `CodonTable.jsx` | Bioinfo |
+| `tool-barcode` | Barcode Generator | `QrBarcodeGenerator.jsx` (`barcode` tab) | Utilities |
+| `tool-currency` | Currency Converter | `CurrencyCounter.jsx` | Utilities |
+| `tool-date` | Date Counter | `DateCounter.jsx` | Utilities |
+| `tool-password` | Password Generator | `PasswordGenerator.jsx` (`generate` tab) | Utilities |
+| `tool-pwstrength` | Password Strength | `PasswordGenerator.jsx` (`check` tab) | Utilities |
+| `tool-qrcode` | QR Code Generator | `QrBarcodeGenerator.jsx` (`qr` tab) | Utilities |
+| `tool-qrbarcodescan` | QR & Barcode Scanner | `QrBarcodeScanner.jsx` | Utilities |
+| `tool-wheel` | Random Wheel | `RandomWheel.jsx` | Utilities |
+
+## Component groups
+
+### Shared UI: `src/components/ui/`
+
+| File | Role |
+| --- | --- |
+| `Card.jsx` | Shared card container for tool pages and dashboard cards. |
+| `ToolHeader.jsx` | The one-title page identity component for routed tools. |
+| `Button.jsx` | Shared button variants and sizes. |
+| `FieldInput.jsx` | Labeled input and textarea helper. |
+| `AutoDetectConverter.jsx` | Shared two-panel automatic converter interface. |
+| `ToggleSwitch.jsx`, `Spinner.jsx`, `ResultDisplay.jsx` | Reusable controls and feedback UI. |
+
+### Media Splitter
+
+`MediaSeparator.jsx` is the page component. `useMediaSeparator.js` owns queue state and actions, `mediaSeparatorEngine.js` loads and invokes ffmpeg.wasm, and the queue item, waveform, and format-select components keep the UI modular.
+
+### File metadata tools
+
+`ImgMeta.jsx`, `OfficeMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
+
+## APIs and development middleware
+
+Cloudflare Pages-compatible handlers live in `functions/api/`:
+
+| Endpoint | File | Purpose |
+| --- | --- | --- |
+| `GET /api/iplookup?ip=<address>` | `iplookup.js` | Query fallback IP geolocation providers and normalize the response. |
+| `POST /api/extract-fonts` | `extract-fonts.js` | Fetch a public page and inspect linked or embedded font declarations. |
+| `GET /api/font-proxy?url=<url>&referer=<url>` | `font-proxy.js` | Proxy a public font binary for browser download. |
+
+`vite.config.js` mirrors those endpoints during local development. It also provides local-development-only folder-analysis helpers at `/api/resolve-local-path` and `/api/scan-local-dir`.
 
 ## Dependencies
 
-| Package | Version | Purpose |
-|---|---|---|
-| `react` | ^18.3.1 | UI framework |
-| `react-dom` | ^18.3.1 | React DOM renderer |
-| `exifreader` | ^4.41.0 | Parse EXIF/ICC/GPS tags from images (`ImgMeta`) |
-| `fast-xml-parser` | ^4.4.0 | Parse Office XML internals (`OfficeMeta`) |
-| `jsbarcode` | ^3.11.6 | Barcode rendering (`QrBarcodeGenerator`) |
-| `jszip` | ^3.10.1 | Unzip `.docx`/`.xlsx`/`.pptx` files (`OfficeMeta`) |
-| `qrcode` | ^1.5.3 | QR code generation (`QrBarcodeGenerator`) |
-| `html5-qrcode` | ^2.3.8 | QR & barcode scanning via camera or file upload (`QrBarcodeScanner`) |
-| `vite` | ^5.2.11 | Build tool & dev server |
-| `@vitejs/plugin-react` | ^4.3.1 | Vite React/JSX transform |
-| `@ffmpeg/ffmpeg` | ^0.12.15 | Client-side ffmpeg runner |
-| `@ffmpeg/util` | ^0.12.2 | Utilities for loading and handling ffmpeg.wasm |
-| `tailwindcss` | ^3.4 | Utility-first CSS framework (Phase 1 migration) |
-| `postcss` | ^8.5 | CSS transformation pipeline (Tailwind peer dependency) |
-| `autoprefixer` | ^10.4 | Automatic vendor prefixes via PostCSS |
+| Package | Purpose |
+| --- | --- |
+| `react`, `react-dom` | React rendering. |
+| `@vitejs/plugin-react`, `vite` | Development server and production build. |
+| `tailwindcss`, `postcss`, `autoprefixer` | Utility CSS build pipeline. |
+| `exifreader` | Image metadata parsing. |
+| `fast-xml-parser`, `jszip` | Office document metadata parsing and archive handling. |
+| `html5-qrcode` | Camera and file-based QR/barcode scanning. |
+| `qrcode`, `jsbarcode` | QR and barcode generation. |
+| `@ffmpeg/ffmpeg`, `@ffmpeg/util` | Client-side media separation. |
 
----
-
-## Development
+## Local development
 
 ```bash
-# Install dependencies
 npm install
-
-# Start dev server (with hot reload + local API proxy)
 npm run dev
-
-# Production build
 npm run build
-
-# Preview production build locally
 npm run preview
 ```
 
----
+`npm run build` is the baseline validation command for source and documentation changes that could affect the Vite build.
 
-## Adding a New Tool — Checklist
+## Adding or changing a tool
 
-1. Create `src/components/<ToolName>.jsx`
-2. Register and import the component in `src/App.jsx`:
-   - Add `import` statement at the top
-   - Add entry to the `navItems` array (id, name, tooltip, category, icon)
-   - Add a case inside `renderActiveTool` function to return the component
-3. Register the tool in `src/components/HomeGrid.jsx` by adding its metadata (id, title, category, desc, icon) to the `tools` array
-4. Style the tool using Tailwind utility classes and the shared primitives in
-   `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`). Do not add new rules to `src/styles.css`.
-5. If a serverless API is needed, add `functions/api/<name>.js` and mirror the handler in the `vite.config.js` dev proxy
-6. **Update this file** (`CODEBASE.md`): add a row to the Tool Inventory table and update the directory tree if new files/dirs were created
+1. Create or update the component under `src/components/`.
+2. Add or revise its import, `navItems` metadata, and `renderActiveTool()` case in `src/App.jsx`.
+3. Follow the shared `Card` plus one `ToolHeader` layout contract.
+4. Reuse existing UI primitives and theme tokens.
+5. Add an API handler only when browser-side code is insufficient; mirror it in `vite.config.js` if local development needs the endpoint.
+6. Update the route inventory and any affected sections of this document.
+7. Build the project and verify the changed route at desktop and mobile widths.
+
+## Documentation maintenance
+
+When user behavior changes, update the relevant entry in `README.md`. When implementation structure changes, update this document. Record the work and follow the validation/commit sequence in `TODO.md`.

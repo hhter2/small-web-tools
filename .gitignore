@@ -63,6 +63,3 @@ _incoming/
 *.7z
 *.bak
 *.swp
-
-# Track files
-TODO.md

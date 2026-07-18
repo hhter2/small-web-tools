@@ -1,177 +1,88 @@
-# Small Web Tools - Premium Dashboard
+# Small Web Tools
 
-**Current Version: v0.3.0-alpha**
+Small Web Tools is a browser-based collection of everyday utilities for text, developer work, files, media, networking, bioinformatics, and quick calculations. It is a single-page React application: selecting a tool changes the view without a full page load.
 
-A modern, responsive single-page web utility application offering various everyday conversion, counting, and encoding tools in a highly polished dashboard layout. 
+## Using the site
 
-This project is built using **React** and **Vite** for a fast local development server and optimized production builds.
+1. Start at the dashboard and choose a category or use the search box.
+2. Select a tool from the navigation. Each tool has its own URL hash, so a page such as `#tool-color` can be bookmarked or shared.
+3. Enter text, choose a file, or use the relevant controls. Results update in the current page.
+4. Use the light/dark toggle when needed. The selected theme, collapsed desktop sidebar, and most recently opened tool are remembered in the browser.
 
-## Features & Upgrades
+On a phone or narrow screen, the navigation becomes a drawer opened by the menu button.
 
-- **Sidebar Navigation Layout**: Clean sidebar navigation on the left, displaying only the selected tool card in the main staging area on the right.
-- **Grouped Tool Categories**: All tools are organized into 7 clear, logical categories: Text, Calculation, Developer, Network, Media, Bioinfo, and Utilities. Group headers separate items in the sidebar, which are hidden in search mode to display flat search results cleanly.
-- **Category Filter Tabs**: The homepage features interactive filter tabs allowing users to instantly filter the dashboard to display specific categories. Selecting "All" displays tools grouped under styled section headings with category icons.
-- **Collapsible Left Sidebar**: Collapse the sidebar to a mini-sidebar layout (78px width) with a single click of the collapse button in the bottom-left sidebar footer. Keeps navigation icons visible and shows text labels as tooltips on hover, remembering your preference via `localStorage`. The brand logo icon is moved to the top bar, allowing for a cleaner header area.
-- **Search Filtering**: Instantly search/filter through the list of tools inside the sidebar to find what you need.
-- **Theme Switcher**: Fully functional Light & Dark theme toggle with automatic system preference detection and state persistence (saves choice to `localStorage`). Only kept in the sidebar footer to avoid redundancy.
-- **Custom Favicon (New)**: Displays a custom SVG favicon (green background and white stack-layers icon) in the browser tab to match the brand identity.
-- **Interactive HSL Color Selector (Upgraded)**: Parallel to the text-based Color Code Converter is a PowerPoint-style Customize HSL selection panel. Dragging on the 2D Hue-Saturation board and the vertical Lightness slider updates HEX, RGB, and HSL outputs instantly. Supports bidirectional sync, standard presets, persistent recent colors list, and native browser Eyedropper API support.
-- **Responsive Mobile Drawer**: Sidebar collapses into a sliding drawer on smaller mobile screens, toggled by a hamburger menu.
-- **Multilingual Word Counter**: The Word Counter matches CJK characters individually and groups other spaced words (preserving internal hyphens/apostrophes) for accurate multilingual word counts.
-- **Persistent Selection**: Remembers the last opened tool across page reloads.
-- **DNA/RNA Direction Transfer**: Support DNA & RNA base complementation (supporting full IUPAC degenerate base codes), automatic direction tag detection (`5'-` and `3'-`), standard reverse complement generation, same-strand reverse direction generation, an interactive **Figure Mode** rendering base-paired double-stranded DNA/RNA molecules using complementary interlocking base shapes (opacity-differentiated: 100% sense/input vs 30% opposite/target), and **Codon Display options** (allowing users to group sequences in 3-base codons or translate them into 3-letter amino acid codes dynamically).
-- **IP Address Lookup**: Retrieve coordinates, timezone, city, region, country, and organization/ISP details for any IP address or automatically detect the current client IP, accompanied by an interactive OpenStreetMap preview.
-- **ImgMeta (Upgraded)**: Instantly extract metadata (camera settings, lens specifications, exposure settings, GPS details) from image files (including Canon `.CR3` RAW files) locally in the browser with 100% privacy (no files are uploaded). Supported upgrades include:
-  - **Multi-File Uploads**: Drag & drop or browse multiple images concurrently.
-  - **Side-by-Side Comparison**: Compare key metadata fields side-by-side across all uploaded files.
-  - **Lossless Jpeg Stripper**: Strip APP1 (EXIF, GPS, XMP), APP13 (IPTC), and APP2 (ICC Profile) segments client-side from the JPEG ArrayBuffer without re-compression, retaining 100% image quality.
-  - **Stripping Verification UI**: Displays a visual comparison list of removed vs. retained metadata tags.
-  - **Bulk Export to Folder**: Package all loaded/stripped images into a single ZIP file (.zip) client-side using `jszip`.
-  - **GPS Map Toggle**: Plots coordinates on an embedded OpenStreetMap map only when the "Show Map" button is clicked.
-  - **Grouped Collapsible Advanced Tab**: Groups raw metadata tags into EXIF, GPS, IPTC, XMP, ICC, and File/Other categories with a global "Expand All" toggle.
-- **Random Wheel (Lucky Draw)**: Spin a customizable visual wheel to draw items from a typed options list (defaulting to 1-5). Supports editable wheel titles, light/dark themes, custom-modal confirmation for clears, keyboard shortcuts, and single-draw elimination mode (drawn options are grayed out/struck through in the status list and automatically removed from the wheel).
-- **Office Metadata Reader (New)**: Extract and analyze core, application, and format-specific metadata from Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) documents client-side locally in the browser with 100% privacy using `JSZip` and the browser's native `DOMParser` for XML parsing. Shows shared core properties, software details, and format-specific structures (like page/word counts, slide details, worksheet lists with visibility states, and heading grouping pairs).
-- **Audio Metadata Reader (New)**: Extract technical parameters (duration, sample rate, channels, bit depth, codec) and metadata tags (title, artist, album, year, genre, track, composer, comments, cover art) from audio files (`.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`, `.ogg`, `.opus`, `.aiff`, `.wma`) client-side. Supports multi-file upload, side-by-side comparison, searchable parameters grouped by type, metadata JSON export, lossless ID3 tag stripping for MP3 files, and an integrated audio preview player.
-- **Typing Speed Test (New)**: Measure typing speed and accuracy under Free Typing (no-template) and Template Mode. Custom templates can be pasted or uploaded as `.txt` files. Features real-time WPM/CPM calculation, accuracy percentage, backspace correction count, and correction rate tracking. Supports Chinese language mode (hiding CPM and counting 1 Chinese character/word as 1 WPM) with native IME composition handling, and displays a floating spelling correction tooltip (`[typed] 🏰 [expected]`) above the active word. Includes local history logging and JSON export capabilities. Upgrades include a simplified settings bar matching modern layouts (moving advanced options to a sub-config bar) and an **IDE Code Mode** (preserves code indentation, renders line numbers, displays end-of-line `↵` indicators, and features auto-indentation on Enter and mass-deletion on Backspace over a clean solid IDE-style editor background).
-- **Network Speed Test (New)**: Test network latency (ping), download speed (100MB), and upload speed (25MB) in real time using Cloudflare endpoints. Features an interactive SVG Speedometer Gauge (needle dial) and a real-time SVG Line Chart visualizing download/upload speeds over time. Discards connection warm-up bias for accurate latency readings and supports abort controls to stop the test early.
-- **RNA Codon Table (New)**: A professional, highly interactive standard genetic code reference table. All 64 RNA codons are organized in the canonical 4×4×4 format (first base rows × second base columns × third base sub-rows). Every codon and every amino acid label is a distinct clickable `<button>` element with ripple animation, hover/active states, and keyboard accessibility. Features include:
-  - **Start codon (AUG/Met)** highlighted in semantic green; **Stop codons (UAA/UAG/UGA)** highlighted in semantic red.
-  - **Click-to-explore**: Selecting a codon opens a glassmorphism detail panel showing the full amino acid name, 3-letter/1-letter codes, all synonymous codons, and a colour-coded per-base breakdown.
-  - **Amino acid grouping highlighting**: Clicking either a codon or its AA label highlights all codons encoding the same amino acid simultaneously.
-  - **Filter mode**: Toggle "★ Start" or "■ Stop" filters to dim unrelated codons instantly.
-  - **JetBrains Mono** monospace font for codons; colour-coded base axes (U=violet, C=cyan, A=amber, G=green).
-  - **Stats bar**: Live counters for total codons, amino acids, start/stop codons, and interaction count.
-  - **Fully responsive** from desktop (full table) to narrow mobile (compacted rows).
-  - **Detailed Fischer Projections**: Displays full L-configuration zwitterionic Fischer projection molecular structure diagrams for each of the 20 amino acids inside the detail panel. The structures accurately model carbon side-chain skeletons, aromatic rings, amides, and charged groups with custom blue color-coding to match reference hand-drawings.
-  - **Interactive Codon Typer (New)**: A passcode-style 3-card base input interface (1st, 2nd, and 3rd positions) for quick codon lookups. Typing characters (U, C, A, G or auto-mapped T -> U) shows the translated amino acid dynamically, highlighting matching codons in the table and dimming others.
-  - **Biochemical Group Filter (New)**: Select biochemical group filters (Hydrophobic, Polar Uncharged, Basic, or Acidic) to highlight related codons in the table and display interactive amino acid chips for quick exploration.
-- **Clean Tool Layout & Spacing**: Hides outer redundant headers, titles, and subtitles across the application (including the duplicate homepage main-header), keeping clean internal tool headings, minimizing blank space, and reducing vertical scrolling for a compact, desktop/mobile-friendly workspace.
-- **Green Accent Theme & Light Sidebar (New)**: Replaced the default blue color scheme with a curated green theme (`#4FB949` in light mode, `#5EC95A` in dark mode). The sidebar has been updated to render in a clean white background during light mode and deep charcoal in dark mode.
-- **Dynamic Responsive Footer (New)**: Structured the footer columns to dynamically mirror the 7 sidebar category groups exactly. Handled mobile responsive layouts by separating brand name and copyright into stacked rows on screens below 768px.
-- **QR Code & Barcode Generator (New)**: Create highly customizable QR codes and barcodes. Generate QR codes from text, URLs, WiFi networks, emails, phone numbers, and SMS. Customize the dot shape (square vs circle), position eyes (standard square, smooth rounded, or circular rings), choose solid or linear/radial gradient foreground colors, set background color (including transparent), upload and embed logo images with size slider and White Circle/Square padding overlays, and export to PNG or vector SVG format. Generate barcodes in multiple formats (CODE128, EAN-13, EAN-8, UPC-A, Code 39, ITF, Codabar) with live input validation, custom line/background colors, bar height/width sliders, toggleable text label, and download as PNG or vector SVG.
-- **Secure Password Generator (New)**: Generate cryptographically secure random passwords using a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG) as the sole source of randomness. Uses unbiased rejection sampling (discarding biased remainder ranges, using a prefetch buffer of 64 bytes to minimize API overhead) to eliminate modulo bias. Offers customizable length (8-128), optional special characters, real-time entropy calculation, offline crack-time estimation, color-coded password display, and a live console-themed visualizer detailing the rejection sampling statistics (with theoretical vs. actual discard rates).
-- **Lowercase & Capital Switcher (New)**: Convert text casing with 4 switchable and combine-able modes: all case conversion (invert case/uppercase/lowercase), sentence case (with toggleable preservation of existing capitals), title case (capitalize each word), and specific terms capitalization (with first word vs all words options). Features live preview, character and word counters, clear function, sample text loader, and fully responsive layout.
-- **QR & Barcode Scanner (New)**: Real-time camera scanner and file upload decoder supporting 14+ formats (QR Code, Code 128, EAN-13, EAN-8, UPC-A, UPC-E, Data Matrix, Aztec, PDF417, Codabar, ITF, RSS). Implements custom sweeping laser animations, native Web Audio API audio confirmation beeps, content-aware action widgets (Wi-Fi, URL, Email, Phone, SMS), and historical logs.
-- **Video Metadata Reader (New)**: Extract and inspect technical parameters (resolution, frame rate, video codec, audio codec, audio channels, sample rate, timecodes, color primaries, and subtitles) from video files (`.mp4`, `.mov`, `.m4v`, `.f4v`, `.3gp`, `.3g2`) and line-based log files client-side. Supports multi-file upload, side-by-side comparison, searchable parameters grouped by type, metadata JSON export, and an integrated HTML5 video preview player.
-- **Media Splitter (New)**: Extract the audio track and silent video track from video files client-side using `ffmpeg.wasm`. Features batch queue processing, format configuration (source-copy/MP3/WAV/AAC/OGG for audio, source-copy/MP4/WebM for video), waveform rendering with playback using Web Audio API, and local downloads.
+## Tool guide
 
+### Text
 
-## Included Tools
+- **Word Counter** — count words, characters, lines, and reading time.
+- **Casing Switcher** — change text to upper, lower, sentence, title, or custom-term casing.
+- **Typing Speed Test** — run a free or template-based typing test.
 
-1. **Slashes Converter**: Normalize Windows file paths to web/URL-friendly paths.
-2. **Word & Character Counter**: Real-time counter of text words, characters, and spaces. Fully optimized for multilingual text, counting CJK (Chinese, Japanese, Korean) characters individually as words (matching Microsoft Word counting rules).
-3. **Lowercase & Capital Switcher**: Convert text casing in real time using 4 combine-able casing switches (case conversion, sentence case, title case, and custom specific terms).
-4. **Date Counter**: Calculate the day difference between a start and end date.
-5. **Currency Converter & Counter**: Convert global currencies (e.g. TWD to USD) for single amounts, or convert and sum a list of decimal currency amounts (one per line) in real-time.
-6. **Color Code Converter**: Interconvert between HEX, RGB, and HSL colors with interactive swatch previews, 12 standard color presets, recent color memory, and a PowerPoint-style HSL visual customize panel.
-7. **ASCII Converter**: Encode text to ASCII code points or decode decimal codes back to text.
-8. **Unicode Converter**: Translate characters to Unicode hex code points (e.g., `U+4F60`) and vice versa.
-9. **Base Converter**: Seamlessly convert numbers across Binary (2), Octal (8), Decimal (10), Hexadecimal (16), and Sexagesimal (60).
-10. **DNA/RNA Direction Transfer**: Perform base sequence complementation (supporting IUPAC degenerate base codes), reversing, same-strand reverse direction generation (e.g., input `5'-AATTCA-3'` -> output `3'-ACTTAA-5'`), 5'/3' strand orientation transfers, and interactive graphical rendering of double-stranded DNA/RNA helix structures with interlocking base-pairing shapes, custom base colors, and target direction indicators.
-11. **IP Address Lookup**: Retrieve details of any IPv4/IPv6 address or look up the caller's IP, including geographical details, timezone, coordinates, organization, and a zoomable OpenStreetMap view.
-12. **Network Speed Test**: Measure client-side latency (ping), download speed (100MB file), and upload speed (25MB file) with real-time SVG speedometer gauge and line chart visualization.
-13. **ImgMeta**: Load common images (JPEG, PNG, WebP, HEIC, AVIF) or Canon `.CR3` RAW files to extract EXIF, GPS, and manufacturer metadata client-side. Compare multiple images side-by-side, strip metadata losslessly, view location maps on toggle, sort raw tags in grouped advanced sections, and export images in bulk as a ZIP archive.
-14. **Random Wheel**: Draw items at random from custom typed options. Edit the wheel title dynamically, view active and eliminated options in real-time, reset or clear options (with custom modal confirmation), toggle duplicate selections, and use keyboard shortcuts (`Space` to spin, `E` to edit options, `R` to reset, `C` to clear).
-15. **Typing Speed Test**: Test typing speed in English or Chinese. Supports auto-timer triggers, template upload, character highlighting (correct/error state), floating spelling typo popups, and local history logging.
-16. **RNA Codon Table**: Interactive standard genetic code reference. All 64 codons and their amino acid products are individually clickable buttons. Click any codon or AA label to reveal synonyms, full names, 1-letter codes, and per-base colour breakdown in a slide-in detail panel. Start/Stop codons carry semantic colour distinctions. Includes filter mode and live interaction stats.
-17. **Secure Password Generator**: Cryptographically secure random password generation tool. Implements batch prefetch buffer (64 bytes) CSPRNG rejection sampling to eliminate modulo bias. Configurable length (8-128) and special character set toggles. Computes entropy in bits, provides strength metrics and guessing-speed estimates, and displays a live terminal log mapping CSPRNG bytes to characters.
-18. **Office Metadata Reader**: Local Office document metadata parser. Extract and view details from `.docx`, `.xlsx`, and `.pptx` documents, including creation/modification timestamps, software versions, worksheet configurations, page/word metrics, and slide counts.
-19. **Audio Metadata Reader**: Local audio file metadata extractor and inspector. Extract parameters and tags from formats like MP3, WAV, FLAC, M4A, OGG, and AIFF. Supports side-by-side audio property comparisons, JSON export, inline audio playback, and lossless MP3 metadata stripping.
-20. **QR & Barcode Scanner**: Client-side QR code and barcode scanner using camera capture or drag-and-drop image files. Decodes 14+ 1D/2D formats, plays a beep chime on match, and displays context-aware controls (e.g. WiFi configuration cards, clickable links, mail/SMS pre-fills).
-21. **Video Metadata Reader**: Local video file metadata extractor and inspector. Extract parameters and tracks (video codec, resolution, frame rate, audio codec, channels, sample rate, subtitles, timecodes, color primaries) from video files (`.mp4`, `.mov`, `.m4v`, `.f4v`, `.3gp`, `.3g2`) and line-based log files client-side. Supports multi-file upload, side-by-side comparison, searchable parameters, JSON export, and an integrated video preview player.
-22. **Media Splitter**: Extract the audio track and silent video track from video files client-side using `ffmpeg.wasm`. Features batch queue processing, format configuration (source-copy/MP3/WAV/AAC/OGG for audio, source-copy/MP4/WebM for video), waveform rendering with playback, and local downloads.
+### Developer
 
----
+- **Slashes Converter** — convert Windows and web-style paths.
+- **ASCII Converter** and **Unicode Converter** — convert text to and from character codes.
+- **Base Converter** — convert values among binary, octal, decimal, hexadecimal, and sexagesimal.
+- **Website Font Extractor** — inspect the fonts used by a public website.
+- **Folder Analyzer** — inspect a selected folder's structure and metrics.
 
-## Local Development
+### Network
 
-### 1. Prerequisites
-Ensure you have [Node.js](https://nodejs.org) installed on your system.
+- **IP Lookup** — look up IP address and location information.
+- **Speed Test** — measure latency, download, and upload performance.
 
-### 2. Install Dependencies
-Run the following command to install the required dev tool (`vite`):
+### Media
+
+- **Color Converter** — work with color codes, palettes, and the HSL spectrum.
+- **Image Metadata**, **Office Metadata**, **Audio Metadata**, and **Video Metadata** — inspect supported local files and their metadata.
+- **Media Splitter** — extract a video's audio track and silent video track.
+
+### Bioinfo
+
+- **DNA/RNA Converter** — transform sequence direction, complements, and display modes.
+- **RNA Codon Table** — explore RNA codons, amino acids, and filters.
+
+### Utilities
+
+- **Currency Converter** and **Date Counter** — perform common calculations.
+- **QR Code Generator** and **Barcode Generator** — create downloadable codes.
+- **QR & Barcode Scanner** — scan with a camera or image file.
+- **Password Generator** and **Password Strength** — generate or assess passwords.
+- **Random Wheel** — make a random selection from a custom list.
+
+## Privacy and network access
+
+File-focused tools process selected files in the browser whenever possible; files are not sent to this project for analysis. Some capabilities necessarily use network access:
+
+- IP Lookup queries a server-side lookup endpoint and external IP providers.
+- Website Font Extractor fetches the public URL supplied by the user through server-side endpoints to work around browser cross-origin limits.
+- Network Speed Test measures real network traffic.
+- Camera scanning requires browser camera permission.
+
+Review a tool's own labels and your browser permissions before using it with sensitive content.
+
+## Run locally
+
+Requires a current Node.js installation.
+
 ```bash
 npm install
-```
-
-### 3. Start Dev Server
-Spin up the local hot-reloading development server:
-```bash
 npm run dev
 ```
-By default, the project is configured to run on [http://127.0.0.1:3000/](http://127.0.0.1:3000/) to avoid default port permission conflicts on Windows.
 
-### 4. Build for Production
-To generate a highly optimized and minified production build inside the `dist` folder:
+Vite prints the local URL when the server starts. For a production build and local preview:
+
 ```bash
 npm run build
-```
-
-### 5. Preview Production Build
-Preview the built assets locally before deployment:
-```bash
 npm run preview
 ```
 
----
+## Documentation
 
-## Project Structure
+- [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
+- [`CODEBASE.md`](CODEBASE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 
-- `index.html` — HTML entry point hosting the root React container.
-- `package.json` — Tooling configuration and dependencies (including React, React-DOM, ExifReader, QRCode, and JsBarcode).
-- `.gitignore` — Standard gitignore configuration for Node/Vite/React projects.
-- `src/` — React source directory:
-  - `src/main.jsx` — Entry point rendering the root component.
-  - `src/App.jsx` — Core layout component managing sidebar, theme, search filters, and tool state.
-  - `src/styles.css` — Custom CSS variables, responsive designs, animations, and tool styling.
-  - `src/components/` — Individual utility tool React components.
-  - `src/utils/` — Utility helper scripts:
-    - `src/utils/passwordGenerator.js` — Core CSPRNG password generator with rejection sampling and batch prefetch buffer.
+## License
 
----
-
-- **Mobile Responsive Layout Fixes**: Fixed mobile layout and responsiveness issues across all tool components to support mobile portrait screen aspect ratios (e.g., 9:20 and 9:16). Specific updates include proportional canvas scaling for the **Random Wheel**, horizontal scrolling for the complex grid structure of the **RNA Codon Table**, optimized font scaling for the **Typing Speed Test**, centered swap button layout for the **Currency Converter**, HSL customize panel stacking for the **Color Code Converter**, and adjusted grid spacing, paddings, and font sizes across all elements on screens ≤768px and ≤500px wide.
-- **DNA/RNA Visual Direction representation**: Fixed a bug where choosing `3' → 5'` input direction did not orient and render the input strand at the bottom correctly with matching arrows and labels. The bottom strand now correctly acts as the input strand, pointing left-to-right (`3' → 5'`) and rendering with 100% opacity, while the top strand is faded as the target strand (`5' → 3'`). Renamed all references to the `3' → 5'` strand to **Anti-sense Strand** and `5' → 3'` to **Sense Strand** in both the legend and SVG indicators.
-- **DNA/RNA Codon Display & Amino Acid Translation**: Added a styled, button-based toggle panel letting the user choose between standard sequence, codon grouping (three-nucleotide groups separated by spaces, e.g. `5'-CAC GTG-3'`), and three-letter amino acid translation (e.g. `N-His-[GT]-C`). In **Figure Mode**, this dynamically draws visual brackets grouping every 3 nucleotides, labeled with the codon sequence or translated amino acid abbreviation (supporting degenerate/unknown bases, and rendering incomplete codons as `[codon]` like `[TG]` in brackets).
-- **Proline Ring Angle Correction**: Corrected the pyrrolidine ring angles of the Proline (Pro) Fischer projection to match chemically accurate L-configuration geometry (regular inverted pentagon where the side edges flare outward from the horizontal N-C(alpha) backbone rather than sloping inward), properly aligned the masking rectangles, and introduced standard 10px spacing gaps at the C-alpha and N terminals to prevent the ring path from overlapping the text labels.
-- **Fischer Projection Enlargement**: Scaled the entire Fischer projection SVG diagram to 1.2X its original size. Scaled all text font sizes and line stroke-widths in CSS proportionally by 1.2X, ensuring the precise 10px spacing and gaps between the bonds (`|`) and the labels are perfectly preserved and scaled.
-- **Codon InfoPanel Layout Upgrades**: Replaced the large codon code in the header with the amino acid name (e.g. Proline) as the primary title. Placed the 3-letter abbreviation badge (e.g. `Pro`) and the 1-letter code badge (e.g. `P`, with no "1-letter: " prefix text) directly next to the title in the header. Reordered the layout to position the base bubbles (1st, 2nd, 3rd) at the top of the card. Removed the redundant Selected Codon text line (as the selected codon bases are already detailed in the base bubbles) and positioned the synonymous codons section below the bubbles, while enlarging both the synonymous codons label and chips for better readability.
-- **Tryptophan (Trp) Side Chain and Layout Updates**: Mirrored the L-configuration Fischer projection side chain of Tryptophan (Trp) horizontally to correctly position the 6-membered benzene ring on the left and the 5-membered pyrrole ring on the right. Corrected the pentagon coordinates to form a clean, symmetric peak at the top C-3 vertex (shifting the shared vertical bond at `x=70` down-left/down-right to peaks at `y=95`), and centered `NH` at the bottom-right vertex `(90, 135)`. Grouped and ordered the abbreviation badges in the panel header (3-letter badge first, 1-letter badge second), and disabled flex-wrap in the title container to guarantee that the full name and both badges always stay on the same line. Reduced the size of the close button `X` mark in the codon card panels (width/height from `26px` to `20px` and font-size from `0.72rem` to `0.58rem`).
-- **Codon and Amino Acid Highlight Sync**: Fixed a bug where selecting a codon or clicking an amino acid button did not highlight all synonymous codons of that amino acid in the table. This occurred because syncing the selected codon to the typed passcode text triggered prefix matching and dimmed non-matching codons (e.g. dimming `AGA` when `CGU` was selected, despite both coding for Arginine). Restructured the highlighting and dimming logic to only apply the typed character prefix filter during partial/incomplete searches (when `selectedCodon` is null), and ensured that when a specific amino acid is clicked/highlighted, all other amino acids (even those within the same biochemical group) are correctly dimmed to prevent confusion.
-- **Start/Stop Codon Highlight Colors**: Customized the border-color, shadow, and background styles for highlighted start codons and stop codons. Highlighted stop codons (UAA, UAG, UGA) and Stop buttons now show in semantic red (`#dc2626`) instead of the default accent blue, and highlighted start codons (AUG) show in semantic green (`#16a34a`).
-- **Color Converter Category Move**: Moved the Color Converter tool from the Developer group to the Media group.
-- **Heading and Branding Font Update**: Replaced the previous "Outfit" headings font and branding font (as well as specific "Inter" branding/header fonts) with the premium "TASA Orbiter" font from Google Fonts. Imported the font stylesheet in `index.html`, defined a global heading CSS rule for `h1-h6` using `TASA Orbiter`, updated all specific style rules in `styles.css` that declared font-family, and synced the font family of the canvas rendering on the **Random Wheel**.
-- **Top Header Dropdowns & Footer Centering**: Replaced the desktop vertical sidebar layout with a top-aligned, sticky horizontal navigation header (`desktop-header`) on screens above 768px. The header features main groups (categories) with triangle chevron icons that rotate smoothly by 180 degrees using CSS transitions when the dropdown menus are hovered or active. Dropdown menus list and navigate to all sub-groups (tools). Integrated a compact search input and theme toggle inside the desktop header. Centered the footer copyright and brand info using a grid-based layout on desktop, while retaining standard flex/column layouts on mobile.
-- **Main Group Header Navigation**: Enabled category redirection and filtering. Clicking the main group category button in the desktop header redirects the user to the Home dashboard pre-filtered to show only the tools inside that selected category. Clicking any brand logo resets the Home dashboard filter to display "All" categories.
-- **Redundant Dashboard Tabs Removal**: Removed the secondary category filters tab bar (`home-tabs`) from the main dashboard since filtering is now handled natively via the desktop top-navigation header menu clicks.
-- **Light Gray Header Background**: Updated the `.desktop-header` background color to a sleek, modern light gray (`#f3f4f6`) in light theme to visually separate it from the white content elements on the dashboard, while retaining the deep charcoal background (`#151820`) in dark theme.
-- **Top Header Brand Text Visibility Fix**: Fixed a bug where the site name ("Small Web Tools") in the desktop header was hidden when `collapsed-sidebar` was active. Scoped the collapsed CSS selector strictly to `.collapsed-sidebar .sidebar .brand-text` to ensure the header brand logo text remains visible at all times.
-- **Top Header Sizing and Color Refinements**: Reduced the top header height (min-height to 48px, padding to 6px 48px) and removed its sticky positioning. Adjusted the site title font size down to `0.95rem` to match the logo icon height. Set the color of the category trigger navigation items to `var(--text-muted)` for a clean, minimal layout, while retaining the green accent color (`var(--accent)`) for the logo icon and site title text to maintain brand identity.
-- **Merged Calculation Group into Utilities & Sorted Alphabetically**: Deleted the redundant `Calculation` category group. Reassigned both the `Date Counter` and `Currency Converter` tools to the `Utilities` category. Alphabetized all 7 tools under the `Utilities` group (`Barcode Generator`, `Currency Converter`, `Date Counter`, `Password Generator`, `Password Strength`, `QR Code Generator`, and `Random Wheel`) inside the configuration arrays of both `App.jsx` and `HomeGrid.jsx` to ensure clean, sorted rendering in header dropdowns, home grid, and footer columns.
-- **Split QR/Barcode and Password/Strength Tools**: Separated the single `QR & Barcode` button into two distinct tools (`QR Code Generator` and `Barcode Generator`), and separated the `Password Generator` into `Password Generator` and `Password Strength Checker`. Both pairs continue to use their respective self-contained pages, but automatically open with the correct tab selected on navigation.
-- **Bioinformatics & DNA/RNA SVG Icons**: Created high-quality, modern, and production-ready custom SVG React component icons for the Bioinformatics category (`BioinfoIcon`) and the DNA/RNA Converter tool (`DnaRnaIcon`). The `BioinfoIcon` merges organic biology (a vertical DNA double helix) with programming/informatics motifs (framing code brackets `<` and `>` and circular data nodes at helix intersections) to ensure explicit representation and visual distinction. The `DnaRnaIcon` features two smooth sinusoidal intertwining curves connected by 4 horizontal base pair rungs. Both icons are self-contained with zero dependencies, pixel-perfect layout inside a 24x24 viewBox, and accept standard SVG props like `size`, `color`, and `className`. Imported and integrated them across the top header category list and home dashboard grid.
-- **Utilities Sub-Grouping and Sorting**: Grouped all tools in the `Utilities` category into two sub-groups: `Calculation` (containing `Currency Converter` and `Date Counter`) and `Utilities` (containing `Barcode Generator`, `Password Generator`, `Password Strength`, `QR Code Generator`, and `Random Wheel`). Both the sub-groups themselves and the tools inside them are sorted alphabetically. Implemented this grouped layout with custom styled headers, spacing, and indentations across the sidebar navigation, desktop header dropdown, home dashboard grid (in both main and filtered views), and footer links.
-- **Cloudflare Pages Functions integration (v0.3.0-alpha)**: Added Cloudflare Pages serverless functions (Workers) under the `/functions/api/` directory to serve `/api/iplookup`, `/api/extract-fonts`, and `/api/font-proxy` in production, eliminating CORS and JSON parsing errors on the deployed website.
-- **Office Metadata Homepage Fix**: Added the Office Metadata Reader tool to the Home Grid dashboard under the Media category so it is accessible from the home page (it was previously only visible in the navigation header and footer).
-- **Cleanup and Refactoring Fix-up Pass**: Completed a post-migration cleanup to align the configuration and styling of the project with the Tailwind CSS architecture:
-  - Split `.agents/AGENTS.md` back into distinct `/CLAUDE.md` (root instructions) and `/AGENTS.md` (root styling migration status) to resolve duplication and config drift.
-  - Refactored `HomeGrid.jsx`'s `ToolCard` to use the shared `Card` primitive (with `variant="home"`) instead of duplicate inline Tailwind classes.
-  - Updated the `Card` primitive to use `rounded-2xl` for the `home` variant (matching the original design's 16px border-radius) and allow theme overrides of hover/border styles.
-  - Consolidated the home dashboard tools list by passing `navItems` as a `tools` prop from `App.jsx` and defining a single source of truth for tool descriptions.
-  - Pruned 80+ dead CSS class rules (including `.home-card`, `.audiometa-*` legacy, and alert banner classes) from `src/styles.css`.
-- **Tailwind and Theme Variable Restore**: Restored the accidentally deleted `@tailwind` directives, Google Fonts import, and light-theme `:root` CSS custom properties at the top of `src/styles.css` to fix the broken site layout and enable styling/theme systems correctly.
-- **Toolcard Icon Size Fix**: Added explicit styling sizing rules (`[&_svg]:w-5 [&_svg]:h-5`) in the `ToolCard` icon container in `HomeGrid.jsx` to correct the size of dashboard tool icons to their intended 20px size.
-- **Conditional Footer Directory rendering**: Conditionally wrapped the large multi-column footer links grid in `App.jsx` with a home page check (`activeTool === 'tool-home'`) so that it is hidden on individual tool pages. This decreases the overall page height of tool pages so that short tool pages (e.g. Slashes Converter, Date Counter) fit entirely within the viewport without showing scrollbars or enabling scrolling.
-- **Scrollbar Disabling & Compact block sizing on Static Tool Pages**: Configured `<main>` to be `md:overflow-y-hidden` and the Tool Stage `<section>` to be `md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto` on a set of static tools (`staticTools`), while keeping both the top header and bottom footer copyright bar visible at all times. Since `overflow-y-auto` is used, the cards will scroll on extremely tiny viewport heights rather than being cut off, but on standard viewports they fit perfectly without triggering any scrollbar. To achieve this:
-  - Rearranged ASCII Converter (`AsciiConverter.jsx`) and Unicode Converter (`UnicodeConverter.jsx`) into a side-by-side two-column grid layout on desktop, cutting their vertical height in half.
-  - Reduced textarea sizes from `rows={6}` to `rows={3}` and changed Exclude Words input from textarea to single-line text input in Casing Switcher (`CasingSwitcher.jsx`).
-  - Reduced bulk textarea size from `rows={5}` to `rows={3}` in Currency Converter (`CurrencyCounter.jsx`).
-  - Wrapped font cards result grid in a `max-h-[300px] overflow-y-auto` container in Website Font Extractor (`WebsiteFontExtractor.jsx`).
-  - Wrapped options configuration form in a `lg:max-h-[480px] lg:overflow-y-auto` container in QR Code & Barcode Generator (`QrBarcodeGenerator.jsx`).
-  - Reduced dropzone and viewfinder container heights to `max-h-[220px]` in QR & Barcode Scanner (`QrBarcodeScanner.jsx`).
-  - Reduced canvas wrapper dimensions to `max-w-[340px]`, min-h to `min-h-[440px]`, and lists/edit textareas to `h-[220px]` in Random Wheel (`RandomWheel.jsx`).
-- **RNA Codon Table fixes**:
-  - **Alignment Shift**: Removed the absolute-positioned `ct-axis-right-container` (which was rendering an overlapping copy of U, C, A, G third-base labels and clashing with the row-aligned repeating grid). The third-base vertical right axis now renders using only the row-aligned grid cells, aligning perfectly with all 16 rows.
-  - **Filter Button Visibility**: Separated the default classes (`bg-card`, `text-text-muted`) and active classes dynamically on the codon filter buttons (`CodonTable.jsx`). This avoids Tailwind style compilation conflicts where both the white background and white text were applied on the active state in light theme, causing the active button label to become invisible.
-
-
+This repository does not currently include a license file. Treat its use and redistribution according to the repository owner's terms until a license is added.

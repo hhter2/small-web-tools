@@ -1,15 +1,34 @@
-# Privacy Policy
+# Privacy Policy & Terms of Service
 
 **First Published:** 20260719  
-**Author:** Rhosiqs  
+**Copyright:** Copyright (c) 2026 Rhosiqs
 
-## Core Terms
+---
 
-1. **First Publication & Author:** This Privacy Policy is first published on 20260719 by the author, Rhosiqs.
-2. **Open Source & License:** This project is open source. You can view the [LICENSE](LICENSE) file, which is licensed under the MIT License.
-3. **Client-Side Operations & Data Collection:** This website is a pure client-side tool. Most services run entirely in the browser. It does not upload, and does not have a backend server that collects, any data. Specific features requiring real-time data utilize public APIs, and data safety on these external services is not guaranteed.
-4. **Policy Amendments:** This policy may change at any time without prior notice.
-5. **Feature & Document Changes:** The website developer reserves the right to make any changes to the files, documentation, or features at any time without prior notice.
-6. **No Liability for Actions:** The website bears no responsibility for any errors, data loss, or property/financial loss resulting from subsequent actions taken based on conversion results or data obtained from this website.
-7. **For Reference Only:** All information and tools on this website are provided for reference only. The developer bears no legal liability for any use of this website.
-8. **Code Reuse:** The website code is open source and can be used in accordance with the MIT [LICENSE](LICENSE).
+## 1. Document Information
+* **Initial Publication Date:** July 19, 2026 (20260719)
+* **Author & Copyright Owner:** Rhosiqs
+
+## 2. Licensing & Open Source
+* **License Type:** This project is licensed under the MIT License.
+* **License Details:** You can view the full license terms in the [LICENSE](LICENSE) file.
+
+## 3. Data Processing & Privacy
+* **Client-Side Operations:** This website operates primarily as a client-side tool. Most conversion and parsing services run entirely in your browser.
+* **No Server Uploads:** No user-entered data is uploaded to, stored by, or collected by any backend server.
+* **External APIs:** Specific features requiring real-time external data fetching utilize public APIs. Data security and privacy on these external third-party services cannot be guaranteed.
+
+## 4. Policy Modifications
+* **Policy Updates:** This privacy policy may be updated, amended, or changed at any time by the developer without prior notice.
+
+## 5. Website Updates & Maintenance
+* **Developer Rights:** The developer reserves the right to modify, add, or remove any features, files, or documentation on this website at any time without prior notice.
+
+## 6. Limitation of Liability
+* **No Liability for Damages:** The website and its developer bear no responsibility for any errors, data loss, or property/financial damages resulting from subsequent actions taken based on conversion results or data obtained from this website.
+
+## 7. Disclaimers
+* **For Reference Only:** All tools, conversion results, and information provided on this website are for reference purposes only. Use of this website is at your own risk, and the developer accepts no legal liability for any outcomes.
+
+## 8. Code Availability
+* **Code Usage:** The source code of this website is fully open source. You may copy, modify, and distribute it in accordance with the terms of the MIT [LICENSE](LICENSE).

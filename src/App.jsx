@@ -545,6 +545,28 @@ export default function App() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const showToast = (message) => {
+    setToastMessage(message);
+  };
+
+  const handleEmailClick = () => {
+    navigator.clipboard.writeText("contact@rhosiqs.com")
+      .then(() => {
+        showToast("Email address copied to clipboard!");
+      })
+      .catch(() => {});
+  };
 
   // Close dropdowns on clicking outside
   useEffect(() => {
@@ -1357,7 +1379,7 @@ export default function App() {
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                 </a>
                 {/* Contact Email */}
-                <a href="mailto:contact@rhosiqs.com" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="Contact Email" aria-label="Contact Email">
+                <a href="mailto:contact@rhosiqs.com" onClick={handleEmailClick} className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="Contact Email" aria-label="Contact Email">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </a>
                 {/* GitHub */}
@@ -1376,6 +1398,16 @@ export default function App() {
             style={{ top: `${tooltipState.top}px`, left: `${tooltipState.left}px` }}
           >
             {tooltipState.text}
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 bg-[var(--bg-card-solid,var(--bg-card))] border border-border px-4 py-3 rounded-lg shadow-lg z-[9999] flex items-center gap-2 text-text-main text-[0.85rem] font-medium animate-fade-in">
+            <svg className="text-[#10b981] w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>{toastMessage}</span>
           </div>
         )}
       </div>

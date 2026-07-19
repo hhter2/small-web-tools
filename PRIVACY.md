@@ -1,34 +1,48 @@
-# Privacy Policy & Terms of Service
+# Privacy Policy & Terms of Use
 
-**First Published:** 20260719  
-**Copyright:** Copyright (c) 2026 Rhosiqs
+**First Published:** July 19, 2026  
+**Last Updated:** July 19, 2026
+
+Copyright (c) 2026 Rhosiqs
 
 ---
 
 ## 1. Document Information
-* **Initial Publication Date:** July 19, 2026 (20260719)
-* **Author & Copyright Owner:** Rhosiqs
 
-## 2. Licensing & Open Source
-* **License Type:** This project is licensed under the MIT License.
-* **License Details:** You can view the full license terms in the [LICENSE](LICENSE) file.
+This document was first published on July 19, 2026 and is maintained by Rhosiqs.
 
-## 3. Data Processing & Privacy
-* **Client-Side Operations:** This website operates primarily as a client-side tool. Most conversion and parsing services run entirely in your browser.
-* **No Server Uploads:** No user-entered data is uploaded to, stored by, or collected by any backend server.
-* **External APIs:** Specific features requiring real-time external data fetching utilize public APIs. Data security and privacy on these external third-party services cannot be guaranteed.
+## 2. Open-Source License
 
-## 4. Policy Modifications
-* **Policy Updates:** This privacy policy may be updated, amended, or changed at any time by the developer without prior notice.
+The source code of this website is open source, hosted on [GitHub](https://github.com/hhter2/small-web-tools), and licensed under the [MIT License](LICENSE).
 
-## 5. Website Updates & Maintenance
-* **Developer Rights:** The developer reserves the right to modify, add, or remove any features, files, or documentation on this website at any time without prior notice.
+The complete license terms are available in the [LICENSE](LICENSE) file.
+
+## 3. Data Processing and Privacy
+
+This website operates primarily as a client-side tool. Most processing, conversion, parsing, and file analysis operations are performed locally within your browser.
+
+Some preferences, presets, and tool history may be stored in your browser using local storage, session storage, or cookies.
+
+Certain features that require real-time data or server-side processing use Cloudflare Pages Functions and publicly available third-party APIs. Data required to perform these features, such as a website URL, IP address, map coordinates, or network test data, may be transmitted to the relevant services. The security and privacy of data processed by Cloudflare or other third-party services cannot be guaranteed by the developer.
+
+## 4. Policy Changes
+
+This policy may be modified, amended, or replaced at any time without prior notice.
+
+## 5. Website Changes and Maintenance
+
+The developer reserves the right to modify, add, remove, or discontinue any file, feature, function, or documentation on this website at any time without prior notice.
 
 ## 6. Limitation of Liability
-* **No Liability for Damages:** The website and its developer bear no responsibility for any errors, data loss, or property/financial damages resulting from subsequent actions taken based on conversion results or data obtained from this website.
 
-## 7. Disclaimers
-* **For Reference Only:** All tools, conversion results, and information provided on this website are for reference purposes only. Use of this website is at your own risk, and the developer accepts no legal liability for any outcomes.
+To the maximum extent permitted by applicable law, the website and its developer shall not be held liable for any errors, data loss, property loss, financial loss, or other damages resulting from actions taken based on conversion results, processed information, or data obtained through this website.
 
-## 8. Code Availability
-* **Code Usage:** The source code of this website is fully open source. You may copy, modify, and distribute it in accordance with the terms of the MIT [LICENSE](LICENSE).
+## 7. Disclaimer
+
+All tools, conversion results, data, and information provided by this website are for reference purposes only.
+
+Use of this website and reliance on its results are at the user's own risk. To the maximum extent permitted by applicable law, the website and its developer shall not be liable for any resulting loss or damage.
+
+## 8. Source Code Usage
+
+The source code of this website is publicly available and may be used, copied, modified, and distributed in accordance with the terms of the [MIT License](LICENSE).

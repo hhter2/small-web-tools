@@ -27,6 +27,7 @@ At build/startup, `vite.config.js` prefers the newest git tag for the displayed 
 ```text
 small-web-tools/
 ├── README.md                 User-facing site manual
+├── PRIVACY.md                User-facing privacy policy and disclaimers
 ├── TODO.md                   Backlog, completed work, and update process
 ├── CODEBASE.md               Architecture and maintenance reference
 ├── package.json              Scripts and dependencies

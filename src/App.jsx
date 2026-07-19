@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import HomeGrid from './components/HomeGrid.jsx';
 import SlashesConverter from './components/SlashesConverter.jsx';
 import CasingSwitcher from './components/CasingSwitcher.jsx';
@@ -538,6 +538,8 @@ export default function App() {
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchRef = useRef(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -546,9 +548,12 @@ export default function App() {
 
   // Close dropdowns on clicking outside
   useEffect(() => {
-    const handleOutsideClick = () => {
+    const handleOutsideClick = (e) => {
       setOpenDropdown(null);
       setLangDropdownOpen(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setIsSearchFocused(false);
+      }
     };
     window.addEventListener('click', handleOutsideClick);
     return () => {
@@ -587,6 +592,7 @@ export default function App() {
         if (searchInput) {
           searchInput.focus();
           searchInput.select();
+          setIsSearchFocused(true);
         }
       }
     };
@@ -654,7 +660,7 @@ export default function App() {
   const renderActiveTool = () => {
     switch (activeTool) {
       case 'tool-home':
-        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
       case 'tool-slash':
         return <SlashesConverter />;
       case 'tool-wc':
@@ -710,7 +716,7 @@ export default function App() {
       case 'tool-folder-analyzer':
         return <FolderAnalyzer />;
       default:
-        return <HomeGrid tools={navItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
   };
 
@@ -1014,7 +1020,7 @@ export default function App() {
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
-          <header className="hidden min-w-0 overflow-hidden border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] md:px-8 xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
+          <header className="hidden min-w-0 border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] md:px-8 xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
             {/* Left: Brand */}
             <div className="flex shrink-0 items-center">
               <div
@@ -1129,7 +1135,8 @@ export default function App() {
             <div className="flex shrink-0 items-center gap-2 xl:gap-4">
               {/* Header Search */}
               <div
-                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] xl:block"
+                ref={searchRef}
+                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] md:block"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative flex items-center">
@@ -1145,13 +1152,14 @@ export default function App() {
                     autoComplete="off"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
                   />
                   {/* Keyboard badge */}
                   <kbd className="absolute right-[10px] top-1/2 -translate-y-1/2 bg-[rgba(255,255,255,0.05)] border border-border text-text-muted rounded-[4px] px-[5px] py-[1px] text-[0.65rem] font-sans font-semibold pointer-events-none transition-opacity duration-150 [.header-search-input:focus~&]:opacity-0 html:not([data-theme='dark'])_&:bg-white">
                     /
                   </kbd>
                 </div>
-                {searchQuery.trim() !== '' && (
+                {searchQuery.trim() !== '' && isSearchFocused && (
                   <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-md w-[280px] max-h-[300px] overflow-y-auto shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] p-[6px] z-[1200] flex flex-col gap-0.5">
                     {filteredNavItems.length > 0 ? (
                       filteredNavItems.map(item => (

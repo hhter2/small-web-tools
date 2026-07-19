@@ -1,7 +1,7 @@
 {
   "name": "small-web-tools",
   "private": true,
-  "version": "0.3.0-alpha",
+  "version": "0.5.4-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",

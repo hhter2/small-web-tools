@@ -13,7 +13,7 @@
 | Item | Current implementation |
 | --- | --- |
 | Package | `small-web-tools` |
-| Version fallback | `0.3.0-alpha` from `package.json` |
+| Version | Dynamic from latest git tag (`v0.5.4-beta`) |
 | UI framework | React 18 |
 | Build tool | Vite 5 |
 | Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
@@ -104,7 +104,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-speedtest` | Speed Test | `NetworkSpeedTest.jsx` | Network |
 | `tool-color` | Color Converter | `ColorConverter.jsx` | Media |
 | `tool-imgmeta` | Image Metadata | `ImgMeta.jsx` | Media |
-| `tool-officemeta` | Office Metadata | `OfficeMeta.jsx` | Media |
+| `tool-docmeta` | Documents Metadata | `DocMeta.jsx` | Media |
 | `tool-audiometa` | Audio Metadata | `AudioMeta.jsx` | Media |
 | `tool-videometa` | Video Metadata | `VideoMeta.jsx` | Media |
 | `tool-mediasplit` | Media Splitter | `MediaSeparator.jsx` | Media |
@@ -138,7 +138,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 
 ### File metadata tools
 
-`ImgMeta.jsx`, `OfficeMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
+`ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
 
 ## APIs and development middleware
 

@@ -4,25 +4,49 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-// Automatically obtain current version from git tags
-let version = 'v1.0.0';
-try {
+function getLatestGitTag() {
   try {
-    execSync('git fetch --unshallow --tags', { stdio: 'ignore' });
-  } catch (fetchErr) {
     try {
       execSync('git fetch --tags', { stdio: 'ignore' });
     } catch (ignore) {}
-  }
-  const tags = execSync('git tag --sort=-v:refname').toString().trim().split(/\r?\n/);
-  version = tags[0] ? tags[0].trim() : 'v1.0.0';
-} catch (e) {
+    const tagsStr = execSync('git tag --sort=-v:refname', { encoding: 'utf-8' }).trim();
+    const tags = tagsStr ? tagsStr.split(/\r?\n/).map(t => t.trim()).filter(Boolean) : [];
+    if (tags.length > 0) {
+      return tags[0];
+    }
+  } catch (e) {}
+
+  try {
+    const desc = execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim();
+    if (desc) return desc;
+  } catch (e) {}
+
+  return null;
+}
+
+let latestTag = getLatestGitTag();
+let version = latestTag || '';
+
+if (!version) {
   try {
     const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-    version = `v${pkg.version}`;
-  } catch (err) {
-    version = 'v1.0.0';
-  }
+    if (pkg.version) {
+      version = pkg.version.startsWith('v') ? pkg.version : `v${pkg.version}`;
+    }
+  } catch (err) {}
+}
+
+if (latestTag) {
+  try {
+    const cleanTagVersion = latestTag.startsWith('v') ? latestTag.slice(1) : latestTag;
+    const pkgPath = path.resolve('./package.json');
+    const pkgContent = fs.readFileSync(pkgPath, 'utf-8');
+    const pkg = JSON.parse(pkgContent);
+    if (pkg.version !== cleanTagVersion) {
+      pkg.version = cleanTagVersion;
+      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
+    }
+  } catch (err) {}
 }
 
 const showChannelAlert = version.includes('alpha') || version.includes('beta');

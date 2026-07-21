@@ -47,13 +47,12 @@ const formatDate = (dateStr) => {
   }
 };
 
-// Helper to format duration strings (e.g., minutes or ISO 8601 duration PT01H23M45S)
+// Helper to format duration strings
 const formatMinutes = (minutesStr) => {
   if (!minutesStr) return '';
   let mins = parseInt(minutesStr, 10);
 
   if (isNaN(mins)) {
-    // Try to parse ISO 8601 duration e.g. PT1H30M
     const match = String(minutesStr).match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/i);
     if (match) {
       const h = parseInt(match[1] || '0', 10);
@@ -78,7 +77,7 @@ const formatMinutes = (minutesStr) => {
   return `${parts.join(' ')} (${mins} mins)`;
 };
 
-// Helper to get element textContent by checking localName (ignoring namespaces)
+// Helper to get element textContent by checking localName
 const getTagValue = (xmlDoc, tagName) => {
   const elements = xmlDoc.getElementsByTagName("*");
   for (let i = 0; i < elements.length; i++) {
@@ -155,7 +154,7 @@ const extractWorksheets = async (zip) => {
   }
 };
 
-// Helper to parse Custom Properties (docProps/custom.xml)
+// Helper to parse Custom Properties
 const parseCustomProperties = (xmlDoc) => {
   const properties = xmlDoc.getElementsByTagName("property");
   const customData = {};
@@ -200,7 +199,7 @@ const decodePdfString = (str) => {
   return str;
 };
 
-// Helper to parse PDF metadata
+// Helper to parse comprehensive PDF metadata
 const parsePdfFile = async (file) => {
   const arrayBuffer = await file.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
@@ -211,6 +210,21 @@ const parsePdfFile = async (file) => {
   const appData = {};
   const customData = {};
 
+  // 1. PDF Version from file header
+  const headerMatch = text.slice(0, 1024).match(/%PDF-(\d+\.\d+)/);
+  if (headerMatch) {
+    appData.PdfVersion = `PDF ${headerMatch[1]}`;
+  }
+
+  // 2. Linearized (Fast Web View)
+  const isLinearized = /\/Linearized\s+\d+/.test(text.slice(0, 1024));
+  appData.Linearized = isLinearized ? 'Yes (Fast Web View enabled)' : 'No';
+
+  // 3. Encryption / Password Protection
+  const isEncrypted = /\/Encrypt\s+\d+/.test(text);
+  appData.Encrypted = isEncrypted ? 'Yes (Encrypted / Security applied)' : 'No (Unencrypted)';
+
+  // 4. Find /Info dictionary in PDF
   const infoMatch = text.match(/\/Info\s+(\d+)\s+(\d+)\s+R/);
   let infoBlock = '';
   if (infoMatch) {
@@ -245,8 +259,14 @@ const parsePdfFile = async (file) => {
     coreData.modified = extractPdfKey('ModDate');
     appData.Application = extractPdfKey('Creator');
     appData.Producer = extractPdfKey('Producer');
+
+    const trapped = infoBlock.match(/\/Trapped\s*\/(\w+)/);
+    if (trapped) {
+      appData.Trapped = trapped[1];
+    }
   }
 
+  // 5. XMP Metadata Block
   const xmpMatch = text.match(/<x:xmpmeta[\s\S]*?<\/x:xmpmeta>/i);
   if (xmpMatch) {
     try {
@@ -261,11 +281,26 @@ const parsePdfFile = async (file) => {
       if (!coreData.modified) coreData.modified = getTagValue(xmlDoc, 'ModifyDate');
       if (!appData.Application) appData.Application = getTagValue(xmlDoc, 'CreatorTool');
       if (!appData.Producer) appData.Producer = getTagValue(xmlDoc, 'Producer');
+
+      const pdfaPart = getTagValue(xmlDoc, 'part');
+      const pdfaConf = getTagValue(xmlDoc, 'conformance');
+      if (pdfaPart) {
+        appData.PdfStandard = `PDF/A-${pdfaPart}${pdfaConf ? pdfaConf.toUpperCase() : ''}`;
+      }
+
+      const docId = getTagValue(xmlDoc, 'DocumentID');
+      const instId = getTagValue(xmlDoc, 'InstanceID');
+      if (docId) customData['XMP Document ID'] = docId;
+      if (instId) customData['XMP Instance ID'] = instId;
+
+      const rights = getTagValue(xmlDoc, 'rights');
+      if (rights) coreData.category = `Copyright: ${rights}`;
     } catch (e) {
       console.warn('XMP parse error', e);
     }
   }
 
+  // 6. Count Pages
   let pageCount = 0;
   const countMatch = text.match(/\/Type\s*\/Pages[\s\S]*?\/Count\s+(\d+)/);
   if (countMatch) {
@@ -277,6 +312,62 @@ const parsePdfFile = async (file) => {
   if (pageCount > 0) {
     appData.Pages = String(pageCount);
   }
+
+  // 7. Page Dimensions (MediaBox) & Orientation
+  const mediaBoxMatch = text.match(/\/MediaBox\s*\[\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*\]/);
+  if (mediaBoxMatch) {
+    const x1 = parseFloat(mediaBoxMatch[1]);
+    const y1 = parseFloat(mediaBoxMatch[2]);
+    const x2 = parseFloat(mediaBoxMatch[3]);
+    const y2 = parseFloat(mediaBoxMatch[4]);
+    const widthPt = Math.abs(x2 - x1);
+    const heightPt = Math.abs(y2 - y1);
+    
+    const widthMm = Math.round(widthPt * 0.352778);
+    const heightMm = Math.round(heightPt * 0.352778);
+    const widthIn = (widthPt / 72).toFixed(2);
+    const heightIn = (heightPt / 72).toFixed(2);
+
+    let paperName = '';
+    if (Math.abs(widthMm - 210) < 5 && Math.abs(heightMm - 297) < 5) paperName = ' (A4)';
+    else if (Math.abs(widthMm - 297) < 5 && Math.abs(heightMm - 210) < 5) paperName = ' (A4)';
+    else if (Math.abs(widthMm - 216) < 5 && Math.abs(heightMm - 279) < 5) paperName = ' (Letter)';
+    else if (Math.abs(widthMm - 279) < 5 && Math.abs(heightMm - 216) < 5) paperName = ' (Letter)';
+
+    const orientation = widthPt > heightPt ? 'Landscape' : 'Portrait';
+    appData.PageDimensions = `${widthMm} × ${heightMm} mm (${widthIn} × ${heightIn} in)${paperName}`;
+    appData.PageOrientation = orientation;
+  }
+
+  // 8. Embedded Fonts
+  const fontMatches = text.match(/\/BaseFont\s*\/([A-Za-z0-9+_-]+)/g);
+  if (fontMatches) {
+    const fonts = Array.from(new Set(fontMatches.map(m => m.replace(/\/BaseFont\s*\//, ''))));
+    appData.EmbeddedFonts = fonts.slice(0, 10).join(', ') + (fonts.length > 10 ? ` (+${fonts.length - 10} more)` : '');
+    appData.FontCount = String(fonts.length);
+  }
+
+  // 9. Embedded Images Count
+  const imageMatches = text.match(/\/Subtype\s*\/Image\b/g);
+  if (imageMatches) {
+    appData.Images = String(imageMatches.length);
+  }
+
+  // 10. Interactive Form (AcroForm)
+  const hasAcroForm = /\/AcroForm\b/.test(text);
+  appData.InteractiveForm = hasAcroForm ? 'Yes (Contains form fields)' : 'No';
+
+  // 11. Tagged / Accessible PDF
+  const isTagged = /\/MarkInfo[\s\S]*?\/Marked\s+true/.test(text) || /\/StructTreeRoot\b/.test(text);
+  appData.TaggedPdf = isTagged ? 'Yes (Tagged PDF for accessibility)' : 'No';
+
+  // 12. Bookmarks / Outlines
+  const hasOutlines = /\/Outlines\s+\d+/.test(text);
+  appData.Bookmarks = hasOutlines ? 'Yes (Contains bookmarks/outline)' : 'No';
+
+  // 13. JavaScript Actions
+  const hasJS = /\/JavaScript\b|\/JS\b/.test(text);
+  appData.JavaScriptActions = hasJS ? 'Yes (Contains JavaScript code)' : 'No';
 
   return { coreData, appData, customData };
 };
@@ -429,6 +520,20 @@ const FIELD_DESCRIPTIONS = {
   Template: 'Template used',
   TotalTime: 'Total editing time',
   Producer: 'PDF producer / converter engine',
+
+  PdfVersion: 'PDF specification version',
+  Linearized: 'Optimized for Fast Web View',
+  Encrypted: 'PDF encryption and security status',
+  PageDimensions: 'Physical page dimensions and paper size',
+  PageOrientation: 'Page orientation (Portrait / Landscape)',
+  EmbeddedFonts: 'List of embedded font names',
+  FontCount: 'Number of embedded fonts',
+  InteractiveForm: 'Interactive AcroForm fields presence',
+  TaggedPdf: 'Tagged PDF accessibility status',
+  Bookmarks: 'Document outline / bookmarks presence',
+  JavaScriptActions: 'Contains JavaScript scripts/actions',
+  PdfStandard: 'ISO Standard compliance (e.g. PDF/A, PDF/X)',
+  Trapped: 'Print trapping status',
   
   Pages: 'Page count',
   Words: 'Word count',
@@ -468,7 +573,11 @@ const COMPARE_FIELDS = [
 
   { label: 'Application', fn: (f) => f.app.Application },
   { label: 'App Version', fn: (f) => f.app.AppVersion },
-  { label: 'Producer', fn: (f) => f.app.Producer },
+  { label: 'PDF Specification', fn: (f) => f.app.PdfVersion },
+  { label: 'PDF Producer', fn: (f) => f.app.Producer },
+  { label: 'Encrypted', fn: (f) => f.app.Encrypted },
+  { label: 'Fast Web View', fn: (f) => f.app.Linearized },
+  { label: 'Page Dimensions', fn: (f) => f.app.PageDimensions },
   { label: 'Company', fn: (f) => f.app.Company },
   { label: 'Manager', fn: (f) => f.app.Manager },
   { label: 'Template', fn: (f) => f.app.Template },
@@ -960,10 +1069,15 @@ export default function DocMeta() {
     const appFields = [
       { key: 'Application Software', dbKey: 'Application', rawValue: file.app.Application },
       { key: 'Application Version', dbKey: 'AppVersion', rawValue: file.app.AppVersion },
+      { key: 'PDF Specification Version', dbKey: 'PdfVersion', rawValue: file.app.PdfVersion },
       { key: 'PDF Producer', dbKey: 'Producer', rawValue: file.app.Producer },
+      { key: 'Encrypted / Protected', dbKey: 'Encrypted', rawValue: file.app.Encrypted },
+      { key: 'Fast Web View (Linearized)', dbKey: 'Linearized', rawValue: file.app.Linearized },
+      { key: 'PDF Conformance Standard', dbKey: 'PdfStandard', rawValue: file.app.PdfStandard },
       { key: 'Company', dbKey: 'Company', rawValue: file.app.Company },
       { key: 'Manager', dbKey: 'Manager', rawValue: file.app.Manager },
       { key: 'Template Used', dbKey: 'Template', rawValue: file.app.Template },
+      { key: 'Print Trapping State', dbKey: 'Trapped', rawValue: file.app.Trapped },
     ];
     appFields.forEach(f => {
       if (f.rawValue !== undefined && f.rawValue !== '') {
@@ -981,13 +1095,21 @@ export default function DocMeta() {
     if (['docx', 'odt', 'pdf'].includes(file.type)) {
       const docFields = [
         { key: 'Total Pages', dbKey: 'Pages', rawValue: file.app.Pages },
+        { key: 'Page Dimensions', dbKey: 'PageDimensions', rawValue: file.app.PageDimensions },
+        { key: 'Page Orientation', dbKey: 'PageOrientation', rawValue: file.app.PageOrientation },
+        { key: 'Embedded Fonts Count', dbKey: 'FontCount', rawValue: file.app.FontCount },
+        { key: 'Embedded Fonts List', dbKey: 'EmbeddedFonts', rawValue: file.app.EmbeddedFonts },
+        { key: 'Embedded Images Count', dbKey: 'Images', rawValue: file.app.Images },
+        { key: 'Interactive Form (AcroForm)', dbKey: 'InteractiveForm', rawValue: file.app.InteractiveForm },
+        { key: 'Tagged PDF (Accessibility)', dbKey: 'TaggedPdf', rawValue: file.app.TaggedPdf },
+        { key: 'Document Bookmarks / Outlines', dbKey: 'Bookmarks', rawValue: file.app.Bookmarks },
+        { key: 'JavaScript Scripts / Actions', dbKey: 'JavaScriptActions', rawValue: file.app.JavaScriptActions },
         { key: 'Words Count', dbKey: 'Words', rawValue: file.app.Words },
         { key: 'Characters', dbKey: 'Characters', rawValue: file.app.Characters },
         { key: 'Characters (with spaces)', dbKey: 'CharactersWithSpaces', rawValue: file.app.CharactersWithSpaces },
         { key: 'Paragraphs', dbKey: 'Paragraphs', rawValue: file.app.Paragraphs },
         { key: 'Lines', dbKey: 'Lines', rawValue: file.app.Lines },
         { key: 'Tables', dbKey: 'Tables', rawValue: file.app.Tables },
-        { key: 'Images', dbKey: 'Images', rawValue: file.app.Images },
       ];
       docFields.forEach(f => {
         if (f.rawValue !== undefined && f.rawValue !== '') {
@@ -1131,7 +1253,9 @@ export default function DocMeta() {
     const appItems = [
       { label: 'Application Software', value: fileToUse.app.Application, description: FIELD_DESCRIPTIONS.Application },
       { label: 'Application Version', value: fileToUse.app.AppVersion, description: FIELD_DESCRIPTIONS.AppVersion },
-      { label: 'Producer', value: fileToUse.app.Producer, description: FIELD_DESCRIPTIONS.Producer }
+      { label: 'PDF Specification Version', value: fileToUse.app.PdfVersion, description: FIELD_DESCRIPTIONS.PdfVersion },
+      { label: 'PDF Producer', value: fileToUse.app.Producer, description: FIELD_DESCRIPTIONS.Producer },
+      { label: 'Page Dimensions', value: fileToUse.app.PageDimensions, description: FIELD_DESCRIPTIONS.PageDimensions }
     ].filter(item => item.value !== undefined && item.value !== '');
 
     if (fileToUse.app.TotalTime !== undefined && fileToUse.app.TotalTime !== '') {

@@ -18,7 +18,7 @@ import CodonTable from './components/CodonTable.jsx';
 import NetworkSpeedTest from './components/NetworkSpeedTest.jsx';
 import QrBarcodeGenerator from './components/QrBarcodeGenerator.jsx';
 import PasswordGenerator from './components/PasswordGenerator.jsx';
-import OfficeMeta from './components/OfficeMeta.jsx';
+import DocMeta from './components/DocMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
@@ -29,7 +29,7 @@ import MediaSeparator from './components/MediaSeparator';
 import FolderAnalyzer from './components/FolderAnalyzer.jsx';
 
 
-const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.0.0';
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
 const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '';
 
@@ -333,11 +333,11 @@ const navItems = [
     )
   },
   {
-    id: 'tool-officemeta',
-    name: 'Office Metadata',
-    tooltip: 'Office Metadata Reader',
+    id: 'tool-docmeta',
+    name: 'Documents Metadata',
+    tooltip: 'Documents Metadata Reader',
     category: 'media',
-    desc: 'Show the metadata from office files.',
+    desc: 'Show metadata from document files (Office, OpenOffice, and PDF).',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -709,8 +709,9 @@ export default function App() {
         return <NetworkSpeedTest />;
       case 'tool-imgmeta':
         return <ImgMeta />;
+      case 'tool-docmeta':
       case 'tool-officemeta':
-        return <OfficeMeta />;
+        return <DocMeta />;
       case 'tool-audiometa':
         return <AudioMeta />;
       case 'tool-videometa':

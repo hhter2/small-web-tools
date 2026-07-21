@@ -1307,7 +1307,7 @@ export default function App() {
           <footer className="mt-auto w-full bg-footer border-t border-border">
             {/* Footer Links Grid */}
             {activeTool === 'tool-home' && (
-              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 border-b border-border max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
+              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
                 {categories.map(cat => {
                   const catItems = navItems.filter(item => item.category === cat.id);
                   if (catItems.length === 0) return null;

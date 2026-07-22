@@ -273,6 +273,7 @@ export default function NetworkSpeedTest() {
   const [clientOrg, setClientOrg] = useState(null);
   const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy | custom
   const [customDownload, setCustomDownload] = useState(100);
+  const [customUpload, setCustomUpload] = useState(25);
   const [isConsentGranted, setIsConsentGranted] = useState(() => hasConsent('speedtest'));
 
   useEffect(() => {
@@ -330,10 +331,10 @@ export default function NetworkSpeedTest() {
       let uploadBytes = 25 * 1024 * 1024;
 
       if (dataLimit === 'custom') {
-        const dlMB = parseFloat(customDownload) || 100;
-        const ulMB = parseFloat(customUpload) || 25;
-        downloadBytes = Math.round(dlMB * 1024 * 1024);
-        uploadBytes = Math.round(ulMB * 1024 * 1024);
+        const dlMB = Number(customDownload) || 100;
+        const ulMB = Number(customUpload) || 25;
+        downloadBytes = Math.round(dlMB * 1_000_000);
+        uploadBytes = Math.round(ulMB * 1_000_000);
       } else {
         const config = DATA_CONFIG[dataLimit];
         downloadBytes = config.downloadBytes;
@@ -472,7 +473,7 @@ export default function NetworkSpeedTest() {
                 min="1"
                 max="1000"
                 value={customDownload}
-                onChange={(e) => setCustomDownload(e.target.value)}
+                onChange={(e) => setCustomDownload(Number(e.target.value))}
                 disabled={isRunning}
                 className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none w-[95px] text-sm"
               />
@@ -487,7 +488,7 @@ export default function NetworkSpeedTest() {
                 min="1"
                 max="1000"
                 value={customUpload}
-                onChange={(e) => setCustomUpload(e.target.value)}
+                onChange={(e) => setCustomUpload(Number(e.target.value))}
                 disabled={isRunning}
                 className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none w-[95px] text-sm"
               />

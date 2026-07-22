@@ -389,7 +389,7 @@ export default function CurrencyCounter() {
             <textarea
               id="currency-bulk-input"
               className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
-              rows="3"
+              rows={3}
               placeholder={"100\n250.50\n1,234.56"}
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}

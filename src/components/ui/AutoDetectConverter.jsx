@@ -25,7 +25,7 @@ export default function AutoDetectConverter({
   analyze,
   editorMinHeightClass = 'min-h-[210px]',
   editorRows = 7,
-  renderSupplementary,
+  renderSupplementary = null,
 }) {
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('auto'); // 'auto' | 'encode' | 'decode'

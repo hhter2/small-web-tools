@@ -21,6 +21,15 @@ const BINARY_EXTENSIONS = new Set([
 
 const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
 
+export function escapeXml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
 function parseGitignoreLineToRegex(rawLine) {
   let line = rawLine;
   if (!line || line.startsWith('#')) return null;
@@ -246,7 +255,7 @@ export default function FolderAnalyzer() {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target.result;
+        const text = String(e.target?.result || '');
         if (!text) {
           resolve(0);
           return;
@@ -1237,8 +1246,7 @@ export default function FolderAnalyzer() {
       <input
         type="file"
         ref={folderInputRef}
-        webkitdirectory="true"
-        directory="true"
+        {...{ webkitdirectory: '', directory: '' }}
         multiple
         style={{ display: 'none' }}
         onChange={handleFolderSelect}
@@ -1250,8 +1258,9 @@ export default function FolderAnalyzer() {
           <div 
             className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5"
             onClick={() => {
-              if (typeof window.showDirectoryPicker === 'function') {
-                window.showDirectoryPicker().then(async (dirHandle) => {
+              const directoryPicker = window.showDirectoryPicker;
+              if (directoryPicker) {
+                directoryPicker().then(async (dirHandle) => {
                   const files = [];
                   async function getFiles(handle, path = dirHandle.name) {
                     for await (const entry of handle.values()) {

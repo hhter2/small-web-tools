@@ -914,7 +914,7 @@ export default function TypingSpeedTest() {
       setUploadedFileName(file.name);
       const reader = new FileReader();
       reader.onload = (event) => {
-        const text = event.target.result || '';
+        const text = String(event.target?.result || '');
         setCustomText(text);
         setSelectedPreset('custom');
       };
@@ -1455,7 +1455,7 @@ export default function TypingSpeedTest() {
               )}
               <textarea
                 className="w-full bg-transparent border-none text-text-main outline-none resize-none p-5 font-mono text-base placeholder-text-muted/40 min-h-[140px]"
-                rows="6"
+                rows={6}
                 placeholder="Start typing here... Timer will begin automatically on the first keystroke."
                 value={typedText}
                 onChange={handleInputChange}

@@ -16,6 +16,11 @@ const escapeWifiString = (str) => {
             .replace(/"/g, '\\"');
 };
 
+const estimateTextWidth = (text, fontSize, weight) => {
+  const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
+  return text.length * fontSize * k;
+};
+
 // Barcode input validator
 const validateBarcode = (value, format) => {
   if (!value) return "Input cannot be empty";
@@ -177,6 +182,11 @@ const renderCustomQR = (canvas, text, options) => {
     if (!logoImg) return false;
     const pad = 0.5; // padding in module counts
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
+  };
+
+  const estimateTextWidth = (text, fontSize, weight) => {
+    const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
+    return text.length * fontSize * k;
   };
 
   // Calculate text bounding box for clearing modules behind embedded text
@@ -680,11 +690,6 @@ const generateQRSVG = (text, options) => {
     svgContent += `<image x="${logoX}" y="${logoY}" width="${logoPx}" height="${logoPx}" href="${logoImgData}" clip-path="url(#${clipId})" />\n`;
   }
 
-  const estimateTextWidth = (text, size, weight) => {
-    const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
-    return text.length * size * k;
-  };
-
   // Draw External Label SVG
   if (hasLabel) {
     const labelX = size / 2;
@@ -1095,7 +1100,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     setLogoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target.result;
+      const dataUrl = String(event.target?.result || '');
       setLogoBase64(dataUrl);
 
       const img = new Image();
@@ -1213,7 +1218,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   };
 
   // Reusable accordion header button
-  const AccordionHeader = ({ sectionKey, label, badge }) => (
+  const AccordionHeader = ({ sectionKey, label, badge = null }) => (
     <button
       type="button"
       onClick={() => toggleSection(sectionKey)}
@@ -1316,7 +1321,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     as="textarea"
                     id="qr-text"
                     label="Plain Text Content"
-                    rows="3"
+                    rows={3}
                     placeholder="Type your text content here..."
                     value={qrText}
                     onChange={(e) => setQrText(e.target.value)}
@@ -1504,7 +1509,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               step="15"
                               className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                               value={qrGradAngle} 
-                              onChange={(e) => setQrGradAngle(e.target.value)}
+                              onChange={(e) => setQrGradAngle(Number(e.target.value))}
                             />
                           </div>
                         )}

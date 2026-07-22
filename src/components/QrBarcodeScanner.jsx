@@ -27,7 +27,9 @@ const FORMAT_LABELS = {
 // ── Play a retro beep sound using the Web Audio API ──────────────────────────
 const playBeep = () => {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
     oscillator.connect(gainNode);
@@ -333,6 +335,7 @@ export default function QrBarcodeScanner() {
   // Result state
   const [lastResult, setLastResult] = useState(null); // { text, format }
   const [history, setHistory] = useState([]);
+  const parsed = lastResult ? parseQRPayload(lastResult.text) : null;
 
   const html5QrcodeRef = useRef(null);
   const scannerMountedRef = useRef(false);

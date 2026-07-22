@@ -648,6 +648,7 @@ export default function App() {
     const handleKeyDown = (e) => {
       if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
         e.preventDefault();
+        /** @type {HTMLInputElement | null} */
         const searchInput = document.querySelector('.header-search-input');
         if (searchInput) {
           searchInput.focus();
@@ -719,7 +720,7 @@ export default function App() {
   // Render active tool component
   const renderActiveTool = () => {
     if (activeTool === 'tool-home') {
-      return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+      return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} />;
     }
 
     let toolNode;
@@ -780,7 +781,7 @@ export default function App() {
       case 'tool-folder-analyzer':
         toolNode = <FolderAnalyzer />; break;
       default:
-        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} />;
     }
 
     return (

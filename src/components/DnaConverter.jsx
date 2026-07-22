@@ -668,7 +668,7 @@ export default function DnaConverter() {
         <textarea
           id="dna-input"
           className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
-          rows="3"
+          rows={3}
           placeholder="Enter sequence (e.g., 5'-CACGT-3' or simply CACGT)"
           value={input}
           onChange={(e) => setInput(e.target.value)}

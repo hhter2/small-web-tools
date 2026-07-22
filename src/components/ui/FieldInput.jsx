@@ -27,15 +27,21 @@ const errorControl = 'border-red-400 focus:border-red-500 focus:ring-red-200';
 
 export default function FieldInput({
   label,
-  hint,
-  error,
+  hint = null,
+  error = null,
   as = 'input', // 'input' | 'textarea'
   className = '',
   id,
   ...rest
 }) {
-  const Tag = as;
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+  const controlProps = {
+    id: inputId,
+    className: [baseControl, error ? errorControl : '', className].filter(Boolean).join(' '),
+    'aria-invalid': Boolean(error) || undefined,
+    'aria-describedby': error || hint ? `${inputId}-note` : undefined,
+    ...rest,
+  };
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -44,13 +50,7 @@ export default function FieldInput({
           {label}
         </label>
       )}
-      <Tag
-        id={inputId}
-        className={[baseControl, error ? errorControl : '', className].filter(Boolean).join(' ')}
-        aria-invalid={Boolean(error) || undefined}
-        aria-describedby={error || hint ? `${inputId}-note` : undefined}
-        {...rest}
-      />
+      {as === 'textarea' ? <textarea {...controlProps} /> : <input {...controlProps} />}
       {(error || hint) && (
         <span
           id={`${inputId}-note`}

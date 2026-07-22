@@ -40,6 +40,8 @@ Thumbs.db
 
 # Temporary/test development files
 test-*.js
+test-results/
+playwright-report/
 sample.cr3
 thumbnail.jpg
 *.tmp

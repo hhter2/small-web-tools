@@ -632,7 +632,9 @@ async function parseAudioFile(file) {
   const arrayBuffer = await file.arrayBuffer();
   const uint8 = new Uint8Array(arrayBuffer);
 
+  /** @type {Record<string, any>} */
   let technical = {};
+  /** @type {Record<string, any>} */
   let tags = {};
   let coverArt = null;
   let format = ext.toUpperCase();
@@ -653,6 +655,7 @@ async function parseAudioFile(file) {
         bitrate: mp3tech.bitrate,
         sampleRate: mp3tech.sampleRate,
         numChannels: 2, // Default; proper VBR/Xing parsing would refine this
+        bitsPerSample: 0,
         audioFormat: 'MP3 (MPEG Layer III)',
       };
     }

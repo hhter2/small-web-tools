@@ -617,9 +617,10 @@ export default function ColorConverter() {
   // Eyedropper API
   const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
   const handleEyeDropper = async () => {
-    if (!hasEyeDropper) return;
+    const EyeDropperClass = window.EyeDropper;
+    if (!hasEyeDropper || !EyeDropperClass) return;
     try {
-      const eyeDropper = new window.EyeDropper();
+      const eyeDropper = new EyeDropperClass();
       const result = await eyeDropper.open();
       const hex = result.sRGBHex;
       setInput(hex);
@@ -885,7 +886,7 @@ export default function ColorConverter() {
 
     fileReader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target.result);
+        const parsed = JSON.parse(String(event.target?.result || ''));
         if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string' && item.startsWith('#'))) {
           setPresets(parsed);
           try {

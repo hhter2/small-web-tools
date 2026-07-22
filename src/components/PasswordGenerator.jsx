@@ -20,7 +20,7 @@ function getUnbiasedRandomInt(max) {
   const limit = 256 - (256 % max);
   const buffer = new Uint8Array(1);
   const cryptoSrc = typeof window !== 'undefined'
-    ? (window.crypto || window.msCrypto)
+    ? window.crypto
     : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
 
   if (!cryptoSrc || !cryptoSrc.getRandomValues) {
@@ -142,7 +142,9 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
         includeRareSpecial: currentRare,
         debug: true
       });
-      setPasswordData(data);
+      if (typeof data === 'object') {
+        setPasswordData(data);
+      }
     } catch (err) {
       console.error(err);
     }

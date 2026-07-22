@@ -210,7 +210,7 @@ export default function RandomWheel() {
     // Keyboard Shortcuts
     const handleKeyDown = (e) => {
       // Do not intercept if focus is inside input/textarea fields
-      const activeEl = document.activeElement;
+      const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
         if (e.key === "Escape" && activeEl.id === "wheel-text-input") {
           setIsEditing(false);
@@ -246,7 +246,7 @@ function getUnbiasedRandomInt(max) {
   const limit = 256 - (256 % max);
   const buffer = new Uint8Array(1);
   const cryptoSrc = typeof window !== 'undefined'
-    ? (window.crypto || window.msCrypto)
+    ? window.crypto
     : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
 
   if (!cryptoSrc || !cryptoSrc.getRandomValues) {

@@ -767,14 +767,14 @@ export default function ImgMeta() {
               }
             } else {
               try {
-                parsedTags = ExifReader.load(arrayBuffer);
+                parsedTags = ExifReader.load(/** @type {ArrayBuffer} */ (arrayBuffer));
               } catch (exifErr) {
                 console.warn("ExifReader failed:", exifErr);
                 parsedTags = { 'Error': { value: exifErr.message, description: 'No EXIF metadata found or format unsupported.' } };
               }
               
               try {
-                expandedTags = ExifReader.load(arrayBuffer, { expanded: true });
+                expandedTags = ExifReader.load(/** @type {ArrayBuffer} */ (arrayBuffer), { expanded: true });
               } catch (e) {
                 expandedTags = {};
               }
@@ -782,7 +782,7 @@ export default function ImgMeta() {
               // Load preview URL
               previewSrc = await new Promise((resPreview) => {
                 const imgReader = new FileReader();
-                imgReader.onload = (ev) => resPreview(ev.target.result);
+                imgReader.onload = (ev) => resPreview(String(ev.target?.result || ''));
                 imgReader.onerror = () => resPreview('');
                 imgReader.readAsDataURL(file);
               });
@@ -1693,8 +1693,8 @@ export default function ImgMeta() {
                               height="320"
                               frameBorder="0"
                               scrolling="no"
-                              marginHeight="0"
-                              marginWidth="0"
+                              marginHeight={0}
+                              marginWidth={0}
                               src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
                               className="w-full border-none"
                             ></iframe>
@@ -1744,8 +1744,8 @@ export default function ImgMeta() {
                               height="320"
                               frameBorder="0"
                               scrolling="no"
-                              marginHeight="0"
-                              marginWidth="0"
+                              marginHeight={0}
+                              marginWidth={0}
                               src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
                               className="w-full border-none"
                             ></iframe>

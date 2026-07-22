@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { createGitignoreMatcher, escapeXml } from '../lib/folderAnalyzerUtils';
 
 
 const TEXT_EXTENSIONS = new Set([
@@ -21,139 +22,8 @@ const BINARY_EXTENSIONS = new Set([
 
 const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
 
-export function escapeXml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
-}
-
-function parseGitignoreLineToRegex(rawLine) {
-  let line = rawLine;
-  if (!line || line.startsWith('#')) return null;
-  line = line.trim();
-  if (!line || line.startsWith('#')) return null;
-
-  let isNegated = false;
-  if (line.startsWith('!')) {
-    isNegated = true;
-    line = line.slice(1);
-  } else if (line.startsWith('\\!')) {
-    line = line.slice(1);
-  }
-
-  if (line.startsWith('\\#')) {
-    line = line.slice(1);
-  }
-
-  let isDirOnly = false;
-  if (line.endsWith('/')) {
-    isDirOnly = true;
-    line = line.slice(0, -1);
-  }
-
-  const isAnchored = line.startsWith('/') || line.includes('/');
-  if (line.startsWith('/')) {
-    line = line.slice(1);
-  }
-
-  let regexStr = '';
-  let i = 0;
-  while (i < line.length) {
-    const char = line[i];
-    if (char === '*') {
-      if (line[i + 1] === '*') {
-        if (line[i + 2] === '/') {
-          regexStr += '(?:(?:^|/)[^/]+)*?/';
-          i += 3;
-          continue;
-        } else {
-          regexStr += '.*';
-          i += 2;
-          continue;
-        }
-      } else {
-        regexStr += '[^/]*';
-        i++;
-        continue;
-      }
-    } else if (char === '?') {
-      regexStr += '[^/]';
-      i++;
-      continue;
-    } else if (['.', '+', '^', '$', '(', ')', '{', '}', '|', '\\'].includes(char)) {
-      regexStr += '\\' + char;
-      i++;
-      continue;
-    } else {
-      regexStr += char;
-      i++;
-    }
-  }
-
-  const fullPattern = isAnchored
-    ? '^' + regexStr + '(?:/|$)'
-    : '(?:^|/)' + regexStr + '(?:/|$)';
-
-  try {
-    return {
-      regex: new RegExp(fullPattern),
-      isNegated,
-      isDirOnly
-    };
-  } catch (e) {
-    return null;
-  }
-}
-
-function createGitignoreMatcher(gitignoreText) {
-  if (!gitignoreText) return () => false;
-
-  const rules = gitignoreText
-    .split(/\r?\n/)
-    .map(parseGitignoreLineToRegex)
-    .filter(Boolean);
-
-  return (filePath, isDir) => {
-    const posixPath = filePath.replace(/\\/g, '/');
-    const parts = posixPath.split('/');
-    const relPath = parts.slice(1).join('/');
-
-    if (!relPath) return false;
-
-    let ignored = false;
-
-    for (const rule of rules) {
-      if (rule.isDirOnly && !isDir) {
-        const parentPaths = relPath.split('/').slice(0, -1);
-        let parentMatch = false;
-        let accum = '';
-        for (const dirPart of parentPaths) {
-          accum = accum ? `${accum}/${dirPart}` : dirPart;
-          if (rule.regex.test(accum)) {
-            parentMatch = true;
-            break;
-          }
-        }
-        if (parentMatch) {
-          ignored = !rule.isNegated;
-        }
-        continue;
-      }
-
-      if (rule.regex.test(relPath)) {
-        ignored = !rule.isNegated;
-      }
-    }
-
-    return ignored;
-  };
-}
 
 export default function FolderAnalyzer() {
-  const [customPath, setCustomPath] = useState('');
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
@@ -163,8 +33,6 @@ export default function FolderAnalyzer() {
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [showAddPathInput, setShowAddPathInput] = useState(false);
-  const [inlinePath, setInlinePath] = useState('');
 
   const activeProject = scannedProjects[activeProjectIndex] || null;
   const treeData = activeProject ? activeProject.treeData : null;
@@ -269,79 +137,11 @@ export default function FolderAnalyzer() {
   }
 
   const handleClear = () => {
-    setCustomPath('');
     setScannedProjects([]);
     setActiveProjectIndex(0);
     setCollapsedPaths({});
     setStatus('idle');
     setProgress({ current: 0, total: 0, phase: '' });
-  };
-
-  const scanPaths = async (paths, shouldAppend = false) => {
-    setStatus('scanning');
-    setProgress({ current: 0, total: 100, phase: 'Scanning local directories...' });
-
-    try {
-      const existingPaths = new Set(scannedProjects.map(p => p.path));
-      const newPathsToScan = shouldAppend ? paths.filter(p => !existingPaths.has(p)) : paths;
-      
-      if (newPathsToScan.length === 0) {
-        setStatus('success');
-        return;
-      }
-
-      const scanPromises = newPathsToScan.map(async (p) => {
-        const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(p)}`);
-        const data = await response.json();
-        return { path: p, data };
-      });
-
-      const scanResults = await Promise.all(scanPromises);
-      const failed = scanResults.find(r => !r.data.ok);
-      if (failed) {
-        setErrorMsg(failed.data.error || `Failed to scan path: ${failed.path}`);
-        setStatus('error');
-        return;
-      }
-
-      const projects = scanResults.map(res => {
-        const p = res.path;
-        const data = res.data;
-        const name = p.replace(/\\/g, '/').split('/').pop() || 'folder';
-        const rootNode = buildTree(data.files, p);
-        return {
-          name,
-          path: p,
-          treeData: rootNode,
-          gitignoreText: data.gitignoreText || ''
-        };
-      });
-
-      if (shouldAppend) {
-        setScannedProjects(prev => {
-          const next = [...prev, ...projects];
-          setActiveProjectIndex(prev.length);
-          const allPaths = next.map(p => p.path).filter(Boolean);
-          setCustomPath(allPaths.join(', '));
-          return next;
-        });
-      } else {
-        setScannedProjects(projects);
-        setActiveProjectIndex(0);
-      }
-      setCollapsedPaths({});
-      setStatus('success');
-    } catch (err) {
-      console.error(err);
-      setErrorMsg('API scan failed: ' + err.message);
-      setStatus('error');
-    }
-  };
-
-  const handleLocalPathScan = async () => {
-    const paths = customPath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-    if (paths.length === 0) return;
-    scanPaths(paths, scannedProjects.length > 0);
   };
 
   // Parse items from directory selection or drag-and-drop
@@ -451,8 +251,6 @@ export default function FolderAnalyzer() {
         setScannedProjects(prev => {
           const next = [...prev, ...projects];
           setActiveProjectIndex(prev.length);
-          const allNames = next.map(p => p.name).filter(Boolean);
-          setCustomPath(allNames.join(', '));
           return next;
         });
       } else {
@@ -468,33 +266,6 @@ export default function FolderAnalyzer() {
     }
   }
 
-  const resolveAndScanLocalPaths = async (rootFolderNames, fallbackFiles, shouldAppend = false) => {
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalDev) {
-      processFiles(fallbackFiles, rootFolderNames, shouldAppend);
-      return;
-    }
-
-    try {
-      const resolvePromises = rootFolderNames.map(async (name) => {
-        const res = await fetch(`/api/resolve-local-path?name=${encodeURIComponent(name)}`);
-        const data = await res.json();
-        return data.ok ? data.path : null;
-      });
-      const resolved = await Promise.all(resolvePromises);
-      const validPaths = resolved.filter(Boolean);
-
-      if (validPaths.length === rootFolderNames.length) {
-        scanPaths(validPaths, shouldAppend);
-        return;
-      }
-    } catch (e) {
-      console.warn('Local path resolution failed, falling back to browser scan:', e);
-    }
-
-    processFiles(fallbackFiles, rootFolderNames, shouldAppend);
-  };
-
   // Handle standard <input type="file" webkitdirectory /> selection
   const handleFolderSelect = (e) => {
     const files = e.target.files;
@@ -502,7 +273,7 @@ export default function FolderAnalyzer() {
       const filesArray = Array.from(files);
       const firstPath = filesArray[0].webkitRelativePath || '';
       const rootFolderName = firstPath.split('/')[0] || '';
-      resolveAndScanLocalPaths([rootFolderName], filesArray, scannedProjects.length > 0);
+      processFiles(filesArray, [rootFolderName], scannedProjects.length > 0);
     }
   };
 
@@ -591,7 +362,7 @@ export default function FolderAnalyzer() {
       }
 
       if (uniqueRoots.length > 0 || allFiles.length > 0) {
-        resolveAndScanLocalPaths(uniqueRoots, allFiles, scannedProjects.length > 0);
+        processFiles(allFiles, uniqueRoots, scannedProjects.length > 0);
       } else {
         setErrorMsg('No files or folders detected in the dropped selection.');
         setStatus('error');
@@ -608,7 +379,6 @@ export default function FolderAnalyzer() {
       const next = prev.filter((_, i) => i !== idx);
       if (next.length === 0) {
         setStatus('idle');
-        setCustomPath('');
         setActiveProjectIndex(0);
       } else {
         if (activeProjectIndex >= next.length) {
@@ -616,22 +386,10 @@ export default function FolderAnalyzer() {
         } else if (activeProjectIndex === idx && idx > 0) {
           setActiveProjectIndex(idx - 1);
         }
-        const remainingPaths = next.map(p => p.path || p.name).filter(Boolean);
-        setCustomPath(remainingPaths.join(', '));
       }
       return next;
     });
     setCollapsedPaths({});
-  };
-
-  const handleInlineAddPath = (e) => {
-    e.preventDefault();
-    const paths = inlinePath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-    if (paths.length > 0) {
-      scanPaths(paths, true);
-    }
-    setInlinePath('');
-    setShowAddPathInput(false);
   };
 
   // Reconstruct tree hierarchy
@@ -1147,31 +905,9 @@ export default function FolderAnalyzer() {
                 <span className="truncate max-w-[200px]" title={activeProject.path || activeProject.name}>{activeProject.path || activeProject.name}</span>
               </div>
               
-              <div className="relative">
-                {showAddPathInput ? (
-                  <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      placeholder="Type path to add..."
-                      value={inlinePath}
-                      onChange={(e) => setInlinePath(e.target.value)}
-                      className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
-                      autoFocus
-                      onBlur={() => {
-                        setTimeout(() => {
-                          if (!inlinePath.trim()) setShowAddPathInput(false);
-                        }, 200);
-                      }}
-                    />
-                    <Button type="submit" size="sm" variant="primary">Add</Button>
-                    <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
-                  </form>
-                ) : (
-                  <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
-                    + Add Path
-                  </button>
-                )}
-              </div>
+              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => folderInputRef.current?.click()}>
+                + Select Another Folder
+              </button>
             </div>
           )}
         </div>
@@ -1214,31 +950,9 @@ export default function FolderAnalyzer() {
             </div>
           ))}
           
-          <div className="relative">
-            {showAddPathInput ? (
-              <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Type path to add..."
-                  value={inlinePath}
-                  onChange={(e) => setInlinePath(e.target.value)}
-                  className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
-                  autoFocus
-                  onBlur={() => {
-                    setTimeout(() => {
-                      if (!inlinePath.trim()) setShowAddPathInput(false);
-                    }, 200);
-                  }}
-                />
-                <Button type="submit" size="sm" variant="primary">Add</Button>
-                <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
-              </form>
-            ) : (
-              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
-                + Add Path
-              </button>
-            )}
-          </div>
+          <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => folderInputRef.current?.click()}>
+            + Select Another Folder
+          </button>
         </div>
       )}
 

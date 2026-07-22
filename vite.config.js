@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
-import path from 'path';
 
 let version = process.env.VITE_APP_VERSION || '';
 
@@ -88,116 +87,6 @@ async function geoLookup(ip) {
     }
   }
   throw new Error(lastErr);
-}
-
-function resolvePathByName(folderName) {
-  const currentDir = process.cwd();
-  if (path.basename(currentDir).toLowerCase() === folderName.toLowerCase()) {
-    return currentDir;
-  }
-  
-  const childPath = path.join(currentDir, folderName);
-  if (fs.existsSync(childPath) && fs.statSync(childPath).isDirectory()) {
-    return childPath;
-  }
-  
-  let parent = path.dirname(currentDir);
-  while (parent && parent !== currentDir) {
-    if (path.basename(parent).toLowerCase() === folderName.toLowerCase()) {
-      return parent;
-    }
-    const siblingPath = path.join(parent, folderName);
-    if (fs.existsSync(siblingPath) && fs.statSync(siblingPath).isDirectory()) {
-      return siblingPath;
-    }
-    const nextParent = path.dirname(parent);
-    if (nextParent === parent) break;
-    parent = nextParent;
-  }
-  
-  return null;
-}
-
-function createGitignoreMatcher(gitignoreContent) {
-  if (!gitignoreContent) return () => false;
-
-  const lines = gitignoreContent.split(/\r?\n/);
-  const rules = [];
-
-  for (let line of lines) {
-    line = line.trim();
-    if (!line || line.startsWith('#')) continue;
-
-    let isNegated = false;
-    if (line.startsWith('!')) {
-      isNegated = true;
-      line = line.slice(1);
-    }
-
-    let isDirOnly = false;
-    if (line.endsWith('/')) {
-      isDirOnly = true;
-      line = line.slice(0, -1);
-    }
-
-    let regexStr = line
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
-
-    if (line.startsWith('/')) {
-      regexStr = '^' + regexStr.slice(1);
-    } else {
-      regexStr = '(^|\\/)' + regexStr;
-    }
-
-    regexStr += '(\\/|$)';
-
-    try {
-      rules.push({
-        regex: new RegExp(regexStr),
-        isNegated,
-        isDirOnly
-      });
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  return (filePath, isDir) => {
-    let ignored = false;
-    const parts = filePath.split('/');
-    const relPath = parts.slice(1).join('/');
-
-    if (!relPath) return false;
-
-    const pathParts = relPath.split('/');
-
-    for (const rule of rules) {
-      let matches = false;
-      if (rule.isDirOnly) {
-        if (isDir) {
-          matches = rule.regex.test(relPath);
-        } else {
-          let parentPath = '';
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            parentPath = parentPath ? `${parentPath}/${pathParts[i]}` : pathParts[i];
-            if (rule.regex.test(parentPath)) {
-              matches = true;
-              break;
-            }
-          }
-        }
-      } else {
-        matches = rule.regex.test(relPath);
-      }
-
-      if (matches) {
-        ignored = !rule.isNegated;
-      }
-    }
-    return ignored;
-  };
 }
 
 export default defineConfig({

@@ -4,6 +4,15 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 
+const EMPTY_PASSWORD_ANALYSIS = {
+  score: 0,
+  label: 'None',
+  color: '#9ca3af',
+  entropyBits: 0,
+  crackTimeEstimate: 'Instant',
+  feedback: ['Enter a password to analyze its strength.'],
+};
+
 /**
  * Generates a cryptographically secure random password.
  * 
@@ -128,6 +137,19 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   // States for Strength Checker
   const [checkPassword, setCheckPassword] = useState('');
   const [showCheckPassword, setShowCheckPassword] = useState(false);
+  const [checkAnalysis, setCheckAnalysis] = useState(EMPTY_PASSWORD_ANALYSIS);
+
+  useEffect(() => {
+    let active = true;
+    if (!checkPassword) {
+      setCheckAnalysis(EMPTY_PASSWORD_ANALYSIS);
+      return () => { active = false; };
+    }
+    import('../lib/passwordStrength').then(({ evaluatePasswordStrength }) => {
+      if (active) setCheckAnalysis(evaluatePasswordStrength(checkPassword));
+    });
+    return () => { active = false; };
+  }, [checkPassword]);
 
   // Generate password with debug info
   const handleGenerate = (
@@ -238,54 +260,20 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     });
   };
 
-  // Analyze strength of user checked password
-  const checkPasswordStrength = (pwd) => {
-    if (!pwd) {
-      return {
-        entropy: 0,
-        length: 0,
-        hasLower: false,
-        hasUpper: false,
-        hasDigit: false,
-        hasCommonSpecial: false,
-        hasRareSpecial: false
-      };
-    }
-    const hasLower = /[a-z]/.test(pwd);
-    const hasUpper = /[A-Z]/.test(pwd);
-    const hasDigit = /[0-9]/.test(pwd);
-    const hasCommonSpecial = /[!@#$%^&*()\-_\=+]/.test(pwd);
-    const hasRareSpecial = /[\[\]{}|;:',.<>?/~]/.test(pwd);
-
-    let alphabetSize = 0;
-    if (hasLower) alphabetSize += 26;
-    if (hasUpper) alphabetSize += 26;
-    if (hasDigit) alphabetSize += 10;
-    if (hasCommonSpecial) alphabetSize += 14;
-    if (hasRareSpecial) alphabetSize += 15;
-
-    const otherChars = pwd.replace(/[a-zA-Z0-9!@#$%^&*()\-_\=+\[\]{}|;:',.<>?/~]/g, '');
-    if (otherChars.length > 0) {
-      const uniqueOthers = new Set(otherChars).size;
-      alphabetSize += uniqueOthers;
-    }
-
-    if (alphabetSize === 0) alphabetSize = 1;
-    const entropy = pwd.length * Math.log2(alphabetSize);
-
-    return {
-      entropy,
-      length: pwd.length,
-      hasLower,
-      hasUpper,
-      hasDigit,
-      hasCommonSpecial,
-      hasRareSpecial
-    };
+  const checkStats = {
+    length: checkPassword.length,
+    hasLower: /[a-z]/.test(checkPassword),
+    hasUpper: /[A-Z]/.test(checkPassword),
+    hasDigit: /[0-9]/.test(checkPassword),
+    hasCommonSpecial: /[!@#$%^&*()\-_=+]/.test(checkPassword),
+    hasRareSpecial: /[\[\]{}|;:',.<>?/~]/.test(checkPassword),
   };
-
-  const checkStats = checkPasswordStrength(checkPassword);
-  const checkStrength = getStrengthDetails(checkStats.entropy);
+  const checkStrength = {
+    label: checkAnalysis.label,
+    color: checkAnalysis.color,
+    percentage: checkAnalysis.score * 20,
+    desc: checkAnalysis.feedback.join(' '),
+  };
   return (
     <Card id="tool-password" variant="tool" size="wide">
       <ToolHeader 
@@ -474,11 +462,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Entropy:</span>
+                  <span>Theoretical random entropy:</span>
                   <span className="text-text-main font-mono text-sm">{entropy.toFixed(1)} bits</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Crack Time:</span>
+                  <span>Estimated offline crack time:</span>
                   <strong className="font-bold text-sm" style={{ color: strength.color }}>{getCrackTime(entropy)}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
@@ -666,12 +654,8 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Entropy:</span>
-                  <span className="text-text-main font-mono text-sm">{checkStats.entropy.toFixed(1)} bits</span>
-                </div>
-                <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Crack Time:</span>
-                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{getCrackTime(checkStats.entropy)}</strong>
+                  <span>Estimated fast offline attack:</span>
+                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{checkAnalysis.crackTimeEstimate}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
                   <span>Security Level:</span>

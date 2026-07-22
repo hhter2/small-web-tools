@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 import ResultDisplay from './ui/ResultDisplay';
+import { swapCurrencies } from '../lib/currency';
+import { parseAmountLines as parseStrictAmountLines } from '../lib/numberParsing';
+import { grantConsent, hasConsent } from '../lib/thirdPartyServices';
 
 const currencyDetails = {
   USD: { name: "US Dollar", locale: "en-US", symbol: "$", flag: "🇺🇸" },
@@ -27,57 +30,14 @@ const currencyDetails = {
   MXN: { name: "Mexican Peso", locale: "es-MX", symbol: "$", flag: "🇲🇽" },
 };
 
-function parseAmountLines(text) {
-  const lines = text.split(/\r?\n/);
-  const results = [];
-
-  lines.forEach((line, index) => {
-    const lineNumber = index + 1;
-    const trimmed = line.trim();
-    if (!trimmed) return;
-
-    // Clean out common currency symbols and extra whitespace
-    const cleanStr = trimmed.replace(/[$,€,£,¥,NT$,HK$,S$,C$,A$,R$,₩,₹,🇵🇭,₱,RM,฿,₫,CHF,\s]/gi, '').trim();
-
-    let parsedVal = NaN;
-
-    if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cleanStr)) {
-      // 1,234.56
-      parsedVal = Number(cleanStr.replace(/,/g, ''));
-    } else if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(cleanStr)) {
-      // 1.234,56
-      parsedVal = Number(cleanStr.replace(/\./g, '').replace(',', '.'));
-    } else if (/^-?\d+(?:[\.,]\d+)?$/.test(cleanStr)) {
-      // 1234.56 or 1234,56
-      parsedVal = Number(cleanStr.replace(',', '.'));
-    }
-
-    if (Number.isNaN(parsedVal)) {
-      results.push({
-        lineNumber,
-        originalLine: trimmed,
-        value: null,
-        error: `Line ${lineNumber}: "${trimmed}" is not a valid number`
-      });
-    } else {
-      results.push({
-        lineNumber,
-        originalLine: trimmed,
-        value: parsedVal,
-        error: null
-      });
-    }
-  });
-
-  return results;
-}
-
 export default function CurrencyCounter() {
   const [activeTab, setActiveTab] = useState('single'); // 'single' or 'bulk'
   const [rates, setRates] = useState({});
   const [lastUpdated, setLastUpdated] = useState("Offline");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [rateProvider, setRateProvider] = useState('');
+  const [currencyConsent, setCurrencyConsent] = useState(() => hasConsent('currency'));
 
   // Quick Convert state
   const [singleAmount, setSingleAmount] = useState('100');
@@ -86,44 +46,61 @@ export default function CurrencyCounter() {
 
   // Bulk Convert state
   const [bulkInput, setBulkInput] = useState('');
+  const [numberFormat, setNumberFormat] = useState('auto');
   const [bulkFromCurrency, setBulkFromCurrency] = useState('TWD');
   const [bulkToCurrency, setBulkToCurrency] = useState('USD');
 
   // Manual Rate state
   const [isManualRate, setIsManualRate] = useState(false);
   const [manualRate, setManualRate] = useState('0.03086');
+  const [manualRateError, setManualRateError] = useState('');
 
-  // Fetch latest rates on mount
   useEffect(() => {
-    let active = true;
+    const handleConsentUpdate = () => setCurrencyConsent(hasConsent('currency'));
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (!currencyConsent || isManualRate) {
+      setIsLoading(false);
+      if (!currencyConsent) {
+        setRates({});
+        setLastUpdated('Consent required');
+      }
+      return undefined;
+    }
+
+    const controller = new AbortController();
     setIsLoading(true);
-    fetch("https://open.er-api.com/v6/latest/USD")
+    fetch('/api/exchange-rates', { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
       })
       .then((data) => {
-        if (active && data && data.rates) {
+        if (data?.ok && data.rates) {
           setRates(data.rates);
-          setLastUpdated(new Date(data.time_last_update_unix * 1000).toLocaleString());
+          setRateProvider(data.provider || 'Exchange rate provider');
+          setLastUpdated(data.dataDate
+            ? new Date(data.dataDate).toLocaleString()
+            : new Date(data.fetchedAt).toLocaleString());
           setApiError(null);
+        } else {
+          throw new Error(data?.error || 'Invalid exchange-rate response');
         }
       })
-      .catch((err) => {
-        if (active) {
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
           setRates({});
           setLastUpdated("Rates Unavailable (Offline)");
           setApiError("Unable to retrieve live exchange rates. Enable 'Manual Rate Override' below for local calculations.");
         }
       })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
 
-    return () => {
-      active = false;
-    };
-  }, []);
+    return () => controller.abort();
+  }, [currencyConsent, isManualRate]);
 
   // Determine active rate based on options
   const getRate = (from, to) => {
@@ -143,32 +120,42 @@ export default function CurrencyCounter() {
 
   // Bulk Convert calculations
   const bulkRate = getRate(bulkFromCurrency, bulkToCurrency);
-  const parsedLineItems = parseAmountLines(bulkInput);
+  const parsedLineItems = parseStrictAmountLines(bulkInput, numberFormat);
   const validItems = parsedLineItems.filter((item) => item.value !== null);
   const lineCount = validItems.length;
   const sourceTotal = validItems.reduce((sum, item) => sum + item.value, 0);
   const convertedTotal = sourceTotal * bulkRate;
 
-  // Unified Swap function for Quick and Bulk modes
-  const swapCurrencies = (from, setFrom, to, setTo) => {
-    setFrom(to);
-    setTo(from);
-
-    if (isManualRate) {
-      const val = Number(manualRate);
-      if (!Number.isNaN(val) && val > 0 && Number.isFinite(val)) {
-        setManualRate((1 / val).toFixed(6));
-      }
-    }
+  const applySwap = (from, setFrom, to, setTo, amount) => {
+    const swapped = swapCurrencies({
+      from,
+      to,
+      amount,
+      manualRate,
+      isManualRate,
+    });
+    setManualRateError(swapped.error || '');
+    if (swapped.error) return;
+    setFrom(swapped.from);
+    setTo(swapped.to);
+    setManualRate(swapped.manualRate);
   };
 
-  const handleSwap = () => {
-    swapCurrencies(fromCurrency, setFromCurrency, toCurrency, setToCurrency);
-  };
+  const handleSwap = () => applySwap(
+    fromCurrency,
+    setFromCurrency,
+    toCurrency,
+    setToCurrency,
+    singleAmount,
+  );
 
-  const handleBulkSwap = () => {
-    swapCurrencies(bulkFromCurrency, setBulkFromCurrency, bulkToCurrency, setBulkToCurrency);
-  };
+  const handleBulkSwap = () => applySwap(
+    bulkFromCurrency,
+    setBulkFromCurrency,
+    bulkToCurrency,
+    setBulkToCurrency,
+    bulkInput,
+  );
 
   // Formatting helpers
   const formatCurrency = (value, code) => {
@@ -210,12 +197,37 @@ export default function CurrencyCounter() {
       {/* API Banner / Status Info */}
       <div className="text-xs min-h-[18px] text-text-muted font-medium px-3 py-1.5 rounded bg-app border border-border flex justify-between flex-wrap gap-2">
         <span>
-          <strong>Rate Source:</strong> {isManualRate ? "Custom Manual Rate" : (apiError ? "Offline" : "Live API")}
+          <strong>Rate Source:</strong>{' '}
+          {isManualRate
+            ? 'Local manual rate'
+            : !currencyConsent
+              ? 'Consent required'
+              : isLoading
+                ? 'Loading'
+                : apiError
+                  ? 'Offline'
+                  : rateProvider || 'Live API'}
         </span>
         <span>
           <strong>Last Updated:</strong> {isManualRate ? "N/A" : lastUpdated}
         </span>
       </div>
+
+      {!currencyConsent && !isManualRate && (
+        <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
+          <span>
+            Live rates contact the configured exchange-rate provider through this site’s server.
+            You can decline and use Manual Rate Override without any request.
+          </span>
+          <button
+            type="button"
+            onClick={() => grantConsent('currency')}
+            className="px-3 py-1.5 rounded border border-accent text-accent font-semibold shrink-0"
+          >
+            Allow live rates
+          </button>
+        </div>
+      )}
 
       {apiError && !isManualRate && (
         <p className="text-xs text-red-500 m-0 p-2 rounded bg-red-500/10 border border-red-500/20">
@@ -262,6 +274,9 @@ export default function CurrencyCounter() {
           </div>
         )}
       </div>
+      {manualRateError && (
+        <p className="text-xs text-red-500 m-0">{manualRateError}</p>
+      )}
 
       {/* Tab Content: Quick Convert */}
       {activeTab === 'single' && (
@@ -385,7 +400,21 @@ export default function CurrencyCounter() {
           </div>
 
           <div className="flex flex-col gap-2 w-full">
-            <label className="text-sm font-semibold text-text-main" htmlFor="currency-bulk-input">Amounts (one per line, e.g. $100, 250.50, 1,234.56)</label>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-semibold text-text-main" htmlFor="currency-bulk-input">
+                Amounts (one per line)
+              </label>
+              <select
+                aria-label="Number format"
+                value={numberFormat}
+                onChange={(event) => setNumberFormat(event.target.value)}
+                className="px-2.5 py-1.5 text-xs rounded border border-border bg-card text-text-main"
+              >
+                <option value="auto">Auto (strict)</option>
+                <option value="dot">1,234.56</option>
+                <option value="comma">1.234,56</option>
+              </select>
+            </div>
             <textarea
               id="currency-bulk-input"
               className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"

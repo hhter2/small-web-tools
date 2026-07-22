@@ -2,30 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
-function getLatestGitTag() {
-  try {
-    try {
-      execSync('git fetch --tags', { stdio: 'ignore' });
-    } catch (ignore) {}
-    const tagsStr = execSync('git tag --sort=-v:refname', { encoding: 'utf-8' }).trim();
-    const tags = tagsStr ? tagsStr.split(/\r?\n/).map(t => t.trim()).filter(Boolean) : [];
-    if (tags.length > 0) {
-      return tags[0];
-    }
-  } catch (e) {}
-
-  try {
-    const desc = execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim();
-    if (desc) return desc;
-  } catch (e) {}
-
-  return null;
-}
-
-let latestTag = getLatestGitTag();
-let version = latestTag || '';
+let version = process.env.VITE_APP_VERSION || '';
 
 if (!version) {
   try {
@@ -33,20 +11,9 @@ if (!version) {
     if (pkg.version) {
       version = pkg.version.startsWith('v') ? pkg.version : `v${pkg.version}`;
     }
-  } catch (err) {}
-}
-
-if (latestTag) {
-  try {
-    const cleanTagVersion = latestTag.startsWith('v') ? latestTag.slice(1) : latestTag;
-    const pkgPath = path.resolve('./package.json');
-    const pkgContent = fs.readFileSync(pkgPath, 'utf-8');
-    const pkg = JSON.parse(pkgContent);
-    if (pkg.version !== cleanTagVersion) {
-      pkg.version = cleanTagVersion;
-      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
-    }
-  } catch (err) {}
+  } catch (err) {
+    version = 'v0.5.4';
+  }
 }
 
 const showChannelAlert = version.includes('alpha') || version.includes('beta');

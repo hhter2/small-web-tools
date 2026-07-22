@@ -861,16 +861,14 @@ export default function FolderAnalyzer() {
       const y = 60 + index * rowHeight;
       const x = 20 + item.depth * indentWidth;
 
-      // Draw structure lines
+      const y = 70 + index * rowHeight;
+      const x = 30 + item.depth * indentWidth;
+
       let connectors = '';
       if (item.depth > 0) {
-        // Horizontal line
-        connectors += `<line x1="${x - 12}" y1="${y + 12}" x2="${x + 2}" y2="${y + 12}" stroke="#4b5563" stroke-width="1.5" />`;
-        // Vertical connector
         connectors += `<line x1="${x - 12}" y1="${y - 12}" x2="${x - 12}" y2="${y + 12}" stroke="#4b5563" stroke-width="1.5" />`;
       }
 
-      // Icon colors and representations
       const isDir = item.type === 'directory';
       const iconColor = isDir ? '#f59e0b' : '#3b82f6';
       const iconPath = isDir 
@@ -878,25 +876,28 @@ export default function FolderAnalyzer() {
         : 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
 
       const lineText = isDir ? '' : ` (${item.lineCount} lines)`;
+      const safeName = escapeXml(item.name);
 
       svgRows += `
         <g>
           ${connectors}
           <!-- Icon -->
-          <svg x="${x + 6}" y="${y + 4}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg x="${x}" y="${y - 14}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="${iconPath}" />
           </svg>
           <!-- Name -->
-          <text x="${x + 28}" y="${y + 16}" fill="#f3f4f6" font-family="JetBrains Mono, monospace" font-size="12px" font-weight="${isDir ? 'bold' : 'normal'}">${item.name}${isDir ? '/' : ''}<tspan fill="#9ca3af">${lineText}</tspan></text>
+          <text x="${x + 24}" y="${y}" fill="#f3f4f6" font-family="JetBrains Mono, monospace" font-size="12px" font-weight="${isDir ? 'bold' : 'normal'}">${safeName}${isDir ? '/' : ''}<tspan fill="#9ca3af">${escapeXml(lineText)}</tspan></text>
         </g>
       `;
     });
+
+    const safeRootName = escapeXml(rootNode.name);
 
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
         <rect width="100%" height="100%" fill="#0f172a" rx="12" />
         <!-- Header -->
-        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${rootNode.name} Folder Structure</text>
+        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${safeRootName} Folder Structure</text>
         <line x1="20" y1="45" x2="${width - 20}" y2="45" stroke="#334155" stroke-width="1" />
         
         <!-- Tree content -->

@@ -273,7 +273,15 @@ export default function NetworkSpeedTest() {
   const [clientOrg, setClientOrg] = useState(null);
   const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy | custom
   const [customDownload, setCustomDownload] = useState(100);
-  const [customUpload, setCustomUpload] = useState(25);
+  const [isConsentGranted, setIsConsentGranted] = useState(() => hasConsent('speedtest'));
+
+  useEffect(() => {
+    const handleConsentUpdate = () => {
+      setIsConsentGranted(hasConsent('speedtest'));
+    };
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
 
   const abortRef = useRef(null);
 

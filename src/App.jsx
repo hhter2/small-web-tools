@@ -4,6 +4,7 @@ import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Dynamic lazy imports for tools to optimize bundle size
 const SlashesConverter = React.lazy(() => import('./components/SlashesConverter.jsx'));
@@ -783,9 +784,11 @@ export default function App() {
     }
 
     return (
-      <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">Loading tool...</span></div>}>
-        {toolNode}
-      </Suspense>
+      <ErrorBoundary key={activeTool}>
+        <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">Loading tool...</span></div>}>
+          {toolNode}
+        </Suspense>
+      </ErrorBoundary>
     );
   };
 

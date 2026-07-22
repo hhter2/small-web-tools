@@ -716,6 +716,7 @@ export default function App() {
   );
 
   // Render active tool component
+  const renderActiveTool = () => {
     if (activeTool === 'tool-home') {
       return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }

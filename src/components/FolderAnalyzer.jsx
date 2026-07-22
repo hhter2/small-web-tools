@@ -1247,60 +1247,52 @@ export default function FolderAnalyzer() {
         onChange={handleFolderSelect}
       />
 
-      {/* Input Options (only visible when not showing results) */}
+      {/* Selection Areas */}
       {status !== 'success' && (
-        <div className="flex gap-4 items-end mt-4">
-          <div className="flex flex-col gap-2 w-full flex-1">
-            <label htmlFor="custom-root-path" className="text-sm font-semibold text-text-main">Folder Path / Custom Root Name</label>
-            <div className="flex gap-3 w-full items-stretch">
-              <input
-                type="text"
-                id="custom-root-path"
-                className="flex-1 min-w-0 px-4 py-2.5 h-12 bg-card border border-border rounded-lg text-text-main placeholder-text-muted/50 outline-none transition-all focus:border-accent text-sm"
-                placeholder="Enter folder path or custom root name..."
-                value={customPath}
-                onChange={(e) => setCustomPath(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && customPath.trim()) {
-                    handleLocalPathScan();
+        <div className="flex flex-col gap-4 mt-4">
+          <div 
+            className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5"
+            onClick={() => {
+              if (typeof window.showDirectoryPicker === 'function') {
+                window.showDirectoryPicker().then(async (dirHandle) => {
+                  const files = [];
+                  async function getFiles(handle, path = dirHandle.name) {
+                    for await (const entry of handle.values()) {
+                      if (entry.kind === 'file') {
+                        const file = await entry.getFile();
+                        file.customPath = `${path}/${entry.name}`;
+                        files.push(file);
+                      } else if (entry.kind === 'directory') {
+                        if (entry.name !== '.git') {
+                          await getFiles(entry, `${path}/${entry.name}`);
+                        }
+                      }
+                    }
                   }
-                }}
-              />
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleLocalPathScan}
-                disabled={!customPath.trim()}
-                className="h-12 px-6 flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                  <line x1="12" y1="11" x2="12" y2="17"></line>
-                  <line x1="9" y1="14" x2="15" y2="14"></line>
-                </svg>
-                <span>Analyze Path</span>
-              </Button>
-            </div>
-            <span className="text-xs text-text-muted mt-1.5">
-              * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
-            </span>
+                  await getFiles(dirHandle);
+                  processFiles(files, [dirHandle.name], scannedProjects.length > 0);
+                }).catch((err) => {
+                  if (err.name !== 'AbortError') {
+                    folderInputRef.current?.click();
+                  }
+                });
+              } else {
+                folderInputRef.current?.click();
+              }
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3 className="text-lg font-bold text-text-main">Select or Drag &amp; Drop Folder</h3>
+            <p className="text-sm text-text-muted">Click to open native folder picker or drop folder here</p>
           </div>
-        </div>
-      )}
 
-      {/* Selection Areas (only visible when not showing results) */}
-      {status !== 'success' && (
-        <div 
-          className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5 mt-4"
-          onClick={() => folderInputRef.current && folderInputRef.current.click()}
-        >
-          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <h3 className="text-lg font-bold text-text-main">Drag &amp; Drop Folder here</h3>
-          <p className="text-sm text-text-muted">or click to select folder from your computer</p>
+          <div className="flex items-center gap-2 p-3 bg-app border border-border rounded-xl text-xs text-text-muted">
+            <span>🔒 <strong>Local Privacy Guarantee:</strong> All file scanning and tree rendering is performed 100% in your browser memory. No folder contents or path details are ever uploaded to any server.</span>
+          </div>
         </div>
       )}
 

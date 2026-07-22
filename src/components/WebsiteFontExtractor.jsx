@@ -174,9 +174,7 @@ function FontCard({ font, index, previewText }) {
   const fontId = `font-ext-preview-${index}`;
 
   const isDataUrl = font.url.startsWith('data:');
-  const proxyUrl = isDataUrl
-    ? font.url
-    : `/api/font-proxy?url=${encodeURIComponent(font.url)}&referer=${encodeURIComponent(font.referer || '')}`;
+  const proxyUrl = font.proxyUrl || (isDataUrl ? font.url : '');
 
   const previewFamily = `FontExtPreview${index}`;
   const similar = getSimilarGoogleFonts(font.family);

@@ -1,3 +1,6 @@
+import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFetch';
+import { signFontToken } from '../_shared/fontToken';
+
 // Font Extractor API — POST /api/extract-fonts
 export async function onRequestOptions(context) {
   return new Response(null, {
@@ -11,9 +14,8 @@ export async function onRequestOptions(context) {
 }
 
 export async function onRequestPost(context) {
-  const { request } = context;
+  const { request, env } = context;
 
-  // Set up common CORS headers helper
   const corsHeaders = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*'
@@ -37,17 +39,16 @@ export async function onRequestPost(context) {
 
     let targetUrl;
     try {
-      targetUrl = new URL(rawUrl);
-    } catch {
-      return new Response(JSON.stringify({ ok: false, error: 'Invalid URL format' }), {
+      targetUrl = validateTargetUrl(rawUrl);
+    } catch (err) {
+      return new Response(JSON.stringify({ ok: false, error: err.message }), {
         status: 400,
         headers: corsHeaders
       });
     }
 
-    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+    const secretStr = env?.FONT_PROXY_SIGNING_SECRET;
 
-    // ── Helpers ────────────────────────────────────────────────
     function resolveUrl(base, relative) {
       try {
         if (relative.startsWith('data:')) return relative;
@@ -125,29 +126,28 @@ export async function onRequestPost(context) {
       if (depth > 3 || fetchedCss.has(url)) return [];
       fetchedCss.add(url);
       try {
-        const r = await fetch(url, { headers: { 'User-Agent': UA } });
-        if (!r.ok) return [];
-        const css = await r.text();
+        const { buffer } = await safeExternalFetch(url, { maxBytes: 1 * 1024 * 1024, timeoutMs: 5000 });
+        const decoder = new TextDecoder('utf-8');
+        const css = decoder.decode(buffer);
         const { fonts, imports } = extractFontsFromCSS(css, url);
         const nested = await Promise.all(imports.map(i => fetchAndParseCss(i, depth + 1)));
         return [...fonts, ...nested.flat()];
       } catch { return []; }
     }
 
-    // ── Fetch HTML ─────────────────────────────────────────────
-    const htmlRes = await fetch(targetUrl.href, {
-      headers: {
-        'User-Agent': UA,
-        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8'
-      }
-    });
-    if (!htmlRes.ok) {
-      return new Response(JSON.stringify({ ok: false, error: `Website returned HTTP ${htmlRes.status}` }), {
+    // ── Fetch HTML safely ──
+    let html = '';
+    try {
+      const { buffer } = await safeExternalFetch(targetUrl.href, { maxBytes: 2 * 1024 * 1024, timeoutMs: 8000 });
+      const decoder = new TextDecoder('utf-8');
+      html = decoder.decode(buffer);
+    } catch (err) {
+      return new Response(JSON.stringify({ ok: false, error: `Website fetch failed: ${err.message}` }), {
         status: 400,
         headers: corsHeaders
       });
     }
-    const html = await htmlRes.text();
+
     const allFonts = [];
 
     // 1. Inline <style> blocks
@@ -190,13 +190,29 @@ export async function onRequestPost(context) {
         fontMap.set(key, f);
       }
     }
-    const result = Array.from(fontMap.values()).sort((a, b) => {
+
+    const deduplicatedFonts = Array.from(fontMap.values()).sort((a, b) => {
       const famComp = a.family.localeCompare(b.family);
       if (famComp !== 0) return famComp;
       const wgtComp = parseInt(a.weight || '400') - parseInt(b.weight || '400');
       if (wgtComp !== 0) return wgtComp;
       return (a.style || '').localeCompare(b.style || '');
     });
+
+    // Generate signed token for proxy URL
+    const result = await Promise.all(
+      deduplicatedFonts.map(async (f) => {
+        if (f.url.startsWith('data:')) {
+          return { ...f, proxyUrl: f.url };
+        }
+        const token = await signFontToken(f.url, secretStr);
+        return {
+          ...f,
+          token,
+          proxyUrl: `/api/font-proxy?token=${encodeURIComponent(token)}`
+        };
+      })
+    );
 
     return new Response(JSON.stringify({ ok: true, fonts: result, total: result.length, sourceUrl: targetUrl.href }), {
       status: 200,

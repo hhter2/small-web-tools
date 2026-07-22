@@ -149,24 +149,25 @@ export default function CurrencyCounter() {
   const sourceTotal = validItems.reduce((sum, item) => sum + item.value, 0);
   const convertedTotal = sourceTotal * bulkRate;
 
-  // Swap function
-  const handleSwap = () => {
-    const tempFrom = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(tempFrom);
+  // Unified Swap function for Quick and Bulk modes
+  const swapCurrencies = (from, setFrom, to, setTo) => {
+    setFrom(to);
+    setTo(from);
 
     if (isManualRate) {
       const val = Number(manualRate);
-      if (val > 0) {
+      if (!Number.isNaN(val) && val > 0 && Number.isFinite(val)) {
         setManualRate((1 / val).toFixed(6));
       }
     }
   };
 
+  const handleSwap = () => {
+    swapCurrencies(fromCurrency, setFromCurrency, toCurrency, setToCurrency);
+  };
+
   const handleBulkSwap = () => {
-    const tempFrom = bulkFromCurrency;
-    setBulkFromCurrency(bulkToCurrency);
-    setBulkToCurrency(tempFrom);
+    swapCurrencies(bulkFromCurrency, setBulkFromCurrency, bulkToCurrency, setBulkToCurrency);
   };
 
   // Formatting helpers

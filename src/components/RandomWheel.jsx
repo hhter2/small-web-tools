@@ -241,6 +241,27 @@ export default function RandomWheel() {
     };
   }, [items, isSpinning, allowDuplicate]);
 
+function getUnbiasedRandomInt(max) {
+  if (max <= 1) return 0;
+  const limit = 256 - (256 % max);
+  const buffer = new Uint8Array(1);
+  const cryptoSrc = typeof window !== 'undefined'
+    ? (window.crypto || window.msCrypto)
+    : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+
+  if (!cryptoSrc || !cryptoSrc.getRandomValues) {
+    throw new Error('CSPRNG is not supported in this environment.');
+  }
+
+  while (true) {
+    cryptoSrc.getRandomValues(buffer);
+    const val = buffer[0];
+    if (val < limit) {
+      return val % max;
+    }
+  }
+}
+
   const spin = () => {
     if (isSpinning) return;
     
@@ -256,12 +277,12 @@ export default function RandomWheel() {
     setIsSpinning(true);
     setShowWinnerBanner(false);
 
-    // Select winner
-    const winIndex = Math.floor(Math.random() * activeItems.length);
+    // Select winner using Web Crypto (unbiased)
+    const winIndex = getUnbiasedRandomInt(activeItems.length);
     const arcSize = (2 * Math.PI) / activeItems.length;
     
     const targetSectorCenter = winIndex * arcSize + arcSize / 2;
-    const spinsCount = 6 + Math.floor(Math.random() * 4); // 6 to 9 full spins
+    const spinsCount = 6 + getUnbiasedRandomInt(4); // 6 to 9 full spins
     const targetAngle = 2 * Math.PI * spinsCount - targetSectorCenter;
 
     const startAngleVal = rotationAngleRef.current % (2 * Math.PI);

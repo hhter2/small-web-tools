@@ -185,27 +185,19 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   if (includeRareSpecial) alphabetSize += 15;
   const entropy = length * Math.log2(alphabetSize);
 
-  // Determine strength level details
+  // Get qualitative strength details (H-07)
   const getStrengthDetails = (ent) => {
-    if (ent <= 0) {
-      return { label: 'Empty', class: 'strength-empty', percentage: 0, color: '#6b7280', desc: 'Enter a password to test.' };
-    }
-    if (ent < 60) {
-      return { label: 'Weak', class: 'strength-weak', percentage: 25, color: '#ef4444', desc: 'Could be brute-forced quickly.' };
-    } else if (ent < 80) {
-      return { label: 'Medium', class: 'strength-medium', percentage: 50, color: '#f97316', desc: 'Reasonably secure against basic attacks.' };
-    } else if (ent < 100) {
-      return { label: 'Strong', class: 'strength-strong', percentage: 75, color: '#eab308', desc: 'Highly secure for normal personal accounts.' };
-    } else if (ent < 120) {
-      return { label: 'Very Strong', class: 'strength-very-strong', percentage: 90, color: '#22c55e', desc: 'Excellent protection for sensitive keys.' };
-    } else {
-      return { label: 'Cryptographically Secure', class: 'strength-unbreakable', percentage: 100, color: '#10b981', desc: 'Mathematically unbreakable with current technology.' };
-    }
+    if (ent <= 0) return { label: 'None', percentage: 0, color: '#9ca3af', desc: 'No password provided.' };
+    if (ent < 28) return { label: 'Very Weak', percentage: 20, color: '#ef4444', desc: 'Vulnerable to basic automated guessing.' };
+    if (ent < 40) return { label: 'Weak', percentage: 40, color: '#f97316', desc: 'Susceptible to targeted dictionary attacks.' };
+    if (ent < 60) return { label: 'Moderate', percentage: 60, color: '#eab308', desc: 'Decent protection against standard offline attacks.' };
+    if (ent < 80) return { label: 'Strong', percentage: 80, color: '#10b981', desc: 'High protection for standard user credentials.' };
+    return { label: 'Very Strong', percentage: 100, color: '#059669', desc: 'Estimated resistant to offline brute-force attacks.' };
   };
 
   const strength = getStrengthDetails(entropy);
 
-  // Estimates crack time assuming 100 trillion guesses per second (highly sophisticated offline attacker)
+  // Estimates crack time assuming high-performance offline brute force
   const getCrackTime = (ent) => {
     if (ent <= 0) return 'N/A';
     const guessesPerSec = 1e14;
@@ -222,8 +214,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     if (years < 1000) return `${Math.round(years)} years`;
     if (years < 1e6) return `${Math.round(years / 1000)} millennia`;
     if (years < 1e9) return `${Math.round(years / 1e6)} million years`;
-    if (years < 1e12) return `${Math.round(years / 1e9)} billion years`;
-    return 'Trillions of years (Unbreakable)';
+    return 'Billions of years (Extremely High Complexity)';
   };
 
   // Color codes individual character classes for nice premium look

@@ -508,14 +508,31 @@ const navItems = [
   }
 ];
 
+const VALID_TOOL_IDS = new Set(['tool-home', ...navItems.map((item) => item.id)]);
+
+function getValidToolId(rawId) {
+  if (rawId && VALID_TOOL_IDS.has(rawId)) {
+    return rawId;
+  }
+  return 'tool-home';
+}
+
 export default function App() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
-      const hash = window.location.hash.replace('#', '');
-      if (hash && hash.startsWith('tool-')) {
-        return hash;
+      const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
+      if (rawHash) {
+        if (VALID_TOOL_IDS.has(rawHash)) {
+          return rawHash;
+        }
+        window.history.replaceState(null, '', '#tool-home');
+        return 'tool-home';
       }
-      return sessionStorage.getItem("activeTool") || "tool-home";
+      const saved = sessionStorage.getItem("activeTool");
+      if (saved && VALID_TOOL_IDS.has(saved)) {
+        return saved;
+      }
+      return "tool-home";
     } catch (e) {
       return "tool-home";
     }
@@ -591,13 +608,28 @@ export default function App() {
     } catch (e) {}
   }, [theme]);
 
-  // Listen for hashchange events to sync to activeTool
+  // Sync activeTool state, sessionStorage, and document title
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("activeTool", activeTool);
+      const item = navItems.find((n) => n.id === activeTool);
+      document.title = item && activeTool !== 'tool-home' ? `${item.name} — Small Web Tools` : 'Small Web Tools — Simple, Private Browser Utilities';
+    } catch (e) {}
+  }, [activeTool]);
+
+  // Listen for hashchange events to sync to activeTool and normalize invalid routes
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash && hash.startsWith('tool-')) {
-        setActiveTool(hash);
-      } else if (!hash) {
+      try {
+        const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
+        if (rawHash && !VALID_TOOL_IDS.has(rawHash)) {
+          window.history.replaceState(null, '', '#tool-home');
+          setActiveTool('tool-home');
+          return;
+        }
+        const validId = getValidToolId(rawHash);
+        setActiveTool(validId);
+      } catch (e) {
         setActiveTool('tool-home');
       }
     };

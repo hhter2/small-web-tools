@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
-import FieldInput from './ui/FieldInput';
 import ToolHeader from './ui/ToolHeader';
+import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
+
+function isValidIp(str) {
+  if (!str || !str.trim()) return true;
+  const trimmed = str.trim();
+  if (trimmed.length > 45 || /[/\s?#%]/g.test(trimmed)) return false;
+  const ipv4 = /^(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipv6 = /^(?:[0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+  return ipv4.test(trimmed) || ipv6.test(trimmed);
+}
 
 async function ipLookup(ip) {
   const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -23,7 +32,7 @@ async function ipLookup(ip) {
 
   const providers = [
     () => tryProvider(
-      ip ? `https://api.ip.sb/geoip/${ip}` : 'https://api.ip.sb/geoip',
+      ip ? `https://api.ip.sb/geoip/${encodeURIComponent(ip.trim())}` : 'https://api.ip.sb/geoip',
       (d) => ({
         ip: d.ip, city: d.city || '', region: d.region || '',
         country_name: d.country || '', country_code: d.country_code || '',
@@ -33,7 +42,7 @@ async function ipLookup(ip) {
       })
     ),
     () => tryProvider(
-      ip ? `https://ipapi.co/${ip}/json/` : 'https://ipapi.co/json/',
+      ip ? `https://ipapi.co/${encodeURIComponent(ip.trim())}/json/` : 'https://ipapi.co/json/',
       (d) => {
         if (d.error) throw new Error(d.reason || 'ipapi.co error');
         return {
@@ -63,7 +72,6 @@ function getFlagEmoji(countryCode) {
     );
 }
 
-/** Inline copy button styled to match legacy .copy-btn-inline */
 function CopyBtn({ value, copiedKey, thisKey, onCopy }) {
   const isCopied = copiedKey === thisKey;
   return (
@@ -87,6 +95,13 @@ export default function IpLookup() {
   const [status, setStatus] = useState('');
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [result, setResult] = useState(null);
+  const [mapAllowed, setMapAllowed] = useState(() => hasConsent('osm'));
+
+  useEffect(() => {
+    const handleConsentUpdate = () => setMapAllowed(hasConsent('osm'));
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
 
   const handleCopy = (val, key) => {
     if (!val) return;
@@ -97,6 +112,12 @@ export default function IpLookup() {
   };
 
   const doLookup = async () => {
+    if (ipInput.trim() && !isValidIp(ipInput)) {
+      setStatus('Error: Invalid IP address format. Please enter a valid IPv4 or IPv6 address.');
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setStatus('');
@@ -111,7 +132,6 @@ export default function IpLookup() {
     }
   };
 
-  // Render variables
   const showResults = result && !loading;
 
   let locationVal = '';
@@ -119,6 +139,7 @@ export default function IpLookup() {
   let timezoneVal = '';
   let coordsVal = '';
   let mapSrc = '';
+  let googleMapsUrl = '';
 
   if (result) {
     const city = result.city || '';
@@ -138,6 +159,7 @@ export default function IpLookup() {
       const lat = result.latitude;
       const lon = result.longitude;
       mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.02}%2C${lat - 0.02}%2C${lon + 0.02}%2C${lat + 0.02}&layer=mapnik&marker=${lat}%2C${lon}`;
+      googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
     } else {
       coordsVal = "Unknown";
     }
@@ -209,21 +231,49 @@ export default function IpLookup() {
               ))}
             </div>
 
-            {/* Interactive Map */}
+            {/* Interactive Map Section */}
             {mapSrc && (
               <div className="flex flex-col gap-2 w-full h-full">
-                <label className="text-sm font-semibold text-text-main">Map Preview</label>
-                <div className="rounded-xl overflow-hidden border border-border bg-app flex-1 min-h-[250px]">
-                  <iframe
-                    id="iplookup-map"
-                    title="IP Location Map"
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0, borderRadius: '10px' }}
-                    allowFullScreen
-                    src={mapSrc}
-                  />
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-text-main">Map Preview</label>
+                  {googleMapsUrl && (
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-accent hover:underline flex items-center gap-1"
+                    >
+                      External Map ↗ (Leaves Site)
+                    </a>
+                  )}
+                </div>
+                <div className="rounded-xl overflow-hidden border border-border bg-app flex-1 min-h-[250px] flex items-center justify-center p-4">
+                  {mapAllowed ? (
+                    <iframe
+                      id="iplookup-map"
+                      title="IP Location Map"
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{ border: 0, borderRadius: '10px' }}
+                      allowFullScreen
+                      src={mapSrc}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-center p-4">
+                      <span className="text-sm text-text-main font-semibold">🗺️ OpenStreetMap Preview</span>
+                      <p className="text-xs text-text-muted max-w-[260px]">
+                        Loading map tiles sends tile requests to OpenStreetMap Foundation.
+                      </p>
+                      <Button
+                        variant="secondary"
+                        onClick={() => grantConsent('osm')}
+                        className="text-xs"
+                      >
+                        Enable Map Preview
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -231,7 +281,7 @@ export default function IpLookup() {
         </div>
       )}
 
-      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm" id="iplookup-status">{status}</p>}
+      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm mt-2" id="iplookup-status">{status}</p>}
     </Card>
   );
 }

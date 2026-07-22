@@ -1309,6 +1309,12 @@ export default function CodonTable() {
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
         <ToolHeader title="RNA Codon Table" />
+        <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs text-text-muted bg-app/50 border border-border px-3 py-2 rounded-lg">
+          <p className="leading-relaxed">
+            <strong className="text-text-main">Standard Genetic Code (NCBI Translation Table 1)</strong>: Maps 64 RNA codons to 20 amino acids and 3 stop codons (UAA Ochre, UAG Amber, UGA Opal).
+            <span className="ml-1 opacity-90">AUG encodes Methionine (Met) and functions as canonical start codon in initiation context. <em>Note: Mitochondrial genomes and certain organisms use non-standard genetic codes.</em></span>
+          </p>
+        </div>
 
         {/* Filter Buttons */}
         <div className="flex w-full flex-wrap items-center justify-end gap-3">

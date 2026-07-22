@@ -5,6 +5,7 @@
 ## Documentation roles
 
 - `README.md` is the brief manual for people using the site.
+- `CONTRIBUTING.md` is the single source of truth for contribution standards and AI guidelines.
 - `TODO.md` is the maintained backlog, completed-work log, and update process.
 - `CODEBASE.md` is this architecture and maintenance reference.
 

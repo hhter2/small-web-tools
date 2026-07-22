@@ -583,6 +583,10 @@ export default function WebsiteFontExtractor() {
           <span className="text-[0.82rem] text-text-muted max-w-[360px]">The site may use only system fonts or load fonts dynamically via JavaScript.</span>
         </div>
       )}
+      {/* Static analysis footnote */}
+      <p className="text-xs text-text-muted mt-4 border-t border-border pt-3">
+        ℹ️ <strong>Note:</strong> This tool analyzes static HTML and CSS stylesheets. Fonts loaded dynamically via JavaScript runtime, shadow DOM, or behind authentication screens may not be detected.
+      </p>
     </Card>
   );
 }

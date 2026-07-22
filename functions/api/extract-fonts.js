@@ -182,24 +182,21 @@ export async function onRequestPost(context) {
     const linked = await Promise.all(cssUrls.map(u => fetchAndParseCss(u)));
     allFonts.push(...linked.flat().map(f => ({ ...f, referer: targetUrl.href })));
 
-    // ── Deduplicate by URL ────────────────────────────────────
-    const byUrl = new Map();
-    for (const f of allFonts) if (!byUrl.has(f.url)) byUrl.set(f.url, f);
-    const unique = Array.from(byUrl.values());
-
-    // ── Sort & deduplicate by family (normal/400 first) ───────
-    unique.sort((a, b) => {
-      const ai = a.style?.toLowerCase().includes('italic') ? 1 : 0;
-      const bi = b.style?.toLowerCase().includes('italic') ? 1 : 0;
-      if (ai !== bi) return ai - bi;
-      return Math.abs(parseInt(a.weight||'400')-400) - Math.abs(parseInt(b.weight||'400')-400);
-    });
-    const byFamily = new Map();
-    for (const f of unique) {
-      const key = f.family.toLowerCase().trim();
-      if (!byFamily.has(key)) byFamily.set(key, f);
+    // ── Deduplicate by (url + family + weight + style) ────────
+    const fontMap = new Map();
+    for (const f of allFonts) {
+      const key = `${f.url}|${(f.family || '').toLowerCase().trim()}|${f.weight || '400'}|${f.style || 'normal'}`;
+      if (!fontMap.has(key)) {
+        fontMap.set(key, f);
+      }
     }
-    const result = Array.from(byFamily.values()).sort((a,b) => a.family.localeCompare(b.family));
+    const result = Array.from(fontMap.values()).sort((a, b) => {
+      const famComp = a.family.localeCompare(b.family);
+      if (famComp !== 0) return famComp;
+      const wgtComp = parseInt(a.weight || '400') - parseInt(b.weight || '400');
+      if (wgtComp !== 0) return wgtComp;
+      return (a.style || '').localeCompare(b.style || '');
+    });
 
     return new Response(JSON.stringify({ ok: true, fonts: result, total: result.length, sourceUrl: targetUrl.href }), {
       status: 200,

@@ -11,17 +11,17 @@
 
 ## Quick facts
 
-| Item | Current implementation |
-| --- | --- |
 | Package | `small-web-tools` |
-| Version | Dynamic from latest git tag (`v0.5.4-beta`) |
+| Version | `0.5.4-beta` (env/CI injected or fallback to `package.json`) |
 | UI framework | React 18 |
-| Build tool | Vite 5 |
+| Build tool | Vite 6 |
+| Testing | Vitest + React Testing Library + jsdom |
+| Linting & Types | ESLint v9, JSDoc + `jsconfig.json` checkJs |
 | Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
-| Routing | In-app state synchronized to URL hashes; no React Router |
-| Server functions | Cloudflare Pages-compatible handlers in `functions/api/` |
+| Routing | In-app state synchronized to URL hashes with `React.lazy()` code splitting; no React Router |
+| Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
-At build/startup, `vite.config.js` prefers the newest git tag for the displayed app version and falls back to `package.json` when no tag is available.
+Version string is supplied via `VITE_APP_VERSION` environment variable or fallback to `package.json`.
 
 ## Repository map
 
@@ -31,17 +31,26 @@ small-web-tools/
 ├── PRIVACY.md                User-facing privacy policy and disclaimers
 ├── TODO.md                   Backlog, completed work, and update process
 ├── CODEBASE.md               Architecture and maintenance reference
-├── package.json              Scripts and dependencies
-├── vite.config.js            Vite config, version injection, local API middleware
+├── package.json              Scripts, dependencies, and pipeline commands
+├── jsconfig.json             TypeScript checkJs configuration for JavaScript
+├── eslint.config.js          ESLint flat config for React, hooks, and Cloudflare functions
+├── vitest.config.js          Vitest runner configuration
+├── vite.config.js            Vite 6 config, dev proxy, and Rollup manualChunks
 ├── tailwind.config.js        Tailwind tokens mapped to CSS custom properties
 ├── postcss.config.js         Tailwind and Autoprefixer configuration
 ├── index.html                Vite HTML shell and React mount point
+├── .github/
+│   ├── dependabot.yml        Weekly dependency update configuration
+│   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
 ├── public/
+│   ├── _headers              Cloudflare Pages security response headers
 │   └── favicon.svg           Static site icon
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
-│   ├── App.jsx               Navigation metadata, hash routing, shell, and tool switch
+│   ├── App.jsx               Navigation metadata, hash routing with React.lazy, shell, and tool switch
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
+│   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
+│   ├── tests/                Vitest unit test suites and setup
 │   └── components/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
 │       ├── HomeGrid.jsx      Dashboard tool grid
@@ -49,6 +58,7 @@ small-web-tools/
 │       ├── useMediaSeparator.js
 │       └── mediaSeparatorEngine.js
 └── functions/
+    ├── _shared/              Shared serverless utilities (safeExternalFetch, fontToken)
     └── api/                 Cloudflare Pages API handlers
 ```
 

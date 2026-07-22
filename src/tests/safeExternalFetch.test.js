@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { isPrivateHost, validateTargetUrl } from '../../functions/_shared/safeExternalFetch.js';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  isPrivateHost,
+  safeExternalFetch,
+  validateTargetUrl,
+} from '../../functions/_shared/safeExternalFetch.js';
 
 describe('isPrivateHost', () => {
   it('blocks empty/null hostname', () => {
@@ -41,8 +45,23 @@ describe('isPrivateHost', () => {
     expect(isPrivateHost('169.254.169.254')).toBe(true);
   });
 
+  it('blocks carrier-grade NAT, benchmark, documentation, and multicast ranges', () => {
+    expect(isPrivateHost('100.64.0.1')).toBe(true);
+    expect(isPrivateHost('198.18.0.1')).toBe(true);
+    expect(isPrivateHost('203.0.113.10')).toBe(true);
+    expect(isPrivateHost('224.0.0.1')).toBe(true);
+  });
+
   it('blocks IPv6 loopback ::1', () => {
     expect(isPrivateHost('::1')).toBe(true);
+  });
+
+  it('blocks IPv6 private, link-local, documentation, and mapped loopback addresses', () => {
+    expect(isPrivateHost('fd00::1')).toBe(true);
+    expect(isPrivateHost('fe80::1')).toBe(true);
+    expect(isPrivateHost('2001:db8::1')).toBe(true);
+    expect(isPrivateHost('::ffff:127.0.0.1')).toBe(true);
+    expect(isPrivateHost('::ffff:7f00:1')).toBe(true);
   });
 
   it('allows public IP addresses', () => {
@@ -54,6 +73,57 @@ describe('isPrivateHost', () => {
   it('allows public domain names', () => {
     expect(isPrivateHost('example.com')).toBe(false);
     expect(isPrivateHost('fonts.googleapis.com')).toBe(false);
+  });
+});
+
+describe('safeExternalFetch', () => {
+  const publicResolver = vi.fn(async () => ['93.184.216.34']);
+
+  it('rejects a public hostname that resolves to a private address', async () => {
+    await expect(safeExternalFetch('https://example.com', {
+      resolveHostname: async () => ['127.0.0.1'],
+      fetchImpl: vi.fn(),
+    })).rejects.toThrow('resolves to a private');
+  });
+
+  it('revalidates DNS after every redirect', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(new Response(null, {
+        status: 302,
+        headers: { Location: 'https://cdn.example.com/font.css' },
+      }))
+      .mockResolvedValueOnce(new Response('body', {
+        status: 200,
+        headers: { 'Content-Type': 'text/css' },
+      }));
+    const resolver = vi.fn(async (hostname) => (
+      hostname === 'cdn.example.com' ? ['10.0.0.5'] : ['93.184.216.34']
+    ));
+
+    await expect(safeExternalFetch('https://example.com', {
+      fetchImpl,
+      resolveHostname: resolver,
+    })).rejects.toThrow('resolves to a private');
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(resolver).toHaveBeenCalledTimes(2);
+  });
+
+  it('enforces response MIME and streamed byte limits', async () => {
+    const htmlResponse = new Response('<html></html>', {
+      headers: { 'Content-Type': 'text/html' },
+    });
+    await expect(safeExternalFetch('https://example.com/file.css', {
+      fetchImpl: vi.fn(async () => htmlResponse),
+      resolveHostname: publicResolver,
+      allowedContentTypes: ['text/css'],
+    })).rejects.toThrow('Unexpected response Content-Type');
+
+    const largeResponse = new Response(new Uint8Array(5));
+    await expect(safeExternalFetch('https://example.com/file', {
+      fetchImpl: vi.fn(async () => largeResponse),
+      resolveHostname: publicResolver,
+      maxBytes: 4,
+    })).rejects.toThrow('Response size exceeds limit');
   });
 });
 

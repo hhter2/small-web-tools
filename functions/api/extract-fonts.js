@@ -1,12 +1,24 @@
 import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFetch';
 import { signFontToken } from '../_shared/fontToken';
+import { enforceRateLimit } from '../_shared/rateLimit';
+
+function sameOriginCorsHeaders(request) {
+  const origin = request.headers.get('Origin');
+  return origin && origin === new URL(request.url).origin
+    ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' }
+    : {};
+}
 
 // Font Extractor API — POST /api/extract-fonts
 export async function onRequestOptions(context) {
+  const corsHeaders = sameOriginCorsHeaders(context.request);
+  if (!corsHeaders['Access-Control-Allow-Origin']) {
+    return new Response(null, { status: 403 });
+  }
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...corsHeaders,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
     }
@@ -18,10 +30,22 @@ export async function onRequestPost(context) {
 
   const corsHeaders = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+    'Cache-Control': 'no-store',
+    ...sameOriginCorsHeaders(request),
   };
 
   try {
+    const limited = await enforceRateLimit(context, { name: 'extract-fonts', limit: 20 });
+    if (limited) return limited;
+
+    const secretStr = env?.FONT_PROXY_SIGNING_SECRET;
+    if (typeof secretStr !== 'string' || secretStr.length < 32) {
+      return new Response(JSON.stringify({ ok: false, error: 'Font proxy is not configured' }), {
+        status: 503,
+        headers: corsHeaders
+      });
+    }
+
     let parsed;
     try {
       parsed = await request.json();
@@ -46,8 +70,6 @@ export async function onRequestPost(context) {
         headers: corsHeaders
       });
     }
-
-    const secretStr = env?.FONT_PROXY_SIGNING_SECRET;
 
     function resolveUrl(base, relative) {
       try {
@@ -123,10 +145,14 @@ export async function onRequestPost(context) {
     const fetchedCss = new Set();
 
     async function fetchAndParseCss(url, depth = 0) {
-      if (depth > 3 || fetchedCss.has(url)) return [];
+      if (depth > 3 || fetchedCss.size >= 20 || fetchedCss.has(url)) return [];
       fetchedCss.add(url);
       try {
-        const { buffer } = await safeExternalFetch(url, { maxBytes: 1 * 1024 * 1024, timeoutMs: 5000 });
+        const { buffer } = await safeExternalFetch(url, {
+          maxBytes: 1 * 1024 * 1024,
+          timeoutMs: 5000,
+          allowedContentTypes: ['text/css'],
+        });
         const decoder = new TextDecoder('utf-8');
         const css = decoder.decode(buffer);
         const { fonts, imports } = extractFontsFromCSS(css, url);
@@ -138,7 +164,11 @@ export async function onRequestPost(context) {
     // ── Fetch HTML safely ──
     let html = '';
     try {
-      const { buffer } = await safeExternalFetch(targetUrl.href, { maxBytes: 2 * 1024 * 1024, timeoutMs: 8000 });
+      const { buffer } = await safeExternalFetch(targetUrl.href, {
+        maxBytes: 2 * 1024 * 1024,
+        timeoutMs: 8000,
+        allowedContentTypes: ['text/html', 'application/xhtml+xml'],
+      });
       const decoder = new TextDecoder('utf-8');
       html = decoder.decode(buffer);
     } catch (err) {
@@ -205,7 +235,9 @@ export async function onRequestPost(context) {
         if (f.url.startsWith('data:')) {
           return { ...f, proxyUrl: f.url };
         }
-        const token = await signFontToken(f.url, secretStr);
+        const token = await signFontToken(f.url, secretStr, {
+          audience: new URL(request.url).origin,
+        });
         return {
           ...f,
           token,

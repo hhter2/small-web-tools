@@ -1,0 +1,8 @@
+# Local Cloudflare Pages Functions configuration.
+# Generate a unique value with at least 32 random characters. Never commit the real secret.
+FONT_PROXY_SIGNING_SECRET=replace-with-a-unique-random-secret-at-least-32-characters
+
+# Optional Cloudflare KV binding used for distributed rate limiting:
+# RATE_LIMIT_KV
+#
+# Preferred: configure a Cloudflare Rate Limiting binding named RATE_LIMITER.

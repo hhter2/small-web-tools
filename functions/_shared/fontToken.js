@@ -1,90 +1,106 @@
-// HMAC-SHA-256 Signed Token Generator and Verifier for Font Proxy (H-03)
+const DEFAULT_TTL_MS = 5 * 60 * 1000;
+const MAX_TTL_MS = 10 * 60 * 1000;
 
-const DEFAULT_SECRET = 'small_web_tools_font_proxy_secret_key_2026';
-
-function base64UrlEncode(str) {
-  return btoa(str)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-function base64UrlDecode(str) {
-  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (base64.length % 4) {
-    base64 += '=';
+function requireSecret(secret) {
+  if (typeof secret !== 'string' || secret.length < 32) {
+    throw new Error('FONT_PROXY_SIGNING_SECRET must contain at least 32 characters');
   }
-  return atob(base64);
+  return secret;
 }
 
-async function getHmacKey(secretStr) {
-  const enc = new TextEncoder();
-  return await crypto.subtle.importKey(
+function bytesToBase64Url(bytes) {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlToBytes(value) {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error('Invalid base64url encoding');
+  let base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) base64 += '=';
+  const binary = atob(base64);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+async function getHmacKey(secret) {
+  return crypto.subtle.importKey(
     'raw',
-    enc.encode(secretStr || DEFAULT_SECRET),
+    new TextEncoder().encode(requireSecret(secret)),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign', 'verify']
+    ['sign', 'verify'],
   );
 }
 
-export async function signFontToken(fontUrl, secretStr, ttlMs = 600_000) {
-  const exp = Date.now() + ttlMs;
-  const payload = JSON.stringify({ url: fontUrl, exp });
-  const payloadB64 = base64UrlEncode(payload);
+export async function signFontToken(fontUrl, secret, options = {}) {
+  const ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
+  if (!Number.isFinite(ttlMs) || ttlMs <= 0 || ttlMs > MAX_TTL_MS) {
+    throw new Error('Font token TTL is outside the allowed range');
+  }
 
-  const key = await getHmacKey(secretStr);
-  const enc = new TextEncoder();
-  const signatureBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));
+  const now = Date.now();
+  const nonce = new Uint8Array(16);
+  crypto.getRandomValues(nonce);
+  const payload = {
+    url: new URL(fontUrl).href,
+    aud: options.audience,
+    iat: now,
+    exp: now + ttlMs,
+    jti: bytesToBase64Url(nonce),
+  };
+  if (!payload.aud) throw new Error('Font token audience is required');
 
-  const sigB64 = base64UrlEncode(String.fromCharCode(...new Uint8Array(signatureBuf)));
-  return `${payloadB64}.${sigB64}`;
+  const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+  const payloadB64 = bytesToBase64Url(payloadBytes);
+  const key = await getHmacKey(secret);
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(payloadB64),
+  );
+  return payloadB64 + '.' + bytesToBase64Url(new Uint8Array(signature));
 }
 
-export async function verifyFontToken(token, secretStr) {
-  if (!token || typeof token !== 'string') {
-    throw new Error('Token is missing');
-  }
-
+export async function verifyFontToken(token, secret, options = {}) {
+  if (!token || typeof token !== 'string') throw new Error('Token is missing');
   const parts = token.split('.');
-  if (parts.length !== 2) {
-    throw new Error('Malformed token structure');
-  }
+  if (parts.length !== 2) throw new Error('Malformed token structure');
+  const [payloadB64, signatureB64] = parts;
 
-  const [payloadB64, sigB64] = parts;
-
-  const key = await getHmacKey(secretStr);
-  const enc = new TextEncoder();
-
-  let rawSig;
+  let signature;
   try {
-    const rawSigStr = base64UrlDecode(sigB64);
-    rawSig = new Uint8Array(rawSigStr.length);
-    for (let i = 0; i < rawSigStr.length; i++) {
-      rawSig[i] = rawSigStr.charCodeAt(i);
-    }
+    signature = base64UrlToBytes(signatureB64);
   } catch {
     throw new Error('Invalid token signature encoding');
   }
 
-  const isValid = await crypto.subtle.verify('HMAC', key, rawSig, enc.encode(payloadB64));
-  if (!isValid) {
-    throw new Error('Invalid font token signature');
-  }
+  const key = await getHmacKey(secret);
+  const valid = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    signature,
+    new TextEncoder().encode(payloadB64),
+  );
+  if (!valid) throw new Error('Invalid font token signature');
 
   let payload;
   try {
-    payload = JSON.parse(base64UrlDecode(payloadB64));
+    payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payloadB64)));
   } catch {
     throw new Error('Invalid token payload JSON');
   }
 
-  if (!payload.exp || Date.now() > payload.exp) {
-    throw new Error('Font token has expired');
+  const now = options.now ?? Date.now();
+  if (!Number.isFinite(payload.iat) || !Number.isFinite(payload.exp)) {
+    throw new Error('Font token timestamps are invalid');
   }
-
-  if (!payload.url) {
-    throw new Error('Font token payload is missing target URL');
+  if (payload.exp <= now) throw new Error('Font token has expired');
+  if (payload.iat > now + 30_000 || payload.exp - payload.iat > MAX_TTL_MS) {
+    throw new Error('Font token lifetime is invalid');
+  }
+  if (!payload.url || !payload.jti) throw new Error('Font token payload is incomplete');
+  if (!options.audience || payload.aud !== options.audience) {
+    throw new Error('Font token audience mismatch');
   }
 
   return payload;

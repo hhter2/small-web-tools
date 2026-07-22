@@ -210,8 +210,24 @@ export default defineConfig({
     port: 3000,
     host: '127.0.0.1',
   },
-  optimizeDeps: {
-    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('exifreader') || id.includes('jszip') || id.includes('pdf-lib') || id.includes('docx') || id.includes('xlsx')) {
+              return 'vendor-meta';
+            }
+            if (id.includes('ffmpeg')) {
+              return 'vendor-ffmpeg';
+            }
+          }
+        }
+      }
+    }
   },
   plugins: [
     react(),

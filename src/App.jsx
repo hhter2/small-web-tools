@@ -1,33 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import HomeGrid from './components/HomeGrid.jsx';
-import SlashesConverter from './components/SlashesConverter.jsx';
-import CasingSwitcher from './components/CasingSwitcher.jsx';
-import WordCounter from './components/WordCounter.jsx';
-import DateCounter from './components/DateCounter.jsx';
-import CurrencyCounter from './components/CurrencyCounter.jsx';
-import ColorConverter from './components/ColorConverter.jsx';
-import AsciiConverter from './components/AsciiConverter.jsx';
-import UnicodeConverter from './components/UnicodeConverter.jsx';
-import BaseConverter from './components/BaseConverter.jsx';
-import DnaConverter from './components/DnaConverter.jsx';
-import IpLookup from './components/IpLookup.jsx';
-import ImgMeta from './components/ImgMeta.jsx';
-import RandomWheel from './components/RandomWheel.jsx';
-import TypingSpeedTest from './components/TypingSpeedTest.jsx';
-import CodonTable from './components/CodonTable.jsx';
-import NetworkSpeedTest from './components/NetworkSpeedTest.jsx';
-import QrBarcodeGenerator from './components/QrBarcodeGenerator.jsx';
-import PasswordGenerator from './components/PasswordGenerator.jsx';
-import DocMeta from './components/DocMeta.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import DnaRnaIcon from './components/DnaRnaIcon.jsx';
-import WebsiteFontExtractor from './components/WebsiteFontExtractor.jsx';
-import QrBarcodeScanner from './components/QrBarcodeScanner.jsx';
-import AudioMeta from './components/AudioMeta.jsx';
-import VideoMeta from './components/VideoMeta.jsx';
-import MediaSeparator from './components/MediaSeparator';
-import FolderAnalyzer from './components/FolderAnalyzer.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
+import Spinner from './components/ui/Spinner';
+
+// Dynamic lazy imports for tools to optimize bundle size
+const SlashesConverter = React.lazy(() => import('./components/SlashesConverter.jsx'));
+const CasingSwitcher = React.lazy(() => import('./components/CasingSwitcher.jsx'));
+const WordCounter = React.lazy(() => import('./components/WordCounter.jsx'));
+const DateCounter = React.lazy(() => import('./components/DateCounter.jsx'));
+const CurrencyCounter = React.lazy(() => import('./components/CurrencyCounter.jsx'));
+const ColorConverter = React.lazy(() => import('./components/ColorConverter.jsx'));
+const AsciiConverter = React.lazy(() => import('./components/AsciiConverter.jsx'));
+const UnicodeConverter = React.lazy(() => import('./components/UnicodeConverter.jsx'));
+const BaseConverter = React.lazy(() => import('./components/BaseConverter.jsx'));
+const DnaConverter = React.lazy(() => import('./components/DnaConverter.jsx'));
+const IpLookup = React.lazy(() => import('./components/IpLookup.jsx'));
+const ImgMeta = React.lazy(() => import('./components/ImgMeta.jsx'));
+const RandomWheel = React.lazy(() => import('./components/RandomWheel.jsx'));
+const TypingSpeedTest = React.lazy(() => import('./components/TypingSpeedTest.jsx'));
+const CodonTable = React.lazy(() => import('./components/CodonTable.jsx'));
+const NetworkSpeedTest = React.lazy(() => import('./components/NetworkSpeedTest.jsx'));
+const QrBarcodeGenerator = React.lazy(() => import('./components/QrBarcodeGenerator.jsx'));
+const PasswordGenerator = React.lazy(() => import('./components/PasswordGenerator.jsx'));
+const DocMeta = React.lazy(() => import('./components/DocMeta.jsx'));
+const WebsiteFontExtractor = React.lazy(() => import('./components/WebsiteFontExtractor.jsx'));
+const QrBarcodeScanner = React.lazy(() => import('./components/QrBarcodeScanner.jsx'));
+const AudioMeta = React.lazy(() => import('./components/AudioMeta.jsx'));
+const VideoMeta = React.lazy(() => import('./components/VideoMeta.jsx'));
+const MediaSeparator = React.lazy(() => import('./components/MediaSeparator'));
+const FolderAnalyzer = React.lazy(() => import('./components/FolderAnalyzer.jsx'));
 
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -713,68 +716,76 @@ export default function App() {
   );
 
   // Render active tool component
-  const renderActiveTool = () => {
+    if (activeTool === 'tool-home') {
+      return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
+    }
+
+    let toolNode;
     switch (activeTool) {
-      case 'tool-home':
-        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
       case 'tool-slash':
-        return <SlashesConverter />;
+        toolNode = <SlashesConverter />; break;
       case 'tool-wc':
-        return <WordCounter />;
+        toolNode = <WordCounter />; break;
       case 'tool-casing':
-        return <CasingSwitcher />;
+        toolNode = <CasingSwitcher />; break;
       case 'tool-date':
-        return <DateCounter />;
+        toolNode = <DateCounter />; break;
       case 'tool-currency':
-        return <CurrencyCounter />;
+        toolNode = <CurrencyCounter />; break;
       case 'tool-color':
-        return <ColorConverter />;
+        toolNode = <ColorConverter />; break;
       case 'tool-ascii':
-        return <AsciiConverter />;
+        toolNode = <AsciiConverter />; break;
       case 'tool-unicode':
-        return <UnicodeConverter />;
+        toolNode = <UnicodeConverter />; break;
       case 'tool-base':
-        return <BaseConverter />;
+        toolNode = <BaseConverter />; break;
       case 'tool-dna':
-        return <DnaConverter />;
+        toolNode = <DnaConverter />; break;
       case 'tool-iplookup':
-        return <IpLookup />;
+        toolNode = <IpLookup />; break;
       case 'tool-speedtest':
-        return <NetworkSpeedTest />;
+        toolNode = <NetworkSpeedTest />; break;
       case 'tool-imgmeta':
-        return <ImgMeta />;
+        toolNode = <ImgMeta />; break;
       case 'tool-docmeta':
       case 'tool-officemeta':
-        return <DocMeta />;
+        toolNode = <DocMeta />; break;
       case 'tool-audiometa':
-        return <AudioMeta />;
+        toolNode = <AudioMeta />; break;
       case 'tool-videometa':
-        return <VideoMeta />;
+        toolNode = <VideoMeta />; break;
       case 'tool-mediasplit':
-        return <MediaSeparator />;
+        toolNode = <MediaSeparator />; break;
       case 'tool-wheel':
-        return <RandomWheel />;
+        toolNode = <RandomWheel />; break;
       case 'tool-typing':
-        return <TypingSpeedTest />;
+        toolNode = <TypingSpeedTest />; break;
       case 'tool-codon':
-        return <CodonTable />;
+        toolNode = <CodonTable />; break;
       case 'tool-qrcode':
-        return <QrBarcodeGenerator initialTab="qr" key="qrcode" />;
+        toolNode = <QrBarcodeGenerator initialTab="qr" key="qrcode" />; break;
       case 'tool-barcode':
-        return <QrBarcodeGenerator initialTab="barcode" key="barcode" />;
+        toolNode = <QrBarcodeGenerator initialTab="barcode" key="barcode" />; break;
       case 'tool-qrbarcodescan':
-        return <QrBarcodeScanner key="qrbarcodescan" />;
+        toolNode = <QrBarcodeScanner key="qrbarcodescan" />; break;
       case 'tool-password':
-        return <PasswordGenerator initialTab="generate" key="password" />;
+        toolNode = <PasswordGenerator initialTab="generate" key="password" />; break;
       case 'tool-pwstrength':
-        return <PasswordGenerator initialTab="check" key="pwstrength" />;
+        toolNode = <PasswordGenerator initialTab="check" key="pwstrength" />; break;
       case 'tool-fontextractor':
-        return <WebsiteFontExtractor />;
+        toolNode = <WebsiteFontExtractor />; break;
       case 'tool-folder-analyzer':
-        return <FolderAnalyzer />;
+        toolNode = <FolderAnalyzer />; break;
       default:
         return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} setActiveTab={setSelectedHomeTab} />;
     }
+
+    return (
+      <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">Loading tool...</span></div>}>
+        {toolNode}
+      </Suspense>
+    );
   };
 
   const activeTitle = activeTool === 'tool-home'

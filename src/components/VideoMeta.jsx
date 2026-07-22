@@ -4,6 +4,7 @@ import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { RESOURCE_LIMITS, validateBatchCount, validateFileSize } from '../lib/resourceLimits';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -655,10 +656,14 @@ export default function VideoMeta() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const processFiles = async (fileList) => {
+    const countCheck = validateBatchCount(fileList, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'media files');
+    if (!countCheck.valid) { setStatus(countCheck.error); return; }
     setLoading(true); setStatus('Parsing files...');
     const newFiles = [];
     const supportedExts = ['mp4', 'mov', 'm4v', 'f4v', '3gp', '3g2', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'ts', 'mts', 'm2ts', 'mxf', 'log', 'txt'];
     for (const file of fileList) {
+      const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_MEDIA_SIZE_BYTES, 'Media file');
+      if (!sizeCheck.valid) { setStatus(sizeCheck.error); continue; }
       const ext = file.name.split('.').pop().toLowerCase();
       if (!supportedExts.includes(ext)) { setStatus(`Skipped unsupported file: ${file.name}`); continue; }
       if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(`Already loaded: ${file.name}`); continue; }

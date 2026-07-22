@@ -3,6 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { RESOURCE_LIMITS, validateFileSize } from '../lib/resourceLimits';
 
 // ── Supported format labels for display ──────────────────────────────────────
 const FORMAT_LABELS = {
@@ -451,6 +452,11 @@ export default function QrBarcodeScanner() {
   // ── File scanning ──────────────────────────────────────────────────────────
   const scanFile = async (file) => {
     if (!file) return;
+    const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_QR_IMAGE_BYTES, 'QR image');
+    if (!sizeCheck.valid) {
+      setFileError(sizeCheck.error);
+      return;
+    }
     if (!/^image\//i.test(file.type)) {
       setFileError('Please select an image file (JPEG, PNG, GIF, WebP, BMP, etc.).');
       return;

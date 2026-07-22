@@ -4,6 +4,13 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 import JSZip from 'jszip';
+import { RESOURCE_LIMITS, validateBatchCount, validateFileSize, validateZipArchive } from '../lib/resourceLimits';
+
+const loadSafeZip = async (file) => {
+  const archiveCheck = await validateZipArchive(file);
+  if (!archiveCheck.valid) throw new Error(archiveCheck.error);
+  return JSZip.loadAsync(file);
+};
 
 // Helper to format bytes
 const formatBytes = (bytes) => {
@@ -374,7 +381,7 @@ const parsePdfFile = async (file) => {
 
 // Helper to parse OpenOffice (ODF) metadata from meta.xml
 const parseOpenOfficeFile = async (file) => {
-  const zip = await JSZip.loadAsync(file);
+  const zip = await loadSafeZip(file);
   const metaFile = zip.file("meta.xml");
   
   const coreData = {};
@@ -651,6 +658,11 @@ export default function DocMeta() {
   };
 
   const processFiles = async (fileList) => {
+    const countCheck = validateBatchCount(fileList, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'documents');
+    if (!countCheck.valid) {
+      setStatus(countCheck.error);
+      return;
+    }
     setLoading(true);
     setStatus('Parsing document files...');
     const acceptedExtensions = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp', 'odg', 'pdf'];
@@ -658,6 +670,11 @@ export default function DocMeta() {
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
+      const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_DOC_SIZE_BYTES, 'Document');
+      if (!sizeCheck.valid) {
+        setStatus(sizeCheck.error);
+        continue;
+      }
       const ext = file.name.split('.').pop().toLowerCase();
       
       if (!acceptedExtensions.includes(ext)) {
@@ -689,7 +706,7 @@ export default function DocMeta() {
           customData = parsedOdf.customData;
           thumbnail = parsedOdf.thumbnail;
         } else {
-          const zip = await JSZip.loadAsync(file);
+          const zip = await loadSafeZip(file);
           
           const coreFile = zip.file("docProps/core.xml");
           if (coreFile) {
@@ -872,7 +889,7 @@ export default function DocMeta() {
     }
 
     if (['odt', 'ods', 'odp', 'odg'].includes(type)) {
-      const zip = await JSZip.loadAsync(fileObj);
+      const zip = await loadSafeZip(fileObj);
       const metaFile = zip.file("meta.xml");
       if (metaFile) {
         const metaText = await metaFile.async("string");
@@ -900,7 +917,7 @@ export default function DocMeta() {
       return await zip.generateAsync({ type: "blob" });
     }
 
-    const zip = await JSZip.loadAsync(fileObj);
+    const zip = await loadSafeZip(fileObj);
     const coreFile = zip.file("docProps/core.xml");
     if (coreFile) {
       const coreText = await coreFile.async("string");

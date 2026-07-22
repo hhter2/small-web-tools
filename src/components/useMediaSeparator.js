@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState, useMemo } from 'react';
 import { ensureFFmpegLoaded, terminateFFmpeg, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
+import { RESOURCE_LIMITS, validateBatchCount, validateFileSize } from '../lib/resourceLimits';
 
 export const STATUS = {
   PENDING: 'ready', // Renamed internal value to 'ready' to improve UX before starting
@@ -25,6 +26,7 @@ export function useMediaSeparator() {
   
   const [engineLoading, setEngineLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastError, setLastError] = useState('');
   const processingRef = useRef(false);
   const stopRef = useRef(false);
 
@@ -33,7 +35,19 @@ export function useMediaSeparator() {
   }, []);
 
   const addFiles = useCallback((fileList) => {
-    const newItems = Array.from(fileList).map((file) => ({
+    const files = Array.from(fileList);
+    const countCheck = validateBatchCount(files, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'media files');
+    if (!countCheck.valid) {
+      setLastError(countCheck.error);
+      return [];
+    }
+    const oversized = files.find((file) => !validateFileSize(file, RESOURCE_LIMITS.MAX_MEDIA_SIZE_BYTES).valid);
+    if (oversized) {
+      setLastError(validateFileSize(oversized, RESOURCE_LIMITS.MAX_MEDIA_SIZE_BYTES, 'Media file').error);
+      return [];
+    }
+    setLastError('');
+    const newItems = files.map((file) => ({
       id: nextId(),
       file,
       status: STATUS.PENDING,
@@ -259,6 +273,7 @@ export function useMediaSeparator() {
     engineLoading,
     isProcessing,
     globalProgress,
+    lastError,
     addFiles,
     removeItem,
     clearDone,

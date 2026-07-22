@@ -15,6 +15,7 @@ export default function MediaSeparator() {
     engineLoading,
     isProcessing,
     globalProgress,
+    lastError,
     addFiles,
     removeItem,
     clearDone,
@@ -74,6 +75,12 @@ export default function MediaSeparator() {
       />
 
       <ToolHeader title="Media Splitter" />
+
+      {lastError && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
+          {lastError}
+        </p>
+      )}
 
       {dragOver && items.length > 0 && (
         <div className="absolute inset-0 bg-accent/15 backdrop-blur-[4px] border-[2.5px] border-dashed border-accent rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-accent text-[1.2rem]">

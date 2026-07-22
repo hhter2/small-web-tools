@@ -1,14 +1,11 @@
 import { ZxcvbnFactory } from '@zxcvbn-ts/core';
 import * as common from '@zxcvbn-ts/language-common';
-import * as english from '@zxcvbn-ts/language-en';
+import englishTranslations from '@zxcvbn-ts/language-en/dist/translations.mjs';
 
 const zxcvbn = new ZxcvbnFactory({
-  translations: english.translations,
+  translations: englishTranslations,
   graphs: common.adjacencyGraphs,
-  dictionary: {
-    ...common.dictionary,
-    ...english.dictionary,
-  },
+  dictionary: common.dictionary,
 });
 
 const LABELS = ['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'];

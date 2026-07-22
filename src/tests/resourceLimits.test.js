@@ -4,6 +4,8 @@ import {
   formatBytes,
   validateFileSize,
   validateBatchCount,
+  inspectZipCentralDirectory,
+  validateZipSummary,
 } from '../lib/resourceLimits.js';
 
 describe('RESOURCE_LIMITS constants', () => {
@@ -75,5 +77,42 @@ describe('validateBatchCount', () => {
     const result = validateBatchCount(files, 100);
     expect(result.valid).toBe(false);
     expect(result.error).toContain('exceeds');
+  });
+});
+
+describe('ZIP archive safeguards', () => {
+  const centralDirectoryEntry = (compressed, uncompressed) => {
+    const buffer = new ArrayBuffer(46);
+    const view = new DataView(buffer);
+    view.setUint32(0, 0x02014b50, true);
+    view.setUint32(20, compressed, true);
+    view.setUint32(24, uncompressed, true);
+    return buffer;
+  };
+
+  it('reads entry sizes without decompressing the archive', () => {
+    const summary = inspectZipCentralDirectory(centralDirectoryEntry(100, 500));
+    expect(summary).toMatchObject({
+      entries: 1,
+      totalCompressedBytes: 100,
+      totalUncompressedBytes: 500,
+      compressionRatio: 5,
+    });
+  });
+
+  it('accepts values exactly on configured boundaries', () => {
+    expect(validateZipSummary({
+      entries: RESOURCE_LIMITS.MAX_ZIP_ENTRIES_COUNT,
+      totalUncompressedBytes: RESOURCE_LIMITS.MAX_UNCOMPRESSED_ZIP_BYTES,
+      compressionRatio: RESOURCE_LIMITS.MAX_ZIP_COMPRESSION_RATIO,
+    }).valid).toBe(true);
+  });
+
+  it.each([
+    ['entry count', { entries: 1001, totalUncompressedBytes: 1, compressionRatio: 1 }],
+    ['expanded size', { entries: 1, totalUncompressedBytes: 513 * 1024 * 1024, compressionRatio: 1 }],
+    ['compression ratio', { entries: 1, totalUncompressedBytes: 101, compressionRatio: 101 }],
+  ])('rejects an archive over the %s limit', (_label, summary) => {
+    expect(validateZipSummary(summary).valid).toBe(false);
   });
 });

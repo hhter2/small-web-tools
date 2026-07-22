@@ -49,7 +49,7 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 - **QR Code Generator** and **Barcode Generator** — create downloadable codes.
 - **QR & Barcode Scanner** — scan with a camera or image file.
 - **Password Generator** and **Password Strength** — generate or assess passwords.
-- **Random Wheel** — make a random selection from a custom list.
+- **Random Wheel** — make a cryptographically seeded selection and export a locally verifiable draw record.
 
 ## Privacy and network access
 
@@ -58,13 +58,15 @@ File-focused tools process selected files in the browser whenever possible; file
 - IP Lookup queries a server-side lookup endpoint and external IP providers.
 - Website Font Extractor fetches the public URL supplied by the user through server-side endpoints to work around browser cross-origin limits.
 - Network Speed Test measures real network traffic.
+- Currency Converter requests live rates only after consent; manual rates remain local.
+- Media Splitter downloads the FFmpeg WebAssembly engine from unpkg when first used.
 - Camera scanning requires browser camera permission.
 
 Review a tool's own labels and your browser permissions before using it with sensitive content.
 
 ## Run locally
 
-Requires a current Node.js installation.
+Requires Node.js 22 or 24 and npm. Node 22 is the repository default (`.nvmrc`); CI verifies both supported releases.
 
 ```bash
 npm install
@@ -77,6 +79,10 @@ Vite prints the local URL when the server starts. For a production build and loc
 npm run build
 npm run preview
 ```
+
+`npm run dev` mirrors only the IP lookup function. To exercise all Cloudflare Pages Functions locally (currency rates and website font extraction/proxying), use the Cloudflare Pages development runtime with the Vite server.
+
+The Cloudflare Pages production build must use Node.js 22 or 24, `npm ci` followed by `npm run build`, and publish `dist/`.
 
 ## Documentation
 

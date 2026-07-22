@@ -23,10 +23,11 @@ For tools that require external web data or remote APIs, network requests are st
 
 | Service / Provider | Purpose | Trigger Condition | Data Transmitted | Local Fallback Option | Provider Privacy Policy |
 |---|---|---|---|---|---|
-| **Google Fonts** (`fonts.googleapis.com`, `fonts.gstatic.com`) | Web typography rendering | Initial page load | IP Address, User-Agent, HTTP Referrer | Browser default fallback fonts | [Google Privacy Policy](https://policies.google.com/privacy) |
-| **Open Exchange Rates API** (`open.er-api.com`) | Currency Converter live exchange rates | Currency Converter tool load | Standard HTTP GET request | Manual Rate Override (100% Local) | [Open Exchange Rates Privacy](https://openexchangerates.org/privacy) |
-| **IP Geolocation Provider** (`ipapi.co` / Proxy) | IP Lookup details | IP Lookup tool load or search | Target IP address | Local IP format validation | [ipapi Privacy Policy](https://ipapi.co/privacy/) |
-| **OpenStreetMap Tiles** (`tile.openstreetmap.org`) | Map view rendering in IP Lookup | User opts in / clicks "View Map" | Map tile coordinate requests | Coordinates display without map tiles | [OpenStreetMap Privacy](https://wiki.osmfoundation.org/wiki/Privacy_Policy) |
+| **Exchange-rate provider** (through `/api/exchange-rates`) | Currency Converter live exchange rates | User grants consent and enables live rates | Standard edge request; provider receives the server request | Manual Rate Override (100% local) | [Provider Privacy](https://www.exchangerate-api.com/privacy) |
+| **IP geolocation providers** (through `/api/iplookup`) | IP Lookup details | User grants consent and starts a lookup | Target IP address | Local IP format validation | [ipapi Privacy Policy](https://ipapi.co/privacy/) |
+| **OpenStreetMap embed** (`www.openstreetmap.org`) | Map view rendering | User grants separate map consent | Coordinates and standard browser request metadata | Coordinates display without a map | [OpenStreetMap Privacy](https://wiki.osmfoundation.org/wiki/Privacy_Policy) |
+| **Cloudflare Speed Test** (`speed.cloudflare.com`) | Latency, download, and upload measurements | User grants consent and starts a test | IP address and generated test traffic | No network test | [Cloudflare Privacy](https://www.cloudflare.com/privacypolicy/) |
+| **unpkg FFmpeg core** (`unpkg.com`) | Loads the FFmpeg WebAssembly engine | User opens a feature that requires FFmpeg processing | IP address and standard browser request metadata | Do not use FFmpeg-based extraction/splitting | [unpkg](https://unpkg.com/) |
 | **Cloudflare Pages & Functions** | Website hosting & API proxying | Page load & API proxy calls | Standard edge request & security logs | N/A (Hosting Infrastructure) | [Cloudflare Privacy](https://www.cloudflare.com/privacypolicy/) |
 | **Website Font Extractor API** (`/api/extract-fonts`) | Parsing font CSS of external sites | User submits website URL | Target website URL | N/A (Web inspection tool) | Per target website policy |
 
@@ -34,7 +35,7 @@ For tools that require external web data or remote APIs, network requests are st
 
 ## 3. Google Fonts Notice
 
-Google Fonts stylesheets and font binaries are fetched directly on initial page load to provide uniform typography. Standard HTTP request headers (IP address and User-Agent) are sent to Google servers during font file retrieval. No cookies or personal identity tracking tokens are sent.
+The application security policy permits Google Fonts, but the current application bundle does not require a Google Fonts request on initial page load. Browser fallback fonts remain available.
 
 ---
 

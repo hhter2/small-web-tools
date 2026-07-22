@@ -159,9 +159,10 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 | --- | --- | --- |
 | `GET /api/iplookup?ip=<address>` | `iplookup.js` | Query fallback IP geolocation providers and normalize the response. |
 | `POST /api/extract-fonts` | `extract-fonts.js` | Fetch a public page and inspect linked or embedded font declarations. |
-| `GET /api/font-proxy?url=<url>&referer=<url>` | `font-proxy.js` | Proxy a public font binary for browser download. |
+| `GET /api/font-proxy?token=<signed-token>` | `font-proxy.js` | Validate a short-lived signed request and proxy an approved public font binary. |
+| `GET /api/exchange-rates` | `exchange-rates.js` | Fetch and normalize live USD-based exchange rates after browser consent. |
 
-`vite.config.js` mirrors those endpoints during local development. It also provides local-development-only folder-analysis helpers at `/api/resolve-local-path` and `/api/scan-local-dir`.
+`vite.config.js` mirrors only IP lookup for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions. Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 
 ## Dependencies
 
@@ -171,10 +172,13 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 | `@vitejs/plugin-react`, `vite` | Development server and production build. |
 | `tailwindcss`, `postcss`, `autoprefixer` | Utility CSS build pipeline. |
 | `exifreader` | Image metadata parsing. |
-| `fast-xml-parser`, `jszip` | Office document metadata parsing and archive handling. |
+| `jszip` | Office document metadata parsing and archive handling after archive-limit preflight. |
 | `html5-qrcode` | Camera and file-based QR/barcode scanning. |
 | `qrcode`, `jsbarcode` | QR and barcode generation. |
 | `@ffmpeg/ffmpeg`, `@ffmpeg/util` | Client-side media separation. |
+| `@zxcvbn-ts/core`, language packages | Pattern-aware password strength analysis loaded only on the password route. |
+| `ignore` | Standards-compatible `.gitignore` matching in Folder Analyzer. |
+| `ipaddr.js` | Canonical IPv4/IPv6 parsing and public-address validation. |
 
 ## Local development
 
@@ -182,10 +186,11 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 npm install
 npm run dev
 npm run build
+npm run verify
 npm run preview
 ```
 
-`npm run build` is the baseline validation command for source and documentation changes that could affect the Vite build.
+Node.js 22 and 24 are supported. `npm run verify` is the baseline gate: lint, type checking, unit tests, production build, bundle budgets, and static header policy. CI additionally runs dependency checks, Playwright route smoke tests, and `npm audit`.
 
 ## Adding or changing a tool
 

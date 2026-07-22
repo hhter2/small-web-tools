@@ -220,7 +220,7 @@ function FontCard({ font, index, previewText }) {
       document.body.removeChild(a);
       URL.revokeObjectURL(objUrl);
     } catch {
-      window.open(font.url, '_blank');
+      window.open(font.url, '_blank', 'noopener,noreferrer');
     } finally {
       setDownloading(false);
     }

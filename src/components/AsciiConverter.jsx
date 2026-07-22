@@ -105,15 +105,37 @@ function decodeAscii(codes) {
   return { output: chars.join(''), error: null };
 }
 
-function analyzeAscii(input) {
+function analyzeAscii(input, mode = 'auto') {
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      sourceLabel: 'Text or ASCII codes',
-      targetLabel: '',
+      sourceLabel: mode === 'encode' ? 'Plain text' : mode === 'decode' ? 'ASCII codes' : 'Text or ASCII codes',
+      targetLabel: mode === 'encode' ? 'ASCII codes' : mode === 'decode' ? 'Plain text' : '',
       output: '',
       outputPlaceholder: '',
       error: null,
+    };
+  }
+
+  if (mode === 'encode') {
+    const encoded = encodeAscii(input);
+    return {
+      sourceLabel: 'Plain text',
+      targetLabel: 'ASCII codes',
+      output: encoded.output,
+      outputPlaceholder: '',
+      error: encoded.error,
+    };
+  }
+
+  if (mode === 'decode') {
+    const decoded = decodeAscii(trimmed);
+    return {
+      sourceLabel: 'ASCII codes',
+      targetLabel: 'Plain text',
+      output: decoded.output,
+      outputPlaceholder: '',
+      error: decoded.error,
     };
   }
 

@@ -63,3 +63,6 @@ _incoming/
 *.7z
 *.bak
 *.swp
+
+# Code Review
+code_reviews/

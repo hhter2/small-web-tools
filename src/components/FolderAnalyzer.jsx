@@ -858,9 +858,6 @@ export default function FolderAnalyzer() {
 
     let svgRows = '';
     list.forEach((item, index) => {
-      const y = 60 + index * rowHeight;
-      const x = 20 + item.depth * indentWidth;
-
       const y = 70 + index * rowHeight;
       const x = 30 + item.depth * indentWidth;
 

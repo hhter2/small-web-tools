@@ -12,7 +12,7 @@
 ## Quick facts
 
 | Package | `small-web-tools` |
-| Version | `0.5.4-beta` (env/CI injected or fallback to `package.json`) |
+| Version | `0.6.0-beta` package metadata; displayed build version follows the latest Git tag |
 | UI framework | React 18 |
 | Build tool | Vite 6 |
 | Testing | Vitest + React Testing Library + jsdom |
@@ -21,7 +21,7 @@
 | Routing | In-app state synchronized to URL hashes with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
-At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically.
+At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically. `npm run version:check`, included in `verify`, prevents release tag and npm package metadata from silently drifting apart.
 
 ## Repository map
 

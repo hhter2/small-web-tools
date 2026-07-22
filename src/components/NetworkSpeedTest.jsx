@@ -164,47 +164,6 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
   });
 };
 
-          if (!isWarmedUp) {
-            if (elapsed >= 0.5) {
-              warmUpBytes = bytes;
-              warmUpTime = elapsed;
-              isWarmedUp = true;
-            }
-            continue;
-          }
-
-          const activeElapsed = elapsed - warmUpTime;
-          const activeBytes = bytes - warmUpBytes;
-          const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / (1024 * 1024) : 0;
-
-          if (now - lastSample > 150) {
-            samples.push(speedMbps);
-            const timePct = (elapsed / (durationMs / 1000)) * 100;
-            const bytesPct = (bytes / downloadBytes) * 100;
-            onProgress({ bytes, elapsed, speedMbps, pct: Math.min(Math.max(timePct, bytesPct), 100) });
-            lastSample = now;
-          }
-        }
-      })
-      .catch((e) => {
-        if (e.name !== 'AbortError') { reject(e); return; }
-        // expected – time limit hit or outer abort
-      })
-      .finally(() => {
-        clearTimeout(timer);
-        outerSignal.removeEventListener('abort', onOuter);
-        if (outerSignal.aborted && bytes === 0) { reject(new DOMException('Aborted', 'AbortError')); return; }
-        const totalElapsed = startTime ? (performance.now() - startTime) / 1000 : 0;
-        const activeElapsed = totalElapsed - warmUpTime;
-        const activeBytes = bytes - warmUpBytes;
-        const avgMbps = isWarmedUp && activeElapsed > 0 && activeBytes > 0
-          ? (activeBytes * 8) / activeElapsed / (1024 * 1024)
-          : (totalElapsed > 0 ? (bytes * 8) / totalElapsed / (1024 * 1024) : 0);
-        resolve({ avgMbps, bytes, samples });
-      });
-  });
-};
-
 // ─── Time-boxed Upload Test (using chunked fetch POST to avoid CORS preflight) ───
 const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal) => {
   const startTime = performance.now();

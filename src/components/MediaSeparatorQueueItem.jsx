@@ -1,11 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import MediaSeparatorFormatSelect from './MediaSeparatorFormatSelect';
 import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import { AUDIO_FORMATS, VIDEO_FORMATS } from './mediaSeparatorEngine';
 
 export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onVideoFormatChange, onRemove, onRetry }) {
   // For raw video preview playback (native browser decoding, unrelated to ffmpeg processing)
-  const sourcePreviewURL = useMemo(() => URL.createObjectURL(item.file), [item.file]);
+  const [sourcePreviewURL, setSourcePreviewURL] = useState('');
+
+  useEffect(() => {
+    if (!item.file) return undefined;
+    const url = URL.createObjectURL(item.file);
+    setSourcePreviewURL(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [item.file]);
 
   const isBusy = item.status === 'processing';
   const canEdit = item.status === 'ready' || item.status === 'error';

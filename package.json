@@ -2,6 +2,7 @@
   "name": "small-web-tools",
   "private": true,
   "version": "0.6.0-beta",
+  "packageManager": "npm@10.9.2",
   "type": "module",
   "engines": {
     "node": ">=22 <25"

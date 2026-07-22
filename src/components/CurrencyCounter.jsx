@@ -169,6 +169,9 @@ export default function CurrencyCounter() {
   return (
     <Card id="tool-currency" variant="tool">
       <ToolHeader title="Currency Converter & Counter" />
+      <p className="text-xs text-text-muted">
+        Live mode contacts an exchange-rate provider through this site. Manual Rate Override remains fully local.
+      </p>
 
       {/* Tabs */}
       <div className="tool-tabs flex gap-2">

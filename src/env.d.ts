@@ -20,6 +20,14 @@ declare global {
     showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
   }
 
+  interface Navigator {
+    connection?: {
+      saveData?: boolean;
+      type?: string;
+      effectiveType?: string;
+    };
+  }
+
   interface HTMLInputElement {
     webkitdirectory: boolean;
     directory: boolean;

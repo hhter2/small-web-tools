@@ -55,6 +55,7 @@
     "exifreader": "^4.41.0",
     "html5-qrcode": "^2.3.8",
     "ignore": "^7.0.6",
+    "ipaddr.js": "^2.4.0",
     "jsbarcode": "^3.11.6",
     "jszip": "^3.10.1",
     "qrcode": "^1.5.3",

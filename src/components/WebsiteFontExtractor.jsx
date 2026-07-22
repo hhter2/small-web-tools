@@ -3,6 +3,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import Spinner from './ui/Spinner';
+import { grantConsent, hasConsent } from '../lib/thirdPartyServices';
 
 // ── fontSimilarity: Lightweight local matcher ─────────────────────────────────
 // Given a font family name, returns up to 3 suggested Google Fonts alternatives
@@ -178,6 +179,8 @@ function FontCard({ font, index, previewText }) {
 
   const previewFamily = `FontExtPreview${index}`;
   const similar = getSimilarGoogleFonts(font.family);
+  const previewWeight = font.weight && font.weight !== 'unknown' ? font.weight : 'normal';
+  const previewStyle = font.style && font.style !== 'unknown' ? font.style : 'normal';
 
   // Inject @font-face into document head for live preview
   useEffect(() => {
@@ -191,8 +194,8 @@ function FontCard({ font, index, previewText }) {
       @font-face {
         font-family: '${previewFamily}';
         src: url('${proxyUrl}');
-        font-weight: ${font.weight || 'normal'};
-        font-style: ${font.style || 'normal'};
+        font-weight: ${previewWeight};
+        font-style: ${previewStyle};
       }
     `;
     document.head.appendChild(style);
@@ -202,7 +205,7 @@ function FontCard({ font, index, previewText }) {
       const el = document.getElementById(fontId);
       if (el) el.remove();
     };
-  }, [font.url, proxyUrl]);
+  }, [fontId, isDataUrl, previewFamily, previewStyle, previewWeight, proxyUrl]);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -244,8 +247,8 @@ function FontCard({ font, index, previewText }) {
             className="text-lg text-text-main text-center leading-relaxed break-all"
             style={{
               fontFamily: `'${previewFamily}', sans-serif`,
-              fontStyle: font.style || 'normal',
-              fontWeight: font.weight || 'normal',
+              fontStyle: previewStyle,
+              fontWeight: previewWeight,
             }}
           >
             {displayText}
@@ -264,14 +267,29 @@ function FontCard({ font, index, previewText }) {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
           </svg>
-          Weight: {font.weight || '400'}
+          Weight: {font.weight || 'unknown'}
         </span>
         <span className="inline-flex items-center gap-1 text-[0.79rem] text-text-muted capitalize">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
-          Style: {font.style || 'normal'}
+          Style: {font.style || 'unknown'}
         </span>
+        <span className="inline-flex items-center gap-1 text-[0.79rem] text-text-muted">
+          Stretch: {font.stretch || 'unknown'}
+        </span>
+        {font.isVariable && (
+          <span className="inline-flex items-center gap-1 text-[0.79rem] text-accent">
+            Variable: {font.variationSettings !== 'unknown'
+              ? font.variationSettings
+              : font.weight || 'range unknown'}
+          </span>
+        )}
+        {font.unicodeRange && font.unicodeRange !== 'unknown' && (
+          <span className="inline-flex items-center gap-1 text-[0.72rem] text-text-muted break-all">
+            Unicode range: {font.unicodeRange}
+          </span>
+        )}
       </div>
 
       {/* Action row */}
@@ -394,12 +412,22 @@ export default function WebsiteFontExtractor() {
   const [fonts, setFonts] = useState([]);
   const [searched, setSearched] = useState(false);
   const [previewText, setPreviewText] = useState('');
-  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [extractorAllowed, setExtractorAllowed] = useState(() => hasConsent('fontextractor'));
   const inputRef = useRef(null);
 
   const exampleUrls = ['stripe.com', 'linear.app', 'vercel.com'];
 
+  useEffect(() => {
+    const handleConsentUpdate = () => setExtractorAllowed(hasConsent('fontextractor'));
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
+
   const doExtract = async (rawUrl) => {
+    if (!extractorAllowed) {
+      setStatus('Website analysis is blocked until you allow the disclosed external service.');
+      return;
+    }
     let target = (rawUrl || urlInput).trim();
     if (!target) {
       setStatus('Please enter a website URL.');
@@ -450,19 +478,28 @@ export default function WebsiteFontExtractor() {
     inputRef.current?.focus();
   };
 
-  const handleCopyUrl = () => {
-    if (!urlInput.trim()) return;
-    navigator.clipboard.writeText(urlInput).then(() => {
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 1500);
-    });
-  };
+  const groupedFonts = Array.from(
+    fonts.reduce((groups, font) => {
+      const key = font.family || 'Unknown family';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(font);
+      return groups;
+    }, new Map()),
+  );
 
   return (
     <Card id="tool-fontextractor" variant="tool" size="wide">
       <ToolHeader 
         title="Website Font Extractor" 
       />
+      {!extractorAllowed && (
+        <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
+          <span>Analysis sends the target URL to this site’s server, which fetches remote HTML, CSS, and selected fonts.</span>
+          <Button variant="secondary" onClick={() => grantConsent('fontextractor')}>
+            Allow website analysis
+          </Button>
+        </div>
+      )}
 
       {/* URL Input section */}
       <div className="flex flex-col gap-2 w-full mt-4">
@@ -533,7 +570,8 @@ export default function WebsiteFontExtractor() {
                 <line x1="9" y1="20" x2="15" y2="20" />
                 <line x1="12" y1="4" x2="12" y2="20" />
               </svg>
-              <strong>{fonts.length}</strong>&nbsp;font{fonts.length !== 1 ? ' families' : ' family'} found
+              <strong>{groupedFonts.length}</strong>&nbsp;famil{groupedFonts.length === 1 ? 'y' : 'ies'},{' '}
+              <strong>{fonts.length}</strong>&nbsp;face{fonts.length === 1 ? '' : 's'} found
             </div>
 
             {/* Preview text input */}
@@ -554,17 +592,24 @@ export default function WebsiteFontExtractor() {
           </div>
 
           {/* Font cards grid */}
-          <div className="max-h-[250px] md:max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {fonts.map((font, i) => (
-                <FontCard
-                  key={`${font.url}-${i}`}
-                  font={font}
-                  index={i}
-                  previewText={previewText}
-                />
-              ))}
-            </div>
+          <div className="max-h-[320px] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-5">
+            {groupedFonts.map(([family, faces], groupIndex) => (
+              <section key={family} className="flex flex-col gap-2">
+                <h3 className="text-sm font-bold text-text-main">
+                  {family} <span className="text-text-muted font-normal">({faces.length} face{faces.length === 1 ? '' : 's'})</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {faces.map((font, faceIndex) => (
+                    <FontCard
+                      key={[font.url, font.weight, font.style, font.stretch, font.unicodeRange].join('|')}
+                      font={font}
+                      index={groupIndex * 100 + faceIndex}
+                      previewText={previewText}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         </div>
       )}

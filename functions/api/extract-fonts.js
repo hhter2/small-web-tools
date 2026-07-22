@@ -123,6 +123,9 @@ export async function onRequestPost(context) {
         const src = blk.match(/src\s*:\s*([^;]+)/i);
         const wgt = blk.match(/font-weight\s*:\s*([^;]+)/i);
         const sty = blk.match(/font-style\s*:\s*([^;]+)/i);
+        const stretch = blk.match(/font-stretch\s*:\s*([^;]+)/i);
+        const unicodeRange = blk.match(/unicode-range\s*:\s*([^;]+)/i);
+        const variationSettings = blk.match(/font-variation-settings\s*:\s*([^;]+)/i);
         if (!fam || !src) continue;
         const family = normFamily(fam[1]);
         const best = pickBestSource(src[1], base);
@@ -134,8 +137,15 @@ export async function onRequestPost(context) {
           family,
           format: best.format,
           url: best.url,
-          weight: wgt ? wgt[1].trim() : '400',
-          style: sty ? sty[1].trim() : 'normal',
+          weight: wgt ? wgt[1].trim() : 'unknown',
+          style: sty ? sty[1].trim() : 'unknown',
+          stretch: stretch ? stretch[1].trim() : 'unknown',
+          unicodeRange: unicodeRange ? unicodeRange[1].trim() : 'unknown',
+          variationSettings: variationSettings ? variationSettings[1].trim() : 'unknown',
+          isVariable: Boolean(
+            (wgt && /\s/.test(wgt[1].trim()))
+            || variationSettings,
+          ),
           referer: base
         });
       }
@@ -206,7 +216,19 @@ export async function onRequestPost(context) {
       } else if ((rel === 'preload' || rel === 'prefetch') && as === 'font') {
         const fmt = getFormatFromUrl(resolved);
         const nm = resolved.split('/').pop()?.split('?')[0] || 'preloaded-font';
-        allFonts.push({ name: nm, family: nm.split('.')[0] || 'Unknown', format: fmt, url: resolved, weight: '400', style: 'normal', referer: targetUrl.href });
+        allFonts.push({
+          name: nm,
+          family: nm.split('.')[0] || 'Unknown',
+          format: fmt,
+          url: resolved,
+          weight: 'unknown',
+          style: 'unknown',
+          stretch: 'unknown',
+          unicodeRange: 'unknown',
+          variationSettings: 'unknown',
+          isVariable: false,
+          referer: targetUrl.href,
+        });
       }
     }
     const linked = await Promise.all(cssUrls.map(u => fetchAndParseCss(u)));
@@ -215,7 +237,16 @@ export async function onRequestPost(context) {
     // ── Deduplicate by (url + family + weight + style) ────────
     const fontMap = new Map();
     for (const f of allFonts) {
-      const key = `${f.url}|${(f.family || '').toLowerCase().trim()}|${f.weight || '400'}|${f.style || 'normal'}`;
+      const key = [
+        f.url,
+        (f.family || '').toLowerCase().trim(),
+        f.weight,
+        f.style,
+        f.stretch,
+        f.format,
+        f.unicodeRange,
+        f.variationSettings,
+      ].join('|');
       if (!fontMap.has(key)) {
         fontMap.set(key, f);
       }
@@ -224,7 +255,7 @@ export async function onRequestPost(context) {
     const deduplicatedFonts = Array.from(fontMap.values()).sort((a, b) => {
       const famComp = a.family.localeCompare(b.family);
       if (famComp !== 0) return famComp;
-      const wgtComp = parseInt(a.weight || '400') - parseInt(b.weight || '400');
+      const wgtComp = (a.weight || '').localeCompare(b.weight || '', undefined, { numeric: true });
       if (wgtComp !== 0) return wgtComp;
       return (a.style || '').localeCompare(b.style || '');
     });

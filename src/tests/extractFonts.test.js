@@ -80,4 +80,37 @@ describe('font extractor handler', () => {
       }),
     );
   });
+
+  it('preserves distinct faces, variable metadata, and unicode ranges', async () => {
+    const html = [
+      '<style>',
+      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
+      'font-weight: 400; font-style: normal; unicode-range: U+0000-00FF; }',
+      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
+      'font-weight: 700; font-style: normal; unicode-range: U+0000-00FF; }',
+      '@font-face { font-family: Demo; src: url("/variable.woff2") format("woff2");',
+      'font-weight: 100 900; font-style: italic; font-stretch: 75% 125%;',
+      'font-variation-settings: "wght" 450; unicode-range: U+0100-024F; }',
+      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
+      'font-weight: 400; font-style: normal; unicode-range: U+0000-00FF; }',
+      '</style>',
+    ].join('');
+    safeExternalFetch.mockResolvedValue({
+      response: new Response(html, { headers: { 'Content-Type': 'text/html' } }),
+      buffer: new TextEncoder().encode(html).buffer,
+    });
+
+    const result = await (await onRequestPost(
+      postContext({ url: 'https://example.com/page' }),
+    )).json();
+    expect(result.fonts).toHaveLength(3);
+    expect(result.fonts.map((font) => font.weight)).toEqual(['100 900', '400', '700']);
+    expect(result.fonts[0]).toMatchObject({
+      style: 'italic',
+      stretch: '75% 125%',
+      unicodeRange: 'U+0100-024F',
+      variationSettings: '"wght" 450',
+      isVariable: true,
+    });
+  });
 });

@@ -5,28 +5,11 @@ import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 import ResultDisplay from './ui/ResultDisplay';
 import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
-
-// ─── Data Configurations (1 MB = 1,000,000 bytes) ────────────────────────────
-const DATA_CONFIG = {
-  light: {
-    downloadBytes: 20_000_000,
-    downloadLabel: '20 MB',
-    uploadBytes: 5_000_000,
-    uploadLabel: '5 MB',
-  },
-  standard: {
-    downloadBytes: 50_000_000,
-    downloadLabel: '50 MB',
-    uploadBytes: 15_000_000,
-    uploadLabel: '15 MB',
-  },
-  heavy: {
-    downloadBytes: 100_000_000,
-    downloadLabel: '100 MB',
-    uploadBytes: 25_000_000,
-    uploadLabel: '25 MB',
-  }
-};
+import {
+  formatDecimalMb,
+  getDataPlan,
+  isConstrainedConnection,
+} from '../lib/speedTest';
 
 // ─── Ping Test ───────────────────────────────────────────────────────────────
 const runPingTest = async (signal) => {
@@ -56,50 +39,16 @@ const runPingTest = async (signal) => {
 
 // ─── IP and ISP Lookup ────────────────────────────────────────────────────────
 const fetchIpInfo = async () => {
-  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-
-  if (isDev) {
-    const res = await fetch('/api/iplookup');
-    const result = await res.json();
-    if (!result.ok) throw new Error(result.error || 'Server-side IP lookup failed');
-    return result.data;
+  const response = await fetch('/api/iplookup');
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    throw new Error(result.error || 'Server-side IP lookup failed');
   }
-
-  const tryProvider = async (url, normalize) => {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`${url} returned ${r.status}`);
-    return normalize(await r.json());
-  };
-
-  const providers = [
-    () => tryProvider(
-      'https://api.ip.sb/geoip',
-      (d) => ({
-        ip: d.ip,
-        org: d.isp || d.organization || '',
-      })
-    ),
-    () => tryProvider(
-      'https://ipapi.co/json/',
-      (d) => {
-        if (d.error) throw new Error(d.reason || 'ipapi.co error');
-        return {
-          ip: d.ip,
-          org: d.org || '',
-        };
-      }
-    ),
-  ];
-
-  let lastErr = null;
-  for (const p of providers) {
-    try { return await p(); } catch (e) { lastErr = e; }
-  }
-  throw new Error(`IP lookup failed: ${lastErr?.message}`);
+  return result.data;
 };
 
 // ─── Time-boxed Download Test ─────────────────────────────────────────────────
-const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => {
+export const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => {
   return new Promise((resolve, reject) => {
     const innerController = new AbortController();
     let bytes = 0;
@@ -165,7 +114,7 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
 };
 
 // ─── Time-boxed Upload Test (using chunked fetch POST to avoid CORS preflight) ───
-const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal) => {
+export const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal) => {
   const startTime = performance.now();
   let totalBytes = 0;
   const samples = [];
@@ -223,7 +172,7 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
       if (chunkDurationSec > 0) {
         const activeElapsed = elapsed - warmUpTime;
         const activeBytes = totalBytes - warmUpBytes;
-        const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / (1024 * 1024) : 0;
+        const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / 1_000_000 : 0;
 
         samples.push(speedMbps);
 
@@ -235,7 +184,7 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
 
         // Dynamically adjust chunk size for the next request to target ~0.3 seconds upload duration
         const targetDuration = 0.3; // seconds
-        let targetSize = Math.round((speedMbps * 1024 * 1024 * targetDuration) / 8);
+        let targetSize = Math.round((speedMbps * 1_000_000 * targetDuration) / 8);
         // Clamp the size
         currentChunkSize = Math.max(minChunkSize, Math.min(maxChunkSize, targetSize));
       }
@@ -252,8 +201,8 @@ const runUploadTest = async (durationMs, maxUploadBytes, onProgress, outerSignal
   const activeElapsed = totalElapsed - warmUpTime;
   const activeBytes = totalBytes - warmUpBytes;
   const avgMbps = isWarmedUp && activeElapsed > 0 && activeBytes > 0
-    ? (activeBytes * 8) / activeElapsed / (1024 * 1024)
-    : (totalElapsed > 0 && totalBytes > 0 ? (totalBytes * 8) / totalElapsed / (1024 * 1024) : 0);
+    ? (activeBytes * 8) / activeElapsed / 1_000_000
+    : (totalElapsed > 0 && totalBytes > 0 ? (totalBytes * 8) / totalElapsed / 1_000_000 : 0);
 
   return { avgMbps, bytes: totalBytes, samples };
 };
@@ -271,10 +220,13 @@ export default function NetworkSpeedTest() {
   const [speedHistory, setSpeedHistory] = useState([]); // { phase, speed }[]
   const [clientIp, setClientIp] = useState(null);
   const [clientOrg, setClientOrg] = useState(null);
-  const [dataLimit, setDataLimit] = useState('standard'); // light | standard | heavy | custom
+  const [dataLimit, setDataLimit] = useState('light'); // light | standard | heavy | custom
   const [customDownload, setCustomDownload] = useState(100);
   const [customUpload, setCustomUpload] = useState(25);
+  const [actualDownloadBytes, setActualDownloadBytes] = useState(0);
+  const [actualUploadBytes, setActualUploadBytes] = useState(0);
   const [isConsentGranted, setIsConsentGranted] = useState(() => hasConsent('speedtest'));
+  const constrainedConnection = isConstrainedConnection(navigator.connection);
 
   useEffect(() => {
     const handleConsentUpdate = () => {
@@ -289,6 +241,16 @@ export default function NetworkSpeedTest() {
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const startTest = async () => {
+    if (!isConsentGranted) {
+      setError('Allow the disclosed Cloudflare speed-test service before starting.');
+      return;
+    }
+    if (
+      dataLimit === 'heavy'
+      && !window.confirm('Heavy mode may transfer up to 125 MB. Continue?')
+    ) {
+      return;
+    }
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -305,6 +267,8 @@ export default function NetworkSpeedTest() {
     setSpeedHistory([]);
     setClientIp(null);
     setClientOrg(null);
+    setActualDownloadBytes(0);
+    setActualUploadBytes(0);
 
     // Fetch client IP and ISP in the background
     fetchIpInfo()
@@ -327,19 +291,11 @@ export default function NetworkSpeedTest() {
       setProgress(0);
       setCurrentSpeed(0);
 
-      let downloadBytes = 100_000_000;
-      let uploadBytes = 25 * 1024 * 1024;
-
-      if (dataLimit === 'custom') {
-        const dlMB = Number(customDownload) || 100;
-        const ulMB = Number(customUpload) || 25;
-        downloadBytes = Math.round(dlMB * 1_000_000);
-        uploadBytes = Math.round(ulMB * 1_000_000);
-      } else {
-        const config = DATA_CONFIG[dataLimit];
-        downloadBytes = config.downloadBytes;
-        uploadBytes = config.uploadBytes;
-      }
+      const { downloadBytes, uploadBytes } = getDataPlan(
+        dataLimit,
+        customDownload,
+        customUpload,
+      );
 
       const dl = await runDownloadTest(
         10_000,
@@ -352,7 +308,8 @@ export default function NetworkSpeedTest() {
         signal,
       );
       setAvgDownloadSpeed(dl.avgMbps);
-      if (signal.aborted) { setPhase('complete'); return; }
+      setActualDownloadBytes(dl.bytes);
+      if (signal.aborted) { setPhase('cancelled'); return; }
 
       // 3. Upload (10 seconds)
       setPhase('upload');
@@ -370,11 +327,12 @@ export default function NetworkSpeedTest() {
         signal,
       );
       setAvgUploadSpeed(ul.avgMbps);
+      setActualUploadBytes(ul.bytes);
       setPhase('complete');
 
     } catch (err) {
       if (err.name === 'AbortError') {
-        setPhase('complete'); // show whatever we've gathered
+        setPhase('cancelled');
       } else {
         setError(err.message || 'An error occurred');
         setPhase('error');
@@ -386,7 +344,13 @@ export default function NetworkSpeedTest() {
     }
   };
 
-  const stopTest = () => abortRef.current?.abort();
+  const stopTest = () => {
+    abortRef.current?.abort();
+    setPhase('cancelled');
+    setIsRunning(false);
+  };
+
+  const selectedPlan = getDataPlan(dataLimit, customDownload, customUpload);
 
   // ── Speedometer math ────────────────────────────────────────────────────────
   const maxScale = Math.max(100, Math.ceil(currentSpeed / 100) * 100);
@@ -441,6 +405,9 @@ export default function NetworkSpeedTest() {
       <ToolHeader 
         title="Network Speed Test" 
       />
+      <p className="text-xs text-text-muted mb-3">
+        This benchmark transfers test payloads to Cloudflare speed-test servers after permission.
+      </p>
 
       <div className="flex flex-row flex-wrap gap-4 items-end justify-start mb-5">
         <div className="flex flex-col gap-1.5">
@@ -454,9 +421,9 @@ export default function NetworkSpeedTest() {
             disabled={isRunning}
             className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none text-sm disabled:cursor-not-allowed cursor-pointer"
           >
-            <option value="light">Light (30MB Down / 8MB Up)</option>
-            <option value="standard">Standard (100MB Down / 25MB Up)</option>
-            <option value="heavy">Heavy (200MB Down / 50MB Up)</option>
+            <option value="light">Light (20 MB down / 5 MB up)</option>
+            <option value="standard">Standard (50 MB down / 15 MB up)</option>
+            <option value="heavy">Heavy (100 MB down / 25 MB up)</option>
             <option value="custom">Custom Size…</option>
           </select>
         </div>
@@ -498,7 +465,7 @@ export default function NetworkSpeedTest() {
 
         <div>
           {!isConsentGranted ? (
-            <Button variant="secondary" onClick={() => grantConsent('speedtest')}>Grant Consent & Start</Button>
+            <Button variant="secondary" onClick={() => grantConsent('speedtest')}>Allow speed test</Button>
           ) : isRunning ? (
             <Button variant="primary" onClick={stopTest}>Stop Test</Button>
           ) : (
@@ -506,6 +473,22 @@ export default function NetworkSpeedTest() {
           )}
         </div>
       </div>
+
+      <p className="text-xs text-text-muted mb-4">
+        Maximum transfer: {formatDecimalMb(selectedPlan.downloadBytes)} download +{' '}
+        {formatDecimalMb(selectedPlan.uploadBytes)} upload ={' '}
+        {formatDecimalMb(selectedPlan.totalBytes)} total (decimal MB).
+      </p>
+
+      {constrainedConnection && (
+        <p className="text-xs text-amber-600 mb-4">
+          Data Saver or a cellular/limited connection was detected. Light mode is recommended.
+        </p>
+      )}
+
+      {phase === 'cancelled' && (
+        <p className="text-xs text-text-muted mb-4">Test cancelled; active requests were aborted.</p>
+      )}
 
       {!isConsentGranted && (
         <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs mb-4">
@@ -676,6 +659,11 @@ export default function NetworkSpeedTest() {
 
           {/* Row 2: Connection Details */}
           <div className="flex flex-col md:flex-row gap-4 w-full">
+            <ResultDisplay
+              label="Actual data transferred"
+              value={formatDecimalMb(actualDownloadBytes) + ' down / ' + formatDecimalMb(actualUploadBytes) + ' up'}
+              className="flex-[1_1_250px]"
+            />
             <ResultDisplay
               label="IP Address"
               value={clientIp || 'Fetching…'}

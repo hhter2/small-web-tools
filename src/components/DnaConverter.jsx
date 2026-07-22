@@ -753,6 +753,9 @@ export default function DnaConverter() {
         renderVisualDna()
       )}
       {input.trim() && statusText && <p className="text-sm font-medium text-red-500" id="dna-status" style={statusStyle}>{statusText}</p>}
+      <p className="text-xs text-text-muted mt-1">
+        Supports standard bases (A, C, G, T, U) and full IUPAC ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N). N represents any or unknown nucleotide.
+      </p>
     </Card>
   );
 }

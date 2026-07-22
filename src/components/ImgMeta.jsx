@@ -5,6 +5,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import { RESOURCE_LIMITS, validateFileSize, validateBatchCount } from '../lib/resourceLimits';
 
 // Jpeg Metadata Stripping Logic
 function stripJpegMetadata(arrayBuffer, mode) {
@@ -724,9 +725,23 @@ export default function ImgMeta() {
 
   const processFiles = async (files) => {
     setStatus('');
+    if (!files || files.length === 0) return;
+
+    const countCheck = validateBatchCount(files, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'images');
+    if (!countCheck.valid) {
+      setStatus(`Error: ${countCheck.error}`);
+      return;
+    }
+
     const newImages = [];
     
     for (const file of files) {
+      const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_IMAGE_SIZE_BYTES, 'Image file');
+      if (!sizeCheck.valid) {
+        setStatus(`Error: ${sizeCheck.error}`);
+        continue;
+      }
+
       const loadPromise = new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = async (e) => {

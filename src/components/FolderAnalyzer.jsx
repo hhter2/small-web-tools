@@ -21,85 +21,124 @@ const BINARY_EXTENSIONS = new Set([
 
 const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
 
-function createGitignoreMatcher(gitignoreText) {
-  if (!gitignoreText) return () => false;
+function parseGitignoreLineToRegex(rawLine) {
+  let line = rawLine;
+  if (!line || line.startsWith('#')) return null;
+  line = line.trim();
+  if (!line || line.startsWith('#')) return null;
 
-  const rules = [];
-  const lines = gitignoreText.split(/\r?\n/);
+  let isNegated = false;
+  if (line.startsWith('!')) {
+    isNegated = true;
+    line = line.slice(1);
+  } else if (line.startsWith('\\!')) {
+    line = line.slice(1);
+  }
 
-  for (let line of lines) {
-    line = line.trim();
-    if (!line || line.startsWith('#')) continue;
+  if (line.startsWith('\\#')) {
+    line = line.slice(1);
+  }
 
-    let isNegated = false;
-    if (line.startsWith('!')) {
-      isNegated = true;
-      line = line.slice(1);
-    }
+  let isDirOnly = false;
+  if (line.endsWith('/')) {
+    isDirOnly = true;
+    line = line.slice(0, -1);
+  }
 
-    let isDirOnly = false;
-    if (line.endsWith('/')) {
-      isDirOnly = true;
-      line = line.slice(0, -1);
-    }
+  const isAnchored = line.startsWith('/') || line.includes('/');
+  if (line.startsWith('/')) {
+    line = line.slice(1);
+  }
 
-    // Convert glob pattern to regular expression
-    let regexStr = line
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
-
-    if (line.startsWith('/')) {
-      regexStr = '^' + regexStr.slice(1);
+  let regexStr = '';
+  let i = 0;
+  while (i < line.length) {
+    const char = line[i];
+    if (char === '*') {
+      if (line[i + 1] === '*') {
+        if (line[i + 2] === '/') {
+          regexStr += '(?:(?:^|/)[^/]+)*?/';
+          i += 3;
+          continue;
+        } else {
+          regexStr += '.*';
+          i += 2;
+          continue;
+        }
+      } else {
+        regexStr += '[^/]*';
+        i++;
+        continue;
+      }
+    } else if (char === '?') {
+      regexStr += '[^/]';
+      i++;
+      continue;
+    } else if (['.', '+', '^', '$', '(', ')', '{', '}', '|', '\\'].includes(char)) {
+      regexStr += '\\' + char;
+      i++;
+      continue;
     } else {
-      regexStr = '(^|\\/)' + regexStr;
-    }
-
-    regexStr += '(\\/|$)';
-
-    try {
-      rules.push({
-        regex: new RegExp(regexStr),
-        isNegated,
-        isDirOnly
-      });
-    } catch (e) {
-      // ignore
+      regexStr += char;
+      i++;
     }
   }
 
+  const fullPattern = isAnchored
+    ? '^' + regexStr + '(?:/|$)'
+    : '(?:^|/)' + regexStr + '(?:/|$)';
+
+  try {
+    return {
+      regex: new RegExp(fullPattern),
+      isNegated,
+      isDirOnly
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function createGitignoreMatcher(gitignoreText) {
+  if (!gitignoreText) return () => false;
+
+  const rules = gitignoreText
+    .split(/\r?\n/)
+    .map(parseGitignoreLineToRegex)
+    .filter(Boolean);
+
   return (filePath, isDir) => {
-    let ignored = false;
-    const parts = filePath.split('/');
+    const posixPath = filePath.replace(/\\/g, '/');
+    const parts = posixPath.split('/');
     const relPath = parts.slice(1).join('/');
 
     if (!relPath) return false;
 
-    const pathParts = relPath.split('/');
+    let ignored = false;
 
     for (const rule of rules) {
-      let matches = false;
-      if (rule.isDirOnly) {
-        if (isDir) {
-          matches = rule.regex.test(relPath);
-        } else {
-          let parentPath = '';
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            parentPath = parentPath ? `${parentPath}/${pathParts[i]}` : pathParts[i];
-            if (rule.regex.test(parentPath)) {
-              matches = true;
-              break;
-            }
+      if (rule.isDirOnly && !isDir) {
+        const parentPaths = relPath.split('/').slice(0, -1);
+        let parentMatch = false;
+        let accum = '';
+        for (const dirPart of parentPaths) {
+          accum = accum ? `${accum}/${dirPart}` : dirPart;
+          if (rule.regex.test(accum)) {
+            parentMatch = true;
+            break;
           }
         }
-      } else {
-        matches = rule.regex.test(relPath);
+        if (parentMatch) {
+          ignored = !rule.isNegated;
+        }
+        continue;
       }
 
-      if (matches) {
+      if (rule.regex.test(relPath)) {
         ignored = !rule.isNegated;
       }
     }
+
     return ignored;
   };
 }

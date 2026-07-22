@@ -11,40 +11,48 @@
 
 本文件是交給 AI coding agent 的可執行規格。所有問題都必須處理；不得因項目是低優先而直接省略。若受外部平台、套件公告或部署權限阻擋，必須標成 `BLOCKED` 並留下證據，不能假裝完成。
 
-## 2026-07-22 獨立複核結論
+## 2026-07-22 最終重新驗證結論（23:15 Asia/Taipei）
 
 - **複核判定：** `NOT READY`
-- **VERIFIED：** 0 / 38
-- **COMPLETED（程式實作看似完成，但缺少規格要求的獨立測試／人工驗收）：** 16 / 38
-- **IN_PROGRESS（仍有明確規格缺口或錯誤）：** 22 / 38
+- **VERIFIED：** 8 / 38
+- **COMPLETED（程式已實作並通過相關自動檢查，但尚缺任務指定的部署／人工驗收）：** 26 / 38
+- **IN_PROGRESS（仍有明確規格缺口）：** 4 / 38
 - **複核者：** Codex
 - **複核日期：** 2026-07-22
 
-本次複核不接受 commit 訊息、原作者勾選或單句實作描述作為 `VERIFIED` 證據。下方各任務既有的「完成紀錄」是原始實作者回報；若與任務目前狀態、本節結果或 Release Gate 衝突，以本次複核為準。
+本次複核不接受 commit 訊息、原作者勾選或單句實作描述作為 `VERIFIED` 證據。下方任務內原有的勾選與「完成紀錄」保留作為歷史資料；任務的現行狀態以本節與「任務總覽」為準。
 
 ### 已執行的自動驗證
 
 | 驗證 | 結果 | 證據摘要 |
 |---|---|---|
-| `npm ci` | PASS | 依 lockfile 安裝 500 packages。 |
-| `npm run verify` | PASS（但 gate 定義不完整） | ESLint 0 errors / 84 warnings；Vitest 3 files、45 tests 全過；Vite build 成功。現有 `verify` 未包含 `typecheck`。 |
-| `npm run typecheck` | **FAIL** | 大量 checkJs 錯誤；包含 `escapeXml`、`customUpload`、`setCustomUpload` 等未定義名稱。 |
-| `npm run test:e2e` | **FAIL** | `package.json` 沒有 `test:e2e` script，也沒有 Playwright smoke tests。 |
-| `npm run deps:check` | **FAIL（不可執行）** | `package.json` 沒有 `deps:check` script。 |
-| `npm audit --audit-level=moderate` | PASS | 0 vulnerabilities。 |
-| `npm run build` | PASS | 生產建置成功，主入口 JS 約 71.47 kB；最大 lazy chunk 約 366.32 kB。 |
+| `npm run verify` | PASS | ESLint 0 errors / 71 warnings；typecheck PASS；Vitest 16 files、116 tests PASS；build、bundle budget、static header policy PASS。 |
+| `npm run test:e2e`（既有系統 Chrome） | PASS | 29/29 route smoke tests PASS；未下載 Playwright Chromium。 |
+| `npm run deps:check` | PASS | Knip dependency usage check 無錯誤。 |
+| `npm audit --audit-level=moderate` | PASS | 2026-07-22 重新連線 npm registry，0 vulnerabilities。 |
+| `npm run build` / `npm run bundle:check` | PASS | 主入口 71.97 kB；最大 lazy chunk 462.35 kB；所有 JS 均低於 500 KiB，入口低於 100 KiB。 |
+| `npm run headers:check` | PASS | `_headers` 必要安全標頭、CSP allowlist 與 wildcard 禁制通過靜態檢查。 |
+
+### 本輪階段性修正提交
+
+| Commit | 範圍 |
+|---|---|
+| `0a37c94` | typecheck、Playwright route smoke、Knip 與 CI gate |
+| `6876361` | Folder Analyzer 任意路徑 API 移除與標準 `.gitignore` matcher |
+| `be9b399` | Font Extractor / Proxy SSRF、token、MIME、大小與 rate-limit 防護 |
+| `39eb954` | 匯率嚴格解析、同源 live-rate API、同意流程與 zxcvbn |
+| `f1ad317` | 第三方 registry、Speed Test、IP 與字型 face 正規化 |
+| `7ea6700` | Random Wheel 版本化 seed、拒絕採樣與可驗證紀錄 |
+| `2be7996` | 資源／ZIP／bundle／header budget、Node 範圍與文件同步 |
 
 ### 阻止宣告完成的主要證據
 
-1. **H-01 / H-04：** `FolderAnalyzer.jsx` 仍包含 `/api/scan-local-dir`、`/api/resolve-local-path` 呼叫；SVG 匯出引用未定義的 `escapeXml`，要求的 grep 與惡意檔名測試均未達標。
-2. **H-02 / H-03：** 尚未證明 DNS/redirect 全鏈驗證、部署層 rate limit、HTML/CSS/font MIME 與 magic-bytes 全套限制；`extract-fonts` 仍回傳 wildcard CORS，且缺少指定的 font token/proxy 測試。
-3. **H-05 / M-10：** 雖然 audit、lint、unit test、build 可執行，但 typecheck 失敗，E2E 與 dependency check 不存在，CI 也沒有執行 typecheck/E2E/deps check。
-4. **H-06 / M-02 / M-03：** `swapCurrencies` 是元件內的 stateful setter helper，不是規格要求的純函式；批次格式選擇與完整錯誤模型未證實；同源 `/api/exchange-rates` 代理不存在。
-5. **H-07：** 沒有加入維護中的 zxcvbn 相容套件；目前為自製分析器，未滿足既定產品決策。
-6. **M-06～M-09：** 第三方同意與服務資料流仍未完成全工具驗證；Speed Test 引用未定義的 `customUpload` / `setCustomUpload`；IP 與字型 face metadata 缺少規格列出的完整測試與欄位證據。
-7. **M-11 / M-12 / M-14：** lazy chunks 已產生，但沒有 bundle budget、全 route E2E、retry 驗證或 CI 尺寸紀錄；正式 Cloudflare headers/CSP 未部署驗收；`CODEBASE.md` 仍記載已移除的舊 Folder Analyzer API、舊 Font Proxy query 與已移除依賴。
-8. **M-21 / M-22 / L-01：** 集中 limits 尚未覆蓋全部 metadata/ZIP/QR/FFmpeg/remote 路徑；`.gitignore` 仍是自製 regex matcher，未使用成熟 `ignore` 類套件；Knip/等價檢查與 CI gate 不存在。
-9. **L-04 / L-09：** Random Wheel 只有 Web Crypto winner selection，沒有版本化 seed、紀錄、重播驗證；README 未列最低/建議 Node 與 npm，`engines.node` 也不是限定 Node 22/24 的明確範圍。
+1. **M-06：** 第三方同意 registry 尚未涵蓋 FFmpeg core 的 unpkg 下載；不能宣告所有第三方流量都已先取得同意。
+2. **M-14：** `CODEBASE.md`、README 與 Privacy 已更新，但 `.agents/AGENTS.md` 仍含「Vite 5」及「每個 Function 必須有 Vite mirror」等舊規則；該檔明文要求未被明確點名不得修改，因此本輪未擅自變更。`TODO.md` 同樣由人工作者維護。
+3. **M-21：** 文件、圖片、QR、影片、Media Splitter 與 ZIP 預檢已接上集中限制；remote fetch 雖已有 timeout/response-size/abort 實作與測試，但常數尚未統一引用，FFmpeg 執行階段亦缺少任務要求的 timeout/fuzz 驗收。
+4. **L-03：** CSP 保留 Google Fonts allowlist，但目前樣式未實際載入 Google Fonts；與「保留遠端載入」產品決策不一致。
+5. **部署驗收限制：** `_headers` 已通過靜態檢查，但本輪沒有 Cloudflare Pages 發佈權限，因此 M-12 只能列 `COMPLETED`，不能列 `VERIFIED`。
+6. **已知非阻斷品質債：** ESLint 仍有 71 個 warning（0 error）；本規格 gate 要求 0 error，但 warning 應另行清理。
 
 ### 本次狀態判定原則
 
@@ -151,25 +159,25 @@ npm run verify
 
 | ID | 階段 | 任務 | 2026-07-22 複核狀態 |
 |---|---|---|---|
-| H-01 | P0 | 移除任意本機路徑掃描，改為瀏覽器資料夾選擇 | IN_PROGRESS |
-| H-02 | P0 | 強化 Website Font Extractor 的 SSRF 與資源限制 | IN_PROGRESS |
-| H-03 | P0 | 將 Font Proxy 改為短效簽章代理 | IN_PROGRESS |
-| H-04 | P0 | 修正 Folder Analyzer SVG/XML 注入 | IN_PROGRESS |
-| H-05 | P0 | 修補依賴漏洞並安全升級建置工具 | IN_PROGRESS |
-| H-06 | P0 | 修正大量匯率模式交換幣別與手動匯率 | IN_PROGRESS |
-| H-07 | P0 | 以 zxcvbn 類型分析重寫密碼強度功能 | IN_PROGRESS |
-| M-01 | P0 | 移除建置時 Git 網路操作與 package.json 改寫 | COMPLETED |
-| M-02 | P1 | 修正批次匯率輸入的地區格式與錯誤回報 | IN_PROGRESS |
-| M-03 | P1 | 移除不透明的過期備援匯率 | IN_PROGRESS |
+| H-01 | P0 | 移除任意本機路徑掃描，改為瀏覽器資料夾選擇 | COMPLETED |
+| H-02 | P0 | 強化 Website Font Extractor 的 SSRF 與資源限制 | COMPLETED |
+| H-03 | P0 | 將 Font Proxy 改為短效簽章代理 | COMPLETED |
+| H-04 | P0 | 修正 Folder Analyzer SVG/XML 注入 | COMPLETED |
+| H-05 | P0 | 修補依賴漏洞並安全升級建置工具 | VERIFIED |
+| H-06 | P0 | 修正大量匯率模式交換幣別與手動匯率 | COMPLETED |
+| H-07 | P0 | 以 zxcvbn 類型分析重寫密碼強度功能 | COMPLETED |
+| M-01 | P0 | 移除建置時 Git 網路操作與 package.json 改寫 | VERIFIED |
+| M-02 | P1 | 修正批次匯率輸入的地區格式與錯誤回報 | COMPLETED |
+| M-03 | P1 | 移除不透明的過期備援匯率 | COMPLETED |
 | M-04 | P1 | 保證產生密碼包含所有已選字元類別 | COMPLETED |
 | M-05 | P1 | 將 LAB 轉換修正為 CSS Color 4 D50 | COMPLETED |
 | M-06 | P0 | 建立第三方服務告知、同意與本地優先機制 | IN_PROGRESS |
-| M-07 | P1 | 修正 Speed Test 單位、資料量與行動網路保護 | IN_PROGRESS |
-| M-08 | P1 | 修正 IP Lookup 驗證、欄位正規化與地圖同意 | IN_PROGRESS |
-| M-09 | P1 | 保留完整字型 face、weight、style 與 variable 資訊 | IN_PROGRESS |
-| M-10 | P0 | 建立 Lint、型別檢查、單元測試、E2E 與 GitHub Actions | IN_PROGRESS |
-| M-11 | P2 | 依工具進行 code splitting，降低初始 bundle | IN_PROGRESS |
-| M-12 | P1 | 新增 Cloudflare Pages 安全回應標頭 | IN_PROGRESS |
+| M-07 | P1 | 修正 Speed Test 單位、資料量與行動網路保護 | COMPLETED |
+| M-08 | P1 | 修正 IP Lookup 驗證、欄位正規化與地圖同意 | COMPLETED |
+| M-09 | P1 | 保留完整字型 face、weight、style 與 variable 資訊 | COMPLETED |
+| M-10 | P0 | 建立 Lint、型別檢查、單元測試、E2E 與 GitHub Actions | VERIFIED |
+| M-11 | P2 | 依工具進行 code splitting，降低初始 bundle | VERIFIED |
+| M-12 | P1 | 新增 Cloudflare Pages 安全回應標頭 | COMPLETED |
 | M-13 | P1 | 重寫 Privacy Policy 以反映真實資料流 | COMPLETED |
 | M-14 | P2 | 統一 CODEBASE、AGENTS、TODO 與貢獻規則 | IN_PROGRESS |
 | M-15 | P1 | 補齊 Word Counter 的行數、句數與閱讀時間 | COMPLETED |
@@ -179,16 +187,16 @@ npm run verify
 | M-19 | P1 | 驗證 URL hash 與 sessionStorage 工具狀態 | COMPLETED |
 | M-20 | P1 | 釋放 Media Splitter 的來源 Object URL | COMPLETED |
 | M-21 | P1 | 建立全專案資源上限與拒絕訊息 | IN_PROGRESS |
-| M-22 | P1 | 以成熟套件取代自製 .gitignore matcher | IN_PROGRESS |
-| L-01 | P2 | 移除未使用依賴並加入依賴使用檢查 | IN_PROGRESS |
+| M-22 | P1 | 以成熟套件取代自製 .gitignore matcher | VERIFIED |
+| L-01 | P2 | 移除未使用依賴並加入依賴使用檢查 | VERIFIED |
 | L-02 | P2 | 統一品牌標題並補足 SEO metadata | COMPLETED |
-| L-03 | P2 | 保留 Google Fonts，但消除重複載入並完整揭露 | COMPLETED |
-| L-04 | P1 | 將 Random Wheel 改為 Web Crypto 無偏且可重現的本地抽籤 | IN_PROGRESS |
+| L-03 | P2 | 保留 Google Fonts，但消除重複載入並完整揭露 | IN_PROGRESS |
+| L-04 | P1 | 將 Random Wheel 改為 Web Crypto 無偏且可重現的本地抽籤 | VERIFIED |
 | L-05 | P2 | 解決 ASCII/Unicode 純數字自動判定歧義 | COMPLETED |
 | L-06 | P2 | 標明 Codon Table 使用 Standard Genetic Code | COMPLETED |
 | L-07 | P2 | 修正 Font Extractor 外部連結 opener 防護 | COMPLETED |
 | L-08 | P2 | 分離頁尾複製 Email 與開啟郵件程式 | COMPLETED |
-| L-09 | P0 | 明確指定 Node.js 支援版本 | IN_PROGRESS |
+| L-09 | P0 | 明確指定 Node.js 支援版本 | VERIFIED |
 
 ---
 

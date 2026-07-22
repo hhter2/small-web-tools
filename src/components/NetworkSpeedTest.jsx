@@ -4,6 +4,29 @@ import ToolHeader from './ui/ToolHeader';
 import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 import ResultDisplay from './ui/ResultDisplay';
+import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
+
+// ─── Data Configurations (1 MB = 1,000,000 bytes) ────────────────────────────
+const DATA_CONFIG = {
+  light: {
+    downloadBytes: 20_000_000,
+    downloadLabel: '20 MB',
+    uploadBytes: 5_000_000,
+    uploadLabel: '5 MB',
+  },
+  standard: {
+    downloadBytes: 50_000_000,
+    downloadLabel: '50 MB',
+    uploadBytes: 15_000_000,
+    uploadLabel: '15 MB',
+  },
+  heavy: {
+    downloadBytes: 100_000_000,
+    downloadLabel: '100 MB',
+    uploadBytes: 25_000_000,
+    uploadLabel: '25 MB',
+  }
+};
 
 // ─── Ping Test ───────────────────────────────────────────────────────────────
 const runPingTest = async (signal) => {
@@ -17,11 +40,10 @@ const runPingTest = async (signal) => {
       });
       await r.text();
       const elapsed = performance.now() - start;
-      if (i > 0) pings.push(elapsed); // skip first (TCP warm-up)
+      if (i > 0) pings.push(elapsed);
     } catch (e) {
       if (e.name === 'AbortError') throw e;
     }
-    // 80ms gap between pings
     if (i < 3) {
       await new Promise((res, rej) => {
         const t = setTimeout(res, 80);
@@ -76,45 +98,20 @@ const fetchIpInfo = async () => {
   throw new Error(`IP lookup failed: ${lastErr?.message}`);
 };
 
-// ─── Speed Test Data Size Configurations ──────────────────────────────────────
-const DATA_CONFIG = {
-  light: {
-    downloadBytes: 30_000_000,
-    downloadLabel: '30MB',
-    uploadBytes: 8 * 1024 * 1024,
-    uploadLabel: '8MB',
-  },
-  standard: {
-    downloadBytes: 100_000_000,
-    downloadLabel: '100MB',
-    uploadBytes: 25 * 1024 * 1024,
-    uploadLabel: '25MB',
-  },
-  heavy: {
-    downloadBytes: 200_000_000,
-    downloadLabel: '200MB',
-    uploadBytes: 50 * 1024 * 1024,
-    uploadLabel: '50MB',
-  }
-};
-
-// ─── Time-boxed Download Test (streams for `durationMs` ms, then aborts) ────
+// ─── Time-boxed Download Test ─────────────────────────────────────────────────
 const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => {
   return new Promise((resolve, reject) => {
     const innerController = new AbortController();
     let bytes = 0;
     let startTime = null;
     const samples = [];
-    let lastSample = 0;
     let warmUpBytes = 0;
     let warmUpTime = 0;
     let isWarmedUp = false;
 
-    // abort inner when outer signals
     const onOuter = () => innerController.abort();
     outerSignal.addEventListener('abort', onOuter, { once: true });
 
-    // stop after durationMs
     const timer = setTimeout(() => innerController.abort(), durationMs);
 
     fetch(`https://speed.cloudflare.com/__down?bytes=${downloadBytes}`, {
@@ -131,6 +128,41 @@ const runDownloadTest = (durationMs, downloadBytes, onProgress, outerSignal) => 
           bytes += value.length;
           const now = performance.now();
           const elapsed = (now - startTime) / 1000;
+
+          if (!isWarmedUp) {
+            if (elapsed >= 0.5) {
+              warmUpBytes = bytes;
+              warmUpTime = elapsed;
+              isWarmedUp = true;
+            }
+            continue;
+          }
+
+          const activeElapsed = elapsed - warmUpTime;
+          const activeBytes = bytes - warmUpBytes;
+          const speedMbps = activeElapsed > 0 ? (activeBytes * 8) / activeElapsed / 1_000_000 : 0;
+          samples.push(speedMbps);
+
+          const pct = Math.min((bytes / downloadBytes) * 100, 100);
+          onProgress({ bytes, elapsed, speedMbps, pct });
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError' && !outerSignal.aborted) reject(err);
+      })
+      .finally(() => {
+        clearTimeout(timer);
+        outerSignal.removeEventListener('abort', onOuter);
+        const totalElapsed = (performance.now() - (startTime || performance.now())) / 1000;
+        const activeElapsed = totalElapsed - warmUpTime;
+        const activeBytes = bytes - warmUpBytes;
+        const avgMbps = isWarmedUp && activeElapsed > 0 && activeBytes > 0
+          ? (activeBytes * 8) / activeElapsed / 1_000_000
+          : (totalElapsed > 0 && bytes > 0 ? (bytes * 8) / totalElapsed / 1_000_000 : 0);
+        resolve({ avgMbps, bytes, samples });
+      });
+  });
+};
 
           if (!isWarmedUp) {
             if (elapsed >= 0.5) {
@@ -497,13 +529,24 @@ export default function NetworkSpeedTest() {
         )}
 
         <div>
-          {isRunning ? (
+          {!isConsentGranted ? (
+            <Button variant="secondary" onClick={() => grantConsent('speedtest')}>Grant Consent & Start</Button>
+          ) : isRunning ? (
             <Button variant="primary" onClick={stopTest}>Stop Test</Button>
           ) : (
             <Button variant="primary" onClick={startTest}>Start Test</Button>
           )}
         </div>
       </div>
+
+      {!isConsentGranted && (
+        <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs mb-4">
+          <span>🛡️ Speed Test transmits test payload chunks to Cloudflare benchmark servers.</span>
+          <Button variant="secondary" onClick={() => grantConsent('speedtest')} className="text-xs shrink-0">
+            Grant Consent
+          </Button>
+        </div>
+      )}
 
       {/* ── Speedometer + Line Charts ── */}
       {showViz && (

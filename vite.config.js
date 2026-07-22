@@ -1,20 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import fs from 'fs';
 import { parseIpInput } from './src/lib/ipValidation';
+import { resolveRepositoryVersion } from './scripts/resolve-version.mjs';
 
-let version = process.env.VITE_APP_VERSION || '';
-
-if (!version) {
-  try {
-    const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-    if (pkg.version) {
-      version = pkg.version.startsWith('v') ? pkg.version : `v${pkg.version}`;
-    }
-  } catch (err) {
-    version = 'v0.5.4';
-  }
-}
+const version = resolveRepositoryVersion();
 
 const showChannelAlert = version.includes('alpha') || version.includes('beta');
 const appChannel = version.includes('alpha') ? 'alpha' : version.includes('beta') ? 'beta' : '';

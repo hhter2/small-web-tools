@@ -21,7 +21,7 @@
 | Routing | In-app state synchronized to URL hashes with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
-Version string is supplied via `VITE_APP_VERSION` environment variable or fallback to `package.json`.
+At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically.
 
 ## Repository map
 

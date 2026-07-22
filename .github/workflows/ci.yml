@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -38,8 +40,6 @@ jobs:
 
       - name: Verify
         run: npm run verify
-        env:
-          VITE_APP_VERSION: ${{ github.sha }}
 
       - name: Dependency Check
         run: npm run deps:check

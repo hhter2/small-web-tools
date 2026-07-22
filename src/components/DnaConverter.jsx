@@ -245,7 +245,7 @@ export default function DnaConverter() {
 
     let warningMessage = "";
     if (cleaned.includes("N")) {
-      warningMessage = "Notification: 'N' detected (can attach to any base: A, T, C, or G).";
+      warningMessage = "Notification: 'N' detected (N represents any or unknown nucleotide).";
     }
 
     // 3. Auto-detect sequence type (DNA vs RNA)
@@ -384,22 +384,22 @@ export default function DnaConverter() {
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444]"></span>
-                  <span>Sense Strand (Input: 5' → 3')</span>
+                  <span>Input Strand (5' → 3')</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6] opacity-30"></span>
-                  <span>Anti-sense Strand (Target: 3' → 5')</span>
+                  <span>Complementary Strand (3' → 5')</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6]"></span>
-                  <span>Anti-sense Strand (Input: 3' → 5')</span>
+                  <span>Input Strand (3' → 5')</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444] opacity-30"></span>
-                  <span>Sense Strand (Target: 5' → 3')</span>
+                  <span>Complementary Strand (5' → 3')</span>
                 </div>
               </>
             )}
@@ -570,7 +570,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Sense Strand Direction (5' → 3')" : "Sense Strand (Target) Direction (5' → 3')"}
+                  {isTopSense ? "Input Strand Direction (5' → 3')" : "Complementary Strand Direction (5' → 3')"}
                 </text>
               </g>
 
@@ -595,7 +595,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Anti-sense Strand (Target) Direction (5' → 3')" : "Anti-sense Strand Direction (3' → 5')"}
+                  {isTopSense ? "Complementary Strand Direction (3' → 5')" : "Input Strand Direction (3' → 5')"}
                 </text>
               </g>
             </svg>

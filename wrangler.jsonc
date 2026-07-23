@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "small-web-tools",
+  "compatibility_date": "2026-07-23",
+  "pages_build_output_dir": "./dist",
+  "services": [
+    {
+      "binding": "RATE_LIMITER_SERVICE",
+      "service": "small-web-tools-rate-limiter"
+    }
+  ],
+  "vars": {
+    "RATE_LIMIT_DEVELOPMENT_MODE": "false"
+  }
+}

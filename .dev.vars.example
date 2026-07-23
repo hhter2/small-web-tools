@@ -2,7 +2,8 @@
 # Permit requests without Origin only on localhost during explicit local development.
 ALLOW_LOCAL_DEVELOPMENT=true
 
-# Optional Cloudflare KV binding used for distributed rate limiting:
-# RATE_LIMIT_KV
-#
-# Preferred: configure a Cloudflare Rate Limiting binding named RATE_LIMITER.
+# Explicitly enables the non-atomic, in-memory limiter only for local development.
+RATE_LIMIT_DEVELOPMENT_MODE=true
+
+# Use at least 32 random characters. Never commit the real production secret.
+RATE_LIMIT_HMAC_SECRET=replace-with-at-least-32-random-characters

@@ -1,47 +1,110 @@
-const fallbackBuckets = new Map();
+const developmentBuckets = new Map();
+const WINDOW_MS = 60_000;
+const SERVICE_TIMEOUT_MS = 1500;
 
-function getClientId(request) {
+function jsonError(status, code, message, extraHeaders = {}) {
+  return Response.json({ ok: false, code, error: message }, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...extraHeaders,
+    },
+  });
+}
+
+function getNetworkIdentifier(request) {
   return request.headers.get('CF-Connecting-IP')
     || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
     || 'unknown';
 }
 
-export async function enforceRateLimit(context, options) {
-  const now = Date.now();
-  const windowMs = options.windowMs ?? 60_000;
-  const bucket = Math.floor(now / windowMs);
-  const clientId = getClientId(context.request);
-  const key = 'rate:' + options.name + ':' + clientId + ':' + bucket;
-  const limiter = context.env?.RATE_LIMITER;
-  const store = context.env?.RATE_LIMIT_KV;
+async function hmacClientKey(secret, networkIdentifier, period) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${networkIdentifier}:${period}`),
+  );
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
-  let count;
-  if (limiter?.limit) {
-    const result = await limiter.limit({ key: options.name + ':' + clientId });
-    if (result.success) return null;
-    count = options.limit + 1;
-  } else if (store?.get && store?.put) {
-    count = Number(await store.get(key) || 0) + 1;
-    await store.put(key, String(count), { expirationTtl: Math.ceil(windowMs / 1000) + 60 });
-  } else {
-    count = (fallbackBuckets.get(key) || 0) + 1;
-    fallbackBuckets.set(key, count);
-    if (fallbackBuckets.size > 5000) {
-      for (const existingKey of fallbackBuckets.keys()) {
-        if (!existingKey.endsWith(':' + bucket)) fallbackBuckets.delete(existingKey);
-      }
+function developmentLimit(name, clientKey, limit, now) {
+  const bucket = Math.floor(now / WINDOW_MS);
+  const key = `${name}:${clientKey}:${bucket}`;
+  const count = (developmentBuckets.get(key) || 0) + 1;
+  developmentBuckets.set(key, count);
+  if (developmentBuckets.size > 5000) {
+    for (const existingKey of developmentBuckets.keys()) {
+      if (!existingKey.endsWith(`:${bucket}`)) developmentBuckets.delete(existingKey);
     }
   }
+  return count <= limit;
+}
 
-  if (count > options.limit) {
-    return new Response(JSON.stringify({ ok: false, error: 'Too many requests' }), {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store',
-        'Retry-After': String(Math.ceil(windowMs / 1000)),
-      },
-    });
+export function resetDevelopmentRateLimits() {
+  developmentBuckets.clear();
+}
+
+export async function enforceRateLimit(context, options) {
+  const env = context.env || {};
+  const developmentMode = env.RATE_LIMIT_DEVELOPMENT_MODE === 'true';
+  const secret = env.RATE_LIMIT_HMAC_SECRET;
+  if (!secret || secret.length < 32) {
+    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
   }
-  return null;
+
+  const now = options.now?.() ?? Date.now();
+  const period = Math.floor(now / 86_400_000);
+  const clientKey = await hmacClientKey(
+    secret,
+    getNetworkIdentifier(context.request),
+    period,
+  );
+
+  if (!env.RATE_LIMITER_SERVICE?.fetch) {
+    if (developmentMode) {
+      const allowed = developmentLimit(options.name, clientKey, options.limit, now);
+      return allowed
+        ? null
+        : jsonError(429, 'RATE_LIMITED', 'Too many requests.', { 'Retry-After': '60' });
+    }
+    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SERVICE_TIMEOUT_MS);
+  try {
+    const serviceCall = env.RATE_LIMITER_SERVICE.fetch(
+      new Request('https://rate-limiter.internal/limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ route: options.name, clientKey }),
+      }),
+    );
+    const response = await Promise.race([
+      serviceCall,
+      new Promise((_, reject) => {
+        controller.signal.addEventListener('abort', () => reject(
+          new DOMException('Rate limiter timed out', 'TimeoutError'),
+        ), { once: true });
+      }),
+    ]);
+    if (!response.ok) throw new Error('limiter service failure');
+    const result = await response.json();
+    if (typeof result?.allowed !== 'boolean') throw new Error('invalid limiter response');
+    return result.allowed
+      ? null
+      : jsonError(429, 'RATE_LIMITED', 'Too many requests.', { 'Retry-After': '60' });
+  } catch {
+    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
+  } finally {
+    clearTimeout(timer);
+  }
 }

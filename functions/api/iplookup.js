@@ -120,14 +120,14 @@ function jsonResponse(body, init = {}) {
 }
 
 export async function onRequestGet(context) {
-  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
-  if (limited) return limited;
-
   const url = new URL(context.request.url);
   const parsed = parseIpInput(url.searchParams.get('ip') || '');
   if (parsed.error) {
     return jsonResponse({ ok: false, error: parsed.error }, { status: 400 });
   }
+
+  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
+  if (limited) return limited;
 
   if (!parsed.value && context.request.cf) {
     const cf = context.request.cf;

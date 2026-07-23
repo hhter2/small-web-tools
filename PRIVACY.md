@@ -1,66 +1,60 @@
 # Privacy Policy & Data Processing Disclosure
 
-**First Published:** July 19, 2026  
-**Last Updated:** July 22, 2026  
-**Repository:** [github.com/hhter2/small-web-tools](https://github.com/hhter2/small-web-tools) (MIT License)  
+**First Published:** July 19, 2026
+
+**Last Updated:** July 23, 2026
+
+**In-app policy:** `#privacy`
+
+**Repository:** [github.com/hhter2/small-web-tools](https://github.com/hhter2/small-web-tools) (MIT License)
+
 **Maintainer Contact:** Rhosiqs (<contact@rhosiqs.com>)
 
----
+## 1. Local-first processing
 
-## 1. Overview & Local-First Philosophy
+Small Web Tools is local-first. Most text, files, images, audio, video, generated codes, and tool results stay in browser memory. Selected media is not uploaded for FFmpeg processing, and file-inspection tools do not send file bodies to this project.
 
-Small Web Tools is designed with a **privacy-first, client-side execution philosophy**. 
+Local-first does not mean offline-only. The hosted application, named network-dependent features, optional map embeds, the on-demand FFmpeg runtime, and user-selected external links use the network as disclosed below.
 
-The vast majority of utilities (including Password Generator, Word Counter, Color Converter, Casing Switcher, ASCII/Unicode Converters, DNA/RNA Converters, Codon Table, Media Splitter, Random Wheel, Typing Speed Test, QR Code Generator/Scanner, Folder Analyzer, and Metadata Viewers) process all data **100% locally inside your web browser**. 
+## 2. Network-service inventory
 
-Your files, text inputs, images, audio, and videos are **never uploaded** to any server.
+`config/network-services.json` is the machine-readable policy source of truth. The in-app `#privacy` route renders the same service inventory.
 
----
+| Service | Purpose and trigger | Data transmitted | Mode | Fallback |
+| --- | --- | --- | --- | --- |
+| ExchangeRate-API | Live rates after the user grants consent and starts a live conversion | Standard edge metadata; the provider receives a server-side rates request | Explicit consent | Manual browser-side rate |
+| IP geolocation providers | Lookup after consent and user action | Requested IP and server request metadata | Explicit consent | Local syntax validation |
+| Cloudflare Speed Test | User-started latency/download/upload measurement | IP, request metadata, and generated measurement traffic | Explicit consent | No remote measurement |
+| Website Font Extractor | Bounded public HTML/CSS scan after consent and URL submission | Target URL; target servers receive Function request metadata | Explicit consent | Do not scan |
+| OpenStreetMap | Optional coordinate map after map consent | Coordinates and standard browser request metadata | Explicit consent | Coordinate text without an iframe |
+| unpkg FFmpeg 0.12.6 | Download pinned JS/WASM on the first processing action | Standard browser request metadata only; media and outputs remain local | Point-of-use disclosure | Do not process with FFmpeg |
+| Google Fonts recommendations | Open a specimen after the user selects a link | Standard navigation metadata | User navigation | Read the recommendation without opening it |
+| Google Maps | Open coordinates after the user selects a link | Coordinates and standard navigation metadata | User navigation | Read coordinates locally |
+| Cloudflare Pages and Functions | Deliver the app and same-origin APIs | Standard edge request and security metadata | Hosting infrastructure | No hosted app |
+| Project and author links | Open source or author information after a click | Standard navigation metadata | User navigation | Remain in the app |
 
-## 2. Comprehensive Third-Party Services & Network Requests Data Table
+## 3. Fonts and media runtime integrity
 
-For tools that require external web data or remote APIs, network requests are strictly limited to necessary features. Below is the complete disclosure of all external data interactions:
+The application UI fonts are self-hosted WOFF2 files. Initial page load does not request `fonts.googleapis.com` or `fonts.gstatic.com`. Font Extractor recommendations may open `fonts.google.com` only after a user selects a link; the extractor does not preview, proxy, or download discovered font files.
 
-| Service / Provider | Purpose | Trigger Condition | Data Transmitted | Local Fallback Option | Provider Privacy Policy |
-|---|---|---|---|---|---|
-| **Exchange-rate provider** (through `/api/exchange-rates`) | Currency Converter live exchange rates | User grants consent and enables live rates | Standard edge request; provider receives the server request | Manual Rate Override (100% local) | [Provider Privacy](https://www.exchangerate-api.com/privacy) |
-| **IP geolocation providers** (through `/api/iplookup`) | IP Lookup details | User grants consent and starts a lookup | Target IP address | Local IP format validation | [ipapi Privacy Policy](https://ipapi.co/privacy/) |
-| **OpenStreetMap embed** (`www.openstreetmap.org`) | Map view rendering | User grants separate map consent | Coordinates and standard browser request metadata | Coordinates display without a map | [OpenStreetMap Privacy](https://wiki.osmfoundation.org/wiki/Privacy_Policy) |
-| **Cloudflare Speed Test** (`speed.cloudflare.com`) | Latency, download, and upload measurements | User grants consent and starts a test | IP address and generated test traffic | No network test | [Cloudflare Privacy](https://www.cloudflare.com/privacypolicy/) |
-| **unpkg FFmpeg core** (`unpkg.com`) | Loads the FFmpeg WebAssembly engine | User opens a feature that requires FFmpeg processing | IP address and standard browser request metadata | Do not use FFmpeg-based extraction/splitting | [unpkg](https://unpkg.com/) |
-| **Cloudflare Pages & Functions** | Website hosting & API proxying | Page load & API proxy calls | Standard edge request & security logs | N/A (Hosting Infrastructure) | [Cloudflare Privacy](https://www.cloudflare.com/privacypolicy/) |
-| **Website Font Extractor API** (`/api/extract-fonts`) | Parsing font CSS of external sites | User submits website URL | Target website URL | N/A (Web inspection tool) | Per target website policy |
+The FFmpeg JavaScript and WebAssembly assets remain pinned to `@ffmpeg/core` 0.12.6 on unpkg. Before execution, the browser verifies their expected byte lengths and SHA-256 values from `config/ffmpeg-assets.json`. A mismatch fails locally without creating an executable Blob URL.
 
----
+## 4. Consent and browser storage
 
-## 3. Google Fonts Notice
+The consent manager stores explicit service choices under `small_web_tools_consent`. Theme, collapsed navigation, and recent route state may also use local or session storage. The project does not add analytics trackers or tracking cookies.
 
-The application security policy permits Google Fonts, but the current application bundle does not require a Google Fonts request on initial page load. Browser fallback fonts remain available.
+Revoking or resetting consent immediately removes an active OpenStreetMap iframe and blocks future consent-gated requests. It cannot recall a request that already completed.
 
----
+## 5. Local file safety
 
-## 4. Local Storage & Consent Settings
+Image, audio, video, Office metadata, Folder Analyzer, Media Splitter, and related local-file tools use browser file APIs. Coordinates extracted from an image are not stored in local storage or logs. Selecting a Google Maps link sends those coordinates to Google only through the user-initiated navigation.
 
-This website uses browser storage (`localStorage` and `sessionStorage`) solely to preserve user interface settings, active tool state, and consent preferences. No tracking cookies or analytics trackers are used.
+## 6. Open source and updates
 
-- **Consent Storage Key:** `small_web_tools_consent`
-- **Resetting Consent:** You can clear or update consent preferences at any time through your browser's site settings or by clearing local storage.
+The project is licensed under the [MIT License](LICENSE). Policy behavior can be reviewed in the repository and in the in-app service table.
 
----
+### Change log
 
-## 5. Local File Safety Guarantee
-
-All local file inspection tools (including Image Metadata, Audio Metadata, Video Metadata, Office Metadata, Folder Analyzer, and Media Splitter) run entirely inside the browser's JavaScript environment using HTML5 File APIs. Files selected from your device are **never uploaded, transmitted, or logged**.
-
----
-
-## 6. Open Source & License
-
-The source code of this project is open-source and licensed under the [MIT License](LICENSE). You may review, fork, inspect, and host the code independently.
-
----
-
-## 7. Change Log & Policy Updates
-
-- **July 19, 2026:** Initial publication of Privacy Policy.
-- **July 22, 2026:** Detailed data flow disclosure table, local fallback options, and third-party consent keys added.
+- **July 19, 2026:** Initial publication.
+- **July 22, 2026:** Added data-flow disclosure, local fallbacks, and consent keys.
+- **July 23, 2026:** Added the in-app policy, machine-readable inventory, self-hosted UI fonts, metadata-only Font Extractor, integrity-verified FFmpeg disclosure, and shared OSM consent behavior.

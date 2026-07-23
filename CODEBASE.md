@@ -39,11 +39,15 @@ small-web-tools/
 ├── tailwind.config.js        Tailwind tokens mapped to CSS custom properties
 ├── postcss.config.js         Tailwind and Autoprefixer configuration
 ├── index.html                Vite HTML shell and React mount point
+├── config/
+│   ├── network-services.json Network-service policy source of truth
+│   └── ffmpeg-assets.json    Pinned FFmpeg asset sizes and SHA-256 values
 ├── .github/
 │   ├── dependabot.yml        Weekly dependency update configuration
 │   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
 ├── public/
 │   ├── _headers              Cloudflare Pages security response headers
+│   ├── fonts/                Self-hosted WOFF2 UI fonts, licenses, and manifest
 │   └── favicon.svg           Static site icon
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
@@ -58,7 +62,7 @@ small-web-tools/
 │       ├── useMediaSeparator.js
 │       └── mediaSeparatorEngine.js
 └── functions/
-    ├── _shared/              Shared serverless utilities (safeExternalFetch, fontToken)
+    ├── _shared/              Shared serverless utilities (safeExternalFetch, requestPolicy)
     └── api/                 Cloudflare Pages API handlers
 ```
 
@@ -76,7 +80,7 @@ small-web-tools/
 - `categories` define the six navigation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
-- `renderActiveTool()` maps every `tool-*` route ID to its React component.
+- `renderActiveTool()` maps every tool route plus the non-catalog `privacy` route to its React component.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
 
@@ -94,6 +98,8 @@ Every routed tool page uses the shared visual contract established by Image Meta
 ### Styling and theme
 
 `src/styles.css` defines light and dark CSS custom properties such as `--bg-app`, `--bg-card`, `--text-main`, `--accent`, and `--border-color`. `tailwind.config.js` exposes those tokens as Tailwind color, shadow, and font utilities.
+
+Inter, JetBrains Mono, Plus Jakarta Sans, and TASA Orbiter are served from `public/fonts/`; their versions, subsets, and OFL license files are recorded in `public/fonts/MANIFEST.md`. The application makes no automatic Google Fonts request.
 
 Prefer the shared primitives and existing design tokens. Add global CSS only for truly shared behavior or component-specific rules that cannot be expressed clearly with the existing utilities.
 
@@ -129,6 +135,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-qrcode` | QR Code Generator | `QrBarcodeGenerator.jsx` (`qr` tab) | Utilities |
 | `tool-qrbarcodescan` | QR & Barcode Scanner | `QrBarcodeScanner.jsx` | Utilities |
 | `tool-wheel` | Random Wheel | `RandomWheel.jsx` | Utilities |
+| `privacy` | Privacy & Network Services | `PrivacyPolicy.jsx` | Policy (not in tool catalog) |
 
 ## Component groups
 
@@ -143,9 +150,11 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `AutoDetectConverter.jsx` | Shared two-panel automatic converter interface. |
 | `ToggleSwitch.jsx`, `Spinner.jsx`, `ResultDisplay.jsx` | Reusable controls and feedback UI. |
 
+`ExternalMapPreview.jsx` is the shared OpenStreetMap consent boundary for IP Lookup and Image Metadata. It renders coordinate text locally, creates an iframe only while `osm` consent is active, and removes the iframe immediately after revocation or reset.
+
 ### Media Splitter
 
-`MediaSeparator.jsx` is the page component. `useMediaSeparator.js` owns queue state and actions, `mediaSeparatorEngine.js` loads and invokes ffmpeg.wasm, and the queue item, waveform, and format-select components keep the UI modular.
+`MediaSeparator.jsx` is the page component. `useMediaSeparator.js` owns queue state and actions. `mediaSeparatorEngine.js` downloads the pinned FFmpeg 0.12.6 JavaScript and WebAssembly assets only on demand, verifies the byte lengths and SHA-256 values from `config/ffmpeg-assets.json`, then loads them through Blob URLs. The queue item, waveform, and format-select components keep the UI modular.
 
 ### File metadata tools
 
@@ -158,11 +167,14 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 | Endpoint | File | Purpose |
 | --- | --- | --- |
 | `GET /api/iplookup?ip=<address>` | `iplookup.js` | Query fallback IP geolocation providers and normalize the response. |
-| `POST /api/extract-fonts` | `extract-fonts.js` | Fetch a public page and inspect linked or embedded font declarations. |
-| `GET /api/font-proxy?token=<signed-token>` | `font-proxy.js` | Validate a short-lived signed request and proxy an approved public font binary. |
+| `POST /api/extract-fonts` | `extract-fonts.js` | Same-site-only, rate-limited scan of bounded public HTML/CSS; returns declaration metadata and truncation information without fetching font files. |
 | `GET /api/exchange-rates` | `exchange-rates.js` | Fetch and normalize live USD-based exchange rates after browser consent. |
 
-`vite.config.js` mirrors only IP lookup for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions. Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
+`functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `vite.config.js` mirrors only IP lookup for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions. Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
+
+## Network-service policy
+
+`config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the `#privacy` route consume this inventory. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.
 
 ## Dependencies
 
@@ -175,7 +187,7 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 | `jszip` | Office document metadata parsing and archive handling after archive-limit preflight. |
 | `html5-qrcode` | Camera and file-based QR/barcode scanning. |
 | `qrcode`, `jsbarcode` | QR and barcode generation. |
-| `@ffmpeg/ffmpeg`, `@ffmpeg/util` | Client-side media separation. |
+| `@ffmpeg/ffmpeg` | Client-side media separation using integrity-verified remote core assets. |
 | `@zxcvbn-ts/core`, language packages | Pattern-aware password strength analysis loaded only on the password route. |
 | `ignore` | Standards-compatible `.gitignore` matching in Folder Analyzer. |
 | `ipaddr.js` | Canonical IPv4/IPv6 parsing and public-address validation. |
@@ -190,7 +202,7 @@ npm run verify
 npm run preview
 ```
 
-Node.js 22 and 24 are supported. `npm run verify` is the baseline gate: lint, type checking, unit tests, production build, bundle budgets, and static header policy. CI additionally runs dependency checks, Playwright route smoke tests, and `npm audit`.
+Node.js 22 and 24 are supported. `npm run verify` is the baseline gate: lint, type checking, unit tests, production build, bundle budgets, static header policy, and the external-host inventory. CI additionally runs dependency checks, Playwright route smoke tests, and `npm audit`.
 
 ## Adding or changing a tool
 

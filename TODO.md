@@ -35,6 +35,11 @@ Use this sequence for each meaningful update:
 
 ## Completed
 
+### 2026-07-23
+
+- [x] `fix` Completed 0723 remediation Phase 1 (C01–C05): self-hosted licensed UI fonts, metadata-only bounded Font Extractor, network-service inventory and in-app privacy route, integrity-verified on-demand FFmpeg loading, and shared OSM map consent with immediate revocation.
+- [x] `test` Added focused API, integrity, consent, and Playwright network-boundary coverage; `npm run verify` and all Phase 1 browser journeys pass.
+
 ### 2026-07-18
 
 - [x] `docs` Rewrote the README as a concise site manual.

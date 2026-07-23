@@ -56,13 +56,14 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 File-focused tools process selected files in the browser whenever possible; files are not sent to this project for analysis. Some capabilities necessarily use network access:
 
 - IP Lookup queries a server-side lookup endpoint and external IP providers.
-- Website Font Extractor fetches the public URL supplied by the user through server-side endpoints to work around browser cross-origin limits.
+- Website Font Extractor scans bounded public HTML and CSS through a same-origin endpoint and returns declaration metadata only; it does not preview or download discovered font files.
 - Network Speed Test measures real network traffic.
 - Currency Converter requests live rates only after consent; manual rates remain local.
-- Media Splitter downloads the FFmpeg WebAssembly engine from unpkg when first used.
+- Image and IP maps contact OpenStreetMap only after map consent; coordinates remain available without the embed.
+- Media Splitter downloads the pinned FFmpeg WebAssembly engine from unpkg on the first processing action and verifies its size and SHA-256 before execution. Media stays in the browser.
 - Camera scanning requires browser camera permission.
 
-Review a tool's own labels and your browser permissions before using it with sensitive content.
+The footer’s **Privacy** route lists every declared network service, trigger, transmitted data, consent mode, and fallback. Review that policy, a tool's own labels, and your browser permissions before using sensitive content.
 
 ## Run locally
 

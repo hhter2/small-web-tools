@@ -4,6 +4,7 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
 import { parseIpInput } from '../lib/ipValidation';
+import ExternalMapPreview from './ExternalMapPreview';
 
 async function ipLookup(ip) {
   const parsed = parseIpInput(ip);
@@ -48,12 +49,10 @@ export default function IpLookup() {
   const [status, setStatus] = useState('');
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [result, setResult] = useState(null);
-  const [mapAllowed, setMapAllowed] = useState(() => hasConsent('osm'));
   const [lookupAllowed, setLookupAllowed] = useState(() => hasConsent('iplookup'));
 
   useEffect(() => {
     const handleConsentUpdate = () => {
-      setMapAllowed(hasConsent('osm'));
       setLookupAllowed(hasConsent('iplookup'));
     };
     window.addEventListener('consent_updated', handleConsentUpdate);
@@ -100,8 +99,6 @@ export default function IpLookup() {
   let regionCountryVal = '';
   let timezoneVal = '';
   let coordsVal = '';
-  let mapSrc = '';
-  let googleMapsUrl = '';
 
   if (result) {
     const city = result.city || '';
@@ -118,10 +115,6 @@ export default function IpLookup() {
 
     if (result.latitude !== undefined && result.latitude !== null && result.longitude !== undefined && result.longitude !== null) {
       coordsVal = `${result.latitude}, ${result.longitude}`;
-      const lat = result.latitude;
-      const lon = result.longitude;
-      mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.02}%2C${lat - 0.02}%2C${lon + 0.02}%2C${lat + 0.02}&layer=mapnik&marker=${lat}%2C${lon}`;
-      googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
     } else {
       coordsVal = "Unknown";
     }
@@ -207,50 +200,13 @@ export default function IpLookup() {
             </div>
 
             {/* Interactive Map Section */}
-            {mapSrc && (
-              <div className="flex flex-col gap-2 w-full h-full">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-text-main">Map Preview</label>
-                  {googleMapsUrl && (
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-accent hover:underline flex items-center gap-1"
-                    >
-                      External Map ↗ (Leaves Site)
-                    </a>
-                  )}
-                </div>
-                <div className="rounded-xl overflow-hidden border border-border bg-app flex-1 min-h-[250px] flex items-center justify-center p-4">
-                  {mapAllowed ? (
-                    <iframe
-                      id="iplookup-map"
-                      title="IP Location Map"
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      style={{ border: 0, borderRadius: '10px' }}
-                      allowFullScreen
-                      src={mapSrc}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 text-center p-4">
-                      <span className="text-sm text-text-main font-semibold">🗺️ OpenStreetMap Preview</span>
-                      <p className="text-xs text-text-muted max-w-[260px]">
-                        Loading map tiles sends tile requests to OpenStreetMap Foundation.
-                      </p>
-                      <Button
-                        variant="secondary"
-                        onClick={() => grantConsent('osm')}
-                        className="text-xs"
-                      >
-                        Enable Map Preview
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {result.latitude != null && result.longitude != null && (
+              <ExternalMapPreview
+                latitude={Number(result.latitude)}
+                longitude={Number(result.longitude)}
+                title="IP Location"
+                delta={0.02}
+              />
             )}
           </div>
         </div>

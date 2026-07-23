@@ -6,6 +6,7 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 import { RESOURCE_LIMITS, validateFileSize, validateBatchCount } from '../lib/resourceLimits';
+import ExternalMapPreview from './ExternalMapPreview';
 
 // Jpeg Metadata Stripping Logic
 function stripJpegMetadata(arrayBuffer, mode) {
@@ -683,7 +684,6 @@ export default function ImgMeta() {
   const [selectedImageId, setSelectedImageId] = useState(null); // Active single-view image
   const [compareMode, setCompareMode] = useState(false); // Toggle side-by-side view
   const [compareSelectedIds, setCompareSelectedIds] = useState([]); // Selected image IDs for comparison
-  const [showMap, setShowMap] = useState(false); // GPS Map toggle
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -720,7 +720,6 @@ export default function ImgMeta() {
 
   // Reset map view state when selected image changes
   React.useEffect(() => {
-    setShowMap(false);
   }, [selectedImageId]);
 
   const processFiles = async (files) => {
@@ -1039,6 +1038,14 @@ export default function ImgMeta() {
 
   const gpsCoords = displayedTags ? getDecimalCoords(displayedTags, displayedExpanded) : null;
   const gpsCoord = displayedTags ? fmtGPS(displayedTags) : null;
+  const gpsMapPreview = gpsCoords ? (
+    <ExternalMapPreview
+      latitude={gpsCoords.lat}
+      longitude={gpsCoords.lon}
+      title="GPS Location"
+      collapsible
+    />
+  ) : null;
 
   const query = searchQuery.toLowerCase().trim();
 
@@ -1660,49 +1667,7 @@ export default function ImgMeta() {
                 <div id="imgmeta-cam-view" className="flex flex-col gap-4 w-full">
                   {renderCamView()}
                   
-                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
-                  {gpsCoords && (
-                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
-                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
-                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
-                          <div className="flex items-center gap-2 ml-auto">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setShowMap(!showMap)}
-                            >
-                              {showMap ? 'Hide Map' : 'Show Map'}
-                            </Button>
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
-                            >
-                              Google Maps ↗
-                            </a>
-                          </div>
-                        </div>
-                        {showMap && (
-                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
-                            <iframe
-                              title="GPS Location Map"
-                              width="100%"
-                              height="320"
-                              frameBorder="0"
-                              scrolling="no"
-                              marginHeight={0}
-                              marginWidth={0}
-                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              className="w-full border-none"
-                            ></iframe>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {gpsMapPreview}
                 </div>
               )}
 
@@ -1711,49 +1676,7 @@ export default function ImgMeta() {
                 <div className="flex flex-col gap-4 w-full">
                   {renderAdvancedGroups()}
                   
-                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
-                  {gpsCoords && (
-                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
-                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
-                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
-                          <div className="flex items-center gap-2 ml-auto">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setShowMap(!showMap)}
-                            >
-                              {showMap ? 'Hide Map' : 'Show Map'}
-                            </Button>
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
-                            >
-                              Google Maps ↗
-                            </a>
-                          </div>
-                        </div>
-                        {showMap && (
-                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
-                            <iframe
-                              title="GPS Location Map"
-                              width="100%"
-                              height="320"
-                              frameBorder="0"
-                              scrolling="no"
-                              marginHeight={0}
-                              marginWidth={0}
-                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              className="w-full border-none"
-                            ></iframe>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {gpsMapPreview}
                 </div>
               )}
             </div>

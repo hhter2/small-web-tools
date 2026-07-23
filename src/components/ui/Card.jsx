@@ -36,7 +36,7 @@ const variants = {
   },
 };
 
-export default function Card({
+const Card = React.forwardRef(function Card({
   variant = 'tool',
   size = 'default', // for variant="tool": 'default' | 'compact' | 'wide'
   clickable = false, // for variant="home": adds cursor-pointer + hover lift
@@ -44,7 +44,7 @@ export default function Card({
   className = '',
   children,
   ...rest
-}) {
+}, ref) {
   const variantClasses = variants[variant]?.[size] ?? variants[variant]?.default ?? '';
   const clickableClasses = clickable
     ? `cursor-pointer hover:-translate-y-0.5 ${variant === 'tool' ? 'hover:border-border-hover' : ''}`
@@ -53,6 +53,7 @@ export default function Card({
 
   return (
     <article
+      ref={ref}
       className={[base, variantClasses, clickableClasses, animationClasses, className]
         .filter(Boolean)
         .join(' ')}
@@ -61,4 +62,6 @@ export default function Card({
       {children}
     </article>
   );
-}
+});
+
+export default Card;

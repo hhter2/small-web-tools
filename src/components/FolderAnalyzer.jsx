@@ -985,8 +985,9 @@ export default function FolderAnalyzer() {
       {/* Selection Areas */}
       {status !== 'success' && (
         <div className="flex flex-col gap-4 mt-4">
-          <div 
-            className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5"
+          <button
+            type="button"
+            className="w-full border-2 border-dashed border-border bg-transparent rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5"
             onClick={() => {
               const directoryPicker = window.showDirectoryPicker;
               if (directoryPicker) {
@@ -1016,6 +1017,7 @@ export default function FolderAnalyzer() {
                 folderInputRef.current?.click();
               }
             }}
+            aria-label="Select a folder to analyze"
           >
             <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1024,7 +1026,7 @@ export default function FolderAnalyzer() {
             </svg>
             <h3 className="text-lg font-bold text-text-main">Select or Drag &amp; Drop Folder</h3>
             <p className="text-sm text-text-muted">Click to open native folder picker or drop folder here</p>
-          </div>
+          </button>
 
           <div className="flex items-center gap-2 p-3 bg-app border border-border rounded-xl text-xs text-text-muted">
             <span>🔒 <strong>Local Privacy Guarantee:</strong> All file scanning and tree rendering is performed 100% in your browser memory. No folder contents or path details are ever uploaded to any server.</span>

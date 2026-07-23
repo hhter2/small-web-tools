@@ -894,10 +894,12 @@ export default function App() {
         >
           {/* Sidebar Brand */}
           <div className={`px-[18px] py-4 flex items-center justify-between border-b border-border-sidebar gap-3 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:flex-col md:justify-center md:px-0 md:py-4 md:gap-[10px]' : ''}`}>
-            <div
-              className={`flex items-center gap-[10px] cursor-pointer ${isSidebarCollapsed ? 'md:justify-center' : ''}`}
+            <button
+              type="button"
+              className={`flex items-center gap-[10px] cursor-pointer bg-transparent border-none p-0 text-left ${isSidebarCollapsed ? 'md:justify-center' : ''}`}
               id="brand-logo-btn"
               title="Go to Home"
+              aria-label="Go to home"
               onClick={() => {
                 handleNavClick('tool-home');
                 setSelectedHomeTab('all');
@@ -911,7 +913,7 @@ export default function App() {
               </div>
               {/* Brand Text — hidden when collapsed on desktop */}
               <span className={`font-display text-[0.95rem] font-extrabold tracking-[-0.02em] text-text-sidebar ${isSidebarCollapsed ? 'md:hidden' : ''}`}>Small Web Tools</span>
-            </div>
+            </button>
 
             {/* Collapse button — hidden on mobile */}
             <button
@@ -1106,9 +1108,11 @@ export default function App() {
           <header className="hidden min-w-0 border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] md:px-8 xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
             {/* Left: Brand */}
             <div className="flex shrink-0 items-center">
-              <div
-                className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85"
+              <button
+                type="button"
+                className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85 bg-transparent border-none p-0"
                 title="Go to Home"
+                aria-label="Go to home"
                 onClick={() => {
                   handleNavClick('tool-home');
                   setSelectedHomeTab('all');
@@ -1120,7 +1124,7 @@ export default function App() {
                   </svg>
                 </div>
                 <span className="hidden font-['TASA_Orbiter',sans-serif] text-[0.95rem] font-bold tracking-[-0.02em] text-accent xl:inline">Small Web Tools</span>
-              </div>
+              </button>
             </div>
 
             {/* Center: Nav Dropdowns */}
@@ -1324,10 +1328,12 @@ export default function App() {
           <div className="hidden max-md:flex items-center justify-between py-3 border-b border-border min-h-[52px] sticky bg-app z-10 px-4" style={{ top: 'calc(60px + var(--banner-height))' }}>
             <div className="flex items-center gap-2">
               {/* Brand logo for mobile breadcrumb */}
-              <div
+              <button
+                type="button"
                 id="top-brand-logo"
-                className="cursor-pointer"
+                className="cursor-pointer bg-transparent border-none p-0 text-accent"
                 title="Go to Home"
+                aria-label="Go to home"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
                   handleNavClick('tool-home');
@@ -1337,7 +1343,7 @@ export default function App() {
                 <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
-              </div>
+              </button>
               {activeTool !== 'tool-home' && (
                 <>
                   <button

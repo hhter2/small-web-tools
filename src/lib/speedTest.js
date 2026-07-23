@@ -4,11 +4,26 @@ export const DATA_CONFIG = {
   heavy: { downloadBytes: 100_000_000, uploadBytes: 25_000_000 },
 };
 
+export const CUSTOM_MB_MIN = 1;
+export const CUSTOM_MB_MAX = 1000;
+export const MAX_HISTORY_SAMPLES = 200;
+
+function parseCustomMegabytes(value, label) {
+  if (typeof value === 'string' && value.trim() === '') {
+    throw new RangeError(`${label} must be between 1 and 1000 MB.`);
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < CUSTOM_MB_MIN || parsed > CUSTOM_MB_MAX) {
+    throw new RangeError(`${label} must be a finite value between 1 and 1000 MB.`);
+  }
+  return parsed;
+}
+
 export function getDataPlan(mode, customDownloadMb = 0, customUploadMb = 0) {
   const plan = mode === 'custom'
     ? {
-        downloadBytes: Math.max(1, Number(customDownloadMb) || 1) * 1_000_000,
-        uploadBytes: Math.max(1, Number(customUploadMb) || 1) * 1_000_000,
+        downloadBytes: parseCustomMegabytes(customDownloadMb, 'Download') * 1_000_000,
+        uploadBytes: parseCustomMegabytes(customUploadMb, 'Upload') * 1_000_000,
       }
     : DATA_CONFIG[mode] || DATA_CONFIG.light;
   return {
@@ -16,6 +31,14 @@ export function getDataPlan(mode, customDownloadMb = 0, customUploadMb = 0) {
     uploadBytes: Math.round(plan.uploadBytes),
     totalBytes: Math.round(plan.downloadBytes + plan.uploadBytes),
   };
+}
+
+export function appendBoundedSample(history, sample, maxSamples = MAX_HISTORY_SAMPLES) {
+  if (history.length < maxSamples) return [...history, sample];
+  return [
+    ...history.filter((_value, index) => index % 2 === 0),
+    sample,
+  ];
 }
 
 export function isConstrainedConnection(connection) {

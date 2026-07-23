@@ -1,11 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   DATA_CONFIG,
+  MAX_HISTORY_SAMPLES,
+  appendBoundedSample,
   formatDecimalMb,
   getDataPlan,
   isConstrainedConnection,
 } from '../lib/speedTest.js';
-import { runDownloadTest, runUploadTest } from '../components/NetworkSpeedTest.jsx';
+import {
+  runDownloadTest,
+  runPingTest,
+  runUploadTest,
+} from '../components/NetworkSpeedTest.jsx';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -34,6 +40,23 @@ describe('speed-test data plans', () => {
     expect(isConstrainedConnection({ effectiveType: '3g' })).toBe(true);
     expect(isConstrainedConnection({ effectiveType: '4g' })).toBe(false);
   });
+
+  it.each([1_000_000, Infinity, NaN, -1, 0, '', 'not-a-number'])(
+    'rejects hostile custom values without silently clamping: %s',
+    (value) => {
+      expect(() => getDataPlan('custom', value, 1)).toThrow(RangeError);
+      expect(() => getDataPlan('custom', 1, value)).toThrow(RangeError);
+    },
+  );
+
+  it('keeps chart history bounded without changing aggregate samples', () => {
+    let history = [];
+    for (let index = 0; index < 1000; index += 1) {
+      history = appendBoundedSample(history, { speed: index });
+    }
+    expect(history.length).toBeLessThanOrEqual(MAX_HISTORY_SAMPLES);
+    expect(history.at(-1)).toEqual({ speed: 999 });
+  });
 });
 
 describe('speed-test cancellation', () => {
@@ -57,5 +80,19 @@ describe('speed-test cancellation', () => {
     controller.abort();
     await running;
     expect(requestSignal.aborted).toBe(true);
+  });
+
+  it('reports latency as unavailable when every ping is non-2xx', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('no', { status: 503 })));
+    expect(await runPingTest(new AbortController().signal)).toBeNull();
+  });
+
+  it.each([
+    ['download', runDownloadTest],
+    ['upload', runUploadTest],
+  ])('rejects a non-2xx %s response', async (_name, runner) => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('no', { status: 503 })));
+    await expect(runner(100, 1_000_000, () => {}, new AbortController().signal))
+      .rejects.toThrow(/server returned error status/i);
   });
 });

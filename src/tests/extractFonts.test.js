@@ -1,38 +1,50 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const safeExternalFetch = vi.fn();
-vi.mock('../../functions/_shared/safeExternalFetch.js', async (importOriginal) => {
-  const actual = await importOriginal();
-  return { ...actual, safeExternalFetch };
-});
-vi.mock('../../functions/_shared/rateLimit.js', () => ({
-  enforceRateLimit: vi.fn(async () => null),
+const enforceRateLimit = vi.fn(async () => null);
+
+vi.mock('../../functions/_shared/safeExternalFetch.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  safeExternalFetch,
 }));
+vi.mock('../../functions/_shared/rateLimit.js', () => ({ enforceRateLimit }));
 
 const { onRequestOptions, onRequestPost } = await import('../../functions/api/extract-fonts.js');
-const SECRET = 'test-only-secret-that-is-longer-than-thirty-two-characters';
 const ORIGIN = 'https://tools.example.com';
 
-function postContext(body, env = { FONT_PROXY_SIGNING_SECRET: SECRET }) {
+function responseBody(text) {
   return {
-    request: new Request(ORIGIN + '/api/extract-fonts', {
+    response: new Response(text),
+    buffer: new TextEncoder().encode(text).buffer,
+  };
+}
+
+function postContext(body, options = {}) {
+  const headers = {
+    Origin: ORIGIN,
+    'Sec-Fetch-Site': 'same-origin',
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  return {
+    request: new Request(`${ORIGIN}/api/extract-fonts`, {
       method: 'POST',
-      headers: {
-        Origin: ORIGIN,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      headers,
+      body: options.rawBody ?? JSON.stringify(body),
     }),
-    env,
+    env: options.env || {},
   };
 }
 
 describe('font extractor handler', () => {
-  beforeEach(() => safeExternalFetch.mockReset());
+  beforeEach(() => {
+    safeExternalFetch.mockReset();
+    enforceRateLimit.mockClear();
+  });
 
   it('permits only same-origin preflight requests', async () => {
     const sameOrigin = await onRequestOptions({
-      request: new Request(ORIGIN + '/api/extract-fonts', {
+      request: new Request(`${ORIGIN}/api/extract-fonts`, {
         method: 'OPTIONS',
         headers: { Origin: ORIGIN },
       }),
@@ -41,7 +53,7 @@ describe('font extractor handler', () => {
     expect(sameOrigin.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN);
 
     const crossOrigin = await onRequestOptions({
-      request: new Request(ORIGIN + '/api/extract-fonts', {
+      request: new Request(`${ORIGIN}/api/extract-fonts`, {
         method: 'OPTIONS',
         headers: { Origin: 'https://attacker.example' },
       }),
@@ -49,68 +61,94 @@ describe('font extractor handler', () => {
     expect(crossOrigin.status).toBe(403);
   });
 
-  it('fails closed when the signing secret is absent', async () => {
-    const response = await onRequestPost(postContext({ url: 'https://example.com' }, {}));
-    expect(response.status).toBe(503);
+  it.each([
+    [{ headers: { Origin: '' } }, 403],
+    [{ headers: { Origin: 'https://attacker.example' } }, 403],
+    [{ headers: { 'Sec-Fetch-Site': 'cross-site' } }, 403],
+    [{ headers: { 'Content-Type': 'text/plain' } }, 415],
+  ])('rejects invalid browser request policy before rate limiting', async (options, status) => {
+    const response = await onRequestPost(postContext({ url: 'https://example.com' }, options));
+    expect(response.status).toBe(status);
+    expect(enforceRateLimit).not.toHaveBeenCalled();
     expect(safeExternalFetch).not.toHaveBeenCalled();
   });
 
-  it('extracts a font and returns only a signed proxy URL', async () => {
+  it('rate limits before parsing or upstream work', async () => {
+    enforceRateLimit.mockResolvedValueOnce(new Response('limited', { status: 429 }));
+    const response = await onRequestPost(postContext({ url: 'https://example.com' }));
+    expect(response.status).toBe(429);
+    expect(safeExternalFetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects bodies over 4 KiB', async () => {
+    const response = await onRequestPost(postContext(null, {
+      rawBody: JSON.stringify({ url: 'https://example.com', padding: 'x'.repeat(4096) }),
+    }));
+    expect(response.status).toBe(413);
+    expect(safeExternalFetch).not.toHaveBeenCalled();
+  });
+
+  it('returns metadata without source URLs, tokens, or proxy fields', async () => {
     const html = [
       '<style>',
       '@font-face { font-family: "Demo"; src: url("/demo.woff2") format("woff2");',
       'font-weight: 600; font-style: italic; }',
       '</style>',
     ].join('');
-    safeExternalFetch.mockResolvedValue({
-      response: new Response(html, { headers: { 'Content-Type': 'text/html' } }),
-      buffer: new TextEncoder().encode(html).buffer,
-    });
+    safeExternalFetch.mockResolvedValue(responseBody(html));
 
     const response = await onRequestPost(postContext({ url: 'https://example.com/page' }));
     const result = await response.json();
     expect(response.status).toBe(200);
-    expect(result.fonts).toHaveLength(1);
-    expect(result.fonts[0].proxyUrl).toMatch(/^\/api\/font-proxy\?token=/);
-    expect(result.fonts[0].proxyUrl).not.toContain('demo.woff2');
-    expect(safeExternalFetch).toHaveBeenCalledWith(
-      'https://example.com/page',
+    expect(result.fonts).toEqual([
       expect.objectContaining({
-        allowedContentTypes: ['text/html', 'application/xhtml+xml'],
+        family: 'Demo',
+        format: 'WOFF2',
+        weight: '600',
+        style: 'italic',
+        sourceHost: 'example.com',
       }),
-    );
+    ]);
+    expect(JSON.stringify(result.fonts)).not.toMatch(/url|token|proxy/iu);
   });
 
-  it('preserves distinct faces, variable metadata, and unicode ranges', async () => {
+  it('deduplicates stylesheet jobs and stops at the configured job cap', async () => {
+    const html = [
+      '<link rel="stylesheet" href="/a.css">',
+      '<link rel="stylesheet" href="/a.css">',
+      '<link rel="stylesheet" href="/b.css">',
+    ].join('');
+    const css = '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2"); }';
+    safeExternalFetch
+      .mockResolvedValueOnce(responseBody(html))
+      .mockResolvedValueOnce(responseBody(css));
+
+    const response = await onRequestPost(postContext(
+      { url: 'https://example.com' },
+      { env: { FONT_EXTRACTION_LIMITS: { stylesheets: 1, concurrency: 1 } } },
+    ));
+    const result = await response.json();
+    expect(safeExternalFetch).toHaveBeenCalledTimes(2);
+    expect(result.truncation).toMatchObject({
+      truncated: true,
+      reasons: expect.arrayContaining(['stylesheets']),
+      consumed: { stylesheets: 1, fontFaces: 1 },
+    });
+  });
+
+  it('returns machine-readable truncation when the face cap is reached', async () => {
     const html = [
       '<style>',
-      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
-      'font-weight: 400; font-style: normal; unicode-range: U+0000-00FF; }',
-      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
-      'font-weight: 700; font-style: normal; unicode-range: U+0000-00FF; }',
-      '@font-face { font-family: Demo; src: url("/variable.woff2") format("woff2");',
-      'font-weight: 100 900; font-style: italic; font-stretch: 75% 125%;',
-      'font-variation-settings: "wght" 450; unicode-range: U+0100-024F; }',
-      '@font-face { font-family: Demo; src: url("/demo.woff2") format("woff2");',
-      'font-weight: 400; font-style: normal; unicode-range: U+0000-00FF; }',
+      '@font-face { font-family: A; src: url("/a.woff2"); }',
+      '@font-face { font-family: B; src: url("/b.woff2"); }',
       '</style>',
     ].join('');
-    safeExternalFetch.mockResolvedValue({
-      response: new Response(html, { headers: { 'Content-Type': 'text/html' } }),
-      buffer: new TextEncoder().encode(html).buffer,
-    });
-
-    const result = await (await onRequestPost(
-      postContext({ url: 'https://example.com/page' }),
-    )).json();
-    expect(result.fonts).toHaveLength(3);
-    expect(result.fonts.map((font) => font.weight)).toEqual(['100 900', '400', '700']);
-    expect(result.fonts[0]).toMatchObject({
-      style: 'italic',
-      stretch: '75% 125%',
-      unicodeRange: 'U+0100-024F',
-      variationSettings: '"wght" 450',
-      isVariable: true,
-    });
+    safeExternalFetch.mockResolvedValue(responseBody(html));
+    const result = await (await onRequestPost(postContext(
+      { url: 'https://example.com' },
+      { env: { FONT_EXTRACTION_LIMITS: { fontFaces: 1 } } },
+    ))).json();
+    expect(result.fonts).toHaveLength(1);
+    expect(result.truncation.reasons).toContain('font-faces');
   });
 });

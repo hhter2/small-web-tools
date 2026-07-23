@@ -4,7 +4,12 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 import JSZip from 'jszip';
-import { RESOURCE_LIMITS, validateBatchCount, validateFileSize, validateZipArchive } from '../lib/resourceLimits';
+import {
+  FILE_RESOURCE_POLICIES,
+  validateResourceAddition,
+  validateZipArchive,
+} from '../lib/resourceLimits';
+import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
 
 const loadSafeZip = async (file) => {
   const archiveCheck = await validateZipArchive(file);
@@ -608,6 +613,12 @@ const COMPARE_FIELDS = [
 ];
 
 export default function DocMeta() {
+  const {
+    createObjectUrl,
+    trackObjectUrl,
+    revokeObjectUrl,
+    revokeAllObjectUrls,
+  } = useObjectUrlRegistry();
   const [files, setFiles] = useState([]);
   const [selectedFileId, setSelectedFileId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -658,9 +669,13 @@ export default function DocMeta() {
   };
 
   const processFiles = async (fileList) => {
-    const countCheck = validateBatchCount(fileList, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'documents');
-    if (!countCheck.valid) {
-      setStatus(countCheck.error);
+    const resourceCheck = validateResourceAddition(
+      files,
+      fileList,
+      FILE_RESOURCE_POLICIES.documentMetadata,
+    );
+    if (!resourceCheck.valid) {
+      setStatus(resourceCheck.error);
       return;
     }
     setLoading(true);
@@ -670,11 +685,6 @@ export default function DocMeta() {
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_DOC_SIZE_BYTES, 'Document');
-      if (!sizeCheck.valid) {
-        setStatus(sizeCheck.error);
-        continue;
-      }
       const ext = file.name.split('.').pop().toLowerCase();
       
       if (!acceptedExtensions.includes(ext)) {
@@ -774,7 +784,7 @@ export default function DocMeta() {
                               zip.file("docProps/thumbnail.jpg");
             if (thumbFile) {
               const blob = await thumbFile.async("blob");
-              thumbnail = URL.createObjectURL(blob);
+              thumbnail = createObjectUrl(blob);
             }
           } catch (thumbErr) {
             console.warn("Failed fallback thumbnail extraction", thumbErr);
@@ -782,6 +792,7 @@ export default function DocMeta() {
         }
 
         const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        trackObjectUrl(thumbnail);
         newFiles.push({
           id,
           name: file.name,
@@ -817,7 +828,7 @@ export default function DocMeta() {
     setFiles(prev => {
       const fileToRemove = prev.find(f => f.id === id);
       if (fileToRemove && fileToRemove.thumbnail) {
-        URL.revokeObjectURL(fileToRemove.thumbnail);
+        revokeObjectUrl(fileToRemove.thumbnail);
       }
       const updated = prev.filter(f => f.id !== id);
       if (selectedFileId === id) {
@@ -829,11 +840,7 @@ export default function DocMeta() {
   };
 
   const handleClearAll = () => {
-    files.forEach(f => {
-      if (f.thumbnail) {
-        URL.revokeObjectURL(f.thumbnail);
-      }
-    });
+    revokeAllObjectUrls();
     setFiles([]);
     setSelectedFileId(null);
     setCompareSelectedIds([]);
@@ -854,14 +861,14 @@ export default function DocMeta() {
     };
     const jsonString = JSON.stringify(metadata, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const url = createObjectUrl(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = activeFile.name.replace(/\.[^/.]+$/, "") + "_metadata.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    revokeObjectUrl(url);
   };
 
   const stripDocumentMetadata = async (fileObj, mode, type) => {
@@ -982,7 +989,7 @@ export default function DocMeta() {
 
   const downloadStrippedFile = (fileObj) => {
     if (!fileObj.strippedInfo) return;
-    const url = URL.createObjectURL(fileObj.strippedInfo.blob);
+    const url = createObjectUrl(fileObj.strippedInfo.blob);
     const a = document.createElement('a');
     a.href = url;
     const ext = fileObj.name.split('.').pop();
@@ -991,7 +998,7 @@ export default function DocMeta() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    revokeObjectUrl(url);
   };
 
   const handleRestoreOriginal = (fileId) => {

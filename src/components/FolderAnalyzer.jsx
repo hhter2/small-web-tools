@@ -3,6 +3,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import { createGitignoreMatcher, escapeXml } from '../lib/folderAnalyzerUtils';
+import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
 
 
 const TEXT_EXTENSIONS = new Set([
@@ -27,6 +28,7 @@ export default function FolderAnalyzer() {
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
+  const acceptedFilesRef = useRef([]);
   const [scannedProjects, setScannedProjects] = useState([]);
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [viewMode, setViewMode] = useState('figure'); // figure, text
@@ -137,6 +139,7 @@ export default function FolderAnalyzer() {
   }
 
   const handleClear = () => {
+    acceptedFilesRef.current = [];
     setScannedProjects([]);
     setActiveProjectIndex(0);
     setCollapsedPaths({});
@@ -147,6 +150,16 @@ export default function FolderAnalyzer() {
   // Parse items from directory selection or drag-and-drop
   async function processFiles(fileList, rootFolderNames, shouldAppend = false) {
     if ((!fileList || fileList.length === 0) && (!rootFolderNames || rootFolderNames.length === 0)) return;
+    const resourceCheck = validateResourceAddition(
+      shouldAppend ? acceptedFilesRef.current : [],
+      fileList,
+      FILE_RESOURCE_POLICIES.folderAnalysis,
+    );
+    if (!resourceCheck.valid) {
+      setErrorMsg(resourceCheck.error);
+      setStatus('error');
+      return;
+    }
     setStatus('scanning');
     setProgress({ current: 0, total: fileList ? fileList.length : 0, phase: 'Reading folder contents...' });
 
@@ -258,6 +271,9 @@ export default function FolderAnalyzer() {
         setActiveProjectIndex(0);
       }
       setCollapsedPaths({});
+      acceptedFilesRef.current = shouldAppend
+        ? [...acceptedFilesRef.current, ...Array.from(fileList || [])]
+        : Array.from(fileList || []);
       setStatus('success');
     } catch (err) {
       console.error(err);

@@ -14,6 +14,112 @@ export const RESOURCE_LIMITS = {
   REMOTE_REQUEST_TIMEOUT_MS: 8000,
 };
 
+const MIB = 1024 * 1024;
+
+export const FILE_RESOURCE_POLICIES = Object.freeze({
+  imageMetadata: Object.freeze({
+    label: 'images',
+    maxFileBytes: 100 * MIB,
+    maxTotalBytes: 300 * MIB,
+    maxCount: 100,
+  }),
+  audioMetadata: Object.freeze({
+    label: 'audio files',
+    maxFileBytes: 100 * MIB,
+    maxTotalBytes: 300 * MIB,
+    maxCount: 100,
+  }),
+  videoMetadata: Object.freeze({
+    label: 'video files',
+    maxFileBytes: 200 * MIB,
+    maxTotalBytes: 300 * MIB,
+    maxCount: 50,
+  }),
+  documentMetadata: Object.freeze({
+    label: 'documents',
+    maxFileBytes: 100 * MIB,
+    maxTotalBytes: 300 * MIB,
+    maxCount: 100,
+  }),
+  folderAnalysis: Object.freeze({
+    label: 'folder files',
+    maxFileBytes: 25 * MIB,
+    maxTotalBytes: 512 * MIB,
+    maxCount: 1000,
+  }),
+});
+
+export function getMediaSeparatorPolicy(deviceMemory) {
+  const reportedMemory = Number(deviceMemory);
+  const maxTotalBytes = Number.isFinite(reportedMemory)
+    ? (reportedMemory <= 4 ? 100 : 200) * MIB
+    : 150 * MIB;
+  return {
+    label: 'media queue',
+    maxFileBytes: Math.min(200 * MIB, maxTotalBytes),
+    maxTotalBytes,
+    maxCount: 10,
+    maxQueueSize: 10,
+  };
+}
+
+function fileSize(item) {
+  const size = Number(item?.size ?? item?.file?.size ?? item?.originalFile?.size);
+  return Number.isFinite(size) && size >= 0 ? size : 0;
+}
+
+/**
+ * Validate a complete existing + incoming selection before callers read any file.
+ * This is intentionally all-or-nothing so rejected files cannot consume resources.
+ */
+export function validateResourceAddition(existingItems, incomingFiles, policy) {
+  const existing = Array.from(existingItems || []);
+  const incoming = Array.from(incomingFiles || []);
+  const label = policy?.label || 'files';
+  const combinedCount = existing.length + incoming.length;
+  const maxCount = Math.min(
+    Number.isFinite(policy?.maxCount) ? policy.maxCount : Infinity,
+    Number.isFinite(policy?.maxQueueSize) ? policy.maxQueueSize : Infinity,
+  );
+
+  if (combinedCount > maxCount) {
+    return {
+      valid: false,
+      error: `Adding ${incoming.length} ${label} would exceed the limit of ${maxCount} (currently ${existing.length}).`,
+      reason: 'count',
+    };
+  }
+
+  const oversized = incoming.find((file) => fileSize(file) > policy.maxFileBytes);
+  if (oversized) {
+    return {
+      valid: false,
+      error: `${oversized.name || 'File'} exceeds the per-file limit of ${formatBytes(policy.maxFileBytes)}.`,
+      reason: 'file-size',
+    };
+  }
+
+  const existingBytes = existing.reduce((total, item) => total + fileSize(item), 0);
+  const incomingBytes = incoming.reduce((total, item) => total + fileSize(item), 0);
+  if (existingBytes + incomingBytes > policy.maxTotalBytes) {
+    return {
+      valid: false,
+      error: `Adding ${formatBytes(incomingBytes)} would exceed the ${label} total limit of ${formatBytes(policy.maxTotalBytes)} (currently ${formatBytes(existingBytes)}).`,
+      reason: 'total-size',
+    };
+  }
+
+  return {
+    valid: true,
+    error: null,
+    reason: null,
+    existingBytes,
+    incomingBytes,
+    totalBytes: existingBytes + incomingBytes,
+    totalCount: combinedCount,
+  };
+}
+
 export function formatBytes(bytes, decimals = 1) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;

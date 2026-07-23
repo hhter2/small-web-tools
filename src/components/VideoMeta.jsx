@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ensureFFmpegLoaded, guessMime } from './mediaSeparatorEngine';
+import { ensureFFmpegLoaded, guessMime, terminateFFmpeg } from './mediaSeparatorEngine';
 import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import { RESOURCE_LIMITS, validateBatchCount, validateFileSize } from '../lib/resourceLimits';
+import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
+import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -413,12 +414,19 @@ async function getVideoInfo(file) {
         c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
         thumbnail = c.toDataURL('image/jpeg', 0.7);
       } catch { /* skip */ }
+      URL.revokeObjectURL(url);
       resolve({ duration: isFinite(video.duration) ? video.duration : null, videoWidth: video.videoWidth || null, videoHeight: video.videoHeight || null, thumbnail });
     };
 
     video.onerror = () => { if (resolved) return; resolved = true; URL.revokeObjectURL(url); resolve(null); };
     video.src = url;
-    setTimeout(() => { if (!resolved) { resolved = true; resolve({ duration: isFinite(video.duration) ? video.duration : null, videoWidth: video.videoWidth || null, videoHeight: video.videoHeight || null, thumbnail: null }); } }, 8000);
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        URL.revokeObjectURL(url);
+        resolve({ duration: isFinite(video.duration) ? video.duration : null, videoWidth: video.videoWidth || null, videoHeight: video.videoHeight || null, thumbnail: null });
+      }
+    }, 8000);
   });
 }
 
@@ -495,6 +503,11 @@ const COMPARE_FIELDS = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VideoMeta() {
+  const {
+    createObjectUrl,
+    revokeObjectUrl,
+    revokeAllObjectUrls,
+  } = useObjectUrlRegistry();
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -556,15 +569,21 @@ export default function VideoMeta() {
             const audioData = await ffmpeg.readFile(outputName);
             const mimeType = guessMime(targetExt, 'audio');
             const audioBlob = new Blob([audioData.buffer], { type: mimeType });
-            const url = URL.createObjectURL(audioBlob);
+            const url = createObjectUrl(audioBlob);
             setAudioURLs(prev => ({ ...prev, [key]: url }));
           }
 
-          try { await ffmpeg.deleteFile(inputName); } catch (e) {}
-          try { await ffmpeg.deleteFile(outputName); } catch (e) {}
         } catch (err) {
           console.error(`Failed to extract audio track ${i} automatically:`, err);
         } finally {
+          if (ffmpeg) {
+            try { await ffmpeg.deleteFile(inputName); } catch {
+              // The input may not have been written before cancellation or failure.
+            }
+            try { await ffmpeg.deleteFile(outputName); } catch {
+              // FFmpeg may not have produced an output for an unsupported track.
+            }
+          }
           if (!cancelled) {
             setLoadingURLs(prev => ({ ...prev, [key]: false }));
           }
@@ -620,7 +639,7 @@ export default function VideoMeta() {
         const mimeType = guessMime(targetExt, 'audio');
         const audioBlob = new Blob([audioData.buffer], { type: mimeType });
 
-        const downloadUrl = URL.createObjectURL(audioBlob);
+        const downloadUrl = createObjectUrl(audioBlob);
         const a = document.createElement('a');
         a.href = downloadUrl;
         const baseName = file.name.replace(/\.[^/.]+$/, '');
@@ -629,12 +648,16 @@ export default function VideoMeta() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(downloadUrl);
+        revokeObjectUrl(downloadUrl);
         setStatus(`Successfully downloaded audio track ${trackIndex + 1}.`);
       } finally {
         ffmpeg.off('progress', onProgress);
-        try { await ffmpeg.deleteFile(inputName); } catch (e) {}
-        try { await ffmpeg.deleteFile(outputName); } catch (e) {}
+        try { await ffmpeg.deleteFile(inputName); } catch {
+          // The input may already have been removed after a failed execution.
+        }
+        try { await ffmpeg.deleteFile(outputName); } catch {
+          // No output exists when extraction fails before writing.
+        }
       }
     } catch (err) {
       console.error(err);
@@ -650,27 +673,25 @@ export default function VideoMeta() {
 
   useEffect(() => {
     return () => {
-      files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
-      Object.values(audioURLsRef.current).forEach(url => URL.revokeObjectURL(url));
+      revokeAllObjectUrls();
+      terminateFFmpeg();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const processFiles = async (fileList) => {
-    const countCheck = validateBatchCount(fileList, RESOURCE_LIMITS.MAX_BATCH_FILES_COUNT, 'media files');
-    if (!countCheck.valid) { setStatus(countCheck.error); return; }
+    const resourceCheck = validateResourceAddition(files, fileList, FILE_RESOURCE_POLICIES.videoMetadata);
+    if (!resourceCheck.valid) { setStatus(resourceCheck.error); return; }
     setLoading(true); setStatus('Parsing files...');
     const newFiles = [];
     const supportedExts = ['mp4', 'mov', 'm4v', 'f4v', '3gp', '3g2', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'ts', 'mts', 'm2ts', 'mxf', 'log', 'txt'];
     for (const file of fileList) {
-      const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_MEDIA_SIZE_BYTES, 'Media file');
-      if (!sizeCheck.valid) { setStatus(sizeCheck.error); continue; }
       const ext = file.name.split('.').pop().toLowerCase();
       if (!supportedExts.includes(ext)) { setStatus(`Skipped unsupported file: ${file.name}`); continue; }
       if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(`Already loaded: ${file.name}`); continue; }
       try {
         const parsed = await parseMediaFile(file);
         parsed.file = file;
-        if (parsed.type === 'video') parsed.objectUrl = URL.createObjectURL(file);
+        if (parsed.type === 'video') parsed.objectUrl = createObjectUrl(file);
         newFiles.push(parsed);
       } catch (err) { console.error('Error parsing', file.name, err); setStatus(`Failed to parse ${file.name}: ${err.message}`); }
     }
@@ -685,13 +706,13 @@ export default function VideoMeta() {
   const handleFileChange = (e) => { if (e.target.files) processFiles(Array.from(e.target.files)); e.target.value = ''; };
 
   const handleRemove = (id) => {
-    setFiles(prev => { const rm = prev.find(f => f.id === id); if (rm?.objectUrl) URL.revokeObjectURL(rm.objectUrl); const up = prev.filter(f => f.id !== id); if (selectedId === id) setSelectedId(up.length > 0 ? up[0].id : null); return up; });
+    setFiles(prev => { const rm = prev.find(f => f.id === id); if (rm?.objectUrl) revokeObjectUrl(rm.objectUrl); const up = prev.filter(f => f.id !== id); if (selectedId === id) setSelectedId(up.length > 0 ? up[0].id : null); return up; });
     setCompareSelectedIds(prev => prev.filter(x => x !== id));
     setAudioURLs(prev => {
       const copy = { ...prev };
       Object.keys(copy).forEach(key => {
         if (key.startsWith(`${id}-`)) {
-          URL.revokeObjectURL(copy[key]);
+          revokeObjectUrl(copy[key]);
           delete copy[key];
         }
       });
@@ -700,8 +721,7 @@ export default function VideoMeta() {
   };
 
   const handleClearAll = () => {
-    files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
-    Object.values(audioURLs).forEach(url => URL.revokeObjectURL(url));
+    revokeAllObjectUrls();
     setAudioURLs({});
     setFiles([]);
     setSelectedId(null);
@@ -713,7 +733,7 @@ export default function VideoMeta() {
     if (!activeFile) return;
     const data = { filename: activeFile.name, format: activeFile.format, fileSize: activeFile.size, duration: activeFile.containerDuration, brand: activeFile.brand, metadata: activeFile.metadata, videoTracks: activeFile.videoTracks.map(t => ({ codec: t.codec, codecFourCC: t.codecFourCC, width: t.width, height: t.height, duration: t.duration, sampleCount: t.sampleCount, colorPrimaries: t.colorPrimaries != null ? COLOR_PRIMARIES[t.colorPrimaries] : null, transferCharacteristics: t.transferCharacteristics != null ? TRANSFER_CHARACTERISTICS[t.transferCharacteristics] : null, matrixCoefficients: t.matrixCoefficients != null ? MATRIX_COEFFICIENTS[t.matrixCoefficients] : null, fullRange: t.fullRange, language: t.language })), audioTracks: activeFile.audioTracks.map(t => ({ codec: t.codec, channels: t.channels, sampleRate: t.sampleRate, bitsPerSample: t.bitsPerSample, language: t.language })), subtitleTracks: activeFile.subtitleTracks.map(t => ({ codec: t.codec, language: t.language })), logParams: activeFile.logParams };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = activeFile.name.replace(/\.[^/.]+$/, '') + '_metadata.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    const url = createObjectUrl(blob); const a = document.createElement('a'); a.href = url; a.download = activeFile.name.replace(/\.[^/.]+$/, '') + '_metadata.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); revokeObjectUrl(url);
   };
 
   const toggleGroup = (gk) => { setCollapsedGroups(prev => ({ ...prev, [gk]: !prev[gk] })); };

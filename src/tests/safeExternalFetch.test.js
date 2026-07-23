@@ -125,6 +125,42 @@ describe('safeExternalFetch', () => {
       maxBytes: 4,
     })).rejects.toThrow('Response size exceeds limit');
   });
+
+  it('uses one absolute deadline across redirects and body reading', async () => {
+    const fetchImpl = vi.fn(async (url) => {
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      return new Response(null, {
+        status: 302,
+        headers: { Location: new URL('/next', url).href },
+      });
+    });
+    await expect(safeExternalFetch('https://example.com/start', {
+      fetchImpl,
+      resolveHostname: publicResolver,
+      timeoutMs: 25,
+      maxRedirects: 5,
+    })).rejects.toMatchObject({ code: 'UPSTREAM_TIMEOUT' });
+    expect(fetchImpl.mock.calls.length).toBeLessThan(6);
+  });
+
+  it('rejects mixed public and private DNS answers', async () => {
+    await expect(safeExternalFetch('https://example.com', {
+      fetchImpl: vi.fn(),
+      resolveHostname: async () => ['93.184.216.34', 'fd00::1'],
+    })).rejects.toThrow('resolves to a private');
+  });
+
+  it('honors caller cancellation during a hanging resolver', async () => {
+    const controller = new AbortController();
+    const running = safeExternalFetch('https://example.com', {
+      fetchImpl: vi.fn(),
+      resolveHostname: () => new Promise(() => {}),
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+    controller.abort();
+    await expect(running).rejects.toMatchObject({ name: 'AbortError' });
+  });
 });
 
 describe('validateTargetUrl', () => {
@@ -146,6 +182,17 @@ describe('validateTargetUrl', () => {
 
   it('throws on private IP', () => {
     expect(() => validateTargetUrl('https://192.168.1.1/api')).toThrow('internal');
+  });
+
+  it.each([
+    'https://2130706433/',
+    'https://0x7f000001/',
+    'https://127.1/',
+    'https://[::ffff:127.0.0.1]/',
+    'http://metadata.google.internal/',
+    'http://instance-data/',
+  ])('rejects ambiguous numeric or metadata target %s', (target) => {
+    expect(() => validateTargetUrl(target)).toThrow();
   });
 
   it('allows valid public HTTPS URL', () => {

@@ -1,5 +1,23 @@
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const DNS_ENDPOINT = 'https://cloudflare-dns.com/dns-query';
+const METADATA_HOSTNAMES = new Set([
+  'instance-data',
+  'metadata',
+  'metadata.google',
+  'metadata.google.internal',
+]);
+
+export class SafeFetchError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'SafeFetchError';
+    this.code = code;
+  }
+}
+
+function fail(code, message) {
+  throw new SafeFetchError(code, message);
+}
 
 function parseIpv4(host) {
   const parts = host.split('.');
@@ -18,6 +36,7 @@ export function isPrivateHost(hostname) {
 
   if (
     host === 'localhost'
+    || METADATA_HOSTNAMES.has(host)
     || host.endsWith('.localhost')
     || host.endsWith('.local')
     || host.endsWith('.internal')
@@ -72,20 +91,20 @@ export function validateTargetUrl(rawUrl) {
   try {
     parsed = new URL(rawUrl);
   } catch {
-    throw new Error('Invalid URL format');
+    fail('INVALID_TARGET', 'Invalid URL format');
   }
 
   if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('Only HTTP and HTTPS protocols are allowed');
+    fail('BLOCKED_TARGET', 'Only HTTP and HTTPS protocols are allowed');
   }
   if (parsed.username || parsed.password) {
-    throw new Error('URLs with user credentials are not allowed');
+    fail('BLOCKED_TARGET', 'URLs with user credentials are not allowed');
   }
   if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
-    throw new Error('Only standard HTTP (80) and HTTPS (443) ports are allowed');
+    fail('BLOCKED_TARGET', 'Only standard HTTP (80) and HTTPS (443) ports are allowed');
   }
   if (isPrivateHost(parsed.hostname)) {
-    throw new Error('Access to internal, loopback, or local IP addresses is prohibited');
+    fail('BLOCKED_TARGET', 'Access to internal, loopback, or local IP addresses is prohibited');
   }
 
   return parsed;
@@ -153,26 +172,58 @@ function assertAllowedContentType(response, allowedContentTypes) {
   if (!allowed) throw new Error('Unexpected response Content-Type: ' + (actual || 'missing'));
 }
 
+function abortError(signal) {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException('Request aborted', 'AbortError');
+}
+
+function awaitWithAbort(value, signal) {
+  if (signal.aborted) return Promise.reject(abortError(signal));
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      signal.removeEventListener('abort', onAbort);
+      reject(abortError(signal));
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    Promise.resolve(value).then(
+      (result) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(result);
+      },
+      (error) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
 export async function safeExternalFetch(rawUrl, options = {}) {
   const maxBytes = options.maxBytes ?? 2 * 1024 * 1024;
   const timeoutMs = options.timeoutMs ?? 8000;
   const maxRedirects = options.maxRedirects ?? 3;
   const fetchImpl = options.fetchImpl || fetch;
+  const controller = new AbortController();
+  const abortFromCaller = () => controller.abort(options.signal.reason);
+  if (options.signal?.aborted) abortFromCaller();
+  else options.signal?.addEventListener('abort', abortFromCaller, { once: true });
+  const timer = setTimeout(
+    () => controller.abort(new SafeFetchError('UPSTREAM_TIMEOUT', 'External request deadline exceeded')),
+    timeoutMs,
+  );
   let currentUrl = rawUrl;
 
-  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
-    const validatedUrl = validateTargetUrl(currentUrl);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      await assertPublicResolution(validatedUrl.hostname, {
+  try {
+    for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+      const validatedUrl = validateTargetUrl(currentUrl);
+      await awaitWithAbort(assertPublicResolution(validatedUrl.hostname, {
         fetchImpl,
         resolveHostname: options.resolveHostname,
         signal: controller.signal,
-      });
+      }), controller.signal);
 
-      const response = await fetchImpl(validatedUrl.href, {
+      const response = await awaitWithAbort(fetchImpl(validatedUrl.href, {
         method: options.method || 'GET',
         headers: {
           'User-Agent': 'Small-Web-Tools/1.0 (+https://small-web-tools.pages.dev)',
@@ -180,12 +231,12 @@ export async function safeExternalFetch(rawUrl, options = {}) {
         },
         redirect: 'manual',
         signal: controller.signal,
-      });
+      }), controller.signal);
 
       if (REDIRECT_STATUSES.has(response.status)) {
         const location = response.headers.get('location');
-        if (!location) throw new Error('Redirect missing Location header');
-        if (redirectCount === maxRedirects) throw new Error('Too many redirects');
+        if (!location) fail('UPSTREAM_INVALID', 'Redirect missing Location header');
+        if (redirectCount === maxRedirects) fail('TOO_MANY_REDIRECTS', 'Too many redirects');
         currentUrl = new URL(location, validatedUrl.href).href;
         continue;
       }
@@ -200,7 +251,7 @@ export async function safeExternalFetch(rawUrl, options = {}) {
       }
 
       if (!response.body) {
-        const buffer = await response.arrayBuffer();
+        const buffer = await awaitWithAbort(response.arrayBuffer(), controller.signal);
         if (buffer.byteLength > maxBytes) {
           throw new Error('Response size exceeds limit of ' + maxBytes + ' bytes');
         }
@@ -208,17 +259,23 @@ export async function safeExternalFetch(rawUrl, options = {}) {
       }
 
       const reader = response.body.getReader();
+      const cancelReader = () => reader.cancel('External request aborted').catch(() => {});
+      controller.signal.addEventListener('abort', cancelReader, { once: true });
       const chunks = [];
       let totalRead = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        totalRead += value.byteLength;
-        if (totalRead > maxBytes) {
-          await reader.cancel('Response size limit exceeded');
-          throw new Error('Response size exceeds limit of ' + maxBytes + ' bytes');
+      try {
+        while (true) {
+          const { done, value } = await awaitWithAbort(reader.read(), controller.signal);
+          if (done) break;
+          totalRead += value.byteLength;
+          if (totalRead > maxBytes) {
+            await reader.cancel('Response size limit exceeded');
+            throw new Error('Response size exceeds limit of ' + maxBytes + ' bytes');
+          }
+          chunks.push(value);
         }
-        chunks.push(value);
+      } finally {
+        controller.signal.removeEventListener('abort', cancelReader);
       }
 
       const fullBuffer = new Uint8Array(totalRead);
@@ -228,10 +285,10 @@ export async function safeExternalFetch(rawUrl, options = {}) {
         offset += chunk.byteLength;
       }
       return { response, buffer: fullBuffer.buffer, url: validatedUrl.href };
-    } finally {
-      clearTimeout(timer);
     }
+    fail('TOO_MANY_REDIRECTS', 'Too many redirects');
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abortFromCaller);
   }
-
-  throw new Error('Too many redirects');
 }

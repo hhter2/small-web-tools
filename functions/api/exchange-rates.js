@@ -1,4 +1,5 @@
 import { enforceRateLimit } from '../_shared/rateLimit';
+import { errorResponse } from '../_shared/errorResponse';
 
 const PROVIDER_URL = 'https://open.er-api.com/v6/latest/USD';
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -119,12 +120,11 @@ export function createExchangeRatesHandler({ fetchImpl = fetch, now = () => Date
       cache = { cachedAt: timestamp, payload };
       return response({ ...payload, cache: 'miss' }, 200, 'public, max-age=300');
     } catch (error) {
-      return response({
-        ok: false,
-        error: error.name === 'AbortError'
-          ? 'Exchange-rate provider timed out'
-          : 'Unable to retrieve live exchange rates',
-      }, 502, 'no-store');
+      const timedOut = error.name === 'AbortError';
+      return errorResponse(timedOut ? 'UPSTREAM_TIMEOUT' : 'PROVIDER_UNAVAILABLE', timedOut ? 504 : 502, {
+        error,
+        diagnostic: timedOut ? 'exchange-provider-timeout' : 'exchange-provider',
+      });
     }
   };
 }

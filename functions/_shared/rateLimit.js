@@ -1,15 +1,14 @@
+import { errorResponse } from './errorResponse';
+
 const developmentBuckets = new Map();
 const WINDOW_MS = 60_000;
 const SERVICE_TIMEOUT_MS = 1500;
 
-function jsonError(status, code, message, extraHeaders = {}) {
-  return Response.json({ ok: false, code, error: message }, {
-    status,
-    headers: {
-      'Cache-Control': 'no-store',
-      'X-Content-Type-Options': 'nosniff',
-      ...extraHeaders,
-    },
+function limiterError(status, code, extraHeaders = {}, log = false) {
+  return errorResponse(code, status, {
+    headers: extraHeaders,
+    log,
+    diagnostic: 'rate-limiter-boundary',
   });
 }
 
@@ -57,7 +56,7 @@ export async function enforceRateLimit(context, options) {
   const developmentMode = env.RATE_LIMIT_DEVELOPMENT_MODE === 'true';
   const secret = env.RATE_LIMIT_HMAC_SECRET;
   if (!secret || secret.length < 32) {
-    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
+    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true);
   }
 
   const now = options.now?.() ?? Date.now();
@@ -73,9 +72,9 @@ export async function enforceRateLimit(context, options) {
       const allowed = developmentLimit(options.name, clientKey, options.limit, now);
       return allowed
         ? null
-        : jsonError(429, 'RATE_LIMITED', 'Too many requests.', { 'Retry-After': '60' });
+        : limiterError(429, 'RATE_LIMITED', { 'Retry-After': '60' });
     }
-    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
+    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true);
   }
 
   const controller = new AbortController();
@@ -101,9 +100,9 @@ export async function enforceRateLimit(context, options) {
     if (typeof result?.allowed !== 'boolean') throw new Error('invalid limiter response');
     return result.allowed
       ? null
-      : jsonError(429, 'RATE_LIMITED', 'Too many requests.', { 'Retry-After': '60' });
+      : limiterError(429, 'RATE_LIMITED', { 'Retry-After': '60' });
   } catch {
-    return jsonError(503, 'RATE_LIMIT_UNAVAILABLE', 'Request protection is temporarily unavailable.');
+    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true);
   } finally {
     clearTimeout(timer);
   }

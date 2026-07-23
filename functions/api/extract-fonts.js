@@ -1,5 +1,6 @@
 import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFetch';
 import { enforceRateLimit } from '../_shared/rateLimit';
+import { errorResponse } from '../_shared/errorResponse';
 import {
   FONT_EXTRACTION_LIMITS,
   readLimitedJson,
@@ -272,7 +273,12 @@ export async function onRequestPost(context) {
   const corsHeaders = sameOriginCorsHeaders(request);
 
   const policyError = validateSameSiteJsonRequest(request, env);
-  if (policyError) return jsonResponse({ ok: false, error: policyError.error }, policyError.status, corsHeaders);
+  if (policyError) {
+    return errorResponse('VALIDATION_FAILED', policyError.status, {
+      headers: corsHeaders,
+      diagnostic: 'same-site-policy',
+    });
+  }
 
   const limited = await enforceRateLimit(context, { name: 'extract-fonts', limit: 20 });
   if (limited) return limited;
@@ -282,17 +288,30 @@ export async function onRequestPost(context) {
     parsed = await readLimitedJson(request);
   } catch (error) {
     const status = error instanceof RangeError ? 413 : 400;
-    return jsonResponse({ ok: false, error: error.message }, status, corsHeaders);
+    return errorResponse('VALIDATION_FAILED', status, {
+      headers: corsHeaders,
+      error,
+      diagnostic: 'request-body',
+    });
   }
 
   const rawUrl = typeof parsed.url === 'string' ? parsed.url.trim() : '';
-  if (!rawUrl) return jsonResponse({ ok: false, error: 'URL is required' }, 400, corsHeaders);
+  if (!rawUrl) {
+    return errorResponse('VALIDATION_FAILED', 400, {
+      headers: corsHeaders,
+      diagnostic: 'missing-url',
+    });
+  }
 
   let targetUrl;
   try {
     targetUrl = validateTargetUrl(rawUrl);
   } catch (error) {
-    return jsonResponse({ ok: false, error: error.message }, 400, corsHeaders);
+    return errorResponse('BLOCKED_TARGET', 400, {
+      headers: corsHeaders,
+      error,
+      diagnostic: error.code || 'blocked-target',
+    });
   }
 
   try {
@@ -305,7 +324,12 @@ export async function onRequestPost(context) {
       sourceUrl: targetUrl.href,
       truncation: result.truncation,
     }, 200, corsHeaders);
-  } catch {
-    return jsonResponse({ ok: false, error: 'Website analysis failed' }, 400, corsHeaders);
+  } catch (error) {
+    const timedOut = error?.code === 'UPSTREAM_TIMEOUT' || error?.name === 'AbortError';
+    return errorResponse(timedOut ? 'UPSTREAM_TIMEOUT' : 'PROVIDER_UNAVAILABLE', timedOut ? 504 : 502, {
+      headers: corsHeaders,
+      error,
+      diagnostic: error?.code || 'font-analysis',
+    });
   }
 }

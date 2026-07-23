@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { ensureFFmpegLoaded, terminateFFmpeg, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
 import { getMediaSeparatorPolicy, validateResourceAddition } from '../lib/resourceLimits';
 import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
+import { toPublicProcessingError } from '../lib/publicErrors';
 
 export const STATUS = {
   PENDING: 'ready', // Renamed internal value to 'ready' to improve UX before starting
@@ -202,10 +203,15 @@ export function useMediaSeparator() {
       setItems((prev) => {
         const firstPending = prev.find((it) => it.status === STATUS.PENDING);
         if (firstPending) {
-          const detail = err?.stack || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+          const safeError = toPublicProcessingError(err, import.meta.env.DEV);
           return prev.map((it) =>
             it.id === firstPending.id
-              ? { ...it, status: STATUS.ERROR, error: `Engine load failed: ${detail}` }
+              ? {
+                  ...it,
+                  status: STATUS.ERROR,
+                  error: safeError.message,
+                  developmentDetail: safeError.developmentDetail,
+                }
               : it
           );
         }
@@ -236,7 +242,12 @@ export function useMediaSeparator() {
         if (stopRef.current) {
           updateItem(next.id, { status: STATUS.PENDING, progress: 0 });
         } else {
-          updateItem(next.id, { status: STATUS.ERROR, error: err?.message || 'Processing failed, please retry' });
+          const safeError = toPublicProcessingError(err, import.meta.env.DEV);
+          updateItem(next.id, {
+            status: STATUS.ERROR,
+            error: safeError.message,
+            developmentDetail: safeError.developmentDetail,
+          });
         }
       }
     }

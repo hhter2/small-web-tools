@@ -1,4 +1,5 @@
 import { enforceRateLimit } from '../_shared/rateLimit';
+import { errorResponse } from '../_shared/errorResponse';
 import { parseIpInput } from '../../src/lib/ipValidation';
 
 function countryNameFromCode(code) {
@@ -123,7 +124,9 @@ export async function onRequestGet(context) {
   const url = new URL(context.request.url);
   const parsed = parseIpInput(url.searchParams.get('ip') || '');
   if (parsed.error) {
-    return jsonResponse({ ok: false, error: parsed.error }, { status: 400 });
+    return errorResponse('VALIDATION_FAILED', 400, {
+      diagnostic: 'ip-input',
+    });
   }
 
   const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
@@ -152,10 +155,10 @@ export async function onRequestGet(context) {
 
   try {
     return jsonResponse({ ok: true, data: await geoLookup(parsed.value) });
-  } catch {
-    return jsonResponse({
-      ok: false,
-      error: 'Unable to retrieve IP geolocation',
-    }, { status: 502 });
+  } catch (error) {
+    return errorResponse('PROVIDER_UNAVAILABLE', 502, {
+      error,
+      diagnostic: 'ip-geolocation-providers',
+    });
   }
 }

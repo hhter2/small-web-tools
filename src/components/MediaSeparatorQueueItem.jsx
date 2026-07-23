@@ -100,6 +100,12 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
       {item.status === 'error' && (
         <div className="flex items-center gap-3 text-red-500 bg-red-50/50 px-3 py-2 rounded-md border border-red-100">
           <span>Error: {item.error}</span>
+          {import.meta.env.DEV && item.developmentDetail && (
+            <details className="text-xs">
+              <summary>Development details</summary>
+              <pre className="whitespace-pre-wrap">{item.developmentDetail}</pre>
+            </details>
+          )}
           <button
             type="button"
             onClick={() => onRetry(item.id)}

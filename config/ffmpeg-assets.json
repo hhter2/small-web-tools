@@ -1,0 +1,17 @@
+{
+  "version": "0.12.6",
+  "assets": {
+    "core": {
+      "url": "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js",
+      "contentType": "text/javascript",
+      "bytes": 114494,
+      "sha256": "c972f5abeafcd5f3949e54edfbdc74a9badb27025809feb1945d468ffbcfb7f1"
+    },
+    "wasm": {
+      "url": "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm",
+      "contentType": "application/wasm",
+      "bytes": 32129114,
+      "sha256": "2390efa7fb66e7e42dbae15427571a5ffc96b829480904c30f471f0a78967f61"
+    }
+  }
+}

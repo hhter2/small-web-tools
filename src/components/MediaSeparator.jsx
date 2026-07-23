@@ -76,6 +76,12 @@ export default function MediaSeparator() {
 
       <ToolHeader title="Media Splitter" />
 
+      <aside className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs leading-relaxed text-text-main">
+        On the first processing action, this tool downloads the pinned FFmpeg 0.12.6 JavaScript and
+        WebAssembly engine from unpkg and verifies both files before execution. unpkg receives standard
+        request metadata. Your selected media and generated output stay in this browser.
+      </aside>
+
       {lastError && (
         <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
           {lastError}

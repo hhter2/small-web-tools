@@ -6,6 +6,7 @@ import {
   hasConsent,
   resetAllConsent,
   revokeConsent,
+  NETWORK_SERVICES,
   THIRD_PARTY_SERVICES,
 } from '../lib/thirdPartyServices.js';
 
@@ -20,11 +21,21 @@ describe('third-party consent registry', () => {
         purpose: expect.any(String),
         dataTransmitted: expect.any(String),
         trigger: expect.any(String),
-        privacyUrl: expect.stringMatching(/^https:/),
+        privacyUrl: expect.stringMatching(/^(https:|\/#)/),
         fallback: expect.any(String),
         consentVersion: CURRENT_CONSENT_VERSION,
       });
     }
+  });
+
+  it('distinguishes consent, disclosure, navigation, and infrastructure modes', () => {
+    expect(new Set(NETWORK_SERVICES.map((service) => service.consentMode))).toEqual(new Set([
+      'explicit-consent',
+      'point-of-use-disclosure',
+      'user-navigation',
+      'hosting-infrastructure',
+    ]));
+    expect(THIRD_PARTY_SERVICES.ffmpeg).toBeUndefined();
   });
 
   it('grants, revokes, and resets decisions', () => {

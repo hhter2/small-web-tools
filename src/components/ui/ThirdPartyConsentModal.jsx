@@ -9,7 +9,7 @@ import {
   resetAllConsent
 } from '../../lib/thirdPartyServices';
 
-export default function ThirdPartyConsentModal({ isOpen, onClose }) {
+export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy }) {
   const [consents, setConsents] = useState({});
 
   const refreshConsents = () => {
@@ -42,8 +42,12 @@ export default function ThirdPartyConsentModal({ isOpen, onClose }) {
         </div>
 
         <p className="text-xs text-text-muted">
-          Small Web Tools operates on a local-first policy. External network requests to third-party services require your explicit consent. You can manage or revoke permissions below at any time.
+          Small Web Tools is local-first. The services below remain blocked until you explicitly allow them.
+          Runtime downloads and user-selected external links use separate point-of-use disclosures.
         </p>
+        <button type="button" onClick={onOpenPrivacy} className="self-start text-xs font-semibold text-accent hover:underline">
+          Read the full Privacy &amp; Network Services policy
+        </button>
 
         <div className="flex flex-col gap-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
           {Object.values(THIRD_PARTY_SERVICES).map((service) => {

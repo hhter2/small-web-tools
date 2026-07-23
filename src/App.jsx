@@ -32,6 +32,7 @@ const AudioMeta = React.lazy(() => import('./components/AudioMeta.jsx'));
 const VideoMeta = React.lazy(() => import('./components/VideoMeta.jsx'));
 const MediaSeparator = React.lazy(() => import('./components/MediaSeparator'));
 const FolderAnalyzer = React.lazy(() => import('./components/FolderAnalyzer.jsx'));
+const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy.jsx'));
 
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -120,7 +121,8 @@ const staticTools = [
   'tool-password',
   'tool-pwstrength',
   'tool-qrbarcodescan',
-  'tool-wheel'
+  'tool-wheel',
+  'privacy'
 ];
 
 const navItems = [
@@ -513,7 +515,7 @@ const navItems = [
   }
 ];
 
-const VALID_TOOL_IDS = new Set(['tool-home', ...navItems.map((item) => item.id)]);
+const VALID_TOOL_IDS = new Set(['tool-home', 'privacy', ...navItems.map((item) => item.id)]);
 
 function getValidToolId(rawId) {
   if (rawId && VALID_TOOL_IDS.has(rawId)) {
@@ -619,7 +621,11 @@ export default function App() {
     try {
       sessionStorage.setItem("activeTool", activeTool);
       const item = navItems.find((n) => n.id === activeTool);
-      document.title = item && activeTool !== 'tool-home' ? `${item.name} — Small Web Tools` : 'Small Web Tools — Simple, Private Browser Utilities';
+      document.title = activeTool === 'privacy'
+        ? 'Privacy & Network Services — Small Web Tools'
+        : item && activeTool !== 'tool-home'
+          ? `${item.name} — Small Web Tools`
+          : 'Small Web Tools — Simple, Private Browser Utilities';
     } catch (e) {}
   }, [activeTool]);
 
@@ -780,6 +786,8 @@ export default function App() {
         toolNode = <WebsiteFontExtractor />; break;
       case 'tool-folder-analyzer':
         toolNode = <FolderAnalyzer />; break;
+      case 'privacy':
+        toolNode = <PrivacyPolicy />; break;
       default:
         return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} />;
     }
@@ -795,7 +803,9 @@ export default function App() {
 
   const activeTitle = activeTool === 'tool-home'
     ? 'Dashboard'
-    : (navItems.find(item => item.id === activeTool)?.name || '');
+    : activeTool === 'privacy'
+      ? 'Privacy & Network Services'
+      : (navItems.find(item => item.id === activeTool)?.name || '');
 
   // --banner-height is 0px by default, 36px when SHOW_CHANNEL_ALERT is true
   // We must use inline styles for calc() expressions using this CSS variable
@@ -1421,7 +1431,7 @@ export default function App() {
               <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
                 <span className="font-display font-bold text-text-main">Small Web Tools</span>
                 <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
-                <span className="text-text-muted">Run locally without upload. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
+                <span className="text-text-muted">Local-first tools. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
               </div>
               {/* Right: Social Links */}
               <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
@@ -1455,6 +1465,14 @@ export default function App() {
                 >
                   🛡️ Consent
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('privacy')}
+                  className="bg-transparent border border-border rounded-full px-2.5 py-1 text-xs text-text-muted cursor-pointer transition-all duration-150 hover:border-accent hover:text-accent"
+                  title="Read Privacy and Network Services"
+                >
+                  Privacy
+                </button>
                 {/* GitHub */}
                 <a href="https://github.com/hhter2/small-web-tools" target="_blank" rel="noopener noreferrer" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="GitHub" aria-label="GitHub">
                   <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -1468,6 +1486,10 @@ export default function App() {
         <ThirdPartyConsentModal
           isOpen={isConsentModalOpen}
           onClose={() => setIsConsentModalOpen(false)}
+          onOpenPrivacy={() => {
+            setIsConsentModalOpen(false);
+            handleNavClick('privacy');
+          }}
         />
 
         {/* Collapsed Sidebar Hover Tooltip */}

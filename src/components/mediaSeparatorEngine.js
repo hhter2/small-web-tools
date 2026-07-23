@@ -1,23 +1,39 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
+import ffmpegManifest from '../../config/ffmpeg-assets.json';
 
 let ffmpegInstance = null;
 let loadingPromise = null;
+const runtimeBlobUrls = new Set();
+
+function bytesToHex(bytes) {
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function createVerifiedAssetUrl(asset, options = {}) {
+  const fetchImpl = options.fetchImpl || fetch;
+  const digestImpl = options.digestImpl || ((algorithm, bytes) => crypto.subtle.digest(algorithm, bytes));
+  const createObjectURL = options.createObjectURL || URL.createObjectURL;
+  const response = await fetchImpl(asset.url, {
+    method: 'GET',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
+  });
+  if (!response.ok) throw new Error('FFmpeg runtime download failed');
+  const bytes = await response.arrayBuffer();
+  if (bytes.byteLength !== asset.bytes) throw new Error('FFmpeg runtime integrity check failed');
+  const actualHash = bytesToHex(await digestImpl('SHA-256', bytes));
+  if (actualHash !== asset.sha256) throw new Error('FFmpeg runtime integrity check failed');
+  return createObjectURL(new Blob([bytes], { type: asset.contentType }));
+}
 
 export function getFFmpeg() {
-  if (!ffmpegInstance) {
-    ffmpegInstance = new FFmpeg();
-  }
+  if (!ffmpegInstance) ffmpegInstance = new FFmpeg();
   return ffmpegInstance;
 }
 
-
-
 /**
- * Ensure the ffmpeg core is loaded, returning the FFmpeg instance.
- * Shares the load promise across calls to prevent redundant downloads.
- * Resets the loadingPromise on failure so subsequent retries can reload.
- * @param {(message: string) => void} [onLog]
+ * Download and verify the pinned FFmpeg runtime on the first processing action.
+ * Media bytes are written only to FFmpeg's in-browser virtual filesystem.
  */
 export async function ensureFFmpegLoaded(onLog) {
   const ffmpeg = getFFmpeg();
@@ -25,51 +41,53 @@ export async function ensureFFmpegLoaded(onLog) {
 
   if (!loadingPromise) {
     loadingPromise = (async () => {
+      let coreURL;
+      let wasmURL;
       try {
         ffmpeg.on('log', ({ message }) => {
-          console.log('[FFmpeg Engine]:', message);
           if (onLog) onLog(message);
         });
-        
-        // Load FFmpeg-core from CDN to bypass the 25MB file limit on Cloudflare Pages.
-        // We use toBlobURL to fetch cross-origin worker resources and load them locally.
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-        const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
-        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
-        
+        [coreURL, wasmURL] = await Promise.all([
+          createVerifiedAssetUrl(ffmpegManifest.assets.core),
+          createVerifiedAssetUrl(ffmpegManifest.assets.wasm),
+        ]);
+        runtimeBlobUrls.add(coreURL);
+        runtimeBlobUrls.add(wasmURL);
         await ffmpeg.load({ coreURL, wasmURL });
-      } catch (e) {
-        loadingPromise = null; // Clear failed promise reference on error
-        throw e;
+        return ffmpeg;
+      } catch {
+        if (coreURL) URL.revokeObjectURL(coreURL);
+        if (wasmURL) URL.revokeObjectURL(wasmURL);
+        runtimeBlobUrls.delete(coreURL);
+        runtimeBlobUrls.delete(wasmURL);
+        loadingPromise = null;
+        throw new Error('The verified FFmpeg runtime could not be loaded.');
       }
     })();
   }
 
-  await loadingPromise;
-  return ffmpeg;
+  return loadingPromise;
 }
 
-/**
- * Force terminates the active FFmpeg instance and clears reference states.
- */
 export function terminateFFmpeg() {
   if (ffmpegInstance) {
     try {
       ffmpegInstance.terminate();
-    } catch (e) {
-      console.warn('FFmpeg terminate failed:', e);
+    } catch {
+      // Termination is best-effort; all retained asset URLs are still revoked below.
     }
-    ffmpegInstance = null;
-    loadingPromise = null;
   }
+  for (const url of runtimeBlobUrls) URL.revokeObjectURL(url);
+  runtimeBlobUrls.clear();
+  ffmpegInstance = null;
+  loadingPromise = null;
 }
 
-// Audio output formats. buildArgs returns ffmpeg parameters (excluding -i input and output filename).
 export const AUDIO_FORMATS = [
   {
     value: 'source',
     label: 'Keep Original Codec (Lossless, Fastest)',
-    outputExt: 'mka', // Packaging arbitrary codecs in Matroska avoids guessing compatibility
+    outputExt: 'mka',
     buildArgs: () => ['-vn', '-acodec', 'copy'],
   },
   {
@@ -98,12 +116,11 @@ export const AUDIO_FORMATS = [
   },
 ];
 
-// Video-only (silent) output formats.
 export const VIDEO_FORMATS = [
   {
     value: 'source',
     label: 'Keep Original Codec (Lossless, Fastest)',
-    outputExt: null, // null means use original extension
+    outputExt: null,
     buildArgs: () => ['-an', '-vcodec', 'copy'],
   },
   {
@@ -121,7 +138,7 @@ export const VIDEO_FORMATS = [
 ];
 
 export function getExt(filename) {
-  const match = /\.([a-zA-Z0-9]+)$/.exec(filename || '');
+  const match = /\.([a-zA-Z0-9]+)$/u.exec(filename || '');
   return match ? match[1].toLowerCase() : '';
 }
 

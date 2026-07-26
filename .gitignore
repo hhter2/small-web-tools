@@ -17,6 +17,7 @@ jspm_packages/
 
 # Optional npm cache directory
 .npm
+.wrangler/
 
 # Output directory for production build
 dist/

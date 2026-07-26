@@ -88,7 +88,11 @@ npm run verify
 npm run test:e2e
 ```
 
-`npm run dev` mirrors only the IP lookup function (`/api/iplookup`). To exercise all Cloudflare Pages Functions locally (currency rates and website font extraction), use the Cloudflare Pages development runtime with the Vite server and run the service-bound rate-limiter Worker described in `CONTRIBUTING.md`.
+`npm run dev` mirrors only the IP lookup function (`/api/iplookup`). To exercise all
+Cloudflare Pages Functions locally (currency rates and website font extraction),
+follow the two-terminal Pages/Worker instructions in `CONTRIBUTING.md`. Run
+`npm run platform:integration` for the automated concurrent-limit and fail-closed
+service-binding check.
 
 The Cloudflare Pages production build must use Node.js 22 or 24, `npm ci` followed by `npm run build`, and publish `dist/`.
 

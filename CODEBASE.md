@@ -180,7 +180,7 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 
 `functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `vite.config.js` mirrors only IP lookup (`/api/iplookup`) for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions.
 
-Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
+Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. `npm run platform:integration` starts the Pages and Worker configurations with isolated local state, proves concurrent requests hit the configured platform limit, and proves the missing-service path fails closed. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
 
 Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 

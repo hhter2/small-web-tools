@@ -8,8 +8,8 @@ current architecture, route inventory, API topology, and project map.
 - Node.js 22 and Node.js 24 are supported; `.nvmrc` selects Node 22.
 - Install exactly from the lockfile with `npm ci`.
 - The frontend is React 18 and Vite 6.
-- Production APIs use Cloudflare Pages Functions plus the dedicated rate-limiter
-  Worker in `workers/rate-limiter/`.
+- Production APIs use Cloudflare Pages Functions plus the dedicated rate-limiter Worker
+  in `workers/rate-limiter/`.
 
 ## Local development
 
@@ -19,17 +19,37 @@ Start the browser application:
 npm run dev
 ```
 
-The Vite middleware mirrors only `/api/iplookup`. For `/api/exchange-rates` and
-`/api/extract-fonts`, run the Cloudflare Pages local runtime against the Vite build
-or dev server. Start the rate-limiter Worker separately with its
-`workers/rate-limiter/wrangler.jsonc` configuration, and bind the Pages project to
-that service as declared in the root `wrangler.jsonc`.
+The Vite middleware mirrors only `/api/iplookup`. To run every Pages Function with
+the real local service-binding topology, first copy `.dev.vars.example` to
+`.dev.vars` and replace the example `RATE_LIMIT_HMAC_SECRET` with at least 32 random
+characters. Build the frontend, then use two terminals:
+
+```bash
+npm run build
+npx wrangler dev --config workers/rate-limiter/wrangler.jsonc
+```
+
+```bash
+npx wrangler pages dev
+```
+
+Wrangler discovers the Worker named `small-web-tools-rate-limiter` and connects the
+`RATE_LIMITER_SERVICE` binding declared in `wrangler.jsonc`. The Pages runtime is
+then available at `http://localhost:8788`. The deterministic automated check starts
+both sides in isolated local state, sends concurrent requests through
+Pages → Service Binding → Worker, and separately proves the production-style
+missing-binding path fails closed:
+
+```bash
+npm run platform:integration
+```
 
 Useful validation commands:
 
 ```bash
 npm run build
 npm run verify
+npm run platform:integration
 npm run test:e2e
 npm run deps:check
 npm run audit

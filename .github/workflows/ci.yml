@@ -41,6 +41,10 @@ jobs:
       - name: Verify
         run: npm run verify
 
+      - name: Pages/Worker Rate Limit Integration
+        if: matrix.node-version == '22'
+        run: npm run platform:integration
+
       - name: Dependency Check
         run: npm run deps:check
 

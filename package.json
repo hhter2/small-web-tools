@@ -14,6 +14,7 @@
     "headers:check": "node scripts/check-headers.mjs",
     "external-hosts:check": "node scripts/check-external-hosts.mjs",
     "platform:check": "node scripts/check-cloudflare-config.mjs",
+    "platform:integration": "node scripts/check-rate-limit-integration.mjs",
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
     "lint": "eslint src functions workers test scripts e2e --max-warnings 68",

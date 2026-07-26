@@ -12,7 +12,7 @@
 ## Quick facts
 
 | Package | `small-web-tools` |
-| Version | `0.6.0-beta` package metadata; displayed build version follows the latest Git tag |
+| Version | `0.6.1-beta` package metadata; displayed build version follows the latest Git tag |
 | UI framework | React 18 |
 | Build tool | Vite 6 |
 | Testing | Vitest 4 + React Testing Library + jsdom |

@@ -7,11 +7,14 @@
 **Reviewed project version:** `0.6.0-beta`  
 **Purpose:** Verifiable implementation specification for an AI coding agent
 
-> This document remains the plan for Phases 2–5. The Phase 1 implementation record below documents completed local work and verification only; it does not claim deployment or Cloudflare-runtime validation.
+> This document is now the implementation and evidence record for all repository
+> phases. Local implementation is complete. Cloudflare-runtime SSRF evidence (CR-009),
+> the real service-binding concurrency test, and post-deployment HSTS confirmation
+> remain explicitly open because they require deployed infrastructure.
 
 ## Phase 1 Implementation Record
 
-Phase 1 (C01–C05) was implemented and locally verified on 2026-07-23. Later phases remain planned and were not changed as part of this work.
+Phase 1 (C01–C05) was implemented and locally verified on 2026-07-23.
 
 | Scope | Status | Commit | Verified outcome |
 | --- | --- | --- | --- |
@@ -27,7 +30,42 @@ Verification evidence:
 - `npm run verify`: passed (123 tests across 17 files, production build, bundle/header/external-host checks).
 - Focused Playwright: 4 passed (`font-extractor`, `privacy-network`, and `gps-consent`).
 - Lint completed with the existing 71-warning baseline and no errors; warning ratcheting remains C14 Phase 4 scope.
-- No deployment or Cloudflare-runtime evidence is claimed. Phases 2–5 remain planned.
+- No deployment or Cloudflare-runtime evidence is claimed for this historical phase.
+
+## Phases 2–5 Implementation Record
+
+Repository implementation for C06–C16 was completed and verified on 2026-07-26.
+
+| Scope | Status | Commit(s) | Verified outcome |
+| --- | --- | --- | --- |
+| C06 | Completed locally | `61ba5d4` | Valid positive rates only, stale labeling, bounded provider contract, failure/manual browser coverage |
+| C07 | Completed locally | `2290989` | Cumulative file/queue policies, dynamic FFmpeg budgets, object-URL ownership and cleanup coverage |
+| C08 | Completed locally | `e39456c` | 1–1000 MB validation, exact high-traffic confirmation, deadlines/cancel, unavailable states, bounded history |
+| C09 | Implementation complete; deployed concurrency evidence pending | `86dd63c` | Dedicated service-bound limiter Worker, HMAC keys, fail-closed production path, config/unit checks |
+| C10 | Local hardening complete; CR-009 runtime closure pending | `a7f6c95` | One absolute redirect/DNS/body deadline, streaming limits, caller abort, isolated Wrangler harness |
+| C11 | Completed locally | `cb810ab` | Stable public codes, correlation IDs, safe API/media errors, no production stacks |
+| C12 | Completed under D-04 | `be0b4cf` | Dialog focus lifecycle, live announcements, native controls; language selector unchanged |
+| C13 | Completed locally | `74d460c` | Risk journeys, undeclared-host/Google Fonts assertions, Axe scans, coverage thresholds, CI artifacts |
+| C14 | Completed locally | `21105a5` | Undefined/empty-catch errors, 68-warning ratchet, strict checkJs, canonical docs and consistency gate |
+| C15 | Completed locally | `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, `695ded1` | Single registry plus independently tested metadata, QR/barcode, typing, and codon domains |
+| C16 | Repository stage complete; deployment confirmation pending | `24f72cd` | One-day HSTS policy, no subdomain/preload commitment, static checker and opt-in deployed test |
+| Final toolchain gate | Completed | `68b3f56` | npm 10 clean install, pinned Wrangler 4.114.0, Vitest 4, fixed transitive overrides, zero audit findings |
+
+Final local evidence:
+
+- `corepack npm@10.9.2 ci`: passed; 516 packages installed from the lockfile.
+- `npm run verify`: passed with 182 tests across 26 files, 85% statements,
+  78.06% branches, 88.46% functions, and 88.2% lines; all critical thresholds passed.
+- `npm run test:e2e`: 49 passed and 2 deployment-only tests skipped when
+  `DEPLOYED_BASE_URL` was unset.
+- `npm run deps:check`: passed.
+- `npm run audit -- --audit-level=moderate`: passed with zero vulnerabilities.
+- Real-host pre-deployment check: `https://small-web-tools.pages.dev` returned 200
+  with a valid TLS connection; HTTP returned 301 to the same HTTPS hostname.
+  The deployed response did not yet contain HSTS, so C16 operational completion is
+  intentionally pending deployment of `24f72cd`.
+- The Cloudflare service-binding concurrency test and the CR-009 runtime harness
+  were not deployed or executed; no runtime closure is claimed.
 
 ## Approved Decision Register
 
@@ -315,6 +353,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 2  
 **Findings:** CR-004, CR-011  
 **Planned commit:** `fix(currency): require validated rates before rendering results`
+**Implementation status:** Completed locally in `61ba5d4`.
 
 ### Relevant files
 
@@ -355,6 +394,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 2  
 **Findings:** CR-005  
 **Planned commit:** `fix(files): enforce cumulative limits and deterministic cleanup`
+**Implementation status:** Completed locally in `2290989`.
 
 ### Relevant files
 
@@ -402,6 +442,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 2  
 **Findings:** CR-012  
 **Planned commit:** `fix(speed-test): clamp traffic and report unavailable measurements`
+**Implementation status:** Completed locally in `e39456c`.
 
 ### Relevant files
 
@@ -441,6 +482,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 3  
 **Findings:** CR-006  
 **Planned commit:** `feat(platform): require atomic rate limiter service in production`
+**Implementation status:** Implemented in `86dd63c`; deployed service-binding concurrency evidence remains pending.
 
 ### Relevant files
 
@@ -490,6 +532,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 3  
 **Findings:** CR-009  
 **Planned commit:** `fix(fetch): enforce one deadline and runtime SSRF tests`
+**Implementation status:** Local hardening and harness completed in `a7f6c95`; CR-009 remains open pending Cloudflare-runtime evidence.
 
 ### Relevant files
 
@@ -529,6 +572,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 3  
 **Findings:** CR-017  
 **Planned commit:** `fix(errors): hide stacks and standardize public error responses`
+**Implementation status:** Completed locally in `cb810ab`.
 
 ### Relevant files
 
@@ -570,6 +614,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 4  
 **Findings:** CR-016  
 **Planned commit:** `fix(a11y): complete dialog focus and native control semantics`
+**Implementation status:** Completed locally in `be0b4cf`; D-04 remains an accepted residual.
 
 ### Relevant files
 
@@ -608,6 +653,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 4  
 **Findings:** CR-015, CR-014  
 **Planned commit:** `test(risk): cover privacy correctness and resource boundaries`
+**Implementation status:** Completed locally in `74d460c`.
 
 ### Relevant files
 
@@ -652,6 +698,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 4  
 **Findings:** CR-018, CR-019  
 **Planned commit:** `chore(quality): ratchet analysis gates and canonicalize contributor docs`
+**Implementation status:** Completed locally in `21105a5`; warning budget later decreased to 68.
 
 ### Relevant files
 
@@ -694,6 +741,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 5  
 **Findings:** CR-020  
 **Planned commit:** `refactor(app): centralize tool routes and split domain modules`
+**Implementation status:** Completed as independent commits `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, and `695ded1`.
 
 ### Relevant files
 
@@ -737,6 +785,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 5  
 **Findings:** CR-022  
 **Planned commit:** `chore(headers): add staged HSTS policy`
+**Implementation status:** Repository stage completed in `24f72cd`; deployed response confirmation remains pending.
 
 ### Relevant files
 
@@ -772,28 +821,28 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 
 | Finding | Planned commit(s) | Outcome |
 |---|---|---|
-| CR-001 | C01, C04 | Planned |
-| CR-002 | C04 | Planned under D-01C; disclosure, no blocking consent |
-| CR-003 | C05 | Planned |
-| CR-004 | C06 | Planned |
-| CR-005 | C07 | Planned |
-| CR-006 | C09 | Planned via dedicated Worker service |
-| CR-007 | C02, C03 | Planned; proxy removed and scan bounded |
-| CR-008 | C04 | Planned |
-| CR-009 | C10 | Conditional closure requires runtime evidence |
-| CR-010 | C03 | Planned; same-site-only API |
-| CR-011 | C06 | Planned |
-| CR-012 | C08 | Planned |
-| CR-013 | C02 | Closed by feature removal after implementation |
-| CR-014 | C01, C02, C04, C13 | Planned |
-| CR-015 | C13 | Planned |
-| CR-016 | C12 | Planned except language-selector portion |
-| CR-017 | C11 | Planned |
-| CR-018 | C14 | Planned |
-| CR-019 | C14 | Planned |
-| CR-020 | C15 | Planned as subcommits |
+| CR-001 | C01, C04 | Closed locally |
+| CR-002 | C04 | Closed locally under D-01C; disclosure, no blocking consent |
+| CR-003 | C05 | Closed locally |
+| CR-004 | C06 | Closed locally |
+| CR-005 | C07 | Closed locally |
+| CR-006 | C09 | Implementation complete; deployed concurrency evidence pending |
+| CR-007 | C02, C03 | Closed locally; proxy removed and scan bounded |
+| CR-008 | C04 | Closed locally |
+| CR-009 | C10 | Open pending Cloudflare-runtime DNS/connection evidence |
+| CR-010 | C03 | Closed locally; same-site-only API |
+| CR-011 | C06 | Closed locally |
+| CR-012 | C08 | Closed locally |
+| CR-013 | C02 | Closed by feature removal |
+| CR-014 | C01, C02, C04, C13 | Closed locally |
+| CR-015 | C13 | Closed locally |
+| CR-016 | C12 | Closed except accepted D-04 language-selector residual |
+| CR-017 | C11 | Closed locally |
+| CR-018 | C14 | Closed locally |
+| CR-019 | C14 | Closed locally |
+| CR-020 | C15 | Closed locally through independent subcommits |
 | CR-021 | None | Accepted residual under D-04; do not change |
-| CR-022 | C16 | Planned after operational validation |
+| CR-022 | C16 | Repository stage complete; open until deployed HSTS is observed |
 
 ## Required Release Evidence
 
@@ -810,6 +859,16 @@ Before calling the remediation milestone complete, attach or preserve:
 - Deployed privacy-route and security-header smoke results.
 - Accessibility scan plus keyboard/screen-reader spot-check notes.
 - A final issue matrix showing CR-021 and the language-selector portion of CR-016 as accepted residual items.
+
+Evidence disposition on 2026-07-26:
+
+- Preserved locally: clean-install output, full verify/coverage results, self-hosted
+  font inventory, fresh-load host assertions, Font Extractor/font-file negative
+  assertion, FFmpeg request boundary, fail-closed limiter unit/config checks,
+  accessibility scans, keyboard dialog coverage, and the final issue matrix.
+- Still required from deployed infrastructure: real Pages-to-Worker concurrent-limit
+  results, the Cloudflare-runtime CR-009 harness, a deployed privacy-route smoke
+  check, and a post-deployment HSTS response containing `max-age=86400`.
 
 ## Rollback Boundaries
 
@@ -841,4 +900,9 @@ Before calling the remediation milestone complete, attach or preserve:
 
 ## Final Completion Definition
 
-Phase 2 is complete only when all planned commits except explicitly accepted residuals satisfy their completion criteria, all required CI and deployment evidence exists, the privacy route matches observed network behavior, and no P0 finding remains open. CR-009 may remain open only if the runtime evidence fails and the issue is explicitly tracked for a stronger egress architecture; it must not be mislabeled as fixed.
+Repository remediation work for C01–C16 is complete. The overall milestone is not
+operationally closed until the explicitly listed deployment evidence exists:
+Pages-to-Worker concurrent limiting, Cloudflare-runtime CR-009 behavior, deployed
+privacy smoke, and the staged HSTS response. CR-009 and CR-022 must not be mislabeled
+as closed before that evidence is recorded. CR-021 and the language-selector portion
+of CR-016 remain accepted residuals under D-04.

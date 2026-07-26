@@ -8,9 +8,10 @@
 **Purpose:** Verifiable implementation specification for an AI coding agent
 
 > This document is now the implementation and evidence record for all repository
-> phases. Local implementation is complete. Cloudflare-runtime SSRF evidence (CR-009),
-> the real service-binding concurrency test, and post-deployment HSTS confirmation
-> remain explicitly open because they require deployed infrastructure.
+> phases. Local implementation, including the real local Pages → Service Binding →
+> Worker concurrency path, is complete. Cloudflare-runtime SSRF evidence (CR-009)
+> and production deployment evidence remain explicitly open because they require
+> external code upload and an authenticated deployment decision.
 
 ## Phase 1 Implementation Record
 
@@ -39,33 +40,44 @@ Repository implementation for C06–C16 was completed and verified on 2026-07-26
 | Scope | Status | Commit(s) | Verified outcome |
 | --- | --- | --- | --- |
 | C06 | Completed locally | `61ba5d4` | Valid positive rates only, stale labeling, bounded provider contract, failure/manual browser coverage |
-| C07 | Completed locally | `2290989` | Cumulative file/queue policies, dynamic FFmpeg budgets, object-URL ownership and cleanup coverage |
+| C07 | Completed locally | `2290989`, `ed4ec06` | Cumulative file/queue policies, dynamic FFmpeg budgets, object-URL ownership and cleanup coverage for every affected policy |
 | C08 | Completed locally | `e39456c` | 1–1000 MB validation, exact high-traffic confirmation, deadlines/cancel, unavailable states, bounded history |
-| C09 | Implementation complete; deployed concurrency evidence pending | `86dd63c` | Dedicated service-bound limiter Worker, HMAC keys, fail-closed production path, config/unit checks |
-| C10 | Local hardening complete; CR-009 runtime closure pending | `a7f6c95` | One absolute redirect/DNS/body deadline, streaming limits, caller abort, isolated Wrangler harness |
+| C09 | Completed in the local Cloudflare runtime | `86dd63c`, `9f502e4` | Dedicated service-bound limiter Worker, HMAC keys, fail-closed production path, and concurrent Pages → Service Binding → Worker integration |
+| C10 | Runtime verifier complete; authorized execution pending | `a7f6c95`, `7718aaa` | One absolute redirect/DNS/body deadline, streaming limits, caller abort, isolated temporary-Cloudflare verifier with redacted credentials |
 | C11 | Completed locally | `cb810ab` | Stable public codes, correlation IDs, safe API/media errors, no production stacks |
 | C12 | Completed under D-04 | `be0b4cf` | Dialog focus lifecycle, live announcements, native controls; language selector unchanged |
 | C13 | Completed locally | `74d460c` | Risk journeys, undeclared-host/Google Fonts assertions, Axe scans, coverage thresholds, CI artifacts |
 | C14 | Completed locally | `21105a5` | Undefined/empty-catch errors, 68-warning ratchet, strict checkJs, canonical docs and consistency gate |
-| C15 | Completed locally | `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, `695ded1` | Single registry plus independently tested metadata, QR/barcode, typing, and codon domains |
+| C15 | Completed locally | `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, `695ded1`, `97aba7d` | Single registry plus independently tested metadata, QR/barcode, typing-template/metrics, and codon state/presentation domains |
 | C16 | Repository stage complete; deployment confirmation pending | `24f72cd` | One-day HSTS policy, no subdomain/preload commitment, static checker and opt-in deployed test |
 | Final toolchain gate | Completed | `68b3f56` | npm 10 clean install, pinned Wrangler 4.114.0, Vitest 4, fixed transitive overrides, zero audit findings |
 
 Final local evidence:
 
 - `corepack npm@10.9.2 ci`: passed; 516 packages installed from the lockfile.
-- `npm run verify`: passed with 182 tests across 26 files, 85% statements,
-  78.06% branches, 88.46% functions, and 88.2% lines; all critical thresholds passed.
+- `npm run verify`: passed with 199 tests across 27 files, 85.18% statements,
+  78.45% branches, 88.46% functions, and 88.4% lines; all critical thresholds passed.
 - `npm run test:e2e`: 49 passed and 2 deployment-only tests skipped when
   `DEPLOYED_BASE_URL` was unset.
 - `npm run deps:check`: passed.
 - `npm run audit -- --audit-level=moderate`: passed with zero vulnerabilities.
-- Real-host pre-deployment check: `https://small-web-tools.pages.dev` returned 200
-  with a valid TLS connection; HTTP returned 301 to the same HTTPS hostname.
-  The deployed response did not yet contain HSTS, so C16 operational completion is
-  intentionally pending deployment of `24f72cd`.
-- The Cloudflare service-binding concurrency test and the CR-009 runtime harness
-  were not deployed or executed; no runtime closure is claimed.
+- `npm run platform:integration`: passed through the real local Pages → Service
+  Binding → Worker chain. Thirty concurrent requests produced exactly 20 validation
+  responses and 10 atomic `429` responses with `Retry-After: 60`; a Pages runtime
+  without the Worker returned stable `503 RATE_LIMIT_UNAVAILABLE`.
+- Required C13 mutation evidence was executed and restored: the gates detected an
+  undeclared host, a fabricated 1:1 currency fallback, a missing OSM consent gate,
+  a repeated-selection limit bypass, and an object-URL leak. The C14 documentation
+  gate also rejected a deliberate package/document version mismatch.
+- Real-host check on 2026-07-26: `https://small-web-tools.pages.dev` returned 200
+  with a valid TLS connection; HTTP returned 301 to the same HTTPS hostname. The
+  response still omitted HSTS. A real-browser smoke identified deployed version
+  `v0.5.2-beta`; `#privacy` normalized to the dashboard, proving the privacy route
+  and the current remediation build are not deployed.
+- The CR-009 verifier passed local dry-run/configuration checks. Its unclaimed
+  temporary Cloudflare execution was stopped before upload because explicit
+  authorization to send repository code to Cloudflare and accept the current
+  Cloudflare terms was not available. No runtime closure is claimed.
 
 ## Approved Decision Register
 
@@ -394,7 +406,8 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 2  
 **Findings:** CR-005  
 **Planned commit:** `fix(files): enforce cumulative limits and deterministic cleanup`
-**Implementation status:** Completed locally in `2290989`.
+**Implementation status:** Completed locally in `2290989`; `ed4ec06` adds
+repeated-addition boundary coverage for every affected policy.
 
 ### Relevant files
 
@@ -482,7 +495,8 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 3  
 **Findings:** CR-006  
 **Planned commit:** `feat(platform): require atomic rate limiter service in production`
-**Implementation status:** Implemented in `86dd63c`; deployed service-binding concurrency evidence remains pending.
+**Implementation status:** Completed in `86dd63c` and `9f502e4`, including the
+real local Pages → Service Binding → Rate Limiting Worker concurrency path.
 
 ### Relevant files
 
@@ -532,7 +546,9 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 3  
 **Findings:** CR-009  
 **Planned commit:** `fix(fetch): enforce one deadline and runtime SSRF tests`
-**Implementation status:** Local hardening and harness completed in `a7f6c95`; CR-009 remains open pending Cloudflare-runtime evidence.
+**Implementation status:** Local hardening completed in `a7f6c95`; the redacted,
+temporary-account runtime verifier was completed in `7718aaa`. CR-009 remains open
+until an explicitly authorized Cloudflare execution records passing evidence.
 
 ### Relevant files
 
@@ -653,7 +669,8 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 4  
 **Findings:** CR-015, CR-014  
 **Planned commit:** `test(risk): cover privacy correctness and resource boundaries`
-**Implementation status:** Completed locally in `74d460c`.
+**Implementation status:** Completed locally in `74d460c`; the required five
+mutation/negative checks were rerun and recorded on 2026-07-26.
 
 ### Relevant files
 
@@ -698,7 +715,8 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 4  
 **Findings:** CR-018, CR-019  
 **Planned commit:** `chore(quality): ratchet analysis gates and canonicalize contributor docs`
-**Implementation status:** Completed locally in `21105a5`; warning budget later decreased to 68.
+**Implementation status:** Completed locally in `21105a5`; warning budget later
+decreased to 68, and a deliberate package/document mismatch was proven to fail.
 
 ### Relevant files
 
@@ -741,7 +759,8 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 5  
 **Findings:** CR-020  
 **Planned commit:** `refactor(app): centralize tool routes and split domain modules`
-**Implementation status:** Completed as independent commits `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, and `695ded1`.
+**Implementation status:** Completed as independent commits `e25902c`, `cec4efd`,
+`a17cddc`, `24ed575`, `7094629`, `695ded1`, and `97aba7d`.
 
 ### Relevant files
 
@@ -785,7 +804,9 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 **Phase:** 5  
 **Findings:** CR-022  
 **Planned commit:** `chore(headers): add staged HSTS policy`
-**Implementation status:** Repository stage completed in `24f72cd`; deployed response confirmation remains pending.
+**Implementation status:** Repository stage completed in `24f72cd`; the live
+2026-07-26 check still served v0.5.2-beta without HSTS or the privacy route, so
+deployed response confirmation remains pending.
 
 ### Relevant files
 
@@ -826,7 +847,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 | CR-003 | C05 | Closed locally |
 | CR-004 | C06 | Closed locally |
 | CR-005 | C07 | Closed locally |
-| CR-006 | C09 | Implementation complete; deployed concurrency evidence pending |
+| CR-006 | C09 | Closed locally with real Pages → Service Binding → Worker concurrency and fail-closed evidence |
 | CR-007 | C02, C03 | Closed locally; proxy removed and scan bounded |
 | CR-008 | C04 | Closed locally |
 | CR-009 | C10 | Open pending Cloudflare-runtime DNS/connection evidence |
@@ -840,7 +861,7 @@ No media file or output is sent to unpkg or a Small Web Tools API.
 | CR-017 | C11 | Closed locally |
 | CR-018 | C14 | Closed locally |
 | CR-019 | C14 | Closed locally |
-| CR-020 | C15 | Closed locally through independent subcommits |
+| CR-020 | C15 | Closed locally through independent registry, metadata, QR/barcode, typing-metrics, and codon-presentation subcommits |
 | CR-021 | None | Accepted residual under D-04; do not change |
 | CR-022 | C16 | Repository stage complete; open until deployed HSTS is observed |
 
@@ -864,11 +885,13 @@ Evidence disposition on 2026-07-26:
 
 - Preserved locally: clean-install output, full verify/coverage results, self-hosted
   font inventory, fresh-load host assertions, Font Extractor/font-file negative
-  assertion, FFmpeg request boundary, fail-closed limiter unit/config checks,
-  accessibility scans, keyboard dialog coverage, and the final issue matrix.
-- Still required from deployed infrastructure: real Pages-to-Worker concurrent-limit
-  results, the Cloudflare-runtime CR-009 harness, a deployed privacy-route smoke
-  check, and a post-deployment HSTS response containing `max-age=86400`.
+  assertion, FFmpeg request boundary, real local Pages-to-Worker concurrency and
+  fail-closed results, required mutation/negative checks, accessibility scans,
+  keyboard dialog coverage, and the final issue matrix.
+- Still required from external infrastructure: an explicitly authorized execution
+  of the Cloudflare-runtime CR-009 verifier, deployment of the current remediation
+  build, a passing deployed privacy-route smoke, and a production HSTS response
+  containing `max-age=86400`.
 
 ## Rollback Boundaries
 
@@ -900,9 +923,10 @@ Evidence disposition on 2026-07-26:
 
 ## Final Completion Definition
 
-Repository remediation work for C01–C16 is complete. The overall milestone is not
-operationally closed until the explicitly listed deployment evidence exists:
-Pages-to-Worker concurrent limiting, Cloudflare-runtime CR-009 behavior, deployed
+Repository remediation work for C01–C16 is complete, including C09 integration
+through the real local Cloudflare topology. The overall milestone is not
+operationally closed until the explicitly listed external evidence exists:
+Cloudflare-runtime CR-009 behavior, deployment of the current build, deployed
 privacy smoke, and the staged HSTS response. CR-009 and CR-022 must not be mislabeled
 as closed before that evidence is recorded. CR-021 and the language-selector portion
 of CR-016 remain accepted residuals under D-04.

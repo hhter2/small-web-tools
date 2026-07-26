@@ -164,9 +164,12 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 `ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
 
 Pure document formatting/parsing helpers live under `src/components/DocMeta/lib/`.
-QR/barcode encoding rules, typing-template transformations, and codon input/filter
-rules live in their corresponding `src/components/<Tool>/lib/` directories and have
-focused tests in `src/tests/extractedDomains.test.js`.
+QR/barcode encoding rules, typing-template/metrics transformations, and codon
+input/filter/presentation rules live in their corresponding
+`src/components/<Tool>/lib/` directories. Focused coverage is in
+`documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
+`typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
+`codonDomain.test.js`.
 
 ## APIs and development middleware
 

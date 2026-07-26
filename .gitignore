@@ -21,6 +21,8 @@ jspm_packages/
 
 # Output directory for production build
 dist/
+coverage/
+.playwright-cli/
 
 # Local env files
 .env*.local

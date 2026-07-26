@@ -1,0 +1,40 @@
+import { describe, expect, it } from 'vitest';
+import {
+  NAVIGATION_ROUTES,
+  PUBLIC_ROUTE_IDS,
+  STATIC_LAYOUT_IDS,
+  TOOL_ROUTES,
+  getToolRoute,
+} from '../toolRegistry.js';
+
+describe('tool route registry', () => {
+  it('owns unique public route and alias identifiers', () => {
+    expect(new Set(PUBLIC_ROUTE_IDS).size).toBe(PUBLIC_ROUTE_IDS.length);
+    expect(PUBLIC_ROUTE_IDS).toContain('tool-home');
+    expect(PUBLIC_ROUTE_IDS).toContain('privacy');
+    expect(getToolRoute('tool-officemeta')?.id).toBe('tool-docmeta');
+  });
+
+  it('provides complete metadata and lazy loaders', () => {
+    for (const route of TOOL_ROUTES) {
+      expect(route).toMatchObject({
+        id: expect.any(String),
+        aliases: expect.any(Array),
+        title: expect.any(String),
+        category: expect.any(String),
+        searchMetadata: expect.any(Array),
+        loader: expect.any(Function),
+        staticLayout: expect.any(Boolean),
+        navigationVisible: expect.any(Boolean),
+      });
+    }
+  });
+
+  it('derives navigation and static layout sets from registry flags', () => {
+    expect(NAVIGATION_ROUTES.every((route) => route.navigationVisible)).toBe(true);
+    for (const route of TOOL_ROUTES.filter((item) => item.staticLayout)) {
+      expect(STATIC_LAYOUT_IDS.has(route.id)).toBe(true);
+      for (const alias of route.aliases) expect(STATIC_LAYOUT_IDS.has(alias)).toBe(true);
+    }
+  });
+});

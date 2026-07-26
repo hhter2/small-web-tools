@@ -1,14 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { PUBLIC_ROUTE_IDS } from '../src/toolRegistry.js';
 
-const toolRoutes = [
-  'tool-home', 'tool-slash', 'tool-wc', 'tool-casing', 'tool-typing',
-  'tool-color', 'tool-ascii', 'tool-unicode', 'tool-fontextractor',
-  'tool-base', 'tool-folder-analyzer', 'tool-dna', 'tool-codon',
-  'tool-iplookup', 'tool-speedtest', 'tool-imgmeta', 'tool-docmeta',
-  'tool-audiometa', 'tool-videometa', 'tool-mediasplit', 'tool-barcode',
-  'tool-currency', 'tool-date', 'tool-password', 'tool-pwstrength',
-  'tool-qrcode', 'tool-qrbarcodescan', 'tool-wheel',
-];
+const toolRoutes = PUBLIC_ROUTE_IDS;
 
 async function blockExternalRequests(page) {
   await page.route('**/*', (route) => {

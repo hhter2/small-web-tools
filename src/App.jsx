@@ -1,39 +1,10 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import HomeGrid from './components/HomeGrid.jsx';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
-import DnaRnaIcon from './components/DnaRnaIcon.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-
-// Dynamic lazy imports for tools to optimize bundle size
-const SlashesConverter = React.lazy(() => import('./components/SlashesConverter.jsx'));
-const CasingSwitcher = React.lazy(() => import('./components/CasingSwitcher.jsx'));
-const WordCounter = React.lazy(() => import('./components/WordCounter.jsx'));
-const DateCounter = React.lazy(() => import('./components/DateCounter.jsx'));
-const CurrencyCounter = React.lazy(() => import('./components/CurrencyCounter.jsx'));
-const ColorConverter = React.lazy(() => import('./components/ColorConverter.jsx'));
-const AsciiConverter = React.lazy(() => import('./components/AsciiConverter.jsx'));
-const UnicodeConverter = React.lazy(() => import('./components/UnicodeConverter.jsx'));
-const BaseConverter = React.lazy(() => import('./components/BaseConverter.jsx'));
-const DnaConverter = React.lazy(() => import('./components/DnaConverter.jsx'));
-const IpLookup = React.lazy(() => import('./components/IpLookup.jsx'));
-const ImgMeta = React.lazy(() => import('./components/ImgMeta.jsx'));
-const RandomWheel = React.lazy(() => import('./components/RandomWheel.jsx'));
-const TypingSpeedTest = React.lazy(() => import('./components/TypingSpeedTest.jsx'));
-const CodonTable = React.lazy(() => import('./components/CodonTable.jsx'));
-const NetworkSpeedTest = React.lazy(() => import('./components/NetworkSpeedTest.jsx'));
-const QrBarcodeGenerator = React.lazy(() => import('./components/QrBarcodeGenerator.jsx'));
-const PasswordGenerator = React.lazy(() => import('./components/PasswordGenerator.jsx'));
-const DocMeta = React.lazy(() => import('./components/DocMeta.jsx'));
-const WebsiteFontExtractor = React.lazy(() => import('./components/WebsiteFontExtractor.jsx'));
-const QrBarcodeScanner = React.lazy(() => import('./components/QrBarcodeScanner.jsx'));
-const AudioMeta = React.lazy(() => import('./components/AudioMeta.jsx'));
-const VideoMeta = React.lazy(() => import('./components/VideoMeta.jsx'));
-const MediaSeparator = React.lazy(() => import('./components/MediaSeparator'));
-const FolderAnalyzer = React.lazy(() => import('./components/FolderAnalyzer.jsx'));
-const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy.jsx'));
-
+import { NAVIGATION_ROUTES, PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, getToolRoute } from './toolRegistry.js';
+import { TOOL_ICONS } from './toolIcons.jsx';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -106,416 +77,15 @@ const categories = [
   }
 ];
 
-const staticTools = [
-  'tool-casing',
-  'tool-ascii',
-  'tool-unicode',
-  'tool-base',
-  'tool-fontextractor',
-  'tool-speedtest',
-  'tool-color',
-  'tool-dna',
-  'tool-currency',
-  'tool-qrcode',
-  'tool-barcode',
-  'tool-password',
-  'tool-pwstrength',
-  'tool-qrbarcodescan',
-  'tool-wheel',
-  'privacy'
-];
+const navItems = NAVIGATION_ROUTES.map((route) => ({
+  ...route,
+  name: route.title,
+  desc: route.description,
+  icon: TOOL_ICONS[route.iconKey],
+}));
+const staticTools = STATIC_LAYOUT_IDS;
 
-const navItems = [
-  {
-    id: 'tool-slash',
-    name: 'Slashes Converter',
-    tooltip: 'Slashes Converter',
-    category: 'developer',
-    desc: 'Switch \\ to /.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="6" y1="18" x2="18" y2="6"></line>
-        <line x1="6" y1="6" x2="18" y2="18" strokeDasharray="2 2"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-wc',
-    name: 'Word Counter',
-    tooltip: 'Word Counter',
-    category: 'text',
-    desc: 'Calculate words, characters, sentences, and reading time.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-casing',
-    name: 'Casing Switcher',
-    tooltip: 'Casing Switcher',
-    category: 'text',
-    desc: 'Support full sentence, single  words, specific term, etc.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 20L9 5l5 15" />
-        <path d="M6.5 14h5" />
-        <circle cx="17.5" cy="15.5" r="3.5" />
-        <path d="M21 12v7" />
-      </svg>
-    )
-  },
-  {
-    id: 'tool-typing',
-    name: 'Typing Speed Test',
-    tooltip: 'Typing Speed Test',
-    category: 'text',
-    desc: 'Test and improve your typing speed with English prose, code, or custom templates.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-        <line x1="6" y1="8" x2="6.01" y2="8"></line>
-        <line x1="10" y1="8" x2="10.01" y2="8"></line>
-        <line x1="14" y1="8" x2="14.01" y2="8"></line>
-        <line x1="18" y1="8" x2="18.01" y2="8"></line>
-        <line x1="6" y1="12" x2="6.01" y2="12"></line>
-        <line x1="10" y1="12" x2="10.01" y2="12"></line>
-        <line x1="14" y1="12" x2="14.01" y2="12"></line>
-        <line x1="18" y1="12" x2="18.01" y2="12"></line>
-        <line x1="7" y1="16" x2="17" y2="16"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-color',
-    name: 'Color Converter',
-    tooltip: 'Color Converter',
-    category: 'media',
-    desc: 'Transfer and select colors between HEX, RGB, and other formats.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03347 19.1749 5.2751 19.2612 5.51862 19.2319C6.27318 19.141 7.00947 19.4674 7.48528 20.0827L7.91508 20.6384C8.42392 21.2963 9.17646 21.7371 10.0152 21.8906C10.6698 22.0104 11.3343 22.0469 12 22Z"></path>
-        <circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"></circle>
-        <circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"></circle>
-        <circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"></circle>
-        <circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"></circle>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-ascii',
-    name: 'ASCII Converter',
-    tooltip: 'ASCII Converter',
-    category: 'developer',
-    desc: 'Text to ASCII codes; ASCII codes to text.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="4 17 10 11 4 5"></polyline>
-        <line x1="12" y1="19" x2="20" y2="19"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-unicode',
-    name: 'Unicode Converter',
-    tooltip: 'Unicode Converter',
-    category: 'developer',
-    desc: 'Text to Unicode; Unicode to text.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="2" y1="12" x2="22" y2="12"></line>
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-fontextractor',
-    name: 'Font Extractor',
-    tooltip: 'Website Font Extractor',
-    category: 'developer',
-    desc: 'Scan and extract font of any URLs. Also download them and find the similarities.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="4 7 4 4 20 4 20 7"></polyline>
-        <line x1="9" y1="20" x2="15" y2="20"></line>
-        <line x1="12" y1="4" x2="12" y2="20"></line>
-        <circle cx="19" cy="19" r="3"></circle>
-        <line x1="21.5" y1="21.5" x2="23" y2="23"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-base',
-    name: 'Base Converter',
-    tooltip: 'Base Converter',
-    category: 'developer',
-    desc: 'Base conversion between binary, octal, decimal, and hexadecimal.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="4" y1="9" x2="20" y2="9"></line>
-        <line x1="4" y1="15" x2="20" y2="15"></line>
-        <line x1="9" y1="4" x2="9" y2="20"></line>
-        <line x1="15" y1="4" x2="15" y2="20"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-folder-analyzer',
-    name: 'Folder Analyzer',
-    tooltip: 'Folder Structure Analyzer',
-    category: 'developer',
-    desc: 'Obtain the folder structure by one click.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        <line x1="12" y1="11" x2="12" y2="17"></line>
-        <line x1="9" y1="14" x2="15" y2="14"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-dna',
-    name: 'DNA/RNA Converter',
-    tooltip: 'DNA/RNA Converter',
-    category: 'bioinfo',
-    desc: "Swap 5'/3' directions and show the anti-sense brand. Support with the figure.",
-    icon: <DnaRnaIcon />
-  },
-  {
-    id: 'tool-codon',
-    name: 'Codon Table',
-    tooltip: 'RNA Codon Table',
-    category: 'bioinfo',
-    desc: 'Find and learn amino acid with interactive.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-        <line x1="3" y1="9" x2="21" y2="9"></line>
-        <line x1="3" y1="15" x2="21" y2="15"></line>
-        <line x1="9" y1="3" x2="9" y2="21"></line>
-        <line x1="15" y1="3" x2="15" y2="21"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-iplookup',
-    name: 'IP Lookup',
-    tooltip: 'IP Lookup',
-    category: 'network',
-    desc: 'Identify geographical location, timezone, ISP, and coordinates for any IP address.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-        <circle cx="12" cy="10" r="3"></circle>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-speedtest',
-    name: 'Speed Test',
-    tooltip: 'Network Speed Test',
-    category: 'network',
-    desc: 'Test the real-time network speed and latency.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="6" x2="12" y2="12"></line>
-        <line x1="12" y1="12" x2="16" y2="14"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-imgmeta',
-    name: 'Image Metadata',
-    tooltip: 'Image Metadata',
-    category: 'media',
-    desc: 'Extract and analyze EXIF, ICC, GPS, and custom camera metadata from image files locally.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-        <circle cx="12" cy="13" r="4"></circle>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-docmeta',
-    name: 'Documents Metadata',
-    tooltip: 'Documents Metadata Reader',
-    category: 'media',
-    desc: 'Show metadata from document files (Office, OpenOffice, and PDF).',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-        <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-audiometa',
-    name: 'Audio Metadata',
-    tooltip: 'Audio Metadata Reader',
-    category: 'media',
-    desc: 'Extract and analyze metadata tags, technical parameters entirely locally without upload.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 18V5l12-2v13"/>
-        <circle cx="6" cy="18" r="3"/>
-        <circle cx="18" cy="16" r="3"/>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-videometa',
-    name: 'Video Metadata',
-    tooltip: 'Video Metadata Reader',
-    category: 'media',
-    desc: 'Extract and analyze encoding format, resolution, and other parameters entirely locally without upload.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="23 7 16 12 23 17 23 7"></polygon>
-        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-mediasplit',
-    name: 'Media Splitter',
-    tooltip: 'Media Splitter',
-    category: 'media',
-    desc: "Split a video's audio track and silent video track locally.",
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22V2M17 5h4v14h-4M7 19H3V5h4" />
-        <path d="M12 7l-3 3 3 3M12 11l3 3-3 3" />
-      </svg>
-    )
-  },
-  {
-    id: 'tool-barcode',
-    name: 'Barcode Generator',
-    tooltip: 'Barcode Generator',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Generate multiple format barcodes.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 5v14M6 5v14M10 5v14M14 5v14M17 5v14M21 5v14" />
-      </svg>
-    )
-  },
-  {
-    id: 'tool-currency',
-    name: 'Currency Converter',
-    tooltip: 'Currency Converter & Counter',
-    category: 'utilities',
-    subGroup: 'Calculation',
-    desc: 'Resource by Live API.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"></line>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-date',
-    name: 'Date Counter',
-    tooltip: 'Date Counter',
-    category: 'utilities',
-    subGroup: 'Calculation',
-    desc: 'Calculate for the dates.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-password',
-    name: 'Password Generator',
-    tooltip: 'Secure Password Generator',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Generate secure passwords. Use CSPRNG for generating.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-pwstrength',
-    name: 'Password Strength',
-    tooltip: 'Password Strength Checker',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Check the passward is strengh or not.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        <path d="m9 11 2 2 4-4"></path>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-qrcode',
-    name: 'QR Code Generator',
-    tooltip: 'QR Code Generator',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Create fully custimized QR code for free.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-qrbarcodescan',
-    name: 'QR & Barcode Scanner',
-    tooltip: 'QR & Barcode Scanner',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Scan the QR and barcodes. Support upload and camera.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-    )
-  },
-  {
-    id: 'tool-wheel',
-    name: 'Random Wheel',
-    tooltip: 'Random Wheel',
-    category: 'utilities',
-    subGroup: 'Utilities',
-    desc: 'Set options, spin the wheel, and draw random items with optional single-draw elimination.',
-    icon: (
-      <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="2" x2="12" y2="22"></line>
-        <line x1="2" y1="12" x2="22" y2="12"></line>
-        <path d="M16.24 7.76l-8.48 8.48"></path>
-        <path d="M7.76 7.76l8.48 8.48"></path>
-      </svg>
-    )
-  }
-];
-
-const VALID_TOOL_IDS = new Set(['tool-home', 'privacy', ...navItems.map((item) => item.id)]);
+const VALID_TOOL_IDS = new Set(PUBLIC_ROUTE_IDS);
 
 function getValidToolId(rawId) {
   if (rawId && VALID_TOOL_IDS.has(rawId)) {
@@ -624,11 +194,11 @@ export default function App() {
   useEffect(() => {
     try {
       sessionStorage.setItem("activeTool", activeTool);
-      const item = navItems.find((n) => n.id === activeTool);
-      document.title = activeTool === 'privacy'
+      const route = getToolRoute(activeTool);
+      document.title = route?.id === 'privacy'
         ? 'Privacy & Network Services — Small Web Tools'
-        : item && activeTool !== 'tool-home'
-          ? `${item.name} — Small Web Tools`
+        : route && route.id !== 'tool-home'
+          ? `${route.title} – Small Web Tools`
           : 'Small Web Tools — Simple, Private Browser Utilities';
     } catch (e) {
       // Storage access can be blocked by the browser; navigation still works.
@@ -733,89 +303,23 @@ export default function App() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
 
-  // Render active tool component
+  // Render the active registry component.
   const renderActiveTool = () => {
-    if (activeTool === 'tool-home') {
-      return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} />;
-    }
-
-    let toolNode;
-    switch (activeTool) {
-      case 'tool-slash':
-        toolNode = <SlashesConverter />; break;
-      case 'tool-wc':
-        toolNode = <WordCounter />; break;
-      case 'tool-casing':
-        toolNode = <CasingSwitcher />; break;
-      case 'tool-date':
-        toolNode = <DateCounter />; break;
-      case 'tool-currency':
-        toolNode = <CurrencyCounter />; break;
-      case 'tool-color':
-        toolNode = <ColorConverter />; break;
-      case 'tool-ascii':
-        toolNode = <AsciiConverter />; break;
-      case 'tool-unicode':
-        toolNode = <UnicodeConverter />; break;
-      case 'tool-base':
-        toolNode = <BaseConverter />; break;
-      case 'tool-dna':
-        toolNode = <DnaConverter />; break;
-      case 'tool-iplookup':
-        toolNode = <IpLookup />; break;
-      case 'tool-speedtest':
-        toolNode = <NetworkSpeedTest />; break;
-      case 'tool-imgmeta':
-        toolNode = <ImgMeta />; break;
-      case 'tool-docmeta':
-      case 'tool-officemeta':
-        toolNode = <DocMeta />; break;
-      case 'tool-audiometa':
-        toolNode = <AudioMeta />; break;
-      case 'tool-videometa':
-        toolNode = <VideoMeta />; break;
-      case 'tool-mediasplit':
-        toolNode = <MediaSeparator />; break;
-      case 'tool-wheel':
-        toolNode = <RandomWheel />; break;
-      case 'tool-typing':
-        toolNode = <TypingSpeedTest />; break;
-      case 'tool-codon':
-        toolNode = <CodonTable />; break;
-      case 'tool-qrcode':
-        toolNode = <QrBarcodeGenerator initialTab="qr" key="qrcode" />; break;
-      case 'tool-barcode':
-        toolNode = <QrBarcodeGenerator initialTab="barcode" key="barcode" />; break;
-      case 'tool-qrbarcodescan':
-        toolNode = <QrBarcodeScanner key="qrbarcodescan" />; break;
-      case 'tool-password':
-        toolNode = <PasswordGenerator initialTab="generate" key="password" />; break;
-      case 'tool-pwstrength':
-        toolNode = <PasswordGenerator initialTab="check" key="pwstrength" />; break;
-      case 'tool-fontextractor':
-        toolNode = <WebsiteFontExtractor />; break;
-      case 'tool-folder-analyzer':
-        toolNode = <FolderAnalyzer />; break;
-      case 'privacy':
-        toolNode = <PrivacyPolicy />; break;
-      default:
-        return <HomeGrid tools={filteredNavItems} onSelectTool={handleNavClick} activeTab={selectedHomeTab} />;
-    }
-
+    const route = getToolRoute(activeTool) || getToolRoute('tool-home');
+    const ToolComponent = route.component;
+    const componentProps = route.id === 'tool-home'
+      ? { tools: filteredNavItems, onSelectTool: handleNavClick, activeTab: selectedHomeTab }
+      : route.componentProps;
     return (
       <ErrorBoundary key={activeTool}>
         <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">Loading tool...</span></div>}>
-          {toolNode}
+          <ToolComponent {...componentProps} key={activeTool} />
         </Suspense>
       </ErrorBoundary>
     );
   };
 
-  const activeTitle = activeTool === 'tool-home'
-    ? 'Dashboard'
-    : activeTool === 'privacy'
-      ? 'Privacy & Network Services'
-      : (navItems.find(item => item.id === activeTool)?.name || '');
+  const activeTitle = getToolRoute(activeTool)?.title || '';
 
   // --banner-height is 0px by default, 36px when SHOW_CHANNEL_ALERT is true
   // We must use inline styles for calc() expressions using this CSS variable
@@ -1111,7 +615,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 min-w-0 p-0 flex flex-col overflow-x-hidden ${staticTools.includes(activeTool) ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-auto'}`}
+          className={`flex-1 min-w-0 p-0 flex flex-col overflow-x-hidden ${staticTools.has(activeTool) ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-auto'}`}
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
@@ -1375,7 +879,7 @@ export default function App() {
           </div>
 
           {/* Tool Stage */}
-          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.includes(activeTool) ? 'tool-stage--static py-4 md:py-1.5 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
+          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.has(activeTool) ? 'tool-stage--static py-4 md:py-1.5 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
             {renderActiveTool()}
           </section>
 

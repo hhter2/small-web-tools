@@ -5,68 +5,11 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
-
-// Helper to escape WiFi strings for standard encoding format
-const escapeWifiString = (str) => {
-  if (!str) return '';
-  return str.replace(/\\/g, '\\\\')
-            .replace(/;/g, '\\;')
-            .replace(/:/g, '\\:')
-            .replace(/,/g, '\\,')
-            .replace(/"/g, '\\"');
-};
-
-const estimateTextWidth = (text, fontSize, weight) => {
-  const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
-  return text.length * fontSize * k;
-};
-
-// Barcode input validator
-const validateBarcode = (value, format) => {
-  if (!value) return "Input cannot be empty";
-  switch (format) {
-    case 'EAN13':
-      if (!/^\d{12,13}$/.test(value)) {
-        return "EAN-13 must be 12 or 13 digits";
-      }
-      break;
-    case 'EAN8':
-      if (!/^\d{7,8}$/.test(value)) {
-        return "EAN-8 must be 7 or 8 digits";
-      }
-      break;
-    case 'UPC':
-      if (!/^\d{11,12}$/.test(value)) {
-        return "UPC-A must be 11 or 12 digits";
-      }
-      break;
-    case 'CODE39':
-      if (!/^[0-9A-Z\-.\s$/+%=]+$/.test(value.toUpperCase())) {
-        return "Code 39 only supports A-Z (uppercase), 0-9, space, and characters: - . $ / + % =";
-      }
-      break;
-    case 'ITF':
-      if (!/^\d+$/.test(value)) {
-        return "ITF must be digits only";
-      }
-      if (value.length % 2 !== 0) {
-        return "ITF must contain an even number of digits";
-      }
-      break;
-    case 'CODABAR':
-      if (!/^[0-9\-$:/.+ABCD]+$/i.test(value)) {
-        return "Codabar only supports digits, - $ : / . +, and A/B/C/D start/stop characters";
-      }
-      break;
-    case 'CODE128':
-    default:
-      if (/[^\x00-\x7F]/.test(value)) {
-        return "Code 128 only supports standard ASCII characters";
-      }
-      break;
-  }
-  return null;
-};
+import {
+  escapeWifiString,
+  estimateTextWidth,
+  validateBarcode,
+} from './QrBarcodeGenerator/lib/encoding';
 
 // Custom canvas rendering for QR Code
 const renderCustomQR = (canvas, text, options) => {
@@ -182,11 +125,6 @@ const renderCustomQR = (canvas, text, options) => {
     if (!logoImg) return false;
     const pad = 0.5; // padding in module counts
     return r >= logoStart - pad && r < logoEnd + pad && c >= logoStart - pad && c < logoEnd + pad;
-  };
-
-  const estimateTextWidth = (text, fontSize, weight) => {
-    const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
-    return text.length * fontSize * k;
   };
 
   // Calculate text bounding box for clearing modules behind embedded text

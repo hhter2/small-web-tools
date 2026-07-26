@@ -190,6 +190,27 @@ isolated Cloudflare-runtime fixtures for the outbound-fetch boundary. Run
 `npm run test:ssrf-runtime` only when temporary Cloudflare deployment is intended;
 it uses an unclaimed, auto-expiring preview account and prints no token or claim URL.
 
+### Local completion and deferred Cloudflare operations
+
+The C06–C16 repository and local-runtime remediation scope was accepted as complete
+on 2026-07-26. Production deployment, live Cloudflare SSRF evidence, and staged HSTS
+observation are owner-deferred operational work. They are not prerequisites for
+local development completion. If a Cloudflare development or deployment error is
+reported later, use `npm run platform:check`, `npm run platform:integration`, and
+the opt-in `npm run test:ssrf-runtime` evidence workflow as applicable; do not infer
+permission to deploy from the presence of those commands.
+
+The Wrangler configuration files (`wrangler.jsonc`,
+`workers/rate-limiter/wrangler.jsonc`, and the integration fixture configurations)
+are version-controlled. Local Wrangler state and credentials are not:
+
+- `.wrangler/`, `.wrangler-*/`, and `.tmp-*/` are disposable runtime/log/state
+  directories and are ignored.
+- `.dev.vars` and `.dev.vars.*` are ignored because they may contain secrets;
+  `.dev.vars.example` remains tracked as the safe template.
+- `dist/`, `coverage/`, `.playwright-cli/`, `test-results/`, and
+  `playwright-report/` are generated locally and ignored.
+
 Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 
 ## Network-service policy

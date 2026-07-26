@@ -17,7 +17,11 @@ jspm_packages/
 
 # Optional npm cache directory
 .npm
+
+# Local Cloudflare/Wrangler state and disposable integration workspaces
 .wrangler/
+.wrangler-*/
+.tmp-*/
 
 # Output directory for production build
 dist/

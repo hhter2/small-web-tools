@@ -9,9 +9,11 @@
 
 > This document is now the implementation and evidence record for all repository
 > phases. Local implementation, including the real local Pages → Service Binding →
-> Worker concurrency path, is complete. Cloudflare-runtime SSRF evidence (CR-009)
-> and production deployment evidence remain explicitly open because they require
-> external code upload and an authenticated deployment decision.
+> Worker concurrency path, is complete and was accepted as the finished local scope
+> by the owner on 2026-07-26. Cloudflare-runtime SSRF evidence (CR-009) and
+> production deployment/HSTS evidence are explicitly owner-deferred; they are not
+> prerequisites for local development completion and must not be executed without a
+> later explicit request.
 
 ## Phase 1 Implementation Record
 
@@ -43,13 +45,13 @@ Repository implementation for C06–C16 was completed and verified on 2026-07-26
 | C07 | Completed locally | `2290989`, `ed4ec06` | Cumulative file/queue policies, dynamic FFmpeg budgets, object-URL ownership and cleanup coverage for every affected policy |
 | C08 | Completed locally | `e39456c` | 1–1000 MB validation, exact high-traffic confirmation, deadlines/cancel, unavailable states, bounded history |
 | C09 | Completed in the local Cloudflare runtime | `86dd63c`, `9f502e4` | Dedicated service-bound limiter Worker, HMAC keys, fail-closed production path, and concurrent Pages → Service Binding → Worker integration |
-| C10 | Runtime verifier complete; authorized execution pending | `a7f6c95`, `7718aaa` | One absolute redirect/DNS/body deadline, streaming limits, caller abort, isolated temporary-Cloudflare verifier with redacted credentials |
+| C10 | Local completion accepted; external verifier owner-deferred | `a7f6c95`, `7718aaa` | One absolute redirect/DNS/body deadline, streaming limits, caller abort, isolated temporary-Cloudflare verifier with redacted credentials |
 | C11 | Completed locally | `cb810ab` | Stable public codes, correlation IDs, safe API/media errors, no production stacks |
 | C12 | Completed under D-04 | `be0b4cf` | Dialog focus lifecycle, live announcements, native controls; language selector unchanged |
 | C13 | Completed locally | `74d460c` | Risk journeys, undeclared-host/Google Fonts assertions, Axe scans, coverage thresholds, CI artifacts |
 | C14 | Completed locally | `21105a5` | Undefined/empty-catch errors, 68-warning ratchet, strict checkJs, canonical docs and consistency gate |
 | C15 | Completed locally | `e25902c`, `cec4efd`, `a17cddc`, `24ed575`, `7094629`, `695ded1`, `97aba7d` | Single registry plus independently tested metadata, QR/barcode, typing-template/metrics, and codon state/presentation domains |
-| C16 | Repository stage complete; deployment confirmation pending | `24f72cd` | One-day HSTS policy, no subdomain/preload commitment, static checker and opt-in deployed test |
+| C16 | Local completion accepted; deployment owner-deferred | `24f72cd` | One-day HSTS policy, no subdomain/preload commitment, static checker and opt-in deployed test |
 | Final toolchain gate | Completed | `68b3f56` | npm 10 clean install, pinned Wrangler 4.114.0, Vitest 4, fixed transitive overrides, zero audit findings |
 
 Final local evidence:
@@ -78,6 +80,9 @@ Final local evidence:
   temporary Cloudflare execution was stopped before upload because explicit
   authorization to send repository code to Cloudflare and accept the current
   Cloudflare terms was not available. No runtime closure is claimed.
+- Owner disposition on 2026-07-26: local development is the accepted completion
+  boundary. Cloudflare execution and production deployment are deferred until the
+  owner reports a Cloudflare development problem or explicitly requests deployment.
 
 ## Approved Decision Register
 
@@ -547,8 +552,9 @@ real local Pages → Service Binding → Rate Limiting Worker concurrency path.
 **Findings:** CR-009  
 **Planned commit:** `fix(fetch): enforce one deadline and runtime SSRF tests`
 **Implementation status:** Local hardening completed in `a7f6c95`; the redacted,
-temporary-account runtime verifier was completed in `7718aaa`. CR-009 remains open
-until an explicitly authorized Cloudflare execution records passing evidence.
+temporary-account runtime verifier was completed in `7718aaa`. The owner accepted
+this as local completion on 2026-07-26 and deferred external execution. CR-009 is
+not claimed closed at the Cloudflare-runtime layer.
 
 ### Relevant files
 
@@ -805,8 +811,8 @@ decreased to 68, and a deliberate package/document mismatch was proven to fail.
 **Findings:** CR-022  
 **Planned commit:** `chore(headers): add staged HSTS policy`
 **Implementation status:** Repository stage completed in `24f72cd`; the live
-2026-07-26 check still served v0.5.2-beta without HSTS or the privacy route, so
-deployed response confirmation remains pending.
+2026-07-26 check still served v0.5.2-beta without HSTS or the privacy route. The
+owner accepted local completion and deferred production deployment/observation.
 
 ### Relevant files
 
@@ -850,7 +856,7 @@ deployed response confirmation remains pending.
 | CR-006 | C09 | Closed locally with real Pages → Service Binding → Worker concurrency and fail-closed evidence |
 | CR-007 | C02, C03 | Closed locally; proxy removed and scan bounded |
 | CR-008 | C04 | Closed locally |
-| CR-009 | C10 | Open pending Cloudflare-runtime DNS/connection evidence |
+| CR-009 | C10 | Local remediation complete; Cloudflare-runtime evidence owner-deferred |
 | CR-010 | C03 | Closed locally; same-site-only API |
 | CR-011 | C06 | Closed locally |
 | CR-012 | C08 | Closed locally |
@@ -863,7 +869,7 @@ deployed response confirmation remains pending.
 | CR-019 | C14 | Closed locally |
 | CR-020 | C15 | Closed locally through independent registry, metadata, QR/barcode, typing-metrics, and codon-presentation subcommits |
 | CR-021 | None | Accepted residual under D-04; do not change |
-| CR-022 | C16 | Repository stage complete; open until deployed HSTS is observed |
+| CR-022 | C16 | Repository stage complete; production deployment/observation owner-deferred |
 
 ## Required Release Evidence
 
@@ -888,10 +894,11 @@ Evidence disposition on 2026-07-26:
   assertion, FFmpeg request boundary, real local Pages-to-Worker concurrency and
   fail-closed results, required mutation/negative checks, accessibility scans,
   keyboard dialog coverage, and the final issue matrix.
-- Still required from external infrastructure: an explicitly authorized execution
-  of the Cloudflare-runtime CR-009 verifier, deployment of the current remediation
-  build, a passing deployed privacy-route smoke, and a production HSTS response
-  containing `max-age=86400`.
+- Owner-deferred external release evidence: Cloudflare-runtime CR-009 execution,
+  deployment of the current remediation build, a passing deployed privacy-route
+  smoke, and a production HSTS response containing `max-age=86400`. These items are
+  required only before claiming deployed/operational closure, not for the accepted
+  local-development completion.
 
 ## Rollback Boundaries
 
@@ -923,10 +930,10 @@ Evidence disposition on 2026-07-26:
 
 ## Final Completion Definition
 
-Repository remediation work for C01–C16 is complete, including C09 integration
-through the real local Cloudflare topology. The overall milestone is not
-operationally closed until the explicitly listed external evidence exists:
-Cloudflare-runtime CR-009 behavior, deployment of the current build, deployed
-privacy smoke, and the staged HSTS response. CR-009 and CR-022 must not be mislabeled
-as closed before that evidence is recorded. CR-021 and the language-selector portion
-of CR-016 remain accepted residuals under D-04.
+Repository and local-runtime remediation work for C01–C16 is complete, including
+C09 integration through the real local Cloudflare topology. The owner accepted this
+local scope as complete on 2026-07-26. Cloudflare-runtime CR-009 behavior,
+production deployment, deployed privacy smoke, and the staged HSTS response are
+owner-deferred operational work. CR-009 and CR-022 must not be mislabeled as
+deployed/operationally closed before that evidence is recorded. CR-021 and the
+language-selector portion of CR-016 remain accepted residuals under D-04.

@@ -10,3 +10,46 @@ export function matchesCodonFilter(codonData, filterMode) {
   if (filterMode === 'stop') return codonData?.type === 'stop';
   return true;
 }
+
+export function resolveCodonGroup(selectedGroup, customGroups, builtinGroups) {
+  if (selectedGroup === 'all') return null;
+  if (selectedGroup.startsWith('custom-')) {
+    const index = Number.parseInt(selectedGroup.slice('custom-'.length), 10);
+    return Number.isInteger(index) ? customGroups[index] || null : null;
+  }
+  return builtinGroups[selectedGroup] || null;
+}
+
+export function isCodonHighlighted({
+  codon,
+  data,
+  selectedCodon,
+  typedCodon,
+  highlightedAA,
+  activeGroup,
+}) {
+  if (selectedCodon === null && typedCodon.length > 0) {
+    return codon.startsWith(typedCodon);
+  }
+  if (!data) return false;
+  if (highlightedAA !== null) return data.aa === highlightedAA;
+  return Boolean(activeGroup?.aas.includes(data.aa));
+}
+
+export function isCodonDimmed({
+  codon,
+  data,
+  filterMode,
+  selectedCodon,
+  typedCodon,
+  highlightedAA,
+  activeGroup,
+}) {
+  if (!data) return false;
+  if (!matchesCodonFilter(data, filterMode)) return true;
+  if (selectedCodon === null && typedCodon.length > 0) {
+    return !codon.startsWith(typedCodon);
+  }
+  if (highlightedAA !== null) return data.aa !== highlightedAA;
+  return Boolean(activeGroup && !activeGroup.aas.includes(data.aa));
+}

@@ -2,7 +2,13 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import { matchesCodonFilter, normalizeCodonInput } from './CodonTable/lib/codonDomain';
+import {
+  isCodonDimmed as deriveCodonDimmed,
+  isCodonHighlighted as deriveCodonHighlighted,
+  matchesCodonFilter,
+  normalizeCodonInput,
+  resolveCodonGroup,
+} from './CodonTable/lib/codonDomain';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CODON DATA — authoritative JSON mapping (RNA codons)
@@ -1245,59 +1251,28 @@ export default function CodonTable() {
   }, [filterMode]);
 
   const isCodonHighlighted = useCallback((codon) => {
-    if (selectedCodon === null && typedCodon.length > 0) {
-      return codon.startsWith(typedCodon);
-    }
     const data = CODON_MAP[codon];
-    if (!data) return false;
-
-    // 1. If a specific AA is highlighted, highlight only that one
-    if (highlightedAA !== null) {
-      return data.aa === highlightedAA;
-    }
-
-    // 2. If a group is selected, highlight all AAs in that group
-    if (selectedGroup !== 'all') {
-      const activeGroup = selectedGroup.startsWith('custom-') 
-        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
-        : AA_GROUPS[selectedGroup];
-      
-      return activeGroup && activeGroup.aas.includes(data.aa);
-    }
-
-    return false;
+    return deriveCodonHighlighted({
+      codon,
+      data,
+      selectedCodon,
+      typedCodon,
+      highlightedAA,
+      activeGroup: resolveCodonGroup(selectedGroup, customGroups, AA_GROUPS),
+    });
   }, [highlightedAA, selectedCodon, typedCodon, selectedGroup, customGroups]);
 
   const isCodonDimmed = useCallback((codon) => {
     const data = CODON_MAP[codon];
-    if (!data) return false;
-
-    // 1. If filterMode is active (All / Start / Stop), use its visibility
-    if (filterMode === 'start' && data.type !== 'start') return true;
-    if (filterMode === 'stop' && data.type !== 'stop') return true;
-
-    // 2. If typing search is active (partial or full), dim non-matching codons
-    if (selectedCodon === null && typedCodon.length > 0) {
-      return !codon.startsWith(typedCodon);
-    }
-
-    // 3. If a specific AA is highlighted, dim all other AAs
-    if (highlightedAA !== null) {
-      return data.aa !== highlightedAA;
-    }
-
-    // 4. If group filter is active, dim codons not in that group
-    if (selectedGroup !== 'all') {
-      const activeGroup = selectedGroup.startsWith('custom-') 
-        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
-        : AA_GROUPS[selectedGroup];
-
-      if (!activeGroup || !activeGroup.aas.includes(data.aa)) {
-        return true;
-      }
-    }
-
-    return false;
+    return deriveCodonDimmed({
+      codon,
+      data,
+      filterMode,
+      selectedCodon,
+      typedCodon,
+      highlightedAA,
+      activeGroup: resolveCodonGroup(selectedGroup, customGroups, AA_GROUPS),
+    });
   }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (

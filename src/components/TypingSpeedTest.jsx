@@ -9,6 +9,7 @@ import {
   parseTemplate,
   repeatToTarget,
 } from './TypingSpeedTest/lib/templateDomain';
+import { calculateTypingMetrics } from './TypingSpeedTest/lib/metricsDomain';
 
 // Preset templates
 const PRESETS = {
@@ -710,62 +711,33 @@ export default function TypingSpeedTest() {
   };
 
   // Metrics calculators
-  const wpm = useMemo(() => {
-    const timeSec = elapsedTime || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0) || 1;
-    const minutes = timeSec / 60;
-
-    if (mode === 'free') {
-      // Free mode mixed parser
-      const cjkMatches = typedText.match(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g);
-      const cjkCount = cjkMatches ? cjkMatches.length : 0;
-      const cleanEnglish = typedText.replace(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g, ' ');
-      const wordsEng = cleanEnglish.split(/\s+/).filter(Boolean).length;
-      
-      if (activeLang === 'chinese') {
-        return Math.round((cjkCount + wordsEng) / minutes);
-      } else {
-        // Standard (chars / 5) / minutes
-        return Math.round((typedText.length / 5) / minutes);
-      }
-    } else {
-      // Template mode calculations
-      let correctCharCount = 0;
-      const limit = Math.min(typedText.length, templateText.length);
-      for (let i = 0; i < limit; i++) {
-        if (typedText[i] === templateText[i]) {
-          correctCharCount += 1;
-        }
-      }
-
-      if (activeLang === 'chinese') {
-        // 1 CJK character = 1 Word
-        return Math.round(correctCharCount / minutes);
-      } else {
-        // English/Code standard
-        return Math.round((correctCharCount / 5) / minutes);
-      }
-    }
-  }, [typedText, templateText, mode, activeLang, elapsedTime, isTesting]);
-
-  const cpm = useMemo(() => {
-    if (activeLang === 'chinese') return null; // Hide CPM for Chinese
-
-    const timeSec = elapsedTime || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0) || 1;
-    const minutes = timeSec / 60;
-    return Math.round(typedText.length / minutes);
-  }, [typedText, elapsedTime, isTesting, activeLang]);
-
-  const accuracy = useMemo(() => {
-    if (mode === 'free') return null;
-    if (totalKeystrokes === 0) return 100;
-    return Math.round((correctKeystrokes / totalKeystrokes) * 100);
-  }, [mode, correctKeystrokes, totalKeystrokes]);
-
-  const correctionRate = useMemo(() => {
-    const totalInputActions = totalKeystrokes + backspacesPressed;
-    if (totalInputActions === 0) return 0;
-    return Math.round((backspacesPressed / totalInputActions) * 100);
-  }, [totalKeystrokes, backspacesPressed]);
+  const metricSeconds = elapsedTime
+    || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0)
+    || 1;
+  const {
+    wpm,
+    cpm,
+    accuracy,
+    correctionRate,
+  } = useMemo(() => calculateTypingMetrics({
+    typedText,
+    templateText,
+    mode,
+    activeLang,
+    elapsedSeconds: metricSeconds,
+    correctKeystrokes,
+    totalKeystrokes,
+    backspacesPressed,
+  }), [
+    typedText,
+    templateText,
+    mode,
+    activeLang,
+    metricSeconds,
+    correctKeystrokes,
+    totalKeystrokes,
+    backspacesPressed,
+  ]);
 
   // Save Results to history list
   const saveResult = () => {

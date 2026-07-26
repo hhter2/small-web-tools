@@ -10,83 +10,16 @@ import {
   validateZipArchive,
 } from '../lib/resourceLimits';
 import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
+import {
+  formatBytes,
+  formatDocumentDate as formatDate,
+  formatDurationMinutes as formatMinutes,
+} from './DocMeta/lib/documentMetadata';
 
 const loadSafeZip = async (file) => {
   const archiveCheck = await validateZipArchive(file);
   if (!archiveCheck.valid) throw new Error(archiveCheck.error);
   return JSZip.loadAsync(file);
-};
-
-// Helper to format bytes
-const formatBytes = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Helper to format ISO timestamps or PDF Date strings (D:YYYYMMDDHHMMSS...)
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  let str = String(dateStr).trim();
-
-  // Handle PDF format date D:YYYYMMDDHHmmSS...
-  if (str.startsWith('D:')) {
-    str = str.slice(2);
-    const year = str.slice(0, 4);
-    const month = str.slice(4, 6) || '01';
-    const day = str.slice(6, 8) || '01';
-    const hour = str.slice(8, 10) || '00';
-    const minute = str.slice(10, 12) || '00';
-    const second = str.slice(12, 14) || '00';
-    str = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-  }
-
-  try {
-    const d = new Date(str);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  } catch (e) {
-    return dateStr;
-  }
-};
-
-// Helper to format duration strings
-const formatMinutes = (minutesStr) => {
-  if (!minutesStr) return '';
-  let mins = parseInt(minutesStr, 10);
-
-  if (isNaN(mins)) {
-    const match = String(minutesStr).match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/i);
-    if (match) {
-      const h = parseInt(match[1] || '0', 10);
-      const m = parseInt(match[2] || '0', 10);
-      mins = h * 60 + m;
-    } else {
-      return minutesStr;
-    }
-  }
-
-  if (mins <= 0) return '';
-  
-  const days = Math.floor(mins / 1440);
-  const hours = Math.floor((mins % 1440) / 60);
-  const minutes = mins % 60;
-  
-  const parts = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
-  
-  return `${parts.join(' ')} (${mins} mins)`;
 };
 
 // Helper to get element textContent by checking localName

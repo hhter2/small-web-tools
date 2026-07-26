@@ -92,6 +92,21 @@ npm run test:e2e
 
 The Cloudflare Pages production build must use Node.js 22 or 24, `npm ci` followed by `npm run build`, and publish `dist/`.
 
+### HSTS rollout
+
+The checked-in response policy is at the initial HSTS stage:
+`Strict-Transport-Security: max-age=86400`. It intentionally omits
+`includeSubDomains` and `preload`. After deploying, validate the real production
+response and HTTP redirect with:
+
+```bash
+DEPLOYED_BASE_URL=https://small-web-tools.pages.dev npm run test:e2e:deployed
+```
+
+Keep the one-day stage until it has been monitored and rollback/domain ownership
+has been reviewed. Later increases to 30 days and one year require separate
+operational approval; subdomains and preload require an explicit full-domain audit.
+
 ## Documentation
 
 `CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `CODEBASE.md`

@@ -7,6 +7,7 @@ const requiredHeaders = [
   'Referrer-Policy: strict-origin-when-cross-origin',
   'Permissions-Policy: camera=(self), microphone=(), geolocation=()',
   'Cross-Origin-Opener-Policy: same-origin',
+  'Strict-Transport-Security: max-age=86400',
   'Content-Security-Policy:',
 ];
 
@@ -29,4 +30,12 @@ if (/connect-src[^;]*\*/u.test(headers) || /frame-src[^;]*\*/u.test(headers)) {
   throw new Error('CSP connect-src and frame-src must not contain wildcards.');
 }
 
-console.log('Static security header policy passed.');
+const hstsLines = headers.match(/^\s*Strict-Transport-Security:.*$/gimu) || [];
+if (hstsLines.length !== 1) {
+  throw new Error('The staged HSTS policy must be declared exactly once.');
+}
+if (/\bincludeSubDomains\b|\bpreload\b/iu.test(hstsLines[0])) {
+  throw new Error('HSTS includeSubDomains/preload require a separate audited rollout.');
+}
+
+console.log('Static security header policy passed (HSTS stage: max-age=86400).');

@@ -7,11 +7,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.js'],
-    include: ['src/tests/**/*.test.{js,jsx}', 'functions/**/*.test.{js}'],
+    include: ['src/tests/**/*.test.{js,jsx}', 'functions/**/*.test.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/lib/**', 'functions/_shared/**'],
+      include: ['src/lib/**', 'functions/_shared/**', 'functions/api/**'],
       thresholds: {
         lines: 80,
         functions: 80,
@@ -24,6 +24,12 @@ export default defineConfig({
           statements: 80,
         },
         'functions/_shared/**': {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+        'functions/api/**': {
           lines: 80,
           functions: 80,
           branches: 70,

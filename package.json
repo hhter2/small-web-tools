@@ -32,16 +32,16 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "9.39.5",
     "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^24.13.3",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.1",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.5.2",
-    "eslint": "^9.0.0",
+    "eslint": "9.39.5",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
@@ -51,11 +51,18 @@
     "tailwindcss": "^3.4.19",
     "typescript": "^5.8.3",
     "vite": "^6.0.0",
-    "vitest": "^3.2.4",
-    "wrangler": "4.36.0"
+    "vitest": "^4.1.10",
+    "wrangler": "4.114.0"
   },
   "overrides": {
-    "esbuild": "^0.25.0"
+    "brace-expansion": "5.0.8",
+    "esbuild": "^0.25.0",
+    "minimatch": "10.2.5"
+  },
+  "knip": {
+    "ignoreDependencies": [
+      "wrangler"
+    ]
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

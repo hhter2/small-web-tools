@@ -15,8 +15,8 @@
 | Version | `0.6.0-beta` package metadata; displayed build version follows the latest Git tag |
 | UI framework | React 18 |
 | Build tool | Vite 6 |
-| Testing | Vitest + React Testing Library + jsdom |
-| Linting & Types | ESLint v9, JSDoc + `jsconfig.json` checkJs |
+| Testing | Vitest 4 + React Testing Library + jsdom |
+| Linting & Types | ESLint 9, JSDoc + normal and strict checkJs projects |
 | Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
 | Routing | In-app state synchronized to URL hashes with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
@@ -194,6 +194,9 @@ Folder Analyzer uses the browser directory picker and never accepts an arbitrary
 | --- | --- |
 | `react`, `react-dom` | React rendering. |
 | `@vitejs/plugin-react`, `vite` | Development server and production build. |
+| `vitest`, `@vitest/coverage-v8` | Unit/integration runner and coverage gates. |
+| `eslint`, React lint plugins | Static-analysis rules and the non-increasing warning budget. |
+| `wrangler` | Pinned Cloudflare Pages/Worker configuration validation and local integration runtime. |
 | `tailwindcss`, `postcss`, `autoprefixer` | Utility CSS build pipeline. |
 | `exifreader` | Image metadata parsing. |
 | `jszip` | Office document metadata parsing and archive handling after archive-limit preflight. |

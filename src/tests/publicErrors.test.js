@@ -1,11 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
-import { errorResponse } from '../../functions/_shared/errorResponse.js';
+import {
+  createCorrelationId,
+  errorResponse,
+} from '../../functions/_shared/errorResponse.js';
 import {
   getPublicError,
   toPublicProcessingError,
 } from '../lib/publicErrors.js';
 
 describe('stable public errors', () => {
+  it('creates a non-identifying correlation id without randomUUID support', () => {
+    vi.stubGlobal('crypto', {
+      getRandomValues: (bytes) => bytes.fill(1),
+    });
+    expect(createCorrelationId()).toBe('01'.repeat(16));
+    vi.unstubAllGlobals();
+  });
+
   it('returns a safe contract and correlates the server diagnostic', async () => {
     const logger = vi.fn();
     const internal = new Error(

@@ -90,7 +90,6 @@ export default defineConfig({
     __APP_CHANNEL__: JSON.stringify(appChannel),
   },
   server: {
-    port: 3000,
     host: '127.0.0.1',
   },
   build: {

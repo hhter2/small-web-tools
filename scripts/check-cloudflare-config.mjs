@@ -9,6 +9,14 @@ const workerConfig = JSON.parse(await readFile(
   path.join(root, 'workers/rate-limiter/wrangler.jsonc'),
   'utf8',
 ));
+const ssrfConfig = JSON.parse(await readFile(
+  path.join(root, 'test/integration/ssrf-worker/wrangler.jsonc'),
+  'utf8',
+));
+const ssrfTargetConfig = JSON.parse(await readFile(
+  path.join(root, 'test/integration/ssrf-target-worker/wrangler.jsonc'),
+  'utf8',
+));
 
 const service = pagesConfig.services?.find((item) => item.binding === 'RATE_LIMITER_SERVICE');
 if (service?.service !== workerConfig.name) {
@@ -25,6 +33,12 @@ if (policies.EXPENSIVE_LIMITER?.limit !== 20 || policies.EXPENSIVE_LIMITER?.peri
 }
 if (policies.STANDARD_LIMITER?.limit !== 60 || policies.STANDARD_LIMITER?.period !== 60) {
   throw new Error('STANDARD_LIMITER must be configured for 60 requests per minute.');
+}
+if (!ssrfConfig.compatibility_flags?.includes('global_fetch_strictly_public')) {
+  throw new Error('The SSRF runtime harness must force public-Internet fetch routing.');
+}
+if (!ssrfConfig.workers_dev || !ssrfTargetConfig.workers_dev) {
+  throw new Error('Temporary SSRF verification Workers must expose short-lived test URLs.');
 }
 
 const wranglerBin = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
@@ -48,6 +62,8 @@ function run(args) {
 
 try {
   run(['deploy', '--dry-run', '--config', 'workers/rate-limiter/wrangler.jsonc']);
+  run(['deploy', '--dry-run', '--config', 'test/integration/ssrf-target-worker/wrangler.jsonc']);
+  run(['deploy', '--dry-run', '--config', 'test/integration/ssrf-worker/wrangler.jsonc']);
   run(['pages', 'functions', 'build', '--outdir', tempOutput]);
 } finally {
   await rm(tempOutput, { recursive: true, force: true });

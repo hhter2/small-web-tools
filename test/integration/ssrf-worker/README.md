@@ -8,9 +8,17 @@ This isolated Worker is deployment-only evidence for CR-009. Configure
 - a redirect chain whose final target is loopback, private, link-local, or a metadata hostname;
 - a DNS-change/rebinding scenario controlled by the operator.
 
-Deploy this Worker without a public `workers.dev` or preview URL, invoke it through
-an authenticated route or service binding, and preserve the response/log evidence.
-Do not add real internal service addresses to the fixtures.
+`npm run test:ssrf-runtime` deploys this harness and the controlled redirect target
+to an unclaimed Cloudflare temporary preview account. The harness is public only for
+the short-lived verification window and requires a random 256-bit bearer token that
+is never printed or committed. Cloudflare deletes the temporary account if it is
+not claimed. The verifier covers a public control, redirects to loopback/metadata,
+a hostname resolving to loopback, and repeated alternating public/loopback DNS
+answers. It prints only redacted, non-secret evidence.
+
+For a permanent-account run, keep the same authentication and allowlist controls,
+invoke through an authenticated route or Service Binding, and preserve the
+response/log evidence. Do not point fixtures at real private services.
 
 Unit tests do not close the DNS time-of-check/time-of-use portion of CR-009. That
 finding remains open until this harness is executed in Cloudflare's production

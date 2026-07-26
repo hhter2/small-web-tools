@@ -55,6 +55,12 @@ npm run deps:check
 npm run audit
 ```
 
+The opt-in `npm run test:ssrf-runtime` command creates an unclaimed, temporary
+Cloudflare preview account and therefore performs an external deployment. Run it
+only when Cloudflare-runtime CR-009 evidence is required and the operator accepts
+Cloudflare's current Terms and Privacy Policy. The command redacts bearer and claim
+credentials; never paste the global Wrangler configuration or claim URL into logs.
+
 `npm run verify` runs version, lint-warning budget, normal and strict checkJs,
 coverage, build/bundle, headers, network inventory, Cloudflare configuration, and
 documentation-consistency gates. CI runs it on Node 22 and Node 24.

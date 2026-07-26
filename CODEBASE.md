@@ -182,6 +182,11 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 
 Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. `npm run platform:integration` starts the Pages and Worker configurations with isolated local state, proves concurrent requests hit the configured platform limit, and proves the missing-service path fails closed. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
 
+`test/integration/ssrf-worker/` and `test/integration/ssrf-target-worker/` are
+isolated Cloudflare-runtime fixtures for the outbound-fetch boundary. Run
+`npm run test:ssrf-runtime` only when temporary Cloudflare deployment is intended;
+it uses an unclaimed, auto-expiring preview account and prints no token or claim URL.
+
 Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 
 ## Network-service policy

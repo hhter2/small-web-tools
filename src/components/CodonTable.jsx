@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { matchesCodonFilter, normalizeCodonInput } from './CodonTable/lib/codonDomain';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CODON DATA — authoritative JSON mapping (RNA codons)
@@ -1180,7 +1181,7 @@ export default function CodonTable() {
   }, []);
 
   const handleTypeCodon = (val) => {
-    const sanitized = val.toUpperCase().replace(/T/g, 'U').replace(/[^UCAG]/g, '').slice(0, 3);
+    const sanitized = normalizeCodonInput(val);
     setTypedCodon(sanitized);
 
     if (sanitized.length === 3) {
@@ -1240,11 +1241,7 @@ export default function CodonTable() {
   };
 
   const isCodonVisible = useCallback((codon) => {
-    const data = CODON_MAP[codon];
-    if (filterMode === 'all')   return true;
-    if (filterMode === 'start') return data?.type === 'start';
-    if (filterMode === 'stop')  return data?.type === 'stop';
-    return true;
+    return matchesCodonFilter(CODON_MAP[codon], filterMode);
   }, [filterMode]);
 
   const isCodonHighlighted = useCallback((codon) => {

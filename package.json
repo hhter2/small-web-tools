@@ -16,7 +16,7 @@
     "platform:check": "node scripts/check-cloudflare-config.mjs",
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
-    "lint": "eslint src functions workers test scripts e2e --max-warnings 70",
+    "lint": "eslint src functions workers test scripts e2e --max-warnings 68",
     "typecheck": "tsc --project jsconfig.json --noEmit",
     "typecheck:strict": "tsc --project jsconfig.strict.json --noEmit",
     "docs:check": "node scripts/check-doc-consistency.mjs",

@@ -51,7 +51,9 @@ small-web-tools/
 │   └── favicon.svg           Static site icon
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
-│   ├── App.jsx               Navigation metadata, hash routing with React.lazy, shell, and tool switch
+│   ├── App.jsx               Hash synchronization, application shell, and registry renderer
+│   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
+│   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
 │   ├── tests/                Vitest unit test suites and setup
@@ -76,11 +78,12 @@ small-web-tools/
 
 `src/App.jsx` owns the application shell:
 
-- `navItems` is the route metadata source for the sidebar, desktop navigation, dashboard cards, and footer links.
-- `categories` define the six navigation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
+- `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
+- Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
+- `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
-- `renderActiveTool()` maps every tool route plus the non-catalog `privacy` route to its React component.
+- `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
 
@@ -159,6 +162,11 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 ### File metadata tools
 
 `ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
+
+Pure document formatting/parsing helpers live under `src/components/DocMeta/lib/`.
+QR/barcode encoding rules, typing-template transformations, and codon input/filter
+rules live in their corresponding `src/components/<Tool>/lib/` directories and have
+focused tests in `src/tests/extractedDomains.test.js`.
 
 ## APIs and development middleware
 

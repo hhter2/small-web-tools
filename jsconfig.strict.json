@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -16,6 +17,7 @@
   },
   "include": [
     "src/lib/**/*.js",
+    "src/components/**/lib/**/*.js",
     "functions/_shared/**/*.js"
   ],
   "exclude": ["node_modules", "dist"]

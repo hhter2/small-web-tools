@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const inventory = JSON.parse(await readFile('config/network-services.json', 'utf8'));
 const declaredHosts = new Set(inventory.flatMap((service) => service.domains));
+const internalServiceHosts = new Set(['rate-limiter.internal']);
 const roots = ['src', 'functions', 'public', 'index.html', 'vite.config.js'];
 const ignoredSegments = new Set(['tests', 'LICENSES']);
 const urlPattern = /https:\/\/[a-z0-9.-]+(?=[:/"'`)\s]|$)/giu;
@@ -32,7 +33,9 @@ for (const root of roots) {
   }
 }
 
-const undeclared = [...found].filter(([host]) => !declaredHosts.has(host));
+const undeclared = [...found].filter(
+  ([host]) => !declaredHosts.has(host) && !internalServiceHosts.has(host),
+);
 if (undeclared.length) {
   const details = undeclared
     .map(([host, files]) => `${host}: ${[...files].join(', ')}`)

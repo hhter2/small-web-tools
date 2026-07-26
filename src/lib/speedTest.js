@@ -19,6 +19,11 @@ function parseCustomMegabytes(value, label) {
   return parsed;
 }
 
+/**
+ * @param {string} mode
+ * @param {string | number} [customDownloadMb]
+ * @param {string | number} [customUploadMb]
+ */
 export function getDataPlan(mode, customDownloadMb = 0, customUploadMb = 0) {
   const plan = mode === 'custom'
     ? {

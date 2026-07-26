@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**'],
+    ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
   },
   // Browser source files
   {
@@ -38,12 +38,30 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/no-unescaped-entities': 'off',
       'no-useless-escape': 'off',
-      'no-empty': 'off',
+      'no-empty': ['error', { allowEmptyCatch: false }],
       'no-case-declarations': 'off',
       'no-control-regex': 'off',
-      'no-undef': 'off',
+      'no-undef': 'error',
       'react/no-unknown-property': 'off',
       'no-misleading-character-class': 'off',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-console': 'off',
+    },
+  },
+  // Node-based tests, scripts, Workers, and tooling
+  {
+    files: ['e2e/**/*.js', 'scripts/**/*.mjs', 'test/**/*.js', 'workers/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-empty': ['error', { allowEmptyCatch: false }],
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': 'off',
     },

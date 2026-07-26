@@ -16,8 +16,10 @@
     "platform:check": "node scripts/check-cloudflare-config.mjs",
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
-    "lint": "eslint src functions",
+    "lint": "eslint src functions workers test scripts e2e --max-warnings 70",
     "typecheck": "tsc --project jsconfig.json --noEmit",
+    "typecheck:strict": "tsc --project jsconfig.strict.json --noEmit",
+    "docs:check": "node scripts/check-doc-consistency.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -25,7 +27,7 @@
     "test:e2e": "playwright test",
     "deps:check": "knip --dependencies --no-progress",
     "audit": "npm audit --audit-level=moderate",
-    "verify": "npm run version:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check"
+    "verify": "npm run version:check && npm run lint && npm run typecheck && npm run typecheck:strict && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check && npm run docs:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",

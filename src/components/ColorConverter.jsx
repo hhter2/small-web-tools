@@ -434,7 +434,9 @@ const getCookie = (name) => {
   if (parts.length === 2) {
     try {
       return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
-    } catch (e) {}
+    } catch (e) {
+      // Ignore malformed legacy cookie data and use the default palette.
+    }
   }
   return null;
 };
@@ -476,7 +478,9 @@ export default function ColorConverter() {
     try {
       const savedLocal = localStorage.getItem("customPresets");
       if (savedLocal) return JSON.parse(savedLocal);
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the in-memory palette remains usable.
+    }
 
     const savedCookie = getCookie("customPresets");
     if (savedCookie) return savedCookie;
@@ -601,7 +605,9 @@ export default function ColorConverter() {
       const next = [formatted, ...filtered].slice(0, 8);
       try {
         localStorage.setItem("recentColors", JSON.stringify(next));
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; recent colors remain in memory.
+      }
       return next;
     });
   };
@@ -611,7 +617,9 @@ export default function ColorConverter() {
     setRecentColors([]);
     try {
       localStorage.removeItem("recentColors");
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; clearing the in-memory list is sufficient.
+    }
   };
 
   // Eyedropper API
@@ -845,7 +853,9 @@ export default function ColorConverter() {
       setPresets(next);
       try {
         localStorage.setItem("customPresets", JSON.stringify(next));
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; the in-memory palette remains usable.
+      }
       saveCookie("customPresets", next);
     }
   };
@@ -855,7 +865,9 @@ export default function ColorConverter() {
     setPresets(next);
     try {
       localStorage.setItem("customPresets", JSON.stringify(next));
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the in-memory palette remains usable.
+    }
     saveCookie("customPresets", next);
   };
 
@@ -864,7 +876,9 @@ export default function ColorConverter() {
       setPresets(DEFAULT_PRESETS);
       try {
         localStorage.removeItem("customPresets");
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; the default palette remains active.
+      }
       document.cookie = "customPresets=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
   };
@@ -891,7 +905,9 @@ export default function ColorConverter() {
           setPresets(parsed);
           try {
             localStorage.setItem("customPresets", JSON.stringify(parsed));
-          } catch (e) {}
+          } catch (e) {
+            // Storage may be unavailable; the imported palette remains in memory.
+          }
           saveCookie("customPresets", parsed);
         } else {
           alert("Invalid file format. The JSON file must contain an array of hex color strings (e.g. ['#FF0000', '#00FF00']).");

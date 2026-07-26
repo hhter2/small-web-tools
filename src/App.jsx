@@ -557,7 +557,9 @@ export default function App() {
     try {
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme) return savedTheme;
-    } catch (e) {}
+    } catch (e) {
+      // Storage access can be blocked by the browser; keep the in-memory default.
+    }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
 
@@ -613,7 +615,9 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     try {
       localStorage.setItem("theme", theme);
-    } catch (e) {}
+    } catch (e) {
+      // Storage access can be blocked by the browser; keep the current state.
+    }
   }, [theme]);
 
   // Sync activeTool state, sessionStorage, and document title
@@ -626,7 +630,9 @@ export default function App() {
         : item && activeTool !== 'tool-home'
           ? `${item.name} — Small Web Tools`
           : 'Small Web Tools — Simple, Private Browser Utilities';
-    } catch (e) {}
+    } catch (e) {
+      // Storage access can be blocked by the browser; navigation still works.
+    }
   }, [activeTool]);
 
   // Listen for hashchange events to sync to activeTool and normalize invalid routes
@@ -678,14 +684,18 @@ export default function App() {
       } else {
         window.location.hash = activeTool;
       }
-    } catch (e) {}
+    } catch (e) {
+      // Storage access can be blocked by the browser; the UI remains usable.
+    }
   }, [activeTool]);
 
   // Sync sidebarCollapsed to localStorage
   useEffect(() => {
     try {
       localStorage.setItem("sidebarCollapsed", isSidebarCollapsed ? "true" : "false");
-    } catch (e) {}
+    } catch (e) {
+      // Storage access can be blocked by the browser; the UI remains usable.
+    }
   }, [isSidebarCollapsed]);
 
   const toggleTheme = () => {

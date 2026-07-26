@@ -97,6 +97,9 @@ export async function verifyDrawRecord(record) {
       ? { valid: true, winnerIndex, winnerName: record.items[winnerIndex] }
       : { valid: false, error: 'Record contents or winner do not match' };
   } catch (error) {
-    return { valid: false, error: error.message };
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : 'Record verification failed',
+    };
   }
 }

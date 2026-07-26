@@ -36,6 +36,17 @@ const variants = {
   },
 };
 
+/**
+ * @typedef {React.HTMLAttributes<HTMLElement> & {
+ *   variant?: 'tool' | 'home',
+ *   size?: 'default' | 'compact' | 'wide',
+ *   clickable?: boolean,
+ *   animateIn?: boolean,
+ *   children?: React.ReactNode
+ * }} CardProps
+ */
+
+/** @type {React.ForwardRefExoticComponent<CardProps & React.RefAttributes<HTMLElement>>} */
 const Card = React.forwardRef(function Card({
   variant = 'tool',
   size = 'default', // for variant="tool": 'default' | 'compact' | 'wide'

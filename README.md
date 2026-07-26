@@ -67,7 +67,7 @@ The footer’s **Privacy** route lists every declared network service, trigger, 
 
 ## Run locally
 
-Requires Node.js 22 or 24 and npm. Node 22 is the repository default (`.nvmrc`); CI verifies both supported releases.
+Requires Node.js 22 or Node.js 24 and npm. Node 22 is the repository default (`.nvmrc`); CI verifies both supported releases.
 
 ```bash
 npm install
@@ -81,11 +81,21 @@ npm run build
 npm run preview
 ```
 
-`npm run dev` mirrors only the IP lookup function. To exercise all Cloudflare Pages Functions locally (currency rates and website font extraction/proxying), use the Cloudflare Pages development runtime with the Vite server.
+Run the complete local verification and browser journeys with:
+
+```bash
+npm run verify
+npm run test:e2e
+```
+
+`npm run dev` mirrors only the IP lookup function (`/api/iplookup`). To exercise all Cloudflare Pages Functions locally (currency rates and website font extraction), use the Cloudflare Pages development runtime with the Vite server and run the service-bound rate-limiter Worker described in `CONTRIBUTING.md`.
 
 The Cloudflare Pages production build must use Node.js 22 or 24, `npm ci` followed by `npm run build`, and publish `dist/`.
 
 ## Documentation
+
+`CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `CODEBASE.md`
+is the canonical architecture and route reference.
 
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
 - [`CODEBASE.md`](CODEBASE.md) — architecture, route inventory, shared UI conventions, and developer guidance.

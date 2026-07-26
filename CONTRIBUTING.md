@@ -1,34 +1,62 @@
-# Small Web Tools — Contribution & AI Agent Guidelines
+# Contributing to Small Web Tools
 
-This document serves as the single source of truth for repository guidelines, component practices, documentation updates, and AI agent workflows.
+`CONTRIBUTING.md` is the canonical engineering guide. Use `CODEBASE.md` for the
+current architecture, route inventory, API topology, and project map.
 
----
+## Supported environment
 
-## 1. Documentation Update Rules
+- Node.js 22 and Node.js 24 are supported; `.nvmrc` selects Node 22.
+- Install exactly from the lockfile with `npm ci`.
+- The frontend is React 18 and Vite 6.
+- Production APIs use Cloudflare Pages Functions plus the dedicated rate-limiter
+  Worker in `workers/rate-limiter/`.
 
-| Document | Modification Policy |
-|---|---|
-| `CONTRIBUTING.md` | Single source of truth for engineering guidelines and agent workflow rules. |
-| `CODEBASE.md` | Update whenever a component/file is added, renamed, or deleted, or when dependencies change. |
-| `PRIVACY.md` | Update whenever data flows or third-party service connections change. |
-| `AGENTS.md` | Core agent rules; defers engineering standards to this file (`CONTRIBUTING.md`). |
-| `README.md` | **Maintained solely by the repository owner.** Do not modify `README.md` unless explicitly requested by the user. |
+## Local development
 
----
+Start the browser application:
 
-## 2. Engineering & Component Standards
+```bash
+npm run dev
+```
 
-- **Architecture**: Functional React components with hooks (`.jsx`). Hash-based routing (`#tool-id`).
-- **Styling**: Use Tailwind CSS utility classes and shared primitives in `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`).
-- **Data Privacy**: All client-side tools process data entirely inside the browser. No third-party network requests unless explicitly required.
-- **Component File Structure**: One tool per file under `src/components/<ToolName>.jsx`. Sub-components for shared primitives belong in `src/components/ui/`.
+The Vite middleware mirrors only `/api/iplookup`. For `/api/exchange-rates` and
+`/api/extract-fonts`, run the Cloudflare Pages local runtime against the Vite build
+or dev server. Start the rate-limiter Worker separately with its
+`workers/rate-limiter/wrangler.jsonc` configuration, and bind the Pages project to
+that service as declared in the root `wrangler.jsonc`.
 
----
+Useful validation commands:
 
-## 3. AI Coding Protocol
+```bash
+npm run build
+npm run verify
+npm run test:e2e
+npm run deps:check
+npm run audit
+```
 
-1. **Orientation**: Read `CODEBASE.md` to map dependencies and relevant files before changing code.
-2. **Strict Scope**: Modify only files directly relevant to the target task.
-3. **Dependencies**: Never introduce new npm packages without explicit user approval.
-4. **Verification**: Always run `npm run build` or tests to verify changes before marking a task complete.
-5. **Evidence Record**: Record actual commit SHAs and concrete verification evidence in task review logs.
+`npm run verify` runs version, lint-warning budget, normal and strict checkJs,
+coverage, build/bundle, headers, network inventory, Cloudflare configuration, and
+documentation-consistency gates. CI runs it on Node 22 and Node 24.
+
+## Engineering standards
+
+- Use functional React components and hooks. Route metadata belongs in the shared
+  tool registry; preserve public hashes and aliases.
+- Use Tailwind utilities, the design tokens in `src/styles.css`, and primitives in
+  `src/components/ui/`. Keep controls keyboard accessible and visibly focused.
+- Client-side tools must keep user content in the browser. Add server or third-party
+  data flows only when required, bounded, consented where appropriate, and declared
+  in `config/network-services.json` and `PRIVACY.md`.
+- Pages Functions must use Web Platform/Cloudflare APIs rather than Node-only APIs.
+  Put reusable request validation and safe-fetch logic in `functions/_shared/`.
+- Add focused unit tests for pure/domain logic and Playwright coverage for critical
+  journeys. Avoid relying only on route smoke tests.
+
+## Documentation and commits
+
+- Update `CODEBASE.md` for structural, route, API, dependency, or runtime changes.
+- Update `README.md` and `PRIVACY.md` when user-visible behavior or data flow changes.
+- Do not edit owner-maintained `TODO.md` unless explicitly requested.
+- Commit coherent phases separately. Do not include generated output, secrets, or
+  unrelated working-tree changes.

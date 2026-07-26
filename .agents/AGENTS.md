@@ -2,7 +2,8 @@
 
 > This file governs how AI agents should behave in this repository.
 > It also tracks the styling migration status (Tailwind CSS).
-> Read this file first, then `CODEBASE.md` for architecture details.
+> Read `CONTRIBUTING.md` for canonical engineering rules and `CODEBASE.md` for
+> canonical architecture, routes, runtime topology, and project structure.
 > Do not modify this file unless explicitly asked.
 
 ---
@@ -53,7 +54,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Only via `functions/api/` (Cloudflare Pages Functions). **Do not call third-party APIs directly from the browser** unless the tool is fully client-side. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
-| Build tool | Vite 5. Do not change `vite.config.js` structure without understanding all four responsibilities documented in `CODEBASE.md`. |
+| Build tool | Vite 6. Follow the runtime topology documented in `CODEBASE.md`. |
 
 ---
 
@@ -73,7 +74,7 @@ Follow this sequence exactly — do not skip or reorder steps:
 ## 6. Serverless Functions (`functions/api/`)
 
 - Each function must handle CORS headers explicitly (`Access-Control-Allow-Origin`).
-- Always implement a dev-server proxy mirror in `vite.config.js` so the function works locally without deploying.
+- Vite mirrors only `/api/iplookup`; use the Cloudflare Pages local runtime for other Functions and the dedicated rate-limiter Worker as documented in `CONTRIBUTING.md`.
 - Follow the existing pattern in `iplookup.js`: validate inputs, handle errors gracefully, return unified JSON.
 - Functions run on Cloudflare Workers runtime — **do not use Node.js-only APIs** (e.g., `fs`, `path`, `child_process`).
 

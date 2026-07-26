@@ -309,7 +309,11 @@ export default function FolderAnalyzer() {
       return new Promise((resolve) => {
         entry.file((file) => {
           file.customPath = path ? `${path}/${entry.name}` : entry.name;
-          try { file.webkitRelativePath = file.customPath; } catch (e) {}
+          try {
+            file.webkitRelativePath = file.customPath;
+          } catch (e) {
+            // Some browsers expose webkitRelativePath as read-only.
+          }
           resolve([file]);
         }, () => resolve([]));
       });

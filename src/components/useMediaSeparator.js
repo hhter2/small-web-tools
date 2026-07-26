@@ -43,7 +43,8 @@ export function useMediaSeparator() {
 
   const addFiles = useCallback((fileList) => {
     const files = Array.from(fileList);
-    const policy = getMediaSeparatorPolicy(globalThis.navigator?.deviceMemory);
+    const deviceMemory = /** @type {Navigator & { deviceMemory?: number }} */ (globalThis.navigator)?.deviceMemory;
+    const policy = getMediaSeparatorPolicy(deviceMemory);
     const resourceCheck = validateResourceAddition(itemsRef.current, files, policy);
     if (!resourceCheck.valid) {
       setLastError(resourceCheck.error);

@@ -102,7 +102,9 @@ function ResultWidget({ parsed }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_) {}
+    } catch (_) {
+      // Stopping an already-closed scanner is harmless.
+    }
   };
 
   const { type } = parsed;

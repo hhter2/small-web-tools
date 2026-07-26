@@ -882,7 +882,9 @@ export default function TypingSpeedTest() {
     setHistory(updated);
     try {
       localStorage.setItem('typing_test_history', JSON.stringify(updated));
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the result remains visible in this session.
+    }
     setResultsSaved(true);
   };
 
@@ -903,7 +905,9 @@ export default function TypingSpeedTest() {
       setHistory([]);
       try {
         localStorage.removeItem('typing_test_history');
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; clearing in-memory history is sufficient.
+      }
     }
   };
 

@@ -170,7 +170,11 @@ Cloudflare Pages-compatible handlers live in `functions/api/`:
 | `POST /api/extract-fonts` | `extract-fonts.js` | Same-site-only, rate-limited scan of bounded public HTML/CSS; returns declaration metadata and truncation information without fetching font files. |
 | `GET /api/exchange-rates` | `exchange-rates.js` | Fetch and normalize live USD-based exchange rates after browser consent. |
 
-`functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `vite.config.js` mirrors only IP lookup for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions. Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
+`functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `vite.config.js` mirrors only IP lookup (`/api/iplookup`) for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions.
+
+Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
+
+Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 
 ## Network-service policy
 
@@ -199,15 +203,16 @@ npm install
 npm run dev
 npm run build
 npm run verify
+npm run test:e2e
 npm run preview
 ```
 
-Node.js 22 and 24 are supported. `npm run verify` is the baseline gate: lint, type checking, unit tests, production build, bundle budgets, static header policy, and the external-host inventory. CI additionally runs dependency checks, Playwright route smoke tests, and `npm audit`.
+Node.js 22 and Node.js 24 are supported. `npm run verify` is the baseline gate: version consistency, a non-increasing ESLint warning budget, normal and strict checkJs, coverage thresholds, production build, bundle budgets, static header policy, the external-host inventory, Cloudflare topology, and documentation consistency. CI additionally runs dependency checks, Playwright journeys, and `npm audit`.
 
 ## Adding or changing a tool
 
 1. Create or update the component under `src/components/`.
-2. Add or revise its import, `navItems` metadata, and `renderActiveTool()` case in `src/App.jsx`.
+2. Add or revise its single registry entry in `src/toolRegistry.js`.
 3. Follow the shared `Card` plus one `ToolHeader` layout contract.
 4. Reuse existing UI primitives and theme tokens.
 5. Add an API handler only when browser-side code is insufficient; mirror it in `vite.config.js` if local development needs the endpoint.

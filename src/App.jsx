@@ -375,6 +375,7 @@ export default function App() {
 
         {/* Mobile Header — hidden on desktop (md+) */}
         <header
+          id="mobile-header"
           className="hidden max-md:flex bg-sidebar border-b border-border-sidebar px-5 py-3 items-center gap-4 fixed left-0 right-0 z-[90] h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
           style={{ top: 'var(--banner-height)' }}
         >
@@ -839,7 +840,11 @@ export default function App() {
           </header>
 
           {/* Mobile Top Bar — shown only on mobile (max-md) */}
-          <div className="hidden max-md:flex items-center justify-between py-3 border-b border-border min-h-[52px] sticky bg-app z-10 px-4" style={{ top: 'calc(60px + var(--banner-height))' }}>
+          <div
+            id="mobile-breadcrumb"
+            className="hidden max-md:flex items-center justify-between py-3 border-b border-border min-h-[52px] sticky bg-app z-10 px-4"
+            style={{ top: '60px' }}
+          >
             <div className="flex items-center gap-2">
               {/* Brand logo for mobile breadcrumb */}
               <button

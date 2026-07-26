@@ -129,9 +129,6 @@ export async function onRequestGet(context) {
     });
   }
 
-  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
-  if (limited) return limited;
-
   if (!parsed.value && context.request.cf) {
     const cf = context.request.cf;
     return jsonResponse({
@@ -152,6 +149,9 @@ export async function onRequestGet(context) {
       },
     });
   }
+
+  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
+  if (limited) return limited;
 
   try {
     return jsonResponse({ ok: true, data: await geoLookup(parsed.value) });

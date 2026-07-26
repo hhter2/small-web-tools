@@ -52,6 +52,11 @@ describe('iplookup API handler', () => {
   });
 
   it('uses Cloudflare request metadata for an empty lookup without contacting providers', async () => {
+    enforceRateLimit.mockResolvedValueOnce(Response.json(
+      { ok: false, code: 'RATE_LIMITED' },
+      { status: 429 },
+    ));
+
     const response = await onRequestGet(context('', {
       city: 'Taipei',
       region: 'Taipei City',
@@ -78,6 +83,7 @@ describe('iplookup API handler', () => {
       },
     });
     expect(body.data.country_name.length).toBeGreaterThan(2);
+    expect(enforceRateLimit).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

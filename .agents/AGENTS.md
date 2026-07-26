@@ -11,7 +11,7 @@
 ## 1. Orientation (Read Before Any Task)
 
 1. Read `CODEBASE.md` for the full project map — do **not** scan the entire codebase from scratch.
-2. Identify which files are relevant to the current task using the Tool Inventory and Directory Structure in `CODEBASE.md`.
+2. Identify which files are relevant to the current task using the Route Inventory and Repository Map in `CODEBASE.md`.
 3. Read only those files. Do not open files outside the stated scope unless a dependency forces it.
 4. State which files you plan to read and modify **before** making any changes.
 
@@ -30,18 +30,47 @@
 
 ## 3. Adding a New Tool (Mandatory Checklist)
 
-Follow this sequence exactly — do not skip or reorder steps:
+Follow this sequence:
 
-1. Create `src/components/<ToolName>.jsx`
-2. In `src/App.jsx`:
-   - Add `import` at the top
-   - Add entry to the `navItems` array: `id`, `name`, `tooltip`, `category`, `icon`, `desc` (optional), `subGroup` (optional)
-   - Add a case inside `renderActiveTool` function to return the component
-3. Style the tool using Tailwind utility classes and the shared primitives in `src/components/ui/` (`Card`, `Button`, `FieldInput`, `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`). Do not add new rules to `src/styles.css`.
-4. If the tool requires a serverless API:
-   - Create `functions/api/<name>.js`
-   - Mirror the handler in `vite.config.js` under the dev-server proxy section
-5. Update `CODEBASE.md`: add a row to the Tool Inventory table and update the directory tree
+1. Create the routed component under `src/components/` and add focused tests for
+   any non-trivial domain logic. A tool may use a single
+   `src/components/<ToolName>.jsx` file or a tool-specific subdirectory when it
+   has supporting modules.
+2. Add exactly one definition to `src/toolRegistry.js`, the only route metadata
+   source. Supply every `ToolRoute` field:
+   - a unique canonical `id` using the `tool-<kebab-case>` convention and any
+     backward-compatible `aliases`
+   - `title`, `tooltip`, `category`, `description`, `searchMetadata`, and
+     `subGroup`
+   - an `iconKey`
+   - a dynamic `loader` such as
+     `() => import('./components/<ToolName>.jsx')`; the registry wraps this
+     loader with `React.lazy()`
+   - `componentProps`, `staticLayout`, and `navigationVisible`
+3. For a catalog tool (`navigationVisible: true`), register an SVG or icon
+   component under the matching `iconKey` in `src/toolIcons.jsx`. Do not use an
+   emoji or add a background behind the small navigation icon.
+4. Do **not** add route imports or route-selection logic to `src/App.jsx`.
+   `NAVIGATION_ROUTES`, `PUBLIC_ROUTE_IDS`, and `STATIC_LAYOUT_IDS` are derived
+   from the registry, and `renderActiveTool()` resolves the lazy component with
+   `getToolRoute()`.
+5. Implement the shared tool-page contract: use `Card` with `variant="tool"`,
+   render exactly one `ToolHeader`, and reuse Tailwind utilities, theme tokens,
+   and primitives from `src/components/ui/`. Add `src/styles.css` rules only for
+   shared behavior or component-specific styling that existing utilities cannot
+   express clearly.
+6. If browser-side code is insufficient, add a Cloudflare Pages Function under
+   `functions/api/` and any reusable policy code under `functions/_shared/`.
+   Vite currently mirrors only `/api/iplookup`; add local middleware only when
+   the new endpoint genuinely needs a Vite development mirror. Declare every
+   new server or third-party data flow in `config/network-services.json` and
+   `PRIVACY.md`.
+7. Update `CODEBASE.md`: add the route to the Route Inventory and update the
+   Repository Map and affected API/runtime sections. Update other user-facing
+   documentation only when the task permits it.
+8. Run `npm run verify`. Confirm the canonical hash and every alias resolve,
+   the lazy component renders, catalog/search/icon behavior matches
+   `navigationVisible`, and the route works at desktop and mobile widths.
 
 ---
 
@@ -49,10 +78,10 @@ Follow this sequence exactly — do not skip or reorder steps:
 
 | Constraint | Rule |
 |---|---|
-| Routing | Hash-based (`#tool-id`) via `useState` in `App.jsx`. **Do not introduce React Router or any router library.** |
-| Styling | Use Tailwind utility classes and the shared primitives in `src/components/ui/`. Do not add new rules to `src/styles.css` (it now contains only @keyframes, scrollbar styles, and global resets). **Do not introduce CSS-in-JS.** |
+| Routing | `src/toolRegistry.js` is the only route metadata source. `App.jsx` synchronizes registry IDs and aliases with URL hashes and resolves routes through `getToolRoute()`. **Do not add parallel route metadata or introduce React Router or another router library.** |
+| Styling | Use Tailwind utility classes, existing design tokens, and the shared primitives in `src/components/ui/`. Add global CSS only for truly shared behavior or component-specific rules that existing utilities cannot express clearly. **Do not introduce CSS-in-JS.** |
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
-| API calls | Only via `functions/api/` (Cloudflare Pages Functions). **Do not call third-party APIs directly from the browser** unless the tool is fully client-side. |
+| API calls | Prefer browser-local processing. Add server or direct third-party data flows only when required, bounded, consented where appropriate, and declared in `config/network-services.json` and `PRIVACY.md`. Use `functions/api/` when a same-origin server boundary is required. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
 | Build tool | Vite 6. Follow the runtime topology documented in `CODEBASE.md`. |
 
@@ -63,31 +92,42 @@ Follow this sequence exactly — do not skip or reorder steps:
 - **Language**: JSX (`.jsx`) for all React components. No TypeScript.
 - **Components**: Functional components with hooks only. No class components.
 - **Naming**: PascalCase for component files and function names (e.g., `MyTool.jsx`). camelCase for variables and props.
-- **Tool IDs**: kebab-case prefixed with `tool-` (e.g., `tool-mytool`). Must be unique across the entire `tools` array in `App.jsx`.
-- **Styling**: Use Tailwind utility classes and shared primitives in `src/components/ui/`. If a shared primitive doesn't cover something, extend the primitive rather than writing one-off classes.
+- **Tool IDs**: kebab-case prefixed with `tool-` (e.g., `tool-mytool`). Canonical IDs and aliases must be unique across `PUBLIC_ROUTE_IDS` derived from `src/toolRegistry.js`.
+- **Styling**: Use Tailwind utility classes, theme tokens, and shared primitives in `src/components/ui/`. Extend a shared primitive when the same control pattern will be reused.
 - **No inline styles** unless absolutely necessary for dynamic values.
-- Keep components self-contained — one component per file, one file per tool.
-- **Icons**: Use the icon or the svg content instead of using emoji. Also, background at the small icon is no needed.
+- Keep tool ownership clear. Start with one routed component and extract
+  tool-specific helpers or subcomponents when complexity warrants it.
+- **Icons**: Register navigation icons in `src/toolIcons.jsx` by the registry
+  `iconKey`. Use SVG or an icon component, not emoji, and do not add a
+  background behind the small icon.
 
 ---
 
 ## 6. Serverless Functions (`functions/api/`)
 
-- Each function must handle CORS headers explicitly (`Access-Control-Allow-Origin`).
+- Pages Functions are same-origin by default. Add explicit CORS handling only
+  when an endpoint has a reviewed cross-origin requirement.
 - Vite mirrors only `/api/iplookup`; use the Cloudflare Pages local runtime for other Functions and the dedicated rate-limiter Worker as documented in `CONTRIBUTING.md`.
-- Follow the existing pattern in `iplookup.js`: validate inputs, handle errors gracefully, return unified JSON.
+- Validate inputs, bound resource use, handle errors without leaking sensitive
+  details, and reuse request-policy/safe-fetch helpers from `functions/_shared/`
+  when applicable.
 - Functions run on Cloudflare Workers runtime — **do not use Node.js-only APIs** (e.g., `fs`, `path`, `child_process`).
 
 ---
 
 ## 7. Directories and Files to Ignore
 
-Unless the task explicitly involves these, **do not read or modify**:
+Unless the task explicitly involves them, **do not read or modify**:
 
-- `dist/` — build output, auto-generated
-- `package-lock.json` — auto-generated lockfile
-- `.gitignore` — not relevant to feature work
-- `public/` — static assets, rarely touched
+- `node_modules/`, `dist/`, `coverage/`, `test-results/`,
+  `playwright-report/`, and `.playwright-cli/` — generated dependency, build,
+  coverage, or test output
+- `.wrangler/`, `.wrangler-*/`, and `.tmp-*/` — disposable local Cloudflare
+  state and integration workspaces
+- `package-lock.json` — auto-generated lockfile; never edit it directly
+- `.gitignore` — read or change it only when the task changes ignore policy
+- `public/` — read or change it only when the task involves static assets,
+  fonts, or response headers
 - `README.md` — maintained manually by the user; **do not update it as part of any task** unless explicitly instructed
 - `TODO.md` — maintained manually by the user. **Never modify this file by yourself**. All operations on it are done by the human. There may be issues or features written in it with a `#` prefix (e.g., `#fix`). Do **not** read this file unless explicitly instructed (e.g. when the user says "detail for #fix" or similar). Otherwise, there is no need to read it.
 
@@ -101,7 +141,9 @@ Before producing any code, confirm:
 - [ ] Which files will you modify or create? (list them)
 - [ ] Does this task require a new npm package? If yes, name it and ask for approval first.
 - [ ] Does this task require a new serverless function? If yes, is a dev-proxy mirror also needed?
-- [ ] Does this task change the Tool Inventory in `CODEBASE.md`? If yes, update it as part of the task.
+- [ ] Does this task add or change route metadata in `src/toolRegistry.js`? If
+      yes, are the Route Inventory and Repository Map in `CODEBASE.md`, the
+      matching icon in `src/toolIcons.jsx`, and relevant route tests in sync?
 
 ---
 
@@ -111,7 +153,7 @@ Before producing any code, confirm:
 
 - A new file or directory is created
 - A file is deleted or renamed
-- A new tool is added (Tool Inventory table + directory tree)
+- A new tool is added (Route Inventory + Repository Map)
 - A new dependency is introduced (Dependencies table)
 - A serverless function is added or removed
 
@@ -132,7 +174,7 @@ This section tracks the Tailwind CSS migration.
   `ToolHeader`, `ToggleSwitch`, `Spinner`, `ResultDisplay`.
   Use these for any new tool or when touching an existing one.
 - `src/styles.css` now contains **only** the following:
-  - `@import` (Google Fonts)
+  - repository-owned `@font-face` declarations for the fonts in `public/fonts/`
   - `@tailwind base/components/utilities` directives
   - `:root` and `html[data-theme="dark"]` CSS custom property definitions
   - Global resets (`*`, `html/body`, `body`)
@@ -161,7 +203,7 @@ This section tracks the Tailwind CSS migration.
 | CodonTable | done |
 | IpLookup | done |
 | ImgMeta | done |
-| OfficeMeta | done |
+| DocMeta | done |
 | AudioMeta | done |
 | VideoMeta | done |
 | RandomWheel | done |
@@ -182,13 +224,13 @@ This section tracks the Tailwind CSS migration.
 ### Rules for new work
 
 - New tools: build with Tailwind + `src/components/ui/` primitives from the start.
-  Do not add new rules to `styles.css`.
+  Add `styles.css` rules only when shared behavior or component-specific styling
+  cannot be expressed clearly with existing utilities.
 - Touching an existing tool for an unrelated bug fix: no obligation to migrate it,
   but if you do touch its styling anyway, prefer migrating that one component fully
   over patching the legacy CSS further.
-- If a shared primitive doesn't cover something you need, extend the primitive
-  (add a variant/prop) rather than writing one-off Tailwind classes in the tool
-  component, so the pattern stays reusable.
+- If a reusable control pattern is missing, extend the relevant shared primitive
+  with a variant or prop so the pattern stays reusable.
 
 ### Still open
 

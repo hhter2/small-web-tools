@@ -1,4 +1,31 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const networkInventory = JSON.parse(readFileSync(
+  new URL('../config/network-services.json', import.meta.url),
+  'utf8',
+));
+const declaredHosts = new Set(networkInventory.flatMap((service) => service.domains));
+
+test('fresh initial load makes no undeclared or Google Fonts requests', async ({ page }) => {
+  const externalSubresources = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (
+      url.hostname !== '127.0.0.1'
+      && request.resourceType() !== 'document'
+      && !request.isNavigationRequest()
+    ) {
+      externalSubresources.push(url.hostname);
+    }
+  });
+  await page.goto('/');
+  await expect(page.locator('main')).toBeVisible();
+  expect(externalSubresources.filter((host) => !declaredHosts.has(host))).toEqual([]);
+  expect(externalSubresources.filter((host) => (
+    host === 'fonts.googleapis.com' || host === 'fonts.gstatic.com'
+  ))).toEqual([]);
+});
 
 test('privacy route and consent manager expose the shared network inventory', async ({ page }) => {
   await page.goto('/');

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 test('consent dialog traps focus, announces changes, closes with Escape, and restores focus', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
@@ -31,3 +32,14 @@ test('brand and folder-selection controls use native button semantics', async ({
   await page.goto('/#tool-folder-analyzer');
   await expect(page.getByRole('button', { name: 'Select a folder to analyze' })).toBeVisible();
 });
+
+for (const route of ['/', '/#privacy', '/#tool-currency', '/#tool-folder-analyzer']) {
+  test(`${route} has no serious or critical automated accessibility findings`, async ({ page }) => {
+    await page.goto(route);
+    const results = await new AxeBuilder({ page }).analyze();
+    const highImpact = results.violations.filter(
+      (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+    );
+    expect(highImpact).toEqual([]);
+  });
+}

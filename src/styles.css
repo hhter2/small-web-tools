@@ -167,12 +167,12 @@
   --text-muted: #64748b;
   --text-sidebar: #0f172a;
   --text-sidebar-muted: #64748b;
-  --accent: #10b981;
-  --accent-hover: #059669;
-  --accent-light: rgba(16, 185, 129, 0.08);
-  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --accent-mint: #10b981;
-  --accent-mint-light: rgba(16, 185, 129, 0.1);
+  --accent: #047857;
+  --accent-hover: #065f46;
+  --accent-light: rgba(4, 120, 87, 0.08);
+  --accent-gradient: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  --accent-mint: #047857;
+  --accent-mint-light: rgba(4, 120, 87, 0.1);
   --border-color: #e2e8f0;
   --border-sidebar: #e2e8f0;
   --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px rgba(15, 23, 42, 0.04);

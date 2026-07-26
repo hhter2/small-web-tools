@@ -12,6 +12,24 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/lib/**', 'functions/_shared/**'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 70,
+        statements: 80,
+        'src/lib/**': {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+        'functions/_shared/**': {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+      },
     },
   },
   define: {

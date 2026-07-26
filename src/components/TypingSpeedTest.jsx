@@ -3,6 +3,12 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import {
+  detectCodeLanguage,
+  detectLanguage,
+  parseTemplate,
+  repeatToTarget,
+} from './TypingSpeedTest/lib/templateDomain';
 
 // Preset templates
 const PRESETS = {
@@ -213,106 +219,6 @@ fit_model <- function(x, y) {
   animation: blink 1s step-end infinite;
 }`
   ]
-};
-
-// Repeat template text until it matches or exceeds the target count
-const repeatToTarget = (text, target, isChinese, isCode) => {
-  if (target <= 0) return text;
-  
-  if (isChinese) {
-    if (text.length >= target) return text;
-    let repeated = text;
-    while (repeated.length < target) {
-      repeated += text;
-    }
-    return repeated;
-  } else {
-    const getWordCount = (t) => t.split(/[\s\n]+/).filter(Boolean).length;
-    const count = getWordCount(text);
-    if (count >= target || count === 0) return text;
-    
-    let repeated = text;
-    const separator = isCode ? '\n\n' : ' ';
-    while (getWordCount(repeated) < target) {
-      repeated += separator + text;
-    }
-    return repeated;
-  }
-};
-
-// Detect programming language from code template text
-const detectCodeLanguage = (text) => {
-  const code = text.trim();
-  if (/<[a-z]+[^>]*>/i.test(code) && /<\/?[a-z]+>/i.test(code)) return 'HTML';
-  if (/^([{}]|.*{.*}|[.#a-zA-Z0-9_-]+\s*\{)/s.test(code) && /color:|margin:|padding:|display:|flex/i.test(code)) return 'CSS';
-  if (/def\s+[a-zA-Z_]\w*\(|import\s+[a-zA-Z_]\w*|print\s*\(|if\s+__name__\s*==/i.test(code)) return 'Python';
-  if (/public\s+class\s+|System\.out\.print|public\s+static\s+void\s+main/i.test(code)) return 'Java';
-  if (/#include\s+<|std::cout|int\s+main\s*\(/i.test(code)) return 'C++';
-  if (/<-|library\s*\(\s*[a-zA-Z_]\w*\s*\)|ggplot\s*\(|install\.packages\s*\(/i.test(code)) return 'R';
-  if (/const\s+|let\s+|var\s+|console\.log|function\s+|=>/i.test(code)) return 'JavaScript';
-  return 'Code';
-};
-
-// Parse template into words with positions
-const parseTemplate = (text, isChinese) => {
-  const words = [];
-  if (isChinese) {
-    // Chinese characters: each CJK character is treated as a separate "word" for tooltip positioning
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      words.push({
-        id: i,
-        text: char,
-        start: i,
-        end: i + 1,
-        chars: [char],
-        hasSpaceAfter: false
-      });
-    }
-  } else {
-    // English/Code space-separated words
-    let wordStart = 0;
-    let currentWord = [];
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (/\s/.test(char)) {
-        if (currentWord.length > 0) {
-          words.push({
-            id: words.length,
-            text: currentWord.join(''),
-            start: wordStart,
-            end: i,
-            chars: [...currentWord],
-            hasSpaceAfter: char === ' '
-          });
-          currentWord = [];
-        }
-        wordStart = i + 1;
-      } else {
-        if (currentWord.length === 0) {
-          wordStart = i;
-        }
-        currentWord.push(char);
-      }
-    }
-    if (currentWord.length > 0) {
-      words.push({
-        id: words.length,
-        text: currentWord.join(''),
-        start: wordStart,
-        end: text.length,
-        chars: [...currentWord],
-        hasSpaceAfter: false
-      });
-    }
-  }
-  return words;
-};
-
-// Check if a text has CJK characters
-const detectLanguage = (text) => {
-  const cjkRegex = /[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/;
-  return cjkRegex.test(text) ? 'chinese' : 'english';
 };
 
 export default function TypingSpeedTest() {

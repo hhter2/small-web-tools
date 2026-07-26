@@ -210,6 +210,30 @@ are version-controlled. Local Wrangler state and credentials are not:
   `.dev.vars.example` remains tracked as the safe template.
 - `dist/`, `coverage/`, `.playwright-cli/`, `test-results/`, and
   `playwright-report/` are generated locally and ignored.
+- `code_reviews/` contains local review working records. The entire directory is
+  ignored and review artifacts are not version-controlled.
+
+### Repository hygiene
+
+Root files and directories remain version-controlled when they are required to
+build, test, operate, or maintain the project:
+
+- `src/`, `public/`, `functions/`, `workers/`, `config/`, `scripts/`, `test/`,
+  and `e2e/` contain application code, runtime assets, policies, automation, or
+  verification fixtures.
+- `package.json`, `package-lock.json`, `.nvmrc`, `index.html`, and the ESLint,
+  JavaScript, Knip, Playwright, PostCSS, Tailwind, Vite, Vitest, and Wrangler
+  configuration files define reproducible local development and verification.
+- `.github/` contains CI and dependency-maintenance configuration, while
+  `.agents/AGENTS.md` contains repository-scoped development instructions.
+- `README.md`, `CONTRIBUTING.md`, `CODEBASE.md`, `PRIVACY.md`, `TODO.md`, and
+  `LICENSE` are maintained project documentation or legal material.
+- `.dev.vars.example` is safe, non-secret local-runtime documentation. Actual
+  `.dev.vars*` files remain ignored.
+
+Editor state, dependency installations, generated output, test reports, local
+Cloudflare state, private environment files, incoming scratch data, and review
+artifacts belong only in the local workspace and are covered by `.gitignore`.
 
 Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
 

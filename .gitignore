@@ -76,5 +76,5 @@ _incoming/
 *.bak
 *.swp
 
-# Code Review
+# Local code-review artifacts
 code_reviews/

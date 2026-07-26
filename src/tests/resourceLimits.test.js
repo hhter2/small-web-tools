@@ -85,6 +85,60 @@ describe('validateBatchCount', () => {
 
 describe('cumulative resource policies', () => {
   const mib = 1024 * 1024;
+  const policyCases = [
+    ['image metadata', FILE_RESOURCE_POLICIES.imageMetadata],
+    ['audio metadata', FILE_RESOURCE_POLICIES.audioMetadata],
+    ['video metadata', FILE_RESOURCE_POLICIES.videoMetadata],
+    ['document metadata', FILE_RESOURCE_POLICIES.documentMetadata],
+    ['folder analysis', FILE_RESOURCE_POLICIES.folderAnalysis],
+    ['media separator', getMediaSeparatorPolicy(undefined)],
+  ];
+
+  it.each(policyCases)(
+    'enforces repeated total additions before reading for %s',
+    (_name, policy) => {
+      const existing = [{
+        name: 'existing.bin',
+        size: policy.maxTotalBytes - mib,
+      }];
+      const allowed = {
+        name: 'allowed.bin',
+        size: mib,
+        arrayBuffer: vi.fn(),
+        text: vi.fn(),
+      };
+      expect(validateResourceAddition(existing, [allowed], policy)).toMatchObject({
+        valid: true,
+        totalBytes: policy.maxTotalBytes,
+      });
+      expect(allowed.arrayBuffer).not.toHaveBeenCalled();
+      expect(allowed.text).not.toHaveBeenCalled();
+
+      const rejected = {
+        name: 'rejected.bin',
+        size: mib + 1,
+        arrayBuffer: vi.fn(),
+        text: vi.fn(),
+      };
+      expect(validateResourceAddition(existing, [rejected], policy)).toMatchObject({
+        valid: false,
+        reason: 'total-size',
+      });
+      expect(rejected.arrayBuffer).not.toHaveBeenCalled();
+      expect(rejected.text).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(policyCases)(
+    'enforces repeated count additions for %s',
+    (_name, policy) => {
+      const existing = new Array(policy.maxCount).fill({ size: 0 });
+      expect(validateResourceAddition(existing, [{ size: 0 }], policy)).toMatchObject({
+        valid: false,
+        reason: 'count',
+      });
+    },
+  );
 
   it('rejects repeated additions that cross the total without reading files', () => {
     const existing = [{ name: 'first.jpg', size: 250 * mib }];

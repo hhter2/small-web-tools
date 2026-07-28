@@ -85,12 +85,12 @@ export default function WordCounter() {
           <span id="wc-chars" className="text-[1.5rem] font-extrabold text-accent">{charCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">No Spaces</span>
-          <span id="wc-chars-nospace" className="text-[1.5rem] font-extrabold text-accent">{charNoSpacesCount}</span>
-        </div>
-        <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
           <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Lines</span>
           <span id="wc-lines" className="text-[1.5rem] font-extrabold text-accent">{lineCount}</span>
+        </div>
+        <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">No Spaces</span>
+          <span id="wc-chars-nospace" className="text-[1.5rem] font-extrabold text-accent">{charNoSpacesCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
           <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Sentences</span>

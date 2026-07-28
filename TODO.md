@@ -27,7 +27,7 @@ Use this sequence for each meaningful update:
 
 - [ ] `feat 2` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
 - [ ] `feat 3` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
-- [ ] `feat 4` Word & Character Counter中，在首行加入行數
+- [x] `feat 4` Word & Character Counter中，在首行加入行數
 - [ ] `fix 1` Typing speed test 現在不知道要從哪裡開始
 - [ ] `fix 2` Slashes Converter的encode/decode作用是什麼？好像可以移除? ASCII Converter也是一樣。留auto 就好。另外，格線要對齊
 - [ ] `fix 3` Folder Structure Analyzer部分，我上傳了一個資料夾後，一樣還是可以輸入新的path

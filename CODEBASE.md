@@ -171,7 +171,7 @@ input/filter/presentation rules live in their corresponding
 `src/components/<Tool>/lib/` directories. Focused coverage is in
 `documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
 `typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
-`codonDomain.test.js`.
+`codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`.
 
 ## APIs and development middleware
 

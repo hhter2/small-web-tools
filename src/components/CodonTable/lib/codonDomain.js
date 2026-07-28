@@ -5,12 +5,6 @@ export function normalizeCodonInput(value) {
     .slice(0, 3);
 }
 
-export function matchesCodonFilter(codonData, filterMode) {
-  if (filterMode === 'start') return codonData?.type === 'start';
-  if (filterMode === 'stop') return codonData?.type === 'stop';
-  return true;
-}
-
 export function resolveCodonGroup(selectedGroup, customGroups, builtinGroups) {
   if (selectedGroup === 'all') return null;
   if (selectedGroup.startsWith('custom-')) {
@@ -39,14 +33,12 @@ export function isCodonHighlighted({
 export function isCodonDimmed({
   codon,
   data,
-  filterMode,
   selectedCodon,
   typedCodon,
   highlightedAA,
   activeGroup,
 }) {
   if (!data) return false;
-  if (!matchesCodonFilter(data, filterMode)) return true;
   if (selectedCodon === null && typedCodon.length > 0) {
     return !codon.startsWith(typedCodon);
   }

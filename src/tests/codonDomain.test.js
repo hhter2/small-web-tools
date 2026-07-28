@@ -2,16 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   isCodonDimmed,
   isCodonHighlighted,
-  matchesCodonFilter,
   normalizeCodonInput,
   resolveCodonGroup,
 } from '../components/CodonTable/lib/codonDomain.js';
 
 describe('codon domain', () => {
-  it('normalizes and filters codons', () => {
+  it('normalizes codons', () => {
     expect(normalizeCodonInput('atg!')).toBe('AUG');
-    expect(matchesCodonFilter({ type: 'start' }, 'start')).toBe(true);
-    expect(matchesCodonFilter({ type: 'stop' }, 'start')).toBe(false);
   });
 
   it('resolves built-in and custom presentation groups', () => {
@@ -33,18 +30,16 @@ describe('codon domain', () => {
       activeGroup: null,
     };
     expect(isCodonHighlighted(base)).toBe(true);
-    expect(isCodonDimmed({ ...base, filterMode: 'all' })).toBe(false);
+    expect(isCodonDimmed(base)).toBe(false);
     expect(isCodonDimmed({
       ...base,
       codon: 'UUU',
-      filterMode: 'all',
     })).toBe(true);
     expect(isCodonDimmed({
       ...base,
       selectedCodon: 'AUG',
       typedCodon: 'AUG',
       highlightedAA: 'Phe',
-      filterMode: 'all',
     })).toBe(true);
   });
 });

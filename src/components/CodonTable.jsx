@@ -5,7 +5,6 @@ import ToolHeader from './ui/ToolHeader';
 import {
   isCodonDimmed as deriveCodonDimmed,
   isCodonHighlighted as deriveCodonHighlighted,
-  matchesCodonFilter,
   normalizeCodonInput,
   resolveCodonGroup,
 } from './CodonTable/lib/codonDomain';
@@ -1114,7 +1113,6 @@ function InfoPanel({
 export default function CodonTable() {
   const [selectedCodon,    setSelectedCodon]    = useState(null);
   const [highlightedAA,    setHighlightedAA]    = useState(null);
-  const [filterMode,       setFilterMode]       = useState('all'); // 'all' | 'start' | 'stop'
   const [typedCodon,       setTypedCodon]       = useState('');
   const [selectedGroup,    setSelectedGroup]    = useState('all'); // 'all' | 'hydrophobic' | 'polar' | 'basic' | 'acidic' ...
   const [customGroups,     setCustomGroups]     = useState(() => {
@@ -1246,10 +1244,6 @@ export default function CodonTable() {
     }
   };
 
-  const isCodonVisible = useCallback((codon) => {
-    return matchesCodonFilter(CODON_MAP[codon], filterMode);
-  }, [filterMode]);
-
   const isCodonHighlighted = useCallback((codon) => {
     const data = CODON_MAP[codon];
     return deriveCodonHighlighted({
@@ -1267,13 +1261,12 @@ export default function CodonTable() {
     return deriveCodonDimmed({
       codon,
       data,
-      filterMode,
       selectedCodon,
       typedCodon,
       highlightedAA,
       activeGroup: resolveCodonGroup(selectedGroup, customGroups, AA_GROUPS),
     });
-  }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
+  }, [selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
     <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full font-sans">
@@ -1286,31 +1279,6 @@ export default function CodonTable() {
             <strong className="text-text-main">Standard Genetic Code (NCBI Translation Table 1)</strong>: Maps 64 RNA codons to 20 amino acids and 3 stop codons (UAA Ochre, UAG Amber, UGA Opal).
             <span className="ml-1 opacity-90">AUG encodes Methionine (Met) and functions as canonical start codon in initiation context. <em>Note: Mitochondrial genomes and certain organisms use non-standard genetic codes.</em></span>
           </p>
-        </div>
-
-        {/* Filter Buttons */}
-        <div className="flex w-full flex-wrap items-center justify-end gap-3">
-          <div className="flex gap-2 flex-wrap" role="group" aria-label="Filter codons">
-            {[
-              { key: 'all',   label: 'All Codons', activeClass: 'bg-accent border-accent text-white shadow-[0_2px_8px_rgba(99,102,241,0.35)]' },
-              { key: 'start', label: '★ Start', activeClass: 'bg-emerald-600 border-emerald-600 text-white shadow-[0_2px_8px_rgba(22,163,74,0.35)]' },
-              { key: 'stop',  label: '■ Stop', activeClass: 'bg-red-600 border-red-600 text-white shadow-[0_2px_8px_rgba(220,38,38,0.35)]' },
-            ].map(({ key, label, activeClass }) => (
-              <button
-                key={key}
-                id={`ct-filter-${key}`}
-                className={`px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold border cursor-pointer transition-all duration-200 tracking-wide hover:border-accent hover:text-accent hover:-translate-y-px ${
-                  filterMode === key 
-                    ? activeClass 
-                    : 'border-border bg-card text-text-muted'
-                }`}
-                onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
-                aria-pressed={filterMode === key}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
         </div>
 
       </div>
@@ -1388,11 +1356,10 @@ export default function CodonTable() {
                           return (
                             <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-14 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
                               {cellCodons.map((codon) => {
-                                const isHidden = !isCodonVisible(codon);
                                 return (
                                   <div
                                     key={codon}
-                                    className={`flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px] ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
+                                    className="flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px]"
                                     role="row"
                                   >
                                     <CodonButton

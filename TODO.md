@@ -27,6 +27,8 @@ Use this sequence for each meaningful update:
 - [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
 - [ ] `feat` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
 - [ ] `feat` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
+- [x] `feat 6` DNA/RNA Direction Transfer中，新增複製時可以去掉5'3'標記的選項
+- [x] `chore 1` RNA codon table 中，移除All/Start/Stop按鈕
 
 ### Maintenance
 

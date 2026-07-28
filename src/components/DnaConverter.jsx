@@ -136,6 +136,10 @@ const formatAminoAcids = (seq, direction) => {
   }
 };
 
+export const stripDirectionLabels = (text) => text
+  .replace(/^\s*[53]['’]\s*-\s*/, '')
+  .replace(/\s*-\s*[53]['’]\s*$/, '');
+
 const getStrandGroups = (strandBases, direction, isRna) => {
   const len = strandBases.length;
   const groups = [];
@@ -176,6 +180,7 @@ export default function DnaConverter() {
   const [codonMode, setCodonMode] = useState('none'); // 'none', 'codon', 'amino'
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [viewMode, setViewMode] = useState('text'); // 'text' or 'figure'
+  const [copyWithoutDirectionLabels, setCopyWithoutDirectionLabels] = useState(false);
 
   // States to keep track of warning colors & messages
   const [statusText, setStatusText] = useState('Enter a sequence to convert.');
@@ -189,7 +194,8 @@ export default function DnaConverter() {
 
   const handleCopy = (text, key) => {
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
+    const clipboardText = copyWithoutDirectionLabels ? stripDirectionLabels(text) : text;
+    navigator.clipboard.writeText(clipboardText).then(() => {
       setCopiedBtn(key);
       setTimeout(() => {
         setCopiedBtn(null);
@@ -675,21 +681,35 @@ export default function DnaConverter() {
         />
       </div>
 
-      <div className="align-self-start flex w-fit gap-2 rounded-md border border-border bg-app p-1">
-        <button
-          type="button"
-          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
-          onClick={() => setViewMode('text')}
-        >
-          Text Mode
-        </button>
-        <button
-          type="button"
-          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
-          onClick={() => setViewMode('figure')}
-        >
-          Figure Mode
-        </button>
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <div className="align-self-start flex w-fit gap-2 rounded-md border border-border bg-app p-1">
+          <button
+            type="button"
+            className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
+            onClick={() => setViewMode('text')}
+          >
+            Text Mode
+          </button>
+          <button
+            type="button"
+            className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
+            onClick={() => setViewMode('figure')}
+          >
+            Figure Mode
+          </button>
+        </div>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-app px-3 py-2 text-sm font-semibold text-text-main">
+          <input
+            type="checkbox"
+            checked={copyWithoutDirectionLabels}
+            onChange={(event) => {
+              setCopyWithoutDirectionLabels(event.target.checked);
+              setCopiedBtn(null);
+            }}
+            className="h-4 w-4 accent-accent"
+          />
+          Copy without 5'/3' labels
+        </label>
       </div>
 
       {viewMode === 'text' ? (

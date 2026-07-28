@@ -134,7 +134,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-codon` | Codon Table | `CodonTable.jsx` | Bioinfo |
 | `tool-barcode` | Barcode Generator | `QrBarcodeGenerator.jsx` (`barcode` tab) | Utilities |
 | `tool-currency` | Currency Converter | `CurrencyCounter.jsx` | Utilities |
-| `tool-date` | Date Counter | `DateCounter.jsx` | Utilities |
+| `tool-date` | Date & Time Counter | `DateCounter.jsx` | Utilities |
 | `tool-password` | Password Generator | `PasswordGenerator.jsx` (`generate` tab) | Utilities |
 | `tool-pwstrength` | Password Strength | `PasswordGenerator.jsx` (`check` tab) | Utilities |
 | `tool-qrcode` | QR Code Generator | `QrBarcodeGenerator.jsx` (`qr` tab) | Utilities |
@@ -171,7 +171,8 @@ input/filter/presentation rules live in their corresponding
 `src/components/<Tool>/lib/` directories. Focused coverage is in
 `documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
 `typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
-`codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`.
+`codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
+and time-difference coverage is in `timeDomain.test.js`.
 
 ## APIs and development middleware
 

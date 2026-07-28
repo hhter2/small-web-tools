@@ -6,6 +6,7 @@ This file is the working backlog and update checklist for Small Web Tools. Keep 
 
 - `feat` — new or expanded user capability.
 - `fix` — corrected behavior or regression.
+- `chore` - the other modification
 - `docs` — documentation-only work.
 - `hotfix` — urgent production correction.
 
@@ -24,11 +25,23 @@ Use this sequence for each meaningful update:
 
 ### Enhancements
 
-- [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
-- [ ] `feat` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
-- [ ] `feat` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
+- [ ] `feat 2` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
+- [ ] `feat 3` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
+- [ ] `feat 4` Word & Character Counter中，在首行加入行數
+- [ ] `fix 1` Typing speed test 現在不知道要從哪裡開始
+- [ ] `fix 2` Slashes Converter的encode/decode作用是什麼？好像可以移除? ASCII Converter也是一樣。留auto 就好。另外，格線要對齊
+- [ ] `fix 3` Folder Structure Analyzer部分，我上傳了一個資料夾後，一樣還是可以輸入新的path
+- [ ] `fix 4` Color Code Converter & HSL Selector中的COLOR SYNC: ON/OFF按鈕要明顯一點
+- [ ] `fix 5` 在Image Metadata Viewer & Stripper中，為甚麼Metadata stripping is only supported for JPEG/JPG format.？其他也要
 - [x] `feat 6` DNA/RNA Direction Transfer中，新增複製時可以去掉5'3'標記的選項
 - [x] `chore 1` RNA codon table 中，移除All/Start/Stop按鈕
+- [ ] `feat 7` Date Counter 加入Time Counter 功能
+- [ ] `feat 8` Barcode Gen 的功能要可以把文字隱藏
+- [ ] `feat 9` 新增羅馬數字轉換器及對照表
+- [ ] `feat 10` SNP calling Mapping Quality Phred Scale transfer
+- [ ] `feat 11` Add SVG to PNG function
+- [ ] `feat 12` URL encoder/decoder (main for Chinese address transformation)
+
 
 ### Maintenance
 
@@ -36,6 +49,12 @@ Use this sequence for each meaningful update:
 - [ ] `docs` Keep `CODEBASE.md` synchronized whenever a route, shared component, API endpoint, or dependency is added, removed, or substantially changed.
 
 ## Completed
+
+### 2026-07-28
+- [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
+
+### 2026-07-26
+Finish the 20260723 code review
 
 ### 2026-07-23
 

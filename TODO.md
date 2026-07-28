@@ -40,7 +40,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 9` 新增羅馬數字轉換器及對照表
 - [x] `feat 10` SNP calling Mapping Quality Phred Scale transfer
 - [x] `feat 11` Add SVG to PNG function
-- [ ] `feat 12` URL encoder/decoder (main for Chinese address transformation)
+- [x] `feat 12` URL encoder/decoder (main for Chinese address transformation)
 
 
 ### Maintenance

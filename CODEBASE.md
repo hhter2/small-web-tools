@@ -119,6 +119,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-slash` | Slashes Converter | `SlashesConverter.jsx` | Developer |
 | `tool-ascii` | ASCII Converter | `AsciiConverter.jsx` | Developer |
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
+| `tool-url` | URL Encoder & Decoder | `UrlEncoderDecoder.jsx` | Developer |
 | `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
 | `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |
 | `tool-folder-analyzer` | Folder Analyzer | `FolderAnalyzer.jsx` | Developer |
@@ -177,7 +178,8 @@ input/filter/presentation rules live in their corresponding
 `codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
 time-difference coverage is in `timeDomain.test.js`, Roman numeral coverage is
 in `romanDomain.test.js`, Phred conversion coverage is in `phredDomain.test.js`,
-and sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`.
+sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`, and URL
+percent-encoding coverage is in `urlDomain.test.js`.
 
 ## APIs and development middleware
 

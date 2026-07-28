@@ -135,6 +135,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-barcode` | Barcode Generator | `QrBarcodeGenerator.jsx` (`barcode` tab) | Utilities |
 | `tool-currency` | Currency Converter | `CurrencyCounter.jsx` | Utilities |
 | `tool-date` | Date & Time Counter | `DateCounter.jsx` | Utilities |
+| `tool-roman` | Roman Numeral Converter | `RomanNumeralConverter.jsx` | Utilities |
 | `tool-password` | Password Generator | `PasswordGenerator.jsx` (`generate` tab) | Utilities |
 | `tool-pwstrength` | Password Strength | `PasswordGenerator.jsx` (`check` tab) | Utilities |
 | `tool-qrcode` | QR Code Generator | `QrBarcodeGenerator.jsx` (`qr` tab) | Utilities |
@@ -172,7 +173,8 @@ input/filter/presentation rules live in their corresponding
 `documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
 `typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
 `codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
-and time-difference coverage is in `timeDomain.test.js`.
+time-difference coverage is in `timeDomain.test.js`, and Roman numeral coverage
+is in `romanDomain.test.js`.
 
 ## APIs and development middleware
 

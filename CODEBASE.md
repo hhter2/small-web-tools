@@ -130,6 +130,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-audiometa` | Audio Metadata | `AudioMeta.jsx` | Media |
 | `tool-videometa` | Video Metadata | `VideoMeta.jsx` | Media |
 | `tool-mediasplit` | Media Splitter | `MediaSeparator.jsx` | Media |
+| `tool-svg-png` | SVG to PNG | `SvgToPngConverter.jsx` | Media |
 | `tool-dna` | DNA/RNA Converter | `DnaConverter.jsx` | Bioinfo |
 | `tool-codon` | Codon Table | `CodonTable.jsx` | Bioinfo |
 | `tool-phred` | Phred Scale Converter | `PhredScaleConverter.jsx` | Bioinfo |
@@ -174,8 +175,9 @@ input/filter/presentation rules live in their corresponding
 `documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
 `typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
 `codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
-time-difference coverage is in `timeDomain.test.js`, and Roman numeral coverage
-is in `romanDomain.test.js`. Phred conversion coverage is in `phredDomain.test.js`.
+time-difference coverage is in `timeDomain.test.js`, Roman numeral coverage is
+in `romanDomain.test.js`, Phred conversion coverage is in `phredDomain.test.js`,
+and sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`.
 
 ## APIs and development middleware
 

@@ -10,9 +10,18 @@ const editorClasses =
 
 function CopyIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="9" y="9" width="13" height="13" rx="2" />
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function PasteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="18" rx="2" />
+      <path d="M9 4V2h6v2M9 12h6M12 9v6" />
     </svg>
   );
 }
@@ -30,12 +39,26 @@ export default function AutoDetectConverter({
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('auto'); // 'auto' | 'encode' | 'decode'
   const [copyState, setCopyState] = useState('idle');
+  const [pasteState, setPasteState] = useState('idle');
   const result = useMemo(() => analyze(input, mode), [analyze, input, mode]);
   const output = result.output || '';
 
   const updateInput = (value) => {
     setInput(value);
     setCopyState('idle');
+    setPasteState('idle');
+  };
+
+  const handlePaste = async () => {
+    setPasteState('reading');
+    try {
+      const text = await navigator.clipboard.readText();
+      setInput(text);
+      setCopyState('idle');
+      setPasteState('pasted');
+    } catch {
+      setPasteState('error');
+    }
   };
 
   const handleCopy = async () => {
@@ -92,17 +115,30 @@ export default function AutoDetectConverter({
                   </span>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={!input}
-                onClick={() => {
-                  setInput('');
-                  setCopyState('idle');
-                }}
-                className="rounded-md px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-text-main disabled:cursor-default disabled:opacity-30"
-              >
-                Clear
-              </button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pasteState === 'reading'}
+                  onClick={handlePaste}
+                  aria-label={pasteState === 'error' ? 'Retry pasting from clipboard' : 'Paste from clipboard'}
+                  className="min-w-[74px]"
+                >
+                  <PasteIcon />
+                  {pasteState === 'reading' ? 'Pasting' : pasteState === 'pasted' ? 'Pasted' : pasteState === 'error' ? 'Retry' : 'Paste'}
+                </Button>
+                <button
+                  type="button"
+                  disabled={!input}
+                  onClick={() => {
+                    updateInput('');
+                  }}
+                  className="rounded-md px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-text-main disabled:cursor-default disabled:opacity-30"
+                >
+                  Clear
+                </button>
+              </div>
             </header>
 
             <textarea
@@ -143,6 +179,7 @@ export default function AutoDetectConverter({
                 variant="secondary"
                 disabled={!output || Boolean(result.error)}
                 onClick={handleCopy}
+                aria-label={copyState === 'error' ? 'Retry copying converted result' : 'Copy converted result'}
                 className="min-w-[74px]"
               >
                 <CopyIcon />

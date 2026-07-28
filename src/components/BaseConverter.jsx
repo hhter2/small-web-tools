@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Card from './ui/Card';
+import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -90,10 +91,21 @@ function CopyIcon() {
   );
 }
 
+function PasteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="18" rx="2" />
+      <path d="M9 4V2h6v2M9 12h6M12 9v6" />
+    </svg>
+  );
+}
+
 export default function BaseConverter() {
   const [input, setInput] = useState('');
   const [baseFrom, setBaseFrom] = useState(10);
   const [copiedBase, setCopiedBase] = useState(null);
+  const [copyState, setCopyState] = useState('idle');
+  const [pasteState, setPasteState] = useState('idle');
   const [selectedReferenceValue, setSelectedReferenceValue] = useState(null);
 
   const trimmed = input.trim();
@@ -121,6 +133,8 @@ export default function BaseConverter() {
     setBaseFrom(base);
     setSelectedReferenceValue(null);
     setCopiedBase(null);
+    setCopyState('idle');
+    setPasteState('idle');
   };
 
   const copyValue = async (result) => {
@@ -128,8 +142,24 @@ export default function BaseConverter() {
     try {
       await navigator.clipboard.writeText(result.value);
       setCopiedBase(result.base);
+      setCopyState('copied');
     } catch {
+      setCopiedBase(result.base);
+      setCopyState('error');
+    }
+  };
+
+  const pasteInput = async () => {
+    setPasteState('reading');
+    try {
+      const text = await navigator.clipboard.readText();
+      setInput(text);
+      setSelectedReferenceValue(null);
       setCopiedBase(null);
+      setCopyState('idle');
+      setPasteState('pasted');
+    } catch {
+      setPasteState('error');
     }
   };
 
@@ -138,6 +168,8 @@ export default function BaseConverter() {
     setBaseFrom(base);
     setSelectedReferenceValue(value);
     setCopiedBase(null);
+    setCopyState('idle');
+    setPasteState('idle');
   };
 
   return (
@@ -191,6 +223,8 @@ export default function BaseConverter() {
                 setInput(event.target.value);
                 setSelectedReferenceValue(null);
                 setCopiedBase(null);
+                setCopyState('idle');
+                setPasteState('idle');
               }}
               placeholder={selectedBase.example}
               className={`min-w-0 flex-1 rounded-lg border bg-card px-4 py-2.5 font-mono text-lg font-semibold text-text-main outline-none transition-all placeholder:text-text-muted/45 focus:ring-2 ${hasError
@@ -199,6 +233,18 @@ export default function BaseConverter() {
               aria-invalid={hasError || undefined}
               aria-describedby="base-status"
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pasteState === 'reading'}
+              onClick={pasteInput}
+              aria-label={pasteState === 'error' ? 'Retry pasting from clipboard' : 'Paste from clipboard'}
+              className="min-w-[74px]"
+            >
+              <PasteIcon />
+              {pasteState === 'reading' ? 'Pasting' : pasteState === 'pasted' ? 'Pasted' : pasteState === 'error' ? 'Retry' : 'Paste'}
+            </Button>
             <button
               type="button"
               disabled={!input}
@@ -206,6 +252,8 @@ export default function BaseConverter() {
                 setInput('');
                 setSelectedReferenceValue(null);
                 setCopiedBase(null);
+                setCopyState('idle');
+                setPasteState('idle');
               }}
               className="rounded-lg border border-border bg-card px-4 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
             >
@@ -248,16 +296,22 @@ export default function BaseConverter() {
                 {result.value || '—'}
               </code>
               <div className="flex items-center justify-end border-t border-border/70 pt-1">
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="secondary"
                   disabled={!result.value}
                   onClick={() => copyValue(result)}
-                  aria-label={`Copy ${result.label} value`}
-                  className="inline-flex min-w-[64px] items-center justify-center gap-1 rounded-md border border-border bg-app px-2 py-0.5 text-[0.7rem] font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
+                  aria-label={copiedBase === result.base && copyState === 'error'
+                    ? `Retry copying ${result.label} value`
+                    : `Copy ${result.label} value`}
+                  className="min-w-[64px] !px-2 !py-0.5 !text-[0.7rem]"
                 >
                   <CopyIcon />
-                  {copiedBase === result.base ? 'Copied' : 'Copy'}
-                </button>
+                  {copiedBase === result.base
+                    ? copyState === 'error' ? 'Retry' : 'Copied'
+                    : 'Copy'}
+                </Button>
               </div>
             </div>
           ))}

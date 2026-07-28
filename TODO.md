@@ -24,7 +24,7 @@ Use this sequence for each meaningful update:
 
 ### Enhancements
 
-- [ ] `feat` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
+- [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
 - [ ] `feat` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
 - [ ] `feat` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
 

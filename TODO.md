@@ -36,7 +36,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 6` DNA/RNA Direction Transfer中，新增複製時可以去掉5'3'標記的選項
 - [x] `chore 1` RNA codon table 中，移除All/Start/Stop按鈕
 - [x] `feat 7` Date Counter 加入Time Counter 功能
-- [ ] `feat 8` Barcode Gen 的功能要可以把文字隱藏
+- [x] `feat 8` Barcode Gen 的功能要可以把文字隱藏
 - [ ] `feat 9` 新增羅馬數字轉換器及對照表
 - [ ] `feat 10` SNP calling Mapping Quality Phred Scale transfer
 - [ ] `feat 11` Add SVG to PNG function

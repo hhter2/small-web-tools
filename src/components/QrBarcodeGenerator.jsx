@@ -5,6 +5,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import ToggleSwitch from './ui/ToggleSwitch';
 import {
   escapeWifiString,
   estimateTextWidth,
@@ -1905,6 +1906,13 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <option value="CODABAR">Codabar</option>
                   </select>
                 </div>
+
+                <ToggleSwitch
+                  id="barcode-display-value"
+                  checked={barcodeDisplayValue}
+                  onChange={(event) => setBarcodeDisplayValue(event.target.checked)}
+                  label="Show human-readable text beneath barcode"
+                />
               </div>
 
               <AccordionHeader sectionKey="barcode-style" label="Barcode Styling" />
@@ -1970,34 +1978,21 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-center mt-6">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                        <input 
-                          type="checkbox"
-                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                          checked={barcodeDisplayValue}
-                          onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
-                        />
-                        Show Text Label
-                      </label>
+                  {barcodeDisplayValue && (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                      <input
+                        id="bc-font-size"
+                        type="range"
+                        min="10"
+                        max="24"
+                        step="1"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeFontSize}
+                        onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
+                      />
                     </div>
-                    {barcodeDisplayValue && (
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
-                        <input 
-                          id="bc-font-size"
-                          type="range" 
-                          min="10" 
-                          max="24" 
-                          step="1"
-                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                          value={barcodeFontSize} 
-                          onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
-                        />
-                      </div>
-                    )}
-                  </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">

@@ -38,7 +38,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 7` Date Counter 加入Time Counter 功能
 - [x] `feat 8` Barcode Gen 的功能要可以把文字隱藏
 - [x] `feat 9` 新增羅馬數字轉換器及對照表
-- [ ] `feat 10` SNP calling Mapping Quality Phred Scale transfer
+- [x] `feat 10` SNP calling Mapping Quality Phred Scale transfer
 - [ ] `feat 11` Add SVG to PNG function
 - [ ] `feat 12` URL encoder/decoder (main for Chinese address transformation)
 

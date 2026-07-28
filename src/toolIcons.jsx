@@ -69,6 +69,13 @@ export const TOOL_ICONS = {
         <line x1="9" y1="3" x2="9" y2="21"></line>
         <line x1="15" y1="3" x2="15" y2="21"></line>
       </svg>,
+  "tool-phred": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19V5M4 19h16M7 8l4 4 3-3 4 4"></path>
+        <circle cx="7" cy="8" r="1"></circle>
+        <circle cx="11" cy="12" r="1"></circle>
+        <circle cx="14" cy="9" r="1"></circle>
+        <circle cx="18" cy="13" r="1"></circle>
+      </svg>,
   "tool-iplookup": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
         <circle cx="12" cy="10" r="3"></circle>

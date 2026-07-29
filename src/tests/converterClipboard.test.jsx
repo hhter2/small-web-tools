@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import AsciiConverter from '../components/AsciiConverter';
 import BaseConverter from '../components/BaseConverter';
 import SlashesConverter from '../components/SlashesConverter';
 
@@ -51,6 +52,20 @@ describe('converter clipboard controls', () => {
 
     expect(clipboard.writeText).toHaveBeenCalledWith('C:/Users/name/report.txt');
     expect(copyButton).toHaveTextContent('Copied');
+  });
+
+  it.each([
+    ['Slashes Converter', SlashesConverter],
+    ['ASCII Converter', AsciiConverter],
+  ])('keeps only automatic mode controls for %s', async (_title, Component) => {
+    await act(async () => {
+      root.render(<Component />);
+    });
+
+    const modeGroup = container.querySelector('[aria-label="Conversion Mode"]');
+    expect(modeGroup).toHaveTextContent('Auto');
+    expect(modeGroup).not.toHaveTextContent('Encode');
+    expect(modeGroup).not.toHaveTextContent('Decode');
   });
 
   it('pastes into the Base Converter and exposes clipboard failures as retry actions', async () => {

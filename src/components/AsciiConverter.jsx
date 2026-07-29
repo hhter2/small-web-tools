@@ -172,6 +172,7 @@ export default function AsciiConverter() {
       editorMinHeightClass="min-h-[76px] md:min-h-[84px]"
       editorRows={3}
       renderSupplementary={(props) => <AsciiReferenceTable {...props} />}
+      showManualModes={false}
     />
   );
 }

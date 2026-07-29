@@ -35,6 +35,7 @@ export default function AutoDetectConverter({
   editorMinHeightClass = 'min-h-[210px]',
   editorRows = 7,
   renderSupplementary = null,
+  showManualModes = true,
 }) {
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('auto'); // 'auto' | 'encode' | 'decode'
@@ -78,7 +79,7 @@ export default function AutoDetectConverter({
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <section className="flex min-w-0 flex-col border-b border-border md:border-b-0 md:border-r" aria-label="Source">
-            <header className="flex min-h-[54px] flex-wrap items-center justify-between gap-2 border-b border-border bg-app/70 px-4 py-2.5">
+            <header className="flex min-h-[54px] flex-wrap items-center justify-between gap-2 border-b border-border bg-app/70 px-4 py-2.5 md:h-[54px] md:flex-nowrap">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <div className="flex rounded-md border border-border bg-card p-0.5" role="group" aria-label="Conversion Mode">
                   <button
@@ -90,24 +91,28 @@ export default function AutoDetectConverter({
                   >
                     Auto
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('encode')}
-                    className={`rounded px-2 py-0.5 text-xs font-bold transition-colors ${
-                      mode === 'encode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
-                    }`}
-                  >
-                    Encode
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('decode')}
-                    className={`rounded px-2 py-0.5 text-xs font-bold transition-colors ${
-                      mode === 'decode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
-                    }`}
-                  >
-                    Decode
-                  </button>
+                  {showManualModes && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setMode('encode')}
+                        className={`rounded px-2 py-0.5 text-xs font-bold transition-colors ${
+                          mode === 'encode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
+                        }`}
+                      >
+                        Encode
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMode('decode')}
+                        className={`rounded px-2 py-0.5 text-xs font-bold transition-colors ${
+                          mode === 'decode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
+                        }`}
+                      >
+                        Decode
+                      </button>
+                    </>
+                  )}
                 </div>
                 {input.trim() && (
                   <span className="truncate rounded-full border border-border bg-card px-2 py-0.5 text-[0.68rem] font-bold text-text-muted">
@@ -167,7 +172,7 @@ export default function AutoDetectConverter({
           </section>
 
           <section className="flex min-w-0 flex-col bg-accent-light/20" aria-label="Result">
-            <header className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/45 px-4 py-2.5">
+            <header className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/45 px-4 py-2.5 md:h-[54px]">
               <div className="min-w-0">
                 <span className="block truncate text-sm font-bold text-text-main">
                   {result.targetLabel || emptyTargetLabel}

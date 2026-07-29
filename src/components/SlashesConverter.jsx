@@ -63,6 +63,7 @@ export default function SlashesConverter() {
       inputPlaceholder={'C:\\Users\\name\\Documents\\report.pdf\nor\n/Users/name/Documents/report.pdf'}
       emptyTargetLabel="Converted path"
       analyze={analyzePath}
+      showManualModes={false}
     />
   );
 }

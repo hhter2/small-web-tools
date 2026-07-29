@@ -26,6 +26,13 @@ describe('code preview domain', () => {
     expect(result).not.toContain('<script>');
   });
 
+  it('highlights C++ preprocessor directives and keywords', () => {
+    const result = highlightCode('#include <iostream>\nint main() { return 0; }', 'cpp');
+    expect(result).toContain('hljs-meta');
+    expect(result).toContain('hljs-keyword');
+    expect(result).toContain('&lt;iostream&gt;');
+  });
+
   it('normalizes downloads and infers languages from files', () => {
     expect(normalizeCodeFilename('../demo', 'python')).toBe('demo.py');
     expect(normalizeCodeFilename('query.sql', 'sql')).toBe('query.sql');

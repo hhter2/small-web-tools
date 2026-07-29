@@ -182,8 +182,9 @@ Focused parser and interaction coverage lives in
 
 `CodePreviewer.jsx` provides one browser-local, VS Code-style editing surface whose
 highlighted display and text input occupy the same window. It supports selectable
-languages; System, Light, and Dark presets; accent, background, foreground, and code
-font controls; line numbers; source-file download; and lazy PNG export without
+languages; an on-demand appearance dialog with System, Light, and Dark presets;
+accent, background, foreground, and code font controls; line numbers; source-file
+download; and lazy PNG export without
 executing or uploading code. The language registry, filename inference, contrast
 selection, and highlighting helpers live under `CodePreviewer/lib/`; focused domain
 and interaction coverage lives in `codePreviewDomain.test.js` and

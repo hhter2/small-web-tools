@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 import ToolHeader from './ui/ToolHeader.jsx';
@@ -82,6 +82,7 @@ export default function CodePreviewer() {
   const [filename, setFilename] = useState(getDefaultFilename('javascript'));
   const [status, setStatus] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState({ top: 0, left: 0 });
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -100,6 +101,15 @@ export default function CodePreviewer() {
   const translatedContentStyle = {
     transform: `translate(${-scrollPosition.left}px, ${-scrollPosition.top}px)`,
   };
+
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setSettingsOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [settingsOpen]);
 
   const applyTheme = (themeId) => {
     const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
@@ -219,78 +229,16 @@ export default function CodePreviewer() {
           <Button type="button" variant="secondary" size="sm" onClick={handlePngDownload} disabled={!code || exporting}>
             {exporting ? 'Exporting…' : 'Download PNG'}
           </Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setSettingsOpen(true)}>
+            Appearance
+          </Button>
           <Button type="button" variant="secondary" size="sm" onClick={handleClear} disabled={!code}>Clear</Button>
         </div>
       </div>
 
-      <section className="rounded-xl border border-border bg-app/45 p-3" aria-labelledby="code-appearance-title">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 id="code-appearance-title" className="text-sm font-bold text-text-main">Appearance</h3>
-          <span className="text-xs text-text-muted">Choose a preset, then adjust any color</span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Editor theme">
-          {['system', 'light', 'dark'].map((themeId) => {
-            const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
-            return (
-              <button
-                key={themeId}
-                type="button"
-                onClick={() => applyTheme(themeId)}
-                aria-pressed={selectedTheme === themeId}
-                className={[
-                  'overflow-hidden rounded-lg border bg-card text-left transition focus:outline-none focus:ring-2 focus:ring-focus',
-                  selectedTheme === themeId ? 'border-accent ring-1 ring-accent' : 'border-border hover:border-border-hover',
-                ].join(' ')}
-              >
-                <span className="flex h-14">
-                  <span className="w-1/4" style={{ backgroundColor: palette.backgroundColor, opacity: 0.78 }} />
-                  <span className="flex flex-1 flex-col gap-1 p-2" style={{ backgroundColor: palette.backgroundColor }}>
-                    <span className="h-1.5 w-1/2 rounded-full" style={{ backgroundColor: palette.foregroundColor, opacity: 0.28 }} />
-                    <span className="h-1.5 w-3/4 rounded-full" style={{ backgroundColor: palette.accentColor, opacity: 0.7 }} />
-                    <span className="h-1.5 w-2/3 rounded-full" style={{ backgroundColor: palette.foregroundColor, opacity: 0.16 }} />
-                  </span>
-                </span>
-                <span className="block border-t border-border px-2 py-1.5 text-center text-xs font-semibold text-text-main">{palette.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-3 rounded-lg border border-border bg-card px-3">
-          <ColorControl label="Accent" value={accentColor} onChange={(value) => {
-            setAccentColor(value);
-            setSelectedTheme('custom');
-          }} />
-          <ColorControl label="Background" value={backgroundColor} onChange={(value) => {
-            setBackgroundColor(value);
-            setSelectedTheme('custom');
-          }} />
-          <ColorControl label="Foreground" value={foregroundColor} onChange={(value) => {
-            setForegroundColor(value);
-            setSelectedTheme('custom');
-          }} />
-          <label className="flex items-center justify-between gap-4 py-3 text-sm font-semibold text-text-main">
-            <span>Code font</span>
-            <select
-              value={fontFamily}
-              onChange={(event) => setFontFamily(event.target.value)}
-              className="w-48 rounded-lg border border-border bg-app px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-            >
-              {FONT_OPTIONS.map((font) => <option key={font.label} value={font.value}>{font.label}</option>)}
-            </select>
-          </label>
-        </div>
-      </section>
-
       <section className="overflow-hidden rounded-xl border border-border bg-card" aria-labelledby="vscode-editor-title">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-app/70 px-3 py-2">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex gap-1.5" aria-hidden="true">
-              <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-              <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-              <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-            </div>
             <h3 id="vscode-editor-title" className="truncate text-xs font-semibold text-text-muted">
               {normalizeCodeFilename(filename, language)}
             </h3>
@@ -356,6 +304,79 @@ export default function CodePreviewer() {
         <p>Edit directly in the highlighted window. Code stays in your browser and is never executed.</p>
         <p role="status" aria-live="polite">{status}</p>
       </div>
+
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSettingsOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appearance-dialog-title"
+            className="max-h-[90vh] w-full max-w-md overflow-auto rounded-xl border border-border bg-card p-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-border pb-3">
+              <div>
+                <h3 id="appearance-dialog-title" className="text-lg font-bold text-text-main">Editor appearance</h3>
+                <p className="mt-1 text-xs text-text-muted">Choose a preset or adjust individual colors.</p>
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setSettingsOpen(false)}>
+                Close
+              </Button>
+            </div>
+
+            <div className="my-3 grid grid-cols-3 gap-2" role="group" aria-label="Editor theme">
+              {['system', 'light', 'dark'].map((themeId) => {
+                const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
+                return (
+                  <button
+                    key={themeId}
+                    type="button"
+                    onClick={() => applyTheme(themeId)}
+                    aria-pressed={selectedTheme === themeId}
+                    className={[
+                      'rounded-lg border px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-focus',
+                      selectedTheme === themeId
+                        ? 'border-accent bg-accent-light text-accent'
+                        : 'border-border bg-app text-text-main hover:border-border-hover',
+                    ].join(' ')}
+                  >
+                    {palette.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-lg border border-border bg-card px-3">
+              <ColorControl label="Accent" value={accentColor} onChange={(value) => {
+                setAccentColor(value);
+                setSelectedTheme('custom');
+              }} />
+              <ColorControl label="Background" value={backgroundColor} onChange={(value) => {
+                setBackgroundColor(value);
+                setSelectedTheme('custom');
+              }} />
+              <ColorControl label="Foreground" value={foregroundColor} onChange={(value) => {
+                setForegroundColor(value);
+                setSelectedTheme('custom');
+              }} />
+              <label className="flex items-center justify-between gap-4 py-3 text-sm font-semibold text-text-main">
+                <span>Code font</span>
+                <select
+                  value={fontFamily}
+                  onChange={(event) => setFontFamily(event.target.value)}
+                  className="w-48 rounded-lg border border-border bg-app px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
+                >
+                  {FONT_OPTIONS.map((font) => <option key={font.label} value={font.value}>{font.label}</option>)}
+                </select>
+              </label>
+            </div>
+          </section>
+        </div>
+      )}
     </Card>
   );
 }

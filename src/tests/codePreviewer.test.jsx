@@ -48,6 +48,11 @@ describe('Code Previewer', () => {
 
   it('applies simple Light and Dark appearance presets', async () => {
     const editor = container.querySelector('[aria-label="VS Code editor"]');
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    const appearanceButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Appearance');
+    await act(async () => appearanceButton.click());
+
     const lightButton = [...container.querySelectorAll('button')]
       .find((button) => button.textContent.trim() === 'Light');
     await act(async () => lightButton.click());
@@ -59,6 +64,20 @@ describe('Code Previewer', () => {
     await act(async () => darkButton.click());
     expect(darkButton).toHaveAttribute('aria-pressed', 'true');
     expect(editor).toHaveStyle({ backgroundColor: '#181818', color: '#FFFFFF' });
+  });
+
+  it('renders C++ preprocessor and keyword tokens in the editable surface', async () => {
+    const language = container.querySelector('#code-language');
+    const editor = container.querySelector('[aria-label="Code editor"]');
+    await act(async () => {
+      setNativeValue(language, 'cpp');
+      setNativeValue(editor, '#include <iostream>\nint main() { return 0; }');
+    });
+
+    const highlightedCode = container.querySelector('[aria-label="VS Code editor"] code');
+    expect(highlightedCode.querySelector('.hljs-meta')).toHaveTextContent('#include <iostream>');
+    expect([...highlightedCode.querySelectorAll('.hljs-keyword')].map((token) => token.textContent))
+      .toContain('return');
   });
 
   it('downloads source with a normalized extension', async () => {

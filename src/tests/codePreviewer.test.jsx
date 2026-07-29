@@ -19,7 +19,10 @@ function setNativeValue(element, value) {
 beforeEach(async () => {
   Object.defineProperty(navigator, 'clipboard', {
     configurable: true,
-    value: { readText: vi.fn().mockResolvedValue('echo "hello"') },
+    value: {
+      readText: vi.fn().mockResolvedValue('echo "hello"'),
+      writeText: vi.fn().mockResolvedValue(undefined),
+    },
   });
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -44,6 +47,18 @@ describe('Code Previewer', () => {
     expect(container.querySelectorAll('textarea')).toHaveLength(1);
     expect(container).not.toHaveTextContent('Live preview');
     expect(container).toHaveTextContent('1 line');
+  });
+
+  it('copies the complete code to the clipboard', async () => {
+    const editor = container.querySelector('[aria-label="Code editor"]');
+    await act(async () => setNativeValue(editor, 'const copied = true;\nconsole.log(copied);'));
+    const copyButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Copy Code');
+
+    await act(async () => copyButton.click());
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('const copied = true;\nconsole.log(copied);');
+    expect(container).toHaveTextContent('Copied code to the clipboard.');
   });
 
   it('applies simple Light and Dark appearance presets', async () => {

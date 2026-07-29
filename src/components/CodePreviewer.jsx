@@ -137,6 +137,15 @@ export default function CodePreviewer() {
     }
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setStatus('Copied code to the clipboard.');
+    } catch {
+      setStatus('Clipboard access was denied. Select and copy the code manually.');
+    }
+  };
+
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -201,6 +210,9 @@ export default function CodePreviewer() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-app/60 p-3">
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>Paste</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={handleCopy} disabled={!code}>
+            Copy Code
+          </Button>
           <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
             Upload Code
           </Button>

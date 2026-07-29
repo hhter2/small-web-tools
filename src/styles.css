@@ -89,6 +89,38 @@
   color: #b91c1c;
 }
 
+.code-preview-syntax .hljs-selector-class {
+  color: var(--code-accent, #c084fc);
+}
+
+.code-preview-syntax .hljs-attr,
+.code-preview-syntax .hljs-property,
+.code-preview-syntax .hljs-attribute {
+  color: #fb923c;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-attr,
+.code-preview-syntax[data-code-theme="light"] .hljs-property,
+.code-preview-syntax[data-code-theme="light"] .hljs-attribute {
+  color: #c2410c;
+}
+
+.code-preview-syntax .hljs-operator {
+  color: #f472b6;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-operator {
+  color: #be185d;
+}
+
+.code-preview-syntax .hljs-strong {
+  font-weight: 700;
+}
+
+.code-preview-syntax .hljs-emphasis {
+  font-style: italic;
+}
+
 .code-editor-surface,
 .code-editor-highlight,
 .code-editor-input {

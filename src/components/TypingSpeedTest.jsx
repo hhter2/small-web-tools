@@ -811,6 +811,10 @@ export default function TypingSpeedTest() {
     }
   };
 
+  const customTemplateMissing = mode === 'template'
+    && selectedPreset === 'custom'
+    && !customText.trim();
+
   return (
     <Card id="tool-typing" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
@@ -1068,6 +1072,35 @@ export default function TypingSpeedTest() {
       {/* Main Test Interface */}
       {!testFinished ? (
         <div className="flex flex-col gap-3">
+          {!isTesting && (
+            <section
+              className="flex flex-col items-start justify-between gap-3 rounded-xl border-2 border-accent/35 bg-accent-light p-4 sm:flex-row sm:items-center"
+              aria-labelledby="typing-ready-title"
+            >
+              <div>
+                <h3 id="typing-ready-title" className="text-base font-extrabold text-text-main">
+                  Ready to start?
+                </h3>
+                <p className="mt-1 text-sm text-text-muted">
+                  Choose your settings, select Start Test, then begin typing. The timer starts with your first keystroke.
+                </p>
+                {customTemplateMissing && (
+                  <p className="mt-1 text-xs font-semibold text-amber-600">
+                    Enter or upload custom template text before starting.
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="primary"
+                onClick={focusInput}
+                disabled={customTemplateMissing}
+                className="w-full shrink-0 sm:w-auto"
+              >
+                Start Test
+              </Button>
+            </section>
+          )}
+
           {/* Active stats display */}
           {isTesting && (
             <div className="flex justify-between items-center bg-card border border-border rounded-xl px-5 py-3 shadow-sm select-none gap-4">
@@ -1136,6 +1169,7 @@ export default function TypingSpeedTest() {
             onCompositionEnd={handleCompositionEnd}
             onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
+            aria-label="Typing input"
             placeholder={mode === 'free' ? "Click here and start typing to begin test..." : ""}
           />
 
@@ -1153,7 +1187,7 @@ export default function TypingSpeedTest() {
                     <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" className="animate-bounce">
                       <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path>
                     </svg>
-                    <span>Click here to focus and start typing</span>
+                    <span>Select Start Test above, or click here, then begin typing</span>
                   </div>
                 </div>
               )}
@@ -1336,9 +1370,11 @@ export default function TypingSpeedTest() {
                 </div>
               )}
               <textarea
+                ref={inputRef}
                 className="w-full bg-transparent border-none text-text-main outline-none resize-none p-5 font-mono text-base placeholder-text-muted/40 min-h-[140px]"
                 rows={6}
                 placeholder="Start typing here... Timer will begin automatically on the first keystroke."
+                aria-label="Typing input"
                 value={typedText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}

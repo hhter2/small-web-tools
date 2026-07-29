@@ -61,6 +61,26 @@ describe('Markdown Previewer', () => {
     expect(container.querySelector('strong')).toHaveTextContent('selected');
   });
 
+  it('keeps fenced code bodies in the scrollable preview flow', async () => {
+    navigator.clipboard.readText.mockResolvedValue([
+      '```bash',
+      'picard MarkDuplicates \\',
+      '  I=input.bam \\',
+      '  O=output.bam',
+      '```',
+    ].join('\n'));
+    const pasteButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Paste');
+
+    await act(async () => pasteButton.click());
+
+    const preview = container.querySelector('[aria-label="Markdown preview"]');
+    expect(preview).toHaveClass('space-y-4');
+    expect(preview).not.toHaveClass('flex');
+    expect(preview.querySelector('pre code')).toHaveTextContent('picard MarkDuplicates');
+    expect(preview.querySelector('pre code')).toHaveTextContent('O=output.bam');
+  });
+
   it('loads a local Markdown file into the editor and preview', async () => {
     const file = new File(['# Uploaded title'], 'notes.markdown', { type: 'text/markdown' });
     Object.defineProperty(file, 'text', {
@@ -102,10 +122,8 @@ describe('Markdown Previewer', () => {
     expect(container).toHaveTextContent('Downloaded draft.md.');
   });
 
-  it('synchronizes long editor and preview content proportionally in both directions', async () => {
-    navigator.clipboard.readText.mockResolvedValue(
-      Array.from({ length: 80 }, (_, index) => `Paragraph ${index + 1}`).join('\n\n'),
-    );
+  it('synchronizes editor and preview by source block in both directions', async () => {
+    navigator.clipboard.readText.mockResolvedValue('First paragraph\n\n```bash\nprintf test\n```');
     const pasteButton = [...container.querySelectorAll('button')]
       .find((button) => button.textContent.trim() === 'Paste');
     await act(async () => pasteButton.click());
@@ -113,25 +131,34 @@ describe('Markdown Previewer', () => {
     const editor = container.querySelector('[aria-label="Markdown editor"]');
     const preview = container.querySelector('[aria-label="Markdown preview"]');
     Object.defineProperties(editor, {
-      scrollHeight: { configurable: true, value: 1000 },
+      scrollHeight: { configurable: true, value: 800 },
       clientHeight: { configurable: true, value: 200 },
     });
     Object.defineProperties(preview, {
-      scrollHeight: { configurable: true, value: 1800 },
+      scrollHeight: { configurable: true, value: 1200 },
       clientHeight: { configurable: true, value: 300 },
+    });
+    const sourceBlocks = preview.querySelectorAll('[data-source-start-line]');
+    Object.defineProperties(sourceBlocks[0], {
+      offsetTop: { configurable: true, value: 0 },
+      offsetHeight: { configurable: true, value: 200 },
+    });
+    Object.defineProperties(sourceBlocks[1], {
+      offsetTop: { configurable: true, value: 500 },
+      offsetHeight: { configurable: true, value: 300 },
     });
 
     await act(async () => {
-      editor.scrollTop = 400;
+      editor.scrollTop = 72;
       editor.dispatchEvent(new Event('scroll', { bubbles: false }));
     });
-    expect(preview.scrollTop).toBe(750);
+    expect(preview.scrollTop).toBe(650);
 
     await act(async () => {
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      preview.scrollTop = 375;
+      preview.scrollTop = 650;
       preview.dispatchEvent(new Event('scroll', { bubbles: false }));
     });
-    expect(editor.scrollTop).toBe(200);
+    expect(editor.scrollTop).toBe(72);
   });
 });

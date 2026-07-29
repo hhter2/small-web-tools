@@ -172,7 +172,9 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 upload, live preview, formatting helpers, and Markdown download. Its domain
 module parses common block and inline syntax into safe React-rendered tokens;
 raw HTML and external images are not rendered, and unsafe URL schemes are
-discarded. Focused parser and interaction coverage lives in
+discarded. Source-line metadata keeps the independently scrollable editor and
+preview aligned in both directions without collapsing fenced-code content.
+Focused parser and interaction coverage lives in
 `markdownDomain.test.js` and `markdownPreviewer.test.jsx`.
 
 ### Media Splitter

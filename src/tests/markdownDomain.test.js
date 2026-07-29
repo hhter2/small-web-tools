@@ -38,6 +38,7 @@ describe('Markdown preview domain', () => {
       { task: false, checked: false },
     ]);
     expect(blocks[5]).toMatchObject({ language: 'js', value: 'const value = 1;' });
+    expect(blocks[5]).toMatchObject({ startLine: 11, endLine: 13 });
   });
 
   it('parses tables with column alignment', () => {

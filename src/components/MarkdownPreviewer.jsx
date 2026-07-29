@@ -60,10 +60,14 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
       ref={previewRef}
       onScroll={onScroll}
       aria-label="Markdown preview"
-      className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-5 text-[0.95rem] leading-7 text-text-main"
+      className="relative h-full min-h-0 space-y-4 overflow-auto p-5 text-[0.95rem] leading-7 text-text-main"
     >
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
+        const sourceProps = {
+          'data-source-start-line': block.startLine,
+          'data-source-end-line': block.endLine,
+        };
         if (block.type === 'heading') {
           const classes = {
             1: 'text-3xl',
@@ -75,24 +79,28 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
           };
           return React.createElement(
             `h${block.level}`,
-            { key, className: `${classes[block.level]} font-extrabold leading-tight text-text-main` },
+            {
+              key,
+              ...sourceProps,
+              className: `${classes[block.level]} font-extrabold leading-tight text-text-main`,
+            },
             <InlinePreview tokens={block.inline} />,
           );
         }
         if (block.type === 'paragraph') {
-          return <p key={key} className="whitespace-pre-wrap"><InlinePreview tokens={block.inline} /></p>;
+          return <p key={key} {...sourceProps} className="whitespace-pre-wrap"><InlinePreview tokens={block.inline} /></p>;
         }
         if (block.type === 'quote') {
           return (
-            <blockquote key={key} className="whitespace-pre-wrap border-l-4 border-accent bg-accent-light/40 px-4 py-2 text-text-muted">
+            <blockquote key={key} {...sourceProps} className="whitespace-pre-wrap border-l-4 border-accent bg-accent-light/40 px-4 py-2 text-text-muted">
               <InlinePreview tokens={block.inline} />
             </blockquote>
           );
         }
-        if (block.type === 'rule') return <hr key={key} className="border-border" />;
+        if (block.type === 'rule') return <hr key={key} {...sourceProps} className="border-border" />;
         if (block.type === 'codeBlock') {
           return (
-            <div key={key} className="overflow-hidden rounded-lg border border-border bg-app">
+            <div key={key} {...sourceProps} className="overflow-hidden rounded-lg border border-border bg-app">
               {block.language && (
                 <div className="border-b border-border px-3 py-1 text-[0.68rem] font-bold uppercase tracking-wider text-text-muted">
                   {block.language}
@@ -105,7 +113,7 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
         if (block.type === 'list') {
           const ListTag = block.ordered ? 'ol' : 'ul';
           return (
-            <ListTag key={key} className={`space-y-1 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}>
+            <ListTag key={key} {...sourceProps} className={`space-y-1 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}>
               {block.items.map((item, itemIndex) => (
                 <li key={`${key}-${itemIndex}`} className={item.task ? 'list-none' : ''}>
                   {item.task && (
@@ -125,7 +133,7 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
         }
         if (block.type === 'table') {
           return (
-            <div key={key} className="overflow-x-auto rounded-lg border border-border">
+            <div key={key} {...sourceProps} className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full min-w-[420px] border-collapse text-sm">
                 <thead className="bg-app">
                   <tr>
@@ -183,17 +191,52 @@ export default function MarkdownPreviewer() {
   const activeScrollRef = useRef(null);
   const blocks = useMemo(() => parseMarkdown(markdown), [markdown]);
 
-  const syncScroll = (source, target, sourceName) => {
-    if (!source || !target || activeScrollRef.current === sourceName) {
+  const syncEditorToPreview = (editor, preview) => {
+    if (!editor || !preview || activeScrollRef.current === 'editor') {
       activeScrollRef.current = null;
       return;
     }
 
-    const sourceRange = source.scrollHeight - source.clientHeight;
-    const targetRange = target.scrollHeight - target.clientHeight;
-    const progress = sourceRange > 0 ? source.scrollTop / sourceRange : 0;
-    activeScrollRef.current = sourceName === 'editor' ? 'preview' : 'editor';
-    target.scrollTop = progress * Math.max(targetRange, 0);
+    const line = editor.scrollTop / 24;
+    const elements = [...preview.querySelectorAll('[data-source-start-line]')];
+    const element = elements.find((candidate) => (
+      line >= Number(candidate.dataset.sourceStartLine)
+      && line <= Number(candidate.dataset.sourceEndLine)
+    )) || elements.findLast((candidate) => line >= Number(candidate.dataset.sourceStartLine));
+
+    if (!element) return;
+    const startLine = Number(element.dataset.sourceStartLine);
+    const endLine = Number(element.dataset.sourceEndLine);
+    const lineSpan = Math.max(endLine - startLine, 1);
+    const progress = Math.min(Math.max((line - startLine) / lineSpan, 0), 1);
+    const targetRange = preview.scrollHeight - preview.clientHeight;
+    activeScrollRef.current = 'preview';
+    preview.scrollTop = Math.min(element.offsetTop + (progress * element.offsetHeight), targetRange);
+    requestAnimationFrame(() => {
+      activeScrollRef.current = null;
+    });
+  };
+
+  const syncPreviewToEditor = (preview, editor) => {
+    if (!preview || !editor || activeScrollRef.current === 'preview') {
+      activeScrollRef.current = null;
+      return;
+    }
+
+    const elements = [...preview.querySelectorAll('[data-source-start-line]')];
+    const element = elements.findLast((candidate) => candidate.offsetTop <= preview.scrollTop)
+      || elements[0];
+    if (!element) return;
+
+    const startLine = Number(element.dataset.sourceStartLine);
+    const endLine = Number(element.dataset.sourceEndLine);
+    const progress = element.offsetHeight > 0
+      ? Math.min(Math.max((preview.scrollTop - element.offsetTop) / element.offsetHeight, 0), 1)
+      : 0;
+    const line = startLine + (progress * Math.max(endLine - startLine, 0));
+    const targetRange = editor.scrollHeight - editor.clientHeight;
+    activeScrollRef.current = 'editor';
+    editor.scrollTop = Math.min(line * 24, targetRange);
     requestAnimationFrame(() => {
       activeScrollRef.current = null;
     });
@@ -334,8 +377,9 @@ export default function MarkdownPreviewer() {
               setMarkdown(event.target.value);
               setStatus('');
             }}
-            onScroll={(event) => syncScroll(event.currentTarget, previewRef.current, 'editor')}
+            onScroll={(event) => syncEditorToPreview(event.currentTarget, previewRef.current)}
             spellCheck={false}
+            wrap="off"
             aria-label="Markdown editor"
             placeholder="Type or paste Markdown here..."
             className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-transparent p-4 font-mono text-sm leading-6 text-text-main outline-none placeholder:text-text-muted/50 focus:ring-0"
@@ -350,7 +394,7 @@ export default function MarkdownPreviewer() {
             <MarkdownPreview
               blocks={blocks}
               previewRef={previewRef}
-              onScroll={(event) => syncScroll(event.currentTarget, textareaRef.current, 'preview')}
+              onScroll={(event) => syncPreviewToEditor(event.currentTarget, textareaRef.current)}
             />
           </div>
         </section>

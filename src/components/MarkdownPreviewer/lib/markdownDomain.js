@@ -93,6 +93,7 @@ export function parseMarkdown(markdown) {
   let index = 0;
 
   while (index < lines.length) {
+    const startLine = index;
     const line = lines[index];
     if (!line.trim()) {
       index += 1;
@@ -108,7 +109,13 @@ export function parseMarkdown(markdown) {
         index += 1;
       }
       if (index < lines.length) index += 1;
-      blocks.push({ type: 'codeBlock', language: fence[1] || '', value: code.join('\n') });
+      blocks.push({
+        type: 'codeBlock',
+        language: fence[1] || '',
+        value: code.join('\n'),
+        startLine,
+        endLine: Math.max(startLine, index - 1),
+      });
       continue;
     }
 
@@ -118,13 +125,15 @@ export function parseMarkdown(markdown) {
         type: 'heading',
         level: heading[1].length,
         inline: tokenizeInlineMarkdown(heading[2].replace(/\s+#+\s*$/, '')),
+        startLine,
+        endLine: startLine,
       });
       index += 1;
       continue;
     }
 
     if (/^\s{0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/.test(line)) {
-      blocks.push({ type: 'rule' });
+      blocks.push({ type: 'rule', startLine, endLine: startLine });
       index += 1;
       continue;
     }
@@ -142,7 +151,7 @@ export function parseMarkdown(markdown) {
         rows.push(splitTableRow(lines[index]).map(tokenizeInlineMarkdown));
         index += 1;
       }
-      blocks.push({ type: 'table', header, alignments, rows });
+      blocks.push({ type: 'table', header, alignments, rows, startLine, endLine: index - 1 });
       continue;
     }
 
@@ -152,7 +161,12 @@ export function parseMarkdown(markdown) {
         quote.push(lines[index].replace(/^\s*>\s?/, ''));
         index += 1;
       }
-      blocks.push({ type: 'quote', inline: tokenizeInlineMarkdown(quote.join('\n')) });
+      blocks.push({
+        type: 'quote',
+        inline: tokenizeInlineMarkdown(quote.join('\n')),
+        startLine,
+        endLine: index - 1,
+      });
       continue;
     }
 
@@ -166,7 +180,13 @@ export function parseMarkdown(markdown) {
         items.push(nextItem);
         index += 1;
       }
-      blocks.push({ type: 'list', ordered: firstListItem.ordered, items });
+      blocks.push({
+        type: 'list',
+        ordered: firstListItem.ordered,
+        items,
+        startLine,
+        endLine: index - 1,
+      });
       continue;
     }
 
@@ -183,7 +203,12 @@ export function parseMarkdown(markdown) {
       paragraph.push(lines[index].trim());
       index += 1;
     }
-    blocks.push({ type: 'paragraph', inline: tokenizeInlineMarkdown(paragraph.join('').trim()) });
+    blocks.push({
+      type: 'paragraph',
+      inline: tokenizeInlineMarkdown(paragraph.join('').trim()),
+      startLine,
+      endLine: index - 1,
+    });
   }
 
   return blocks;

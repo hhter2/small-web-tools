@@ -101,4 +101,37 @@ describe('Markdown Previewer', () => {
     expect(anchorClick).toHaveBeenCalledOnce();
     expect(container).toHaveTextContent('Downloaded draft.md.');
   });
+
+  it('synchronizes long editor and preview content proportionally in both directions', async () => {
+    navigator.clipboard.readText.mockResolvedValue(
+      Array.from({ length: 80 }, (_, index) => `Paragraph ${index + 1}`).join('\n\n'),
+    );
+    const pasteButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Paste');
+    await act(async () => pasteButton.click());
+
+    const editor = container.querySelector('[aria-label="Markdown editor"]');
+    const preview = container.querySelector('[aria-label="Markdown preview"]');
+    Object.defineProperties(editor, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 200 },
+    });
+    Object.defineProperties(preview, {
+      scrollHeight: { configurable: true, value: 1800 },
+      clientHeight: { configurable: true, value: 300 },
+    });
+
+    await act(async () => {
+      editor.scrollTop = 400;
+      editor.dispatchEvent(new Event('scroll', { bubbles: false }));
+    });
+    expect(preview.scrollTop).toBe(750);
+
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      preview.scrollTop = 375;
+      preview.dispatchEvent(new Event('scroll', { bubbles: false }));
+    });
+    expect(editor.scrollTop).toBe(200);
+  });
 });

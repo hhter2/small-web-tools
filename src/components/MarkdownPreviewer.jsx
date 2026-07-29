@@ -41,17 +41,27 @@ function InlinePreview({ tokens }) {
   });
 }
 
-function MarkdownPreview({ blocks }) {
+function MarkdownPreview({ blocks, previewRef, onScroll }) {
   if (blocks.length === 0) {
     return (
-      <div className="flex min-h-[360px] items-center justify-center p-8 text-center text-sm text-text-muted">
+      <div
+        ref={previewRef}
+        onScroll={onScroll}
+        aria-label="Markdown preview"
+        className="flex h-full min-h-0 items-center justify-center overflow-auto p-8 text-center text-sm text-text-muted"
+      >
         The rendered preview will appear here.
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[360px] flex-col gap-4 p-5 text-[0.95rem] leading-7 text-text-main">
+    <div
+      ref={previewRef}
+      onScroll={onScroll}
+      aria-label="Markdown preview"
+      className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-5 text-[0.95rem] leading-7 text-text-main"
+    >
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
         if (block.type === 'heading') {
@@ -168,8 +178,26 @@ export default function MarkdownPreviewer() {
   const [filename, setFilename] = useState('document.md');
   const [status, setStatus] = useState('');
   const textareaRef = useRef(null);
+  const previewRef = useRef(null);
   const fileInputRef = useRef(null);
+  const activeScrollRef = useRef(null);
   const blocks = useMemo(() => parseMarkdown(markdown), [markdown]);
+
+  const syncScroll = (source, target, sourceName) => {
+    if (!source || !target || activeScrollRef.current === sourceName) {
+      activeScrollRef.current = null;
+      return;
+    }
+
+    const sourceRange = source.scrollHeight - source.clientHeight;
+    const targetRange = target.scrollHeight - target.clientHeight;
+    const progress = sourceRange > 0 ? source.scrollTop / sourceRange : 0;
+    activeScrollRef.current = sourceName === 'editor' ? 'preview' : 'editor';
+    target.scrollTop = progress * Math.max(targetRange, 0);
+    requestAnimationFrame(() => {
+      activeScrollRef.current = null;
+    });
+  };
 
   const insertFormat = ({ prefix, suffix, placeholder }) => {
     const textarea = textareaRef.current;
@@ -293,8 +321,8 @@ export default function MarkdownPreviewer() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card lg:grid-cols-2">
-        <section className="flex min-w-0 flex-col border-b border-border lg:border-b-0 lg:border-r" aria-labelledby="markdown-editor-title">
+      <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card lg:h-[560px] lg:grid-cols-2">
+        <section className="flex min-h-[420px] min-w-0 flex-col border-b border-border lg:min-h-0 lg:border-b-0 lg:border-r" aria-labelledby="markdown-editor-title">
           <div className="flex min-h-12 items-center justify-between border-b border-border bg-app/70 px-4 py-2">
             <h3 id="markdown-editor-title" className="text-sm font-bold text-text-main">Markdown</h3>
             <span className="text-xs tabular-nums text-text-muted">{markdown.length.toLocaleString()} characters</span>
@@ -306,18 +334,25 @@ export default function MarkdownPreviewer() {
               setMarkdown(event.target.value);
               setStatus('');
             }}
+            onScroll={(event) => syncScroll(event.currentTarget, previewRef.current, 'editor')}
             spellCheck={false}
             aria-label="Markdown editor"
             placeholder="Type or paste Markdown here..."
-            className="min-h-[420px] w-full resize-y border-0 bg-transparent p-4 font-mono text-sm leading-6 text-text-main outline-none placeholder:text-text-muted/50 focus:ring-0"
+            className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-transparent p-4 font-mono text-sm leading-6 text-text-main outline-none placeholder:text-text-muted/50 focus:ring-0"
           />
         </section>
 
-        <section className="min-w-0 bg-accent-light/10" aria-labelledby="markdown-preview-title">
+        <section className="flex min-h-[420px] min-w-0 flex-col bg-accent-light/10 lg:min-h-0" aria-labelledby="markdown-preview-title">
           <div className="flex min-h-12 items-center border-b border-border bg-app/45 px-4 py-2">
             <h3 id="markdown-preview-title" className="text-sm font-bold text-text-main">Preview</h3>
           </div>
-          <MarkdownPreview blocks={blocks} />
+          <div className="min-h-0 flex-1">
+            <MarkdownPreview
+              blocks={blocks}
+              previewRef={previewRef}
+              onScroll={(event) => syncScroll(event.currentTarget, textareaRef.current, 'preview')}
+            />
+          </div>
         </section>
       </div>
 

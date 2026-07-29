@@ -41,7 +41,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 10` SNP calling Mapping Quality Phred Scale transfer
 - [x] `feat 11` Add SVG to PNG function
 - [x] `feat 12` URL encoder/decoder (main for Chinese address transformation)
-- [ ] `feat 13` New feauture of the Markdown file previewer. Can paste the markdown syntax or upload the file, then use the engine to preview it. Also, can make the simple modification, also to download.
+- [x] `feat 13` New feauture of the Markdown file previewer. Can paste the markdown syntax or upload the file, then use the engine to preview it. Also, can make the simple modification, also to download.
 
 
 ### Maintenance

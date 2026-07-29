@@ -60,6 +60,7 @@ small-web-tools/
 │   └── components/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
 │       ├── HomeGrid.jsx      Dashboard tool grid
+│       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
 │       ├── useMediaSeparator.js
 │       └── mediaSeparatorEngine.js
@@ -123,6 +124,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-ascii` | ASCII Converter | `AsciiConverter.jsx` | Developer |
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
 | `tool-url` | URL Encoder & Decoder | `UrlEncoderDecoder.jsx` | Developer |
+| `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |
 | `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
 | `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |
 | `tool-folder-analyzer` | Folder Analyzer | `FolderAnalyzer.jsx` | Developer |
@@ -163,6 +165,15 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `ToggleSwitch.jsx`, `Spinner.jsx`, `ResultDisplay.jsx` | Reusable controls and feedback UI. |
 
 `ExternalMapPreview.jsx` is the shared OpenStreetMap consent boundary for IP Lookup and Image Metadata. It renders coordinate text locally, creates an iframe only while `osm` consent is active, and removes the iframe immediately after revocation or reset.
+
+### Markdown Previewer
+
+`MarkdownPreviewer.jsx` provides a browser-local editor, `.md`/`.markdown`
+upload, live preview, formatting helpers, and Markdown download. Its domain
+module parses common block and inline syntax into safe React-rendered tokens;
+raw HTML and external images are not rendered, and unsafe URL schemes are
+discarded. Focused parser and interaction coverage lives in
+`markdownDomain.test.js` and `markdownPreviewer.test.jsx`.
 
 ### Media Splitter
 

@@ -19,6 +19,30 @@ const FONT_OPTIONS = [
   { label: 'System monospace', value: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace' },
 ];
 
+const THEME_PRESETS = {
+  light: {
+    label: 'Light',
+    accentColor: '#339CFF',
+    backgroundColor: '#FFFFFF',
+    foregroundColor: '#1A1C1F',
+  },
+  dark: {
+    label: 'Dark',
+    accentColor: '#339CFF',
+    backgroundColor: '#181818',
+    foregroundColor: '#FFFFFF',
+  },
+};
+
+function getSystemPalette() {
+  const isDark = document.documentElement.dataset.theme === 'dark'
+    || window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  return {
+    ...(isDark ? THEME_PRESETS.dark : THEME_PRESETS.light),
+    label: 'System',
+  };
+}
+
 function triggerDownload(href, filename) {
   const anchor = document.createElement('a');
   anchor.href = href;
@@ -28,35 +52,68 @@ function triggerDownload(href, filename) {
   anchor.remove();
 }
 
+function ColorControl({ label, value, onChange }) {
+  return (
+    <label className="flex items-center justify-between gap-4 border-b border-border/70 py-3 text-sm font-semibold text-text-main last:border-b-0">
+      <span>{label}</span>
+      <span className="flex w-36 items-center gap-2 rounded-lg border border-border bg-app px-2 py-1.5">
+        <input
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
+          aria-label={`${label} color`}
+        />
+        <span className="font-mono text-xs font-normal uppercase text-text-main">{value}</span>
+      </span>
+    </label>
+  );
+}
+
 export default function CodePreviewer() {
+  const initialPalette = THEME_PRESETS.dark;
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
-  const [previewType, setPreviewType] = useState('editor');
   const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
-  const [backgroundColor, setBackgroundColor] = useState('#111827');
+  const [accentColor, setAccentColor] = useState(initialPalette.accentColor);
+  const [backgroundColor, setBackgroundColor] = useState(initialPalette.backgroundColor);
+  const [foregroundColor, setForegroundColor] = useState(initialPalette.foregroundColor);
+  const [selectedTheme, setSelectedTheme] = useState('dark');
   const [filename, setFilename] = useState(getDefaultFilename('javascript'));
   const [status, setStatus] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState({ top: 0, left: 0 });
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-  const previewRef = useRef(null);
+  const editorRef = useRef(null);
 
   const highlightedCode = useMemo(() => highlightCode(code, language), [code, language]);
   const lineCount = getLineCount(code);
   const syntaxTheme = getSyntaxTheme(backgroundColor);
+  /** @type {React.CSSProperties & Record<string, string>} */
+  const editorStyle = {
+    '--code-accent': accentColor,
+    backgroundColor,
+    color: foregroundColor,
+    fontFamily,
+  };
+  const translatedContentStyle = {
+    transform: `translate(${-scrollPosition.left}px, ${-scrollPosition.top}px)`,
+  };
+
+  const applyTheme = (themeId) => {
+    const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
+    setSelectedTheme(themeId);
+    setAccentColor(palette.accentColor);
+    setBackgroundColor(palette.backgroundColor);
+    setForegroundColor(palette.foregroundColor);
+  };
 
   const handleLanguageChange = (nextLanguage) => {
     const previousDefault = getDefaultFilename(language);
     setLanguage(nextLanguage);
     if (filename === previousDefault) setFilename(getDefaultFilename(nextLanguage));
     setStatus('');
-  };
-
-  const handlePreviewTypeChange = (nextType) => {
-    setPreviewType(nextType);
-    if (nextType === 'terminal' && previewType !== 'terminal') {
-      handleLanguageChange('bash');
-    }
   };
 
   const handlePaste = async () => {
@@ -97,25 +154,20 @@ export default function CodePreviewer() {
   };
 
   const handlePngDownload = async () => {
-    if (!previewRef.current || !code) return;
+    if (!editorRef.current || !code) return;
     setExporting(true);
     setStatus('Preparing PNG…');
     try {
       const { toPng } = await import('html-to-image');
-      const node = previewRef.current;
-      const width = Math.min(Math.max(node.scrollWidth, 720), 4096);
-      const height = Math.min(Math.max(node.scrollHeight, 320), 16384);
-      const dataUrl = await toPng(node, {
+      const dataUrl = await toPng(editorRef.current, {
         backgroundColor,
         cacheBust: false,
         pixelRatio: 2,
-        width,
-        height,
-        style: { width: `${width}px`, height: `${height}px`, maxHeight: 'none' },
         preferredFontFormat: 'woff2',
+        filter: (node) => !node.classList?.contains('code-editor-input'),
       });
       const sourceName = normalizeCodeFilename(filename, language);
-      const imageName = `${sourceName.replace(/\.[^.]+$/, '') || 'code'}-${previewType}.png`;
+      const imageName = `${sourceName.replace(/\.[^.]+$/, '') || 'code'}-vscode.png`;
       triggerDownload(dataUrl, imageName);
       setStatus(`Downloaded ${imageName}.`);
     } catch {
@@ -127,13 +179,14 @@ export default function CodePreviewer() {
 
   const handleClear = () => {
     setCode('');
+    setScrollPosition({ top: 0, left: 0 });
     setStatus('Editor cleared.');
     textareaRef.current?.focus();
   };
 
   return (
-    <Card id="tool-code-preview" variant="tool" size="wide" className="max-w-[1240px]">
-      <ToolHeader title="Code Live Preview & Highlighter" />
+    <Card id="tool-code-preview" variant="tool" size="wide" className="max-w-[1040px]">
+      <ToolHeader title="VS Code Preview" />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-app/60 p-3">
         <div className="flex flex-wrap gap-2">
@@ -170,64 +223,115 @@ export default function CodePreviewer() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-app/45 p-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col gap-1 text-xs font-bold text-text-muted">
-          Language
-          <select
-            value={language}
-            onChange={(event) => handleLanguageChange(event.target.value)}
-            className="rounded-md border border-border bg-card px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-          >
-            {CODE_LANGUAGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-          </select>
-        </label>
+      <section className="rounded-xl border border-border bg-app/45 p-3" aria-labelledby="code-appearance-title">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 id="code-appearance-title" className="text-sm font-bold text-text-main">Appearance</h3>
+          <span className="text-xs text-text-muted">Choose a preset, then adjust any color</span>
+        </div>
 
-        <label className="flex flex-col gap-1 text-xs font-bold text-text-muted">
-          Preview type
-          <select
-            value={previewType}
-            onChange={(event) => handlePreviewTypeChange(event.target.value)}
-            className="rounded-md border border-border bg-card px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-          >
-            <option value="editor">Code editor</option>
-            <option value="terminal">Terminal</option>
-          </select>
-        </label>
+        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Editor theme">
+          {['system', 'light', 'dark'].map((themeId) => {
+            const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
+            return (
+              <button
+                key={themeId}
+                type="button"
+                onClick={() => applyTheme(themeId)}
+                aria-pressed={selectedTheme === themeId}
+                className={[
+                  'overflow-hidden rounded-lg border bg-card text-left transition focus:outline-none focus:ring-2 focus:ring-focus',
+                  selectedTheme === themeId ? 'border-accent ring-1 ring-accent' : 'border-border hover:border-border-hover',
+                ].join(' ')}
+              >
+                <span className="flex h-14">
+                  <span className="w-1/4" style={{ backgroundColor: palette.backgroundColor, opacity: 0.78 }} />
+                  <span className="flex flex-1 flex-col gap-1 p-2" style={{ backgroundColor: palette.backgroundColor }}>
+                    <span className="h-1.5 w-1/2 rounded-full" style={{ backgroundColor: palette.foregroundColor, opacity: 0.28 }} />
+                    <span className="h-1.5 w-3/4 rounded-full" style={{ backgroundColor: palette.accentColor, opacity: 0.7 }} />
+                    <span className="h-1.5 w-2/3 rounded-full" style={{ backgroundColor: palette.foregroundColor, opacity: 0.16 }} />
+                  </span>
+                </span>
+                <span className="block border-t border-border px-2 py-1.5 text-center text-xs font-semibold text-text-main">{palette.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <label className="flex flex-col gap-1 text-xs font-bold text-text-muted">
-          Font
-          <select
-            value={fontFamily}
-            onChange={(event) => setFontFamily(event.target.value)}
-            className="rounded-md border border-border bg-card px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-          >
-            {FONT_OPTIONS.map((font) => <option key={font.label} value={font.value}>{font.label}</option>)}
-          </select>
-        </label>
+        <div className="mt-3 rounded-lg border border-border bg-card px-3">
+          <ColorControl label="Accent" value={accentColor} onChange={(value) => {
+            setAccentColor(value);
+            setSelectedTheme('custom');
+          }} />
+          <ColorControl label="Background" value={backgroundColor} onChange={(value) => {
+            setBackgroundColor(value);
+            setSelectedTheme('custom');
+          }} />
+          <ColorControl label="Foreground" value={foregroundColor} onChange={(value) => {
+            setForegroundColor(value);
+            setSelectedTheme('custom');
+          }} />
+          <label className="flex items-center justify-between gap-4 py-3 text-sm font-semibold text-text-main">
+            <span>Code font</span>
+            <select
+              value={fontFamily}
+              onChange={(event) => setFontFamily(event.target.value)}
+              className="w-48 rounded-lg border border-border bg-app px-3 py-2 text-sm font-normal text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
+            >
+              {FONT_OPTIONS.map((font) => <option key={font.label} value={font.value}>{font.label}</option>)}
+            </select>
+          </label>
+        </div>
+      </section>
 
-        <label className="flex flex-col gap-1 text-xs font-bold text-text-muted">
-          Background color
-          <span className="flex h-[38px] items-center gap-2 rounded-md border border-border bg-card px-2">
-            <input
-              type="color"
-              value={backgroundColor}
-              onChange={(event) => setBackgroundColor(event.target.value)}
-              className="h-7 w-10 cursor-pointer border-0 bg-transparent p-0"
-              aria-label="Preview background color"
-            />
-            <span className="font-mono text-sm font-normal uppercase text-text-main">{backgroundColor}</span>
-          </span>
-        </label>
-      </div>
-
-      <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card lg:h-[580px] lg:grid-cols-2">
-        <section className="flex min-h-[420px] min-w-0 flex-col border-b border-border lg:min-h-0 lg:border-b-0 lg:border-r" aria-labelledby="code-editor-title">
-          <div className="flex min-h-12 items-center justify-between border-b border-border bg-app/70 px-4 py-2">
-            <h3 id="code-editor-title" className="text-sm font-bold text-text-main">Code</h3>
-            <span className="text-xs tabular-nums text-text-muted">
+      <section className="overflow-hidden rounded-xl border border-border bg-card" aria-labelledby="vscode-editor-title">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-app/70 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex gap-1.5" aria-hidden="true">
+              <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+              <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+              <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+            </div>
+            <h3 id="vscode-editor-title" className="truncate text-xs font-semibold text-text-muted">
+              {normalizeCodeFilename(filename, language)}
+            </h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="code-language" className="sr-only">Language</label>
+            <select
+              id="code-language"
+              value={language}
+              onChange={(event) => handleLanguageChange(event.target.value)}
+              className="max-w-44 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
+            >
+              {CODE_LANGUAGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+            <span className="whitespace-nowrap text-xs tabular-nums text-text-muted">
               {lineCount.toLocaleString()} {lineCount === 1 ? 'line' : 'lines'}
             </span>
           </div>
+        </div>
+
+        <div
+          ref={editorRef}
+          data-code-theme={syntaxTheme}
+          className="code-preview-syntax code-editor-surface relative h-[520px] overflow-hidden"
+          style={editorStyle}
+          aria-label="VS Code editor"
+        >
+          <div className="code-editor-line-numbers absolute inset-y-0 left-0 w-14 overflow-hidden border-r border-current/10 bg-black/5">
+            <div className="min-h-full py-5 text-right text-sm leading-6 opacity-45" style={{ transform: `translateY(${-scrollPosition.top}px)` }}>
+              {Array.from({ length: lineCount }, (_, index) => <div key={index} className="pr-3">{index + 1}</div>)}
+            </div>
+          </div>
+
+          <pre
+            className="code-editor-highlight pointer-events-none absolute inset-y-0 left-14 right-0 m-0 min-w-full overflow-hidden p-5 text-sm leading-6"
+            style={translatedContentStyle}
+            aria-hidden="true"
+          >
+            <code dangerouslySetInnerHTML={{ __html: highlightedCode || '<span class="code-editor-placeholder">Type or paste code here…</span>' }} />
+          </pre>
+
           <textarea
             ref={textareaRef}
             value={code}
@@ -235,53 +339,21 @@ export default function CodePreviewer() {
               setCode(event.target.value);
               setStatus('');
             }}
+            onScroll={(event) => setScrollPosition({
+              top: event.currentTarget.scrollTop,
+              left: event.currentTarget.scrollLeft,
+            })}
             spellCheck={false}
             wrap="off"
             aria-label="Code editor"
-            placeholder="Type or paste code here…"
-            className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-transparent p-4 font-mono text-sm leading-6 text-text-main outline-none placeholder:text-text-muted/50 focus:ring-0"
+            className="code-editor-input absolute inset-y-0 left-14 right-0 h-full w-auto resize-none overflow-auto border-0 bg-transparent p-5 text-sm leading-6 outline-none focus:ring-0"
+            style={{ caretColor: accentColor, fontFamily }}
           />
-        </section>
-
-        <section className="flex min-h-[420px] min-w-0 flex-col lg:min-h-0" aria-labelledby="code-preview-title">
-          <div className="flex min-h-12 items-center justify-between border-b border-border bg-app/45 px-4 py-2">
-            <h3 id="code-preview-title" className="text-sm font-bold text-text-main">Live preview</h3>
-            <span className="text-xs text-text-muted">{previewType === 'terminal' ? 'Terminal' : 'Code editor'}</span>
-          </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-slate-950/10 p-4">
-            <div
-              ref={previewRef}
-              data-code-theme={syntaxTheme}
-              data-preview-type={previewType}
-              className="code-preview-syntax min-h-full min-w-[680px] overflow-hidden rounded-xl shadow-xl"
-              style={{ backgroundColor, fontFamily }}
-              aria-label="Highlighted code preview"
-            >
-              <div className="flex h-10 items-center gap-2 border-b border-white/10 bg-black/20 px-4">
-                {previewType === 'editor' ? (
-                  <>
-                    <span className="h-3 w-3 rounded-full bg-[#ff5f57]" aria-hidden="true" />
-                    <span className="h-3 w-3 rounded-full bg-[#febc2e]" aria-hidden="true" />
-                    <span className="h-3 w-3 rounded-full bg-[#28c840]" aria-hidden="true" />
-                    <span className="ml-2 truncate text-xs text-current opacity-70">{normalizeCodeFilename(filename, language)}</span>
-                  </>
-                ) : (
-                  <span className="text-xs font-semibold text-current opacity-75">Terminal — {CODE_LANGUAGES.find((item) => item.id === language)?.label}</span>
-                )}
-              </div>
-              <div className="flex min-h-[280px] p-5 text-sm leading-6">
-                <div className="select-none border-r border-current/15 pr-4 text-right text-current opacity-45" aria-hidden="true">
-                  {Array.from({ length: lineCount }, (_, index) => <div key={index}>{index + 1}</div>)}
-                </div>
-                <pre className="m-0 min-w-0 flex-1 overflow-visible pl-4 [font-family:inherit] text-inherit [font-size:inherit] [line-height:inherit]"><code dangerouslySetInnerHTML={{ __html: highlightedCode || '&nbsp;' }} /></pre>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
-        <p>Highlighting and exports stay in your browser. Code is never executed.</p>
+        <p>Edit directly in the highlighted window. Code stays in your browser and is never executed.</p>
         <p role="status" aria-live="polite">{status}</p>
       </div>
     </Card>

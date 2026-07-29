@@ -34,24 +34,31 @@ afterEach(async () => {
 });
 
 describe('Code Previewer', () => {
-  it('pastes and highlights code with line numbers', async () => {
+  it('edits and highlights code in one VS Code-style surface with line numbers', async () => {
     const pasteButton = [...container.querySelectorAll('button')]
       .find((button) => button.textContent.trim() === 'Paste');
     await act(async () => pasteButton.click());
 
     expect(container.querySelector('[aria-label="Code editor"]')).toHaveValue('echo "hello"');
-    expect(container.querySelector('[aria-label="Highlighted code preview"] code')).toHaveTextContent('echo "hello"');
+    expect(container.querySelector('[aria-label="VS Code editor"] code')).toHaveTextContent('echo "hello"');
+    expect(container.querySelectorAll('textarea')).toHaveLength(1);
+    expect(container).not.toHaveTextContent('Live preview');
     expect(container).toHaveTextContent('1 line');
   });
 
-  it('defaults the Terminal preview to Bash without restricting later language changes', async () => {
-    const selects = container.querySelectorAll('select');
-    await act(async () => setNativeValue(selects[1], 'terminal'));
-    expect(selects[0]).toHaveValue('bash');
-    expect(container.querySelector('[aria-label="Highlighted code preview"]')).toHaveAttribute('data-preview-type', 'terminal');
+  it('applies simple Light and Dark appearance presets', async () => {
+    const editor = container.querySelector('[aria-label="VS Code editor"]');
+    const lightButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Light');
+    await act(async () => lightButton.click());
+    expect(lightButton).toHaveAttribute('aria-pressed', 'true');
+    expect(editor).toHaveStyle({ backgroundColor: '#FFFFFF', color: '#1A1C1F' });
 
-    await act(async () => setNativeValue(selects[0], 'python'));
-    expect(selects[0]).toHaveValue('python');
+    const darkButton = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === 'Dark');
+    await act(async () => darkButton.click());
+    expect(darkButton).toHaveAttribute('aria-pressed', 'true');
+    expect(editor).toHaveStyle({ backgroundColor: '#181818', color: '#FFFFFF' });
   });
 
   it('downloads source with a normalized extension', async () => {

@@ -26,7 +26,7 @@
 .code-preview-syntax .hljs-literal,
 .code-preview-syntax .hljs-section,
 .code-preview-syntax .hljs-link {
-  color: #c084fc;
+  color: var(--code-accent, #c084fc);
 }
 
 .code-preview-syntax[data-code-theme="light"] .hljs-keyword,
@@ -34,7 +34,7 @@
 .code-preview-syntax[data-code-theme="light"] .hljs-literal,
 .code-preview-syntax[data-code-theme="light"] .hljs-section,
 .code-preview-syntax[data-code-theme="light"] .hljs-link {
-  color: #7e22ce;
+  color: var(--code-accent, #7e22ce);
 }
 
 .code-preview-syntax .hljs-string,
@@ -87,6 +87,33 @@
 
 .code-preview-syntax[data-code-theme="light"] .hljs-deletion {
   color: #b91c1c;
+}
+
+.code-editor-surface,
+.code-editor-highlight,
+.code-editor-input {
+  tab-size: 2;
+}
+
+.code-editor-highlight,
+.code-editor-input {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.code-editor-input {
+  background: transparent !important;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.code-editor-input::selection {
+  background: color-mix(in srgb, var(--code-accent, #339cff) 38%, transparent);
+}
+
+.code-editor-placeholder {
+  color: currentColor;
+  opacity: 0.45;
 }
 
 /* Repository-owned Google Fonts subsets; provenance and licenses are in public/fonts. */

@@ -98,7 +98,10 @@ Every routed tool page uses the shared visual contract established by Image Meta
 3. Keep page-level descriptions out of `ToolHeader`; helper text belongs inside the feature that needs it.
 4. Preserve the shared desktop card spacing (`p-6`, `gap-4`) and allow the mobile `.tool-card` rules in `styles.css` to handle compact screens.
 
-`src/components/ui/AutoDetectConverter.jsx` implements this contract for the Slashes, ASCII, and Unicode converters.
+`src/components/ui/AutoDetectConverter.jsx` implements this contract for the
+Slashes, ASCII, Unicode, and URL converters. Slashes and ASCII expose the
+automatic direction detector only; Unicode and URL retain explicit
+encode/decode controls where direction can be ambiguous.
 
 ### Styling and theme
 
@@ -179,7 +182,10 @@ input/filter/presentation rules live in their corresponding
 time-difference coverage is in `timeDomain.test.js`, Roman numeral coverage is
 in `romanDomain.test.js`, Phred conversion coverage is in `phredDomain.test.js`,
 sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`, and URL
-percent-encoding coverage is in `urlDomain.test.js`.
+percent-encoding coverage is in `urlDomain.test.js`. The explicit typing-start
+flow is covered by `typingStart.test.jsx`; the converter-mode, folder-picker,
+Color Sync, and image-stripping guidance regressions are covered by
+`converterClipboard.test.jsx` and `enhancementUi.test.jsx`.
 
 ## APIs and development middleware
 
@@ -249,7 +255,17 @@ Editor state, dependency installations, generated output, test reports, local
 Cloudflare state, private environment files, incoming scratch data, and review
 artifacts belong only in the local workspace and are covered by `.gitignore`.
 
-Folder Analyzer uses the browser directory picker and never accepts an arbitrary local path.
+Folder Analyzer uses the browser directory picker and never accepts an arbitrary
+local path. After a scan it can reopen a reset picker to add another folder,
+including a previously selected path, without clearing the current analysis.
+
+Image Metadata strips JPEG metadata without re-encoding. For PNG, WebP, and
+other browser-decodable formats, it removes metadata through a browser-local
+privacy-safe re-encode, preserving PNG/WebP output where supported and falling
+back to PNG for other decoded formats. Canon CR3 remains inspection-only because
+the browser cannot safely reconstruct its RAW image data.
+
+Color Converter exposes Color Sync as a high-contrast pressed toggle.
 
 ## Network-service policy
 

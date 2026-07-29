@@ -53,6 +53,12 @@ export const TOOL_ICONS = {
         <path d="M9 16v-4l2 2 2-2v4"></path>
         <path d="M15 13v3m0 0-1.5-1.5M15 16l1.5-1.5"></path>
       </svg>,
+  "tool-code-preview": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+        <path d="m9 8-4 4 4 4"></path>
+        <path d="m15 8 4 4-4 4"></path>
+        <path d="m13 6-2 12"></path>
+      </svg>,
   "tool-fontextractor": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 7 4 4 20 4 20 7"></polyline>
         <line x1="9" y1="20" x2="15" y2="20"></line>

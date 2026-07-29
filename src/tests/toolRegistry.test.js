@@ -13,6 +13,7 @@ describe('tool route registry', () => {
     expect(new Set(PUBLIC_ROUTE_IDS).size).toBe(PUBLIC_ROUTE_IDS.length);
     expect(PUBLIC_ROUTE_IDS).toContain('tool-home');
     expect(PUBLIC_ROUTE_IDS).toContain('tool-markdown');
+    expect(PUBLIC_ROUTE_IDS).toContain('tool-code-preview');
     expect(PUBLIC_ROUTE_IDS).toContain('privacy');
     expect(getToolRoute('tool-officemeta')?.id).toBe('tool-docmeta');
   });

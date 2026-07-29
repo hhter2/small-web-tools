@@ -125,6 +125,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
 | `tool-url` | URL Encoder & Decoder | `UrlEncoderDecoder.jsx` | Developer |
 | `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |
+| `tool-code-preview` | Code Live Preview | `CodePreviewer.jsx` | Developer |
 | `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
 | `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |
 | `tool-folder-analyzer` | Folder Analyzer | `FolderAnalyzer.jsx` | Developer |
@@ -176,6 +177,15 @@ discarded. Source-line metadata keeps the independently scrollable editor and
 preview aligned in both directions without collapsing fenced-code content.
 Focused parser and interaction coverage lives in
 `markdownDomain.test.js` and `markdownPreviewer.test.jsx`.
+
+### Code Live Preview
+
+`CodePreviewer.jsx` provides a browser-local code editor and live syntax-highlighted
+Editor or Terminal presentation. It supports selectable languages, fonts, background
+colors, line numbers, source-file download, and lazy PNG export without executing or
+uploading code. The language registry, filename inference, contrast selection, and
+highlighting helpers live under `CodePreviewer/lib/`; focused domain and interaction
+coverage lives in `codePreviewDomain.test.js` and `codePreviewer.test.jsx`.
 
 ### Media Splitter
 
@@ -298,6 +308,8 @@ Color Converter exposes Color Sync as a high-contrast pressed toggle.
 | `jszip` | Office document metadata parsing and archive handling after archive-limit preflight. |
 | `html5-qrcode` | Camera and file-based QR/barcode scanning. |
 | `qrcode`, `jsbarcode` | QR and barcode generation. |
+| `highlight.js` | Browser-local syntax highlighting for the Code Live Preview tool. |
+| `html-to-image` | Lazy browser-local PNG export of styled code previews. |
 | `@ffmpeg/ffmpeg` | Client-side media separation using integrity-verified remote core assets. |
 | `@zxcvbn-ts/core`, language packages | Pattern-aware password strength analysis loaded only on the password route. |
 | `ignore` | Standards-compatible `.gitignore` matching in Folder Analyzer. |

@@ -2,6 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
+.code-preview-syntax[data-code-theme="dark"] {
+  color: #e5e7eb;
+}
+
+.code-preview-syntax[data-code-theme="light"] {
+  color: #1f2937;
+}
+
+.code-preview-syntax .hljs-comment,
+.code-preview-syntax .hljs-quote {
+  color: #7c899d;
+  font-style: italic;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-comment,
+.code-preview-syntax[data-code-theme="light"] .hljs-quote {
+  color: #64748b;
+}
+
+.code-preview-syntax .hljs-keyword,
+.code-preview-syntax .hljs-selector-tag,
+.code-preview-syntax .hljs-literal,
+.code-preview-syntax .hljs-section,
+.code-preview-syntax .hljs-link {
+  color: #c084fc;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-keyword,
+.code-preview-syntax[data-code-theme="light"] .hljs-selector-tag,
+.code-preview-syntax[data-code-theme="light"] .hljs-literal,
+.code-preview-syntax[data-code-theme="light"] .hljs-section,
+.code-preview-syntax[data-code-theme="light"] .hljs-link {
+  color: #7e22ce;
+}
+
+.code-preview-syntax .hljs-string,
+.code-preview-syntax .hljs-title,
+.code-preview-syntax .hljs-name,
+.code-preview-syntax .hljs-type,
+.code-preview-syntax .hljs-attribute,
+.code-preview-syntax .hljs-symbol,
+.code-preview-syntax .hljs-bullet,
+.code-preview-syntax .hljs-addition,
+.code-preview-syntax .hljs-variable,
+.code-preview-syntax .hljs-template-tag,
+.code-preview-syntax .hljs-template-variable {
+  color: #86efac;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-string,
+.code-preview-syntax[data-code-theme="light"] .hljs-title,
+.code-preview-syntax[data-code-theme="light"] .hljs-name,
+.code-preview-syntax[data-code-theme="light"] .hljs-type,
+.code-preview-syntax[data-code-theme="light"] .hljs-attribute,
+.code-preview-syntax[data-code-theme="light"] .hljs-symbol,
+.code-preview-syntax[data-code-theme="light"] .hljs-bullet,
+.code-preview-syntax[data-code-theme="light"] .hljs-addition,
+.code-preview-syntax[data-code-theme="light"] .hljs-variable,
+.code-preview-syntax[data-code-theme="light"] .hljs-template-tag,
+.code-preview-syntax[data-code-theme="light"] .hljs-template-variable {
+  color: #166534;
+}
+
+.code-preview-syntax .hljs-number,
+.code-preview-syntax .hljs-meta,
+.code-preview-syntax .hljs-built_in,
+.code-preview-syntax .hljs-builtin-name,
+.code-preview-syntax .hljs-params {
+  color: #7dd3fc;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-number,
+.code-preview-syntax[data-code-theme="light"] .hljs-meta,
+.code-preview-syntax[data-code-theme="light"] .hljs-built_in,
+.code-preview-syntax[data-code-theme="light"] .hljs-builtin-name,
+.code-preview-syntax[data-code-theme="light"] .hljs-params {
+  color: #0369a1;
+}
+
+.code-preview-syntax .hljs-deletion {
+  color: #fca5a5;
+}
+
+.code-preview-syntax[data-code-theme="light"] .hljs-deletion {
+  color: #b91c1c;
+}
+
 /* Repository-owned Google Fonts subsets; provenance and licenses are in public/fonts. */
 @font-face {
   font-family: "Inter";

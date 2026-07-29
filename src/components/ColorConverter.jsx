@@ -1219,10 +1219,21 @@ export default function ColorConverter() {
             <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider">HSL Swatches</h3>
             <button
               type="button"
-              className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
+              className={`inline-flex min-h-9 items-center gap-2 rounded-full border-2 px-3 py-1.5 text-xs font-extrabold tracking-wide shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                isSynced
+                  ? 'border-accent bg-accent text-white shadow-[0_3px_12px_var(--accent-light)] hover:bg-accent-hover'
+                  : 'border-amber-500 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+              }`}
               onClick={handleSyncToggle}
               title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
+              aria-pressed={isSynced}
             >
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 rounded-full border-2 ${
+                  isSynced ? 'border-white bg-white' : 'border-amber-500 bg-transparent'
+                }`}
+              />
               {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
             </button>
           </div>

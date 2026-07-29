@@ -293,6 +293,12 @@ export default function FolderAnalyzer() {
     }
   };
 
+  const openFolderInput = () => {
+    if (!folderInputRef.current) return;
+    folderInputRef.current.value = '';
+    folderInputRef.current.click();
+  };
+
   // Drag and Drop handlers
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -925,8 +931,13 @@ export default function FolderAnalyzer() {
                 <span className="truncate max-w-[200px]" title={activeProject.path || activeProject.name}>{activeProject.path || activeProject.name}</span>
               </div>
               
-              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => folderInputRef.current?.click()}>
-                + Select Another Folder
+              <button
+                type="button"
+                className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
+                onClick={openFolderInput}
+                aria-label="Select another folder path"
+              >
+                + Add Another Folder
               </button>
             </div>
           )}
@@ -970,8 +981,13 @@ export default function FolderAnalyzer() {
             </div>
           ))}
           
-          <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => folderInputRef.current?.click()}>
-            + Select Another Folder
+          <button
+            type="button"
+            className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
+            onClick={openFolderInput}
+            aria-label="Select another folder path"
+          >
+            + Add Another Folder
           </button>
         </div>
       )}
@@ -1014,11 +1030,11 @@ export default function FolderAnalyzer() {
                   processFiles(files, [dirHandle.name], scannedProjects.length > 0);
                 }).catch((err) => {
                   if (err.name !== 'AbortError') {
-                    folderInputRef.current?.click();
+                    openFolderInput();
                   }
                 });
               } else {
-                folderInputRef.current?.click();
+                openFolderInput();
               }
             }}
             aria-label="Select a folder to analyze"

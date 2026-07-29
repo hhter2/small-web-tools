@@ -104,6 +104,45 @@ function stripJpegMetadata(arrayBuffer, mode) {
   return result.buffer;
 }
 
+const REENCODE_MIME_TYPES = new Set(['image/png', 'image/webp']);
+
+export function reencodeImageWithoutMetadata(previewSrc, sourceMimeType) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      if (image.naturalWidth * image.naturalHeight > 40_000_000) {
+        reject(new Error('This image is too large to re-encode safely in the browser.'));
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        reject(new Error('This browser cannot create a metadata-free image.'));
+        return;
+      }
+
+      context.drawImage(image, 0, 0);
+      const requestedMimeType = REENCODE_MIME_TYPES.has(sourceMimeType) ? sourceMimeType : 'image/png';
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          reject(new Error('This image format could not be re-encoded by the browser.'));
+          return;
+        }
+        const mimeType = blob.type === 'image/webp' ? 'image/webp' : 'image/png';
+        resolve({
+          buffer: await blob.arrayBuffer(),
+          mimeType,
+          extension: mimeType === 'image/webp' ? 'webp' : 'png',
+        });
+      }, requestedMimeType, requestedMimeType === 'image/webp' ? 0.95 : undefined);
+    };
+    image.onerror = () => reject(new Error('This browser cannot decode the selected image format.'));
+    image.src = previewSrc;
+  });
+}
+
 function isCR3(arrayBuffer) {
   if (arrayBuffer.byteLength < 12) return false;
   const view = new DataView(arrayBuffer);
@@ -887,16 +926,35 @@ export default function ImgMeta() {
     }
   };
 
-  const handleStripMetadata = (image, mode) => {
+  const handleStripMetadata = async (image, mode) => {
     try {
       const isJpeg = image.type === 'JPEG' || image.type === 'JPG' || image.name.toLowerCase().endsWith('.jpg') || image.name.toLowerCase().endsWith('.jpeg');
-      
-      if (!isJpeg) {
-        setStatus("Lossless stripping is only supported for JPEG/JPG images.");
-        return;
+      const sourceMimeType = image.file?.type || '';
+      let strippedBuffer;
+      let outputMimeType;
+      let outputExtension;
+      let lossless;
+
+      if (isJpeg) {
+        strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
+        outputMimeType = 'image/jpeg';
+        outputExtension = image.name.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'jpg';
+        lossless = true;
+      } else {
+        if (mode === 'private') {
+          setStatus('Private-only stripping is available for JPEG/JPG. Use Remove All Metadata for other image formats.');
+          return;
+        }
+        if (!image.previewSrc || image.type === 'Canon CR3 RAW') {
+          setStatus('This image format cannot be safely re-encoded by the browser.');
+          return;
+        }
+        const reencoded = await reencodeImageWithoutMetadata(image.previewSrc, sourceMimeType);
+        strippedBuffer = reencoded.buffer;
+        outputMimeType = reencoded.mimeType;
+        outputExtension = reencoded.extension;
+        lossless = outputMimeType === 'image/png';
       }
-      
-      const strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
       
       let strippedTags = {};
       let strippedExpanded = {};
@@ -923,7 +981,7 @@ export default function ImgMeta() {
         }
       }
       
-      const blob = new Blob([strippedBuffer], { type: 'image/jpeg' });
+      const blob = new Blob([strippedBuffer], { type: outputMimeType });
       const strippedPreviewSrc = createObjectUrl(blob);
       
       setImages(prev => prev.map(img => {
@@ -939,13 +997,19 @@ export default function ImgMeta() {
               retainedTags: retainedTags,
               previewSrc: strippedPreviewSrc,
               formattedSize: formatBytes(strippedBuffer.byteLength),
+              mimeType: outputMimeType,
+              extension: outputExtension,
             }
           };
         }
         return img;
       }));
       
-      setStatus(`Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'} losslessly!`);
+      setStatus(
+        `Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'}${
+          lossless ? ' losslessly' : ` by re-encoding as ${outputExtension.toUpperCase()}`
+        }!`,
+      );
     } catch (err) {
       console.error(err);
       setStatus("Error stripping metadata: " + err.message);
@@ -970,14 +1034,13 @@ export default function ImgMeta() {
 
   const downloadStrippedFile = (image) => {
     if (!image.strippedInfo) return;
-    const blob = new Blob([image.strippedInfo.buffer], { type: 'image/jpeg' });
+    const blob = new Blob([image.strippedInfo.buffer], { type: image.strippedInfo.mimeType });
     const url = createObjectUrl(blob);
     const a = document.createElement('a');
     a.href = url;
     
-    const ext = image.name.split('.').pop();
     const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
-    a.download = `${nameWithoutExt}_stripped.${ext}`;
+    a.download = `${nameWithoutExt}_stripped.${image.strippedInfo.extension}`;
     
     document.body.appendChild(a);
     a.click();
@@ -996,9 +1059,8 @@ export default function ImgMeta() {
         
         let filename = image.name;
         if (image.strippedInfo) {
-          const ext = image.name.split('.').pop();
           const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
-          filename = `${nameWithoutExt}_stripped.${ext}`;
+          filename = `${nameWithoutExt}_stripped.${image.strippedInfo.extension}`;
         }
         
         zip.file(filename, buffer);
@@ -1329,6 +1391,7 @@ export default function ImgMeta() {
     if (images.length === 0) return null;
     
     const isJpeg = activeImage && (activeImage.type === 'JPEG' || activeImage.type === 'JPG' || activeImage.name.toLowerCase().endsWith('.jpg') || activeImage.name.toLowerCase().endsWith('.jpeg'));
+    const canStripMetadata = activeImage && activeImage.type !== 'Canon CR3 RAW' && Boolean(activeImage.previewSrc);
     
     return (
       <div className="flex flex-col gap-4 border-b border-border pb-5 mb-6">
@@ -1395,26 +1458,28 @@ export default function ImgMeta() {
         
         <div className="flex flex-wrap items-center justify-between gap-4 mt-1 bg-app/40 border border-border rounded-xl p-3">
           {/* Metadata Stripping inline */}
-          {activeImage && isJpeg ? (
-            <div className="flex items-center gap-2.5">
+          {canStripMetadata ? (
+            <div className="flex flex-wrap items-center gap-2.5">
               {!activeImage.strippedInfo ? (
                 <>
                   <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0">Strip Meta:</span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="flex items-center gap-1 hover:text-accent font-bold"
-                    onClick={() => handleStripMetadata(activeImage, 'private')}
-                  >
-                    🔒 Private
-                  </Button>
+                  {isJpeg && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-1 hover:text-accent font-bold"
+                      onClick={() => handleStripMetadata(activeImage, 'private')}
+                    >
+                      🔒 Private
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     size="sm"
                     className="flex items-center gap-1 hover:text-red-500 font-bold"
                     onClick={() => handleStripMetadata(activeImage, 'all')}
                   >
-                    🗑️ All
+                    🗑️ Remove All Metadata
                   </Button>
                 </>
               ) : (
@@ -1440,7 +1505,9 @@ export default function ImgMeta() {
               )}
             </div>
           ) : (
-            <div className="text-xs text-text-muted/60 italic">Metadata stripping is only supported for JPEG/JPG format.</div>
+            <div className="text-xs text-text-muted/60 italic">
+              This RAW image cannot be safely re-encoded by the browser.
+            </div>
           )}
 
           <div className="flex items-center gap-2">
@@ -1536,6 +1603,9 @@ export default function ImgMeta() {
                 Browse Files
               </Button>
               <p className="text-[10px] text-text-muted/60 leading-relaxed">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
+              <p role="note" className="rounded-md border border-accent/30 bg-accent-light px-2.5 py-1.5 text-xs font-semibold text-accent">
+                Metadata stripping supports JPEG/JPG, PNG, WebP, and other browser-decodable images. Non-JPEG formats are privacy-safe re-encodes.
+              </p>
             </div>
           </div>
         )}

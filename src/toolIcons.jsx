@@ -47,6 +47,12 @@ export const TOOL_ICONS = {
         <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1"></path>
         <path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1"></path>
       </svg>,
+  "tool-markdown": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 3h9l4 4v14H6z"></path>
+        <path d="M15 3v5h4"></path>
+        <path d="M9 16v-4l2 2 2-2v4"></path>
+        <path d="M15 13v3m0 0-1.5-1.5M15 16l1.5-1.5"></path>
+      </svg>,
   "tool-fontextractor": <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 7 4 4 20 4 20 7"></polyline>
         <line x1="9" y1="20" x2="15" y2="20"></line>

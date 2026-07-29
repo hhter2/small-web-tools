@@ -6,11 +6,13 @@ import {
   TOOL_ROUTES,
   getToolRoute,
 } from '../toolRegistry.js';
+import { TOOL_ICONS } from '../toolIcons.jsx';
 
 describe('tool route registry', () => {
   it('owns unique public route and alias identifiers', () => {
     expect(new Set(PUBLIC_ROUTE_IDS).size).toBe(PUBLIC_ROUTE_IDS.length);
     expect(PUBLIC_ROUTE_IDS).toContain('tool-home');
+    expect(PUBLIC_ROUTE_IDS).toContain('tool-markdown');
     expect(PUBLIC_ROUTE_IDS).toContain('privacy');
     expect(getToolRoute('tool-officemeta')?.id).toBe('tool-docmeta');
   });
@@ -35,6 +37,12 @@ describe('tool route registry', () => {
     for (const route of TOOL_ROUTES.filter((item) => item.staticLayout)) {
       expect(STATIC_LAYOUT_IDS.has(route.id)).toBe(true);
       for (const alias of route.aliases) expect(STATIC_LAYOUT_IDS.has(alias)).toBe(true);
+    }
+  });
+
+  it('provides an icon for every visible navigation route', () => {
+    for (const route of NAVIGATION_ROUTES) {
+      expect(TOOL_ICONS[route.iconKey], route.id).toBeTruthy();
     }
   });
 });

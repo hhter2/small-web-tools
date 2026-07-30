@@ -3,6 +3,10 @@ import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import Card from './ui/Card';
 import Button from './ui/Button';
+import FullscreenPreview, {
+  FullscreenPreviewButton,
+  TRANSPARENT_PREVIEW_CLASS,
+} from './ui/FullscreenPreview';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 import ToggleSwitch from './ui/ToggleSwitch';
@@ -826,6 +830,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
   // Copy status
   const [copied, setCopied] = useState(false);
+  const [fullscreenPreview, setFullscreenPreview] = useState(null);
 
   // ================= Barcode State =================
   const [barcodeValue, setBarcodeValue] = useState('');
@@ -1156,6 +1161,21 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     URL.revokeObjectURL(url);
   };
 
+  const openFullscreenPreview = () => {
+    const isQrPreview = activeTab === 'qr';
+    const canvas = isQrPreview ? qrCanvasRef.current : barcodeCanvasRef.current;
+    const unavailable = isQrPreview
+      ? !getQRValue()
+      : !barcodeValue || Boolean(barcodeError);
+    if (!canvas || unavailable) return;
+
+    setFullscreenPreview({
+      src: canvas.toDataURL('image/png'),
+      title: `${isQrPreview ? 'QR code' : 'Barcode'} fullscreen preview`,
+      transparent: isQrPreview && qrBgTransparent,
+    });
+  };
+
   // Reusable accordion header button
   const AccordionHeader = ({ sectionKey, label, badge = null }) => (
     <button
@@ -1191,7 +1211,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <Button
             variant={activeTab === 'qr' ? 'primary' : 'secondary'}
             size="sm"
-            onClick={() => setActiveTab('qr')}
+            onClick={() => {
+              setFullscreenPreview(null);
+              setActiveTab('qr');
+            }}
             className="flex items-center gap-1.5"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -1205,7 +1228,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <Button
             variant={activeTab === 'barcode' ? 'primary' : 'secondary'}
             size="sm"
-            onClick={() => setActiveTab('barcode')}
+            onClick={() => {
+              setFullscreenPreview(null);
+              setActiveTab('barcode');
+            }}
             className="flex items-center gap-1.5"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -2027,7 +2053,12 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
             <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">Live Preview</h3>
 
-            <div className="flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
+            <div className="relative flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
+              <FullscreenPreviewButton
+                disabled={activeTab === 'qr' ? !getQRValue() : !barcodeValue || Boolean(barcodeError)}
+                label={`Open fullscreen ${activeTab === 'qr' ? 'QR code' : 'barcode'} preview`}
+                onClick={openFullscreenPreview}
+              />
               {activeTab === 'qr' ? (
                 <div className="flex items-center justify-center h-full w-full">
                   {!getQRValue() ? (
@@ -2108,6 +2139,21 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
       </div>
+
+      <FullscreenPreview
+        open={Boolean(fullscreenPreview)}
+        onClose={() => setFullscreenPreview(null)}
+        title={fullscreenPreview?.title}
+        surfaceClassName={fullscreenPreview?.transparent ? TRANSPARENT_PREVIEW_CLASS : 'bg-white'}
+      >
+        {fullscreenPreview && (
+          <img
+            src={fullscreenPreview.src}
+            alt={fullscreenPreview.title}
+            className="max-h-[76vh] max-w-full object-contain"
+          />
+        )}
+      </FullscreenPreview>
     </Card>
   );
 }

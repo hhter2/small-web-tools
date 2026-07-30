@@ -109,4 +109,24 @@ describe('Code Previewer', () => {
     expect(click).toHaveBeenCalledOnce();
     expect(container).toHaveTextContent('Downloaded snippet.js.');
   });
+
+  it('opens and closes an icon-only fullscreen code preview', async () => {
+    await act(async () => setNativeValue(
+      container.querySelector('[aria-label="Code editor"]'),
+      'const fullscreen = true;',
+    ));
+
+    const expandButton = container.querySelector('[aria-label="Open fullscreen code preview"]');
+    expect(expandButton).toBeEnabled();
+    expect(expandButton).toHaveTextContent('');
+    await act(async () => expandButton.click());
+
+    expect(document.querySelector('[role="dialog"]')).toHaveAccessibleName('Code fullscreen preview');
+    expect(document.querySelector('[aria-label="Fullscreen highlighted code"]'))
+      .toHaveTextContent('const fullscreen = true;');
+
+    const closeButton = document.querySelector('[aria-label="Close fullscreen preview"]');
+    await act(async () => closeButton.click());
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
 });

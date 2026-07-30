@@ -35,6 +35,8 @@ Use this sequence for each meaningful update:
 
 ### 2026-07-30
 
+- [x] `fix` Make the SVG-to-PNG preview surface reflect the selected transparent or white export background.
+- [x] `feat` Add an accessible icon-only fullscreen preview for SVG, QR code, barcode, and VS Code image exports.
 - [x] `feat 2` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
 - [x] `feat 3` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
 - [x] `feat 4` Word & Character Counter中，在首行加入行數

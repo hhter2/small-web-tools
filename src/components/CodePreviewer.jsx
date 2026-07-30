@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
+import FullscreenPreview, { FullscreenPreviewButton } from './ui/FullscreenPreview.jsx';
 import ToolHeader from './ui/ToolHeader.jsx';
 import {
   CODE_LANGUAGES,
@@ -83,6 +84,7 @@ export default function CodePreviewer() {
   const [status, setStatus] = useState('');
   const [exporting, setExporting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState({ top: 0, left: 0 });
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -183,7 +185,8 @@ export default function CodePreviewer() {
         cacheBust: false,
         pixelRatio: 2,
         preferredFontFormat: 'woff2',
-        filter: (node) => !node.classList?.contains('code-editor-input'),
+        filter: (node) => !node.classList?.contains('code-editor-input')
+          && !node.classList?.contains('fullscreen-preview-control'),
       });
       const sourceName = normalizeCodeFilename(filename, language);
       const imageName = `${sourceName.replace(/\.[^.]+$/, '') || 'code'}-vscode.png`;
@@ -197,6 +200,7 @@ export default function CodePreviewer() {
   };
 
   const handleClear = () => {
+    setPreviewOpen(false);
     setCode('');
     setScrollPosition({ top: 0, left: 0 });
     setStatus('Editor cleared.');
@@ -278,6 +282,11 @@ export default function CodePreviewer() {
           style={editorStyle}
           aria-label="VS Code editor"
         >
+          <FullscreenPreviewButton
+            disabled={!code}
+            label="Open fullscreen code preview"
+            onClick={() => setPreviewOpen(true)}
+          />
           <div className="code-editor-line-numbers absolute inset-y-0 left-0 w-14 overflow-hidden border-r border-current/10 bg-black/5">
             <div className="min-h-full py-5 text-right text-sm leading-6 opacity-45" style={{ transform: `translateY(${-scrollPosition.top}px)` }}>
               {Array.from({ length: lineCount }, (_, index) => <div key={index} className="pr-3">{index + 1}</div>)}
@@ -389,6 +398,31 @@ export default function CodePreviewer() {
           </section>
         </div>
       )}
+
+      <FullscreenPreview
+        open={previewOpen && Boolean(code)}
+        onClose={() => setPreviewOpen(false)}
+        title="Code fullscreen preview"
+        surfaceClassName="bg-transparent !p-0"
+      >
+        <div
+          data-code-theme={syntaxTheme}
+          className="code-preview-syntax code-editor-surface relative max-h-[82vh] min-h-[420px] w-full overflow-auto rounded-lg"
+          style={editorStyle}
+        >
+          <div className="code-editor-line-numbers absolute inset-y-0 left-0 w-14 border-r border-current/10 bg-black/5">
+            <div className="min-h-full py-5 text-right text-sm leading-6 opacity-45">
+              {Array.from({ length: lineCount }, (_, index) => <div key={index} className="pr-3">{index + 1}</div>)}
+            </div>
+          </div>
+          <pre
+            className="m-0 min-h-[420px] min-w-max pl-[4.5rem] pr-5 pt-5 text-sm leading-6"
+            aria-label="Fullscreen highlighted code"
+          >
+            <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+          </pre>
+        </div>
+      </FullscreenPreview>
     </Card>
   );
 }

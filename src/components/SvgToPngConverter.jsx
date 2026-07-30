@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import FullscreenPreview, {
+  FullscreenPreviewButton,
+  TRANSPARENT_PREVIEW_CLASS,
+} from './ui/FullscreenPreview';
 import ToolHeader from './ui/ToolHeader';
 import {
   calculateLockedDimension,
@@ -29,6 +33,7 @@ export default function SvgToPngConverter() {
   const [height, setHeight] = useState(512);
   const [lockRatio, setLockRatio] = useState(true);
   const [background, setBackground] = useState('transparent');
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [status, setStatus] = useState('');
 
   const parsed = useMemo(() => inspectAndSanitizeSvg(markup), [markup]);
@@ -54,6 +59,7 @@ export default function SvgToPngConverter() {
       return;
     }
     const text = await file.text();
+    setPreviewOpen(false);
     setMarkup(text);
     setFilename(file.name.replace(/\.svg$/i, '') || 'converted');
     setStatus('');
@@ -145,6 +151,7 @@ export default function SvgToPngConverter() {
             id="svg-markup"
             value={markup}
             onChange={(event) => {
+              setPreviewOpen(false);
               setMarkup(event.target.value);
               setStatus('');
             }}
@@ -162,7 +169,17 @@ export default function SvgToPngConverter() {
 
         <section className="flex min-w-0 flex-col gap-4" aria-labelledby="svg-output-title">
           <h3 id="svg-output-title" className="text-sm font-bold text-text-main">PNG output</h3>
-          <div className="flex min-h-56 items-center justify-center overflow-hidden rounded-xl border border-border bg-[linear-gradient(45deg,#ddd_25%,transparent_25%),linear-gradient(-45deg,#ddd_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ddd_75%),linear-gradient(-45deg,transparent_75%,#ddd_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px] p-4">
+          <div
+            data-preview-background={background}
+            className={`relative flex min-h-56 items-center justify-center overflow-hidden rounded-xl border border-border p-4 ${
+              background === 'white' ? 'bg-white' : TRANSPARENT_PREVIEW_CLASS
+            }`}
+          >
+            <FullscreenPreviewButton
+              disabled={!previewUrl}
+              label="Open fullscreen SVG preview"
+              onClick={() => setPreviewOpen(true)}
+            />
             {previewUrl ? (
               <img src={previewUrl} alt="Sanitized SVG preview" className="max-h-72 max-w-full object-contain" />
             ) : (
@@ -229,6 +246,19 @@ export default function SvgToPngConverter() {
           {status && <p role="status" className="text-xs text-text-muted">{status}</p>}
         </section>
       </div>
+
+      <FullscreenPreview
+        open={previewOpen && Boolean(previewUrl)}
+        onClose={() => setPreviewOpen(false)}
+        title="SVG fullscreen preview"
+        surfaceClassName={background === 'white' ? 'bg-white' : TRANSPARENT_PREVIEW_CLASS}
+      >
+        <img
+          src={previewUrl}
+          alt="Sanitized SVG fullscreen preview"
+          className="max-h-[76vh] max-w-full object-contain"
+        />
+      </FullscreenPreview>
     </Card>
   );
 }

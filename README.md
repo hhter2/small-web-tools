@@ -148,11 +148,11 @@ operational approval; subdomains and preload require an explicit full-domain aud
 
 ## Documentation
 
-`CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `CODEBASE.md`
+`CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `ARCHITECTURE.md`
 is the canonical architecture and route reference.
 
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
-- [`CODEBASE.md`](CODEBASE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 
 ## License
 

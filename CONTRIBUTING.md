@@ -1,6 +1,6 @@
 # Contributing to Small Web Tools
 
-`CONTRIBUTING.md` is the canonical engineering guide. Use `CODEBASE.md` for the
+`CONTRIBUTING.md` is the canonical engineering guide. Use `ARCHITECTURE.md` for the
 current architecture, route inventory, API topology, and project map.
 
 ## Supported environment
@@ -88,7 +88,7 @@ documentation-consistency gates. CI runs it on Node 22 and Node 24.
 
 ## Documentation and commits
 
-- Update `CODEBASE.md` for structural, route, API, dependency, or runtime changes.
+- Update `ARCHITECTURE.md` for structural, route, API, dependency, or runtime changes.
 - Update `README.md` and `PRIVACY.md` when user-visible behavior or data flow changes.
 - Do not edit owner-maintained `TODO.md` unless explicitly requested.
 - Commit coherent phases separately. Do not include generated output, secrets, or

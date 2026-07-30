@@ -1,6 +1,6 @@
 # Project TODO
 
-This file is the working backlog and update checklist for Small Web Tools. Keep it focused on planned work, completed maintenance, and release preparation. User-facing instructions belong in `README.md`; architecture belongs in `CODEBASE.md`.
+This file is the working backlog and update checklist for Small Web Tools. Keep it focused on planned work, completed maintenance, and release preparation. User-facing instructions belong in `README.md`; architecture belongs in `ARCHITECTURE.md`.
 
 ## Labels
 
@@ -17,7 +17,7 @@ Use this sequence for each meaningful update:
 1. **Define the change.** Record the task below with an appropriate label and confirm the affected tools, routes, APIs, or shared components.
 2. **Implement in the right place.** Keep tool registration in `src/toolRegistry.js`; use the shared `Card` and `ToolHeader` primitives for tool pages; add server functionality under `functions/api/` only when browser-only code is insufficient.
 3. **Validate.** Run `npm run verify`. For layout or interaction work, also run the relevant Playwright journeys, check the affected routes at desktop and mobile widths, and review browser console errors.
-4. **Update documentation.** Refresh `README.md` for changed user behavior and `CODEBASE.md` for structural changes. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
+4. **Update documentation.** Refresh `README.md` for changed user behavior and `ARCHITECTURE.md` for structural changes. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
 5. **Review and commit.** Check `git diff` and `git status`, then create a focused commit after each completed logical stage.
 6. **Prepare a release when appropriate.** Confirm the version in `package.json`; create or update the git tag only as part of an agreed release. The app displays the newest git tag when one is available, otherwise it falls back to the package version.
 
@@ -56,7 +56,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 13` New feauture of the Markdown file previewer. Can paste the markdown syntax or upload the file, then use the engine to preview it. Also, can make the simple modification, also to download.
 - [x] `feat 14` The code live preview and highlighter, support the multiplex language include terminal, user can choose the preview type, font and background color, also download the code. Also show the line numbers
 - [x] `docs` Review the tool descriptions in the dashboard when a feature's behavior materially changes.
-- [x] `docs` Keep `CODEBASE.md` synchronized whenever a route, shared component, API endpoint, or dependency is added, removed, or substantially changed.
+- [x] `docs` Keep `ARCHITECTURE.md` synchronized whenever a route, shared component, API endpoint, or dependency is added, removed, or substantially changed.
 
 ### 2026-07-28
 - [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.
@@ -73,7 +73,7 @@ Finish the 20260723 code review
 
 - [x] `docs` Rewrote the README as a concise site manual.
 - [x] `docs` Moved the project update process and maintenance backlog into this file.
-- [x] `docs` Refreshed CODEBASE.md to match the active route inventory, component conventions, APIs, and documentation roles.
+- [x] `docs` Refreshed the architecture guide to match the active route inventory, component conventions, APIs, and documentation roles.
 
 ### 2026-07-08
 

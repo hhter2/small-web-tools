@@ -2,7 +2,7 @@
 
 > This file governs how AI agents should behave in this repository.
 > It also tracks the styling migration status (Tailwind CSS).
-> Read `CONTRIBUTING.md` for canonical engineering rules and `CODEBASE.md` for
+> Read `CONTRIBUTING.md` for canonical engineering rules and `ARCHITECTURE.md` for
 > canonical architecture, routes, runtime topology, and project structure.
 > Do not modify this file unless explicitly asked.
 
@@ -10,8 +10,8 @@
 
 ## 1. Orientation (Read Before Any Task)
 
-1. Read `CODEBASE.md` for the full project map — do **not** scan the entire codebase from scratch.
-2. Identify which files are relevant to the current task using the Route Inventory and Repository Map in `CODEBASE.md`.
+1. Read `ARCHITECTURE.md` for the full project map — do **not** scan the entire codebase from scratch.
+2. Identify which files are relevant to the current task using the Route Inventory and Repository Map in `ARCHITECTURE.md`.
 3. Read only those files. Do not open files outside the stated scope unless a dependency forces it.
 4. State which files you plan to read and modify **before** making any changes.
 
@@ -65,7 +65,7 @@ Follow this sequence:
    the new endpoint genuinely needs a Vite development mirror. Declare every
    new server or third-party data flow in `config/network-services.json` and
    `PRIVACY.md`.
-7. Update `CODEBASE.md`: add the route to the Route Inventory and update the
+7. Update `ARCHITECTURE.md`: add the route to the Route Inventory and update the
    Repository Map and affected API/runtime sections. Update other user-facing
    documentation only when the task permits it.
 8. Run `npm run verify`. Confirm the canonical path and every alias resolve,
@@ -83,7 +83,7 @@ Follow this sequence:
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Prefer browser-local processing. Add server or direct third-party data flows only when required, bounded, consented where appropriate, and declared in `config/network-services.json` and `PRIVACY.md`. Use `functions/api/` when a same-origin server boundary is required. |
 | Data privacy | All client-side tools must process data entirely in the browser. **No user data should be sent to any server** unless the tool explicitly requires it (e.g., IP lookup, font extractor). |
-| Build tool | Vite 6. Follow the runtime topology documented in `CODEBASE.md`. |
+| Build tool | Vite 6. Follow the runtime topology documented in `ARCHITECTURE.md`. |
 
 ---
 
@@ -142,14 +142,14 @@ Before producing any code, confirm:
 - [ ] Does this task require a new npm package? If yes, name it and ask for approval first.
 - [ ] Does this task require a new serverless function? If yes, is a dev-proxy mirror also needed?
 - [ ] Does this task add or change route metadata in `src/toolRegistry.js`? If
-      yes, are the Route Inventory and Repository Map in `CODEBASE.md`, the
+      yes, are the Route Inventory and Repository Map in `ARCHITECTURE.md`, the
       matching icon in `src/toolIcons.jsx`, and relevant route tests in sync?
 
 ---
 
-## 9. Updating `CODEBASE.md`
+## 9. Updating `ARCHITECTURE.md`
 
-`CODEBASE.md` is the single source of truth for the project structure. Update it whenever:
+`ARCHITECTURE.md` is the single source of truth for the project structure. Update it whenever:
 
 - A new file or directory is created
 - A file is deleted or renamed
@@ -157,7 +157,7 @@ Before producing any code, confirm:
 - A new dependency is introduced (Dependencies table)
 - A serverless function is added or removed
 
-**Do not wait to be asked — updating `CODEBASE.md` is part of every task that changes the file structure.**
+**Do not wait to be asked — updating `ARCHITECTURE.md` is part of every task that changes the file structure.**
 
 ---
 

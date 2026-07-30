@@ -1,4 +1,4 @@
-# Codebase Guide: Small Web Tools
+# Architecture Guide: Small Web Tools
 
 `small-web-tools` is a React 18 and Vite single-page application containing browser-based utility tools. This document is the technical reference for maintaining the current application. Keep it updated when routes, shared components, APIs, or dependencies change.
 
@@ -7,7 +7,7 @@
 - `README.md` is the brief manual for people using the site.
 - `CONTRIBUTING.md` is the single source of truth for contribution standards and AI guidelines.
 - `TODO.md` is the maintained backlog, completed-work log, and update process.
-- `CODEBASE.md` is this architecture and maintenance reference.
+- `ARCHITECTURE.md` is this architecture and maintenance reference.
 
 ## Quick facts
 
@@ -30,7 +30,7 @@ small-web-tools/
 ├── README.md                 User-facing site manual
 ├── PRIVACY.md                User-facing privacy policy and disclaimers
 ├── TODO.md                   Backlog, completed work, and update process
-├── CODEBASE.md               Architecture and maintenance reference
+├── ARCHITECTURE.md           Architecture and maintenance reference
 ├── package.json              Scripts, dependencies, and pipeline commands
 ├── jsconfig.json             TypeScript checkJs configuration for JavaScript
 ├── eslint.config.js          ESLint flat config for React, hooks, and Cloudflare functions
@@ -296,7 +296,7 @@ build, test, operate, or maintain the project:
   configuration files define reproducible local development and verification.
 - `.github/` contains CI and dependency-maintenance configuration, while
   `.agents/AGENTS.md` contains repository-scoped development instructions.
-- `README.md`, `CONTRIBUTING.md`, `CODEBASE.md`, `PRIVACY.md`, `TODO.md`, and
+- `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `PRIVACY.md`, `TODO.md`, and
   `LICENSE` are maintained project documentation or legal material.
 - `.dev.vars.example` is safe, non-secret local-runtime documentation. Actual
   `.dev.vars*` files remain ignored.

@@ -42,6 +42,7 @@ Use this sequence for each meaningful update:
 - [x] `feat 11` Add SVG to PNG function
 - [x] `feat 12` URL encoder/decoder (main for Chinese address transformation)
 - [x] `feat 13` New feauture of the Markdown file previewer. Can paste the markdown syntax or upload the file, then use the engine to preview it. Also, can make the simple modification, also to download.
+- [ ] `feat 14` The code live preview and highlighter, support the multiplex language include terminal, user can choose the preview type, font and background color, also download the code. Also show the line numbers
 
 
 ### Maintenance

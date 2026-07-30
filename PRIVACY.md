@@ -8,7 +8,7 @@
 
 **Repository:** [github.com/hhter2/small-web-tools](https://github.com/hhter2/small-web-tools) (MIT License)
 
-**Maintainer Contact:** Rhosiqs (<contact@rhosiqs.com>)
+**Maintainer Contact:** Rhosiqs (<emailforvirtualmachine@gmail.com>)
 
 ## 1. Local-first processing
 

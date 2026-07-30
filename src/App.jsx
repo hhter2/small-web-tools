@@ -188,7 +188,7 @@ export default function App() {
   };
 
   const handleEmailClick = () => {
-    navigator.clipboard.writeText("contact@rhosiqs.com")
+    navigator.clipboard.writeText("emailforvirtualmachine@gmail.com")
       .then(() => {
         showToast("Email address copied to clipboard!");
       })
@@ -1074,7 +1074,7 @@ export default function App() {
                 </a>
                 {/* Email: copy the address and open the configured mail client */}
                 <a
-                  href="mailto:contact@rhosiqs.com"
+                  href="mailto:emailforvirtualmachine@gmail.com"
                   onClick={handleEmailClick}
                   className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
                   title="Email Rhosiqs (copies address)"

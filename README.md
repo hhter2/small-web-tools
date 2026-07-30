@@ -24,6 +24,7 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 - **Slashes Converter** — convert Windows and web-style paths.
 - **ASCII Converter** and **Unicode Converter** — convert text to and from character codes.
 - **Base Converter** — convert values among binary, octal, decimal, hexadecimal, and sexagesimal.
+- **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads.
 - **Website Font Extractor** — inspect the fonts used by a public website.
 - **Folder Analyzer** — inspect a selected folder's structure and metrics.
 

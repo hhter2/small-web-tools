@@ -181,14 +181,14 @@ Focused parser and interaction coverage lives in
 ### VS Code Preview
 
 `CodePreviewer.jsx` provides one browser-local, VS Code-style editing surface whose
-highlighted display and text input occupy the same window. It supports selectable
-languages; an on-demand appearance dialog with System, Light, and Dark presets;
-accent, background, foreground, and code font controls; line numbers; source-file
-download; clipboard copy; and lazy PNG export without
-executing or uploading code. The language registry, filename inference, contrast
-selection, and highlighting helpers live under `CodePreviewer/lib/`; focused domain
-and interaction coverage lives in `codePreviewDomain.test.js` and
-`codePreviewer.test.jsx`.
+highlighted display and text input occupy the same window. It supports 26 selectable
+language modes, including Bash/Shell; local file input; an on-demand appearance
+dialog with System, Light, and Dark presets; accent, background, foreground, and
+code font controls; line numbers; source-file download; clipboard copy; and lazy
+PNG export without executing code or sending it to a server. The language registry,
+filename inference, contrast selection, and highlighting helpers live under
+`CodePreviewer/lib/`; focused domain and interaction coverage lives in
+`codePreviewDomain.test.js` and `codePreviewer.test.jsx`.
 
 ### Media Splitter
 

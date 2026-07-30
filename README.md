@@ -21,16 +21,17 @@ other nonessential dashboard controls.
 Every selection redirects to a bookmarkable address and displays the complete
 address for copying. The canonical mode addresses are:
 
-- `?mode=daily#tool-home`
-- `?mode=developer#tool-home`
-- `?mode=bioinformatics#tool-home`
-- `?mode=designer#tool-home`
-- `?mode=student#tool-home`
-- `?mode=simple#tool-home`
+- `/home`
+- `/home/daily`
+- `/home/developer`
+- `/home/bioinformatics`
+- `/home/designer`
+- `/home/student`
+- `/home/simple`
 
-The `mode` parameter remains in the address while opening tools, so a link such
-as `?mode=developer#tool-code-preview` restores both the selected workspace and
-the requested tool.
+The workspace path remains in the address while opening tools, so a link such as
+`/home/developer#tool-code-preview` restores both the selected workspace and the
+requested tool.
 
 ## Tool guide
 

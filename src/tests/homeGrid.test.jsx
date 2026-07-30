@@ -50,7 +50,7 @@ describe('HomeGrid workspace modes', () => {
         tools={tools}
         onSelectTool={vi.fn()}
         modeId="simple"
-        modeAddress="https://tools.example/?mode=simple#tool-home"
+        modeAddress="https://tools.example/home/simple"
         onSelectMode={vi.fn()}
       />,
     ));
@@ -60,7 +60,7 @@ describe('HomeGrid workspace modes', () => {
     expect(container).toHaveTextContent('2 tools');
     expect(container.querySelector('#tool-mode')).toHaveValue('simple');
     expect(container.querySelector('#tool-mode-address'))
-      .toHaveValue('https://tools.example/?mode=simple#tool-home');
+      .toHaveValue('https://tools.example/home/simple');
     expect([...container.querySelectorAll('h3')].map((heading) => heading.textContent))
       .toEqual(['Word Counter', 'Date & Time Counter']);
   });
@@ -72,7 +72,7 @@ describe('HomeGrid workspace modes', () => {
         tools={tools}
         onSelectTool={vi.fn()}
         modeId="daily"
-        modeAddress="https://tools.example/?mode=daily#tool-home"
+        modeAddress="https://tools.example/home/daily"
         onSelectMode={onSelectMode}
       />,
     ));
@@ -88,7 +88,7 @@ describe('HomeGrid workspace modes', () => {
       .find((button) => button.textContent.trim() === 'Copy address');
     await act(async () => copyButton.click());
     expect(navigator.clipboard.writeText)
-      .toHaveBeenCalledWith('https://tools.example/?mode=daily#tool-home');
+      .toHaveBeenCalledWith('https://tools.example/home/daily');
     expect(container).toHaveTextContent('Mode address copied.');
   });
 });

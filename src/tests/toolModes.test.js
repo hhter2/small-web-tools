@@ -4,8 +4,9 @@ import {
   TOOL_MODES,
   buildModeUrl,
   filterToolsForMode,
-  getModeIdFromSearch,
+  getModeIdFromLocation,
   getToolMode,
+  isToolModePath,
 } from '../toolModes.js';
 
 describe('tool modes', () => {
@@ -37,12 +38,16 @@ describe('tool modes', () => {
 
   it('builds complete bookmarkable addresses and reads the selected mode', () => {
     expect(buildModeUrl('https://tools.example/app?ref=test#tool-wc', 'developer'))
-      .toBe('https://tools.example/app?ref=test&mode=developer#tool-home');
+      .toBe('https://tools.example/home/developer');
     expect(buildModeUrl('https://tools.example/app?mode=developer#tool-wc', 'developer', 'tool-code-preview'))
-      .toBe('https://tools.example/app?mode=developer#tool-code-preview');
+      .toBe('https://tools.example/home/developer#tool-code-preview');
     expect(buildModeUrl('https://tools.example/app?mode=simple#tool-home', 'all'))
-      .toBe('https://tools.example/app');
-    expect(getModeIdFromSearch('?ref=test&mode=bioinformatics')).toBe('bioinformatics');
-    expect(getModeIdFromSearch('?mode=unknown')).toBe('all');
+      .toBe('https://tools.example/home');
+    expect(getModeIdFromLocation('/home/bioinformatics')).toBe('bioinformatics');
+    expect(getModeIdFromLocation('/home/student/')).toBe('student');
+    expect(getModeIdFromLocation('/home/unknown')).toBe('all');
+    expect(getModeIdFromLocation('/', '?mode=designer')).toBe('designer');
+    expect(isToolModePath('/home/developer')).toBe(true);
+    expect(isToolModePath('/')).toBe(false);
   });
 });

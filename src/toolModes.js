@@ -127,9 +127,20 @@ export function getToolMode(modeId) {
   return modesById.get(modeId) ?? modesById.get('all');
 }
 
-export function getModeIdFromSearch(search) {
-  const modeId = new URLSearchParams(search).get('mode');
-  return getToolMode(modeId).id;
+export function isToolModePath(pathname) {
+  return /^\/home(?:\/[^/]+)?\/?$/.test(pathname);
+}
+
+export function getModeIdFromLocation(pathname, search = '') {
+  const pathMatch = pathname.match(/^\/home(?:\/([^/]+))?\/?$/);
+  if (pathMatch) {
+    return getToolMode(pathMatch[1] || 'all').id;
+  }
+
+  // Read old query-based links once so the app can redirect them to the
+  // canonical path without breaking existing bookmarks.
+  const legacyModeId = new URLSearchParams(search).get('mode');
+  return getToolMode(legacyModeId).id;
 }
 
 export function filterToolsForMode(tools, modeId) {
@@ -142,11 +153,8 @@ export function filterToolsForMode(tools, modeId) {
 export function buildModeUrl(currentHref, modeId, routeId = 'tool-home') {
   const profile = getToolMode(modeId);
   const url = new URL(currentHref);
-  if (profile.id === 'all') {
-    url.searchParams.delete('mode');
-  } else {
-    url.searchParams.set('mode', profile.id);
-  }
-  url.hash = profile.id === 'all' && routeId === 'tool-home' ? '' : routeId;
+  url.pathname = profile.id === 'all' ? '/home' : `/home/${profile.id}`;
+  url.search = '';
+  url.hash = routeId === 'tool-home' ? '' : routeId;
   return url.toString();
 }

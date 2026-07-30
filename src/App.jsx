@@ -8,8 +8,9 @@ import { TOOL_ICONS } from './toolIcons.jsx';
 import {
   buildModeUrl,
   filterToolsForMode,
-  getModeIdFromSearch,
+  getModeIdFromLocation,
   getToolMode,
+  isToolModePath,
 } from './toolModes.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -108,7 +109,17 @@ export default function App() {
         if (VALID_TOOL_IDS.has(rawHash)) {
           return rawHash;
         }
-        window.history.replaceState(null, '', '#tool-home');
+        window.history.replaceState(
+          null,
+          '',
+          buildModeUrl(
+            window.location.href,
+            getModeIdFromLocation(window.location.pathname, window.location.search),
+          ),
+        );
+        return 'tool-home';
+      }
+      if (isToolModePath(window.location.pathname)) {
         return 'tool-home';
       }
       const saved = sessionStorage.getItem("activeTool");
@@ -123,7 +134,7 @@ export default function App() {
 
   const [toolMode, setToolMode] = useState(() => {
     try {
-      return getModeIdFromSearch(window.location.search);
+      return getModeIdFromLocation(window.location.pathname, window.location.search);
     } catch {
       return 'all';
     }
@@ -229,13 +240,20 @@ export default function App() {
       try {
         const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
         if (rawHash && !VALID_TOOL_IDS.has(rawHash)) {
-          window.history.replaceState(null, '', buildModeUrl(window.location.href, getModeIdFromSearch(window.location.search)));
+          window.history.replaceState(
+            null,
+            '',
+            buildModeUrl(
+              window.location.href,
+              getModeIdFromLocation(window.location.pathname, window.location.search),
+            ),
+          );
           setActiveTool('tool-home');
           return;
         }
         const validId = getValidToolId(rawHash);
         setActiveTool(validId);
-        setToolMode(getModeIdFromSearch(window.location.search));
+        setToolMode(getModeIdFromLocation(window.location.pathname, window.location.search));
       } catch (e) {
         setActiveTool('tool-home');
         setToolMode('all');

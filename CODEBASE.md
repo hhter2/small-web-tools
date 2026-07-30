@@ -86,7 +86,7 @@ small-web-tools/
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
-- `toolMode` is initialized from the validated `mode` query parameter. The mode
+- `toolMode` is initialized from the validated `/home` path. The workspace path
   remains in the URL while hash navigation changes tools.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
@@ -106,7 +106,7 @@ shown only in the complete dashboard.
 and a flat recommended-tool grid for audience and Simple modes. Simple mode also
 hides desktop category navigation, the inactive language control, and the
 duplicated dashboard footer. Mode selection uses `history.pushState()` and the
-canonical `?mode=<id>#<tool-id>` format, so browser history, direct links, and
+canonical `/home[/<mode>][#<tool-id>]` format, so browser history, direct links, and
 reloads preserve both the workspace and selected tool. Focused profile, URL, and
 component coverage lives in `toolModes.test.js` and `homeGrid.test.jsx`.
 

@@ -25,8 +25,18 @@ Use this sequence for each meaningful update:
 
 ### Enhancements
 
-- [ ] `feat 2` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
-- [ ] `feat 3` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
+
+
+### Maintenance
+
+
+
+## Completed
+
+### 2026-07-30
+
+- [x] `feat 2` Add a selectable audience mode for daily users, developers, bioinformatics researchers, designers, and students.
+- [x] `feat 3` Consider a simplified mode that surfaces only high-frequency tools and reduces advanced controls.
 - [x] `feat 4` Word & Character Counter中，在首行加入行數
 - [x] `fix 1` Typing speed test 現在不知道要從哪裡開始
 - [x] `fix 2` Slashes Converter的encode/decode作用是什麼？好像可以移除? ASCII Converter也是一樣。留auto 就好。另外，格線要對齊
@@ -42,15 +52,9 @@ Use this sequence for each meaningful update:
 - [x] `feat 11` Add SVG to PNG function
 - [x] `feat 12` URL encoder/decoder (main for Chinese address transformation)
 - [x] `feat 13` New feauture of the Markdown file previewer. Can paste the markdown syntax or upload the file, then use the engine to preview it. Also, can make the simple modification, also to download.
-- [ ] `feat 14` The code live preview and highlighter, support the multiplex language include terminal, user can choose the preview type, font and background color, also download the code. Also show the line numbers
-
-
-### Maintenance
-
-- [ ] `docs` Review the tool descriptions in the dashboard when a feature's behavior materially changes.
-- [ ] `docs` Keep `CODEBASE.md` synchronized whenever a route, shared component, API endpoint, or dependency is added, removed, or substantially changed.
-
-## Completed
+- [x] `feat 14` The code live preview and highlighter, support the multiplex language include terminal, user can choose the preview type, font and background color, also download the code. Also show the line numbers
+- [x] `docs` Review the tool descriptions in the dashboard when a feature's behavior materially changes.
+- [x] `docs` Keep `CODEBASE.md` synchronized whenever a route, shared component, API endpoint, or dependency is added, removed, or substantially changed.
 
 ### 2026-07-28
 - [x] `feat 1` Add a paste button to the source side of the Slashes, ASCII, Unicode, and Base converters. Review the existing result-copy controls at the same time for a consistent clipboard experience.

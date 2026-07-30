@@ -57,6 +57,8 @@ describe('SimpleHome', () => {
     expect(container).toHaveTextContent('8 tools');
     expect(container.querySelectorAll('[aria-labelledby="simple-essentials-heading"] button'))
       .toHaveLength(8);
+    expect(container).toHaveTextContent('Simple mode');
+    expect(container).not.toHaveTextContent('Simple home');
     expect(container).not.toHaveTextContent('VS Code Preview');
     expect(container).not.toHaveTextContent('Choose your workspace');
   });

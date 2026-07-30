@@ -23,7 +23,7 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
   return (
     <div id="simple-home" className="mx-auto w-full max-w-[980px]">
       <header className="mx-auto mb-8 max-w-[720px] text-center">
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">Simple home</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">Simple mode</p>
         <h1 className="text-3xl font-bold tracking-[-0.025em] text-text-main sm:text-4xl">
           Find a tool and get started
         </h1>
@@ -54,7 +54,7 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search all tools..."
           autoComplete="off"
-          className="h-14 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-base text-text-main shadow-card outline-none transition focus:border-accent focus:ring-2 focus:ring-focus"
+          className="h-14 w-full rounded-xl border border-border bg-card !pl-12 !pr-4 text-base text-text-main shadow-card outline-none transition focus:border-accent focus:ring-2 focus:ring-focus"
         />
         {normalizedQuery && (
           <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[320px] overflow-y-auto rounded-xl border border-border bg-[var(--bg-card-solid,var(--bg-card))] p-2 shadow-xl">

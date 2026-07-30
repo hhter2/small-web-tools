@@ -1086,6 +1086,7 @@ export default function ColorConverter() {
         <div className="flex items-center justify-between border-t border-border pt-2">
           <div className="relative">
             <select
+              aria-label="Color slider model"
               value={sliderModel}
               onChange={(e) => setSliderModel(e.target.value)}
               className="px-3 py-1.5 rounded-md bg-app border border-border text-text-main font-sans text-sm cursor-pointer outline-none hover:bg-border-hover"

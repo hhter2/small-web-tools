@@ -349,6 +349,10 @@ export default function App() {
     setMobileSidebarOpen(false);
   };
 
+  const handleAllToolsHomeClick = () => {
+    handleModeChange('all');
+  };
+
   // Tooltip logic for collapsed sidebar
   const handleMouseEnter = (e, item) => {
     if (isSidebarCollapsed) {
@@ -366,7 +370,7 @@ export default function App() {
     setTooltipState(prev => ({ ...prev, visible: false }));
   };
 
-  // Audience and Simple modes filter every place that surfaces tools.
+  // Audience modes filter the home, sidebar, and search; header shortcuts stay complete.
   const modeNavItems = filterToolsForMode(navItems, toolMode);
   const searchNavItems = modeProfile.simplified ? navItems : modeNavItems;
   const filteredModeNavItems = modeNavItems.filter(item =>
@@ -481,10 +485,14 @@ export default function App() {
           <span className="min-w-0 flex-1 truncate font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
           <button
             type="button"
-            onClick={() => handleModeChange(modeProfile.simplified ? 'all' : 'simple')}
+            onClick={() => (
+              modeProfile.simplified
+                ? handleAllToolsHomeClick()
+                : handleModeChange('simple')
+            )}
             className="shrink-0 rounded-lg border border-border bg-app px-2.5 py-1.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
-            {modeProfile.simplified ? 'Full Home' : 'Quick Home'}
+            {modeProfile.simplified ? 'Exit Simple mode' : 'Simple mode'}
           </button>
         </header>
 
@@ -510,8 +518,7 @@ export default function App() {
               title="Go to Home"
               aria-label="Go to home"
               onClick={() => {
-                handleNavClick('tool-home');
-                setSelectedHomeTab('all');
+                handleAllToolsHomeClick();
               }}
             >
               {/* Brand Icon Box */}
@@ -719,13 +726,11 @@ export default function App() {
             <div className="flex shrink-0 items-center">
               <button
                 type="button"
+                id="desktop-brand-logo"
                 className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85 bg-transparent border-none p-0"
                 title="Go to Home"
                 aria-label="Go to home"
-                onClick={() => {
-                  handleNavClick('tool-home');
-                  setSelectedHomeTab('all');
-                }}
+                onClick={handleAllToolsHomeClick}
               >
                 <div className="bg-accent-gradient text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.15)] flex-shrink-0 [&_svg]:w-[18px] [&_svg]:[stroke-width:2.2]">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -737,9 +742,9 @@ export default function App() {
             </div>
 
             {/* Center: category navigation */}
-            <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 xl:gap-2`}>
+            <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 min-[1380px]:gap-2`}>
               {categories.map(cat => {
-                const catItems = modeNavItems.filter(item => item.category === cat.id);
+                const catItems = navItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
                 const isOpen = openDropdown === cat.id;
                 return (
@@ -750,7 +755,10 @@ export default function App() {
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
                     <button
-                      className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent lg:px-3 lg:gap-2 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
+                      aria-label={cat.name}
+                      aria-expanded={isOpen}
+                      aria-haspopup="menu"
+                      className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent min-[1380px]:gap-2 min-[1380px]:px-3 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleNavClick('tool-home');
@@ -761,7 +769,7 @@ export default function App() {
                       <span className="inline-flex items-center justify-center w-4 h-4 [&_svg]:w-full [&_svg]:h-full">
                         {cat.icon}
                       </span>
-                      <span className="hidden font-display font-semibold lg:inline">{cat.name}</span>
+                      <span className="hidden font-display font-semibold min-[1380px]:inline">{cat.name}</span>
                       <span className={`inline-flex items-center justify-center ml-0.5 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-text-muted [&_svg]:w-[10px] [&_svg]:h-[10px] ${isOpen ? 'rotate-180 text-accent' : ''}`}>
                         <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="6 9 12 15 18 9"></polyline>
@@ -827,11 +835,14 @@ export default function App() {
             <div className="flex shrink-0 items-center gap-2 xl:gap-4">
               <button
                 type="button"
-                onClick={() => handleModeChange(modeProfile.simplified ? 'all' : 'simple')}
+                onClick={() => (
+                  modeProfile.simplified
+                    ? handleAllToolsHomeClick()
+                    : handleModeChange('simple')
+                )}
                 className="flex h-8 shrink-0 items-center rounded border border-border bg-app px-2.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:px-3"
               >
-                <span className="xl:hidden">{modeProfile.simplified ? 'Full' : 'Quick'}</span>
-                <span className="hidden xl:inline">{modeProfile.simplified ? 'Full Home' : 'Quick Home'}</span>
+                <span>{modeProfile.simplified ? 'Exit Simple mode' : 'Simple mode'}</span>
               </button>
               {/* Header Search */}
               <div
@@ -953,8 +964,7 @@ export default function App() {
                 aria-label="Go to home"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
-                  handleNavClick('tool-home');
-                  setSelectedHomeTab('all');
+                  handleAllToolsHomeClick();
                 }}
               >
                 <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">

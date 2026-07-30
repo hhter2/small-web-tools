@@ -30,10 +30,10 @@ The workspace path remains in the address while opening tools, so a link such as
 `/home/developer/code-preview` restores both the selected workspace and the
 requested tool.
 
-The separate **Quick Home** interface is available at `/simple`. It provides a
+The separate **Simple mode** interface is available at `/simple`. It provides a
 large search across every tool and compact shortcuts to eight everyday
 essentials. Tools opened there remain in the reduced shell at addresses such as
-`/simple/color`; use **Full Home** to return to `/home`.
+`/simple/color`; use **Exit Simple mode** or the brand icon to return to `/home`.
 
 ## Tool guide
 

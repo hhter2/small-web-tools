@@ -11,6 +11,27 @@ Small Web Tools is a browser-based collection of everyday utilities for text, de
 
 On a phone or narrow screen, the navigation becomes a drawer opened by the menu button.
 
+### Audience and Simple modes
+
+The dashboard workspace selector can show all tools or a curated set for daily
+users, developers, bioinformatics researchers, designers, or students. Simple
+mode presents only frequently used tools and removes the category navigation and
+other nonessential dashboard controls.
+
+Every selection redirects to a bookmarkable address and displays the complete
+address for copying. The canonical mode addresses are:
+
+- `?mode=daily#tool-home`
+- `?mode=developer#tool-home`
+- `?mode=bioinformatics#tool-home`
+- `?mode=designer#tool-home`
+- `?mode=student#tool-home`
+- `?mode=simple#tool-home`
+
+The `mode` parameter remains in the address while opening tools, so a link such
+as `?mode=developer#tool-code-preview` restores both the selected workspace and
+the requested tool.
+
 ## Tool guide
 
 ### Text

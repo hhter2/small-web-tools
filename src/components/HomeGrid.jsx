@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import BioinfoIcon from './BioinfoIcon.jsx';
-import DnaRnaIcon from './DnaRnaIcon.jsx';
+import { TOOL_MODES, getToolMode } from '../toolModes.js';
+import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 
 const categories = [
@@ -106,7 +107,31 @@ function ToolCard({ tool, onSelectTool }) {
   );
 }
 
-export default function HomeGrid({ tools = [], onSelectTool, activeTab = 'all' }) {
+export default function HomeGrid({
+  tools = [],
+  onSelectTool,
+  activeTab = 'all',
+  modeId = 'all',
+  modeAddress = '',
+  onSelectMode,
+}) {
+  const [addressStatus, setAddressStatus] = useState('');
+  const mode = getToolMode(modeId);
+  const isCuratedMode = mode.id !== 'all';
+  const curatedTools = activeTab === 'all'
+    ? tools
+    : tools.filter((tool) => tool.category === activeTab);
+  const activeCategory = categories.find((category) => category.id === activeTab);
+
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(modeAddress);
+      setAddressStatus('Mode address copied.');
+    } catch {
+      setAddressStatus('Could not copy the address. Select it and copy manually.');
+    }
+  };
+
   function renderGrid(toolList) {
     return (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 mt-6">
@@ -137,12 +162,68 @@ export default function HomeGrid({ tools = [], onSelectTool, activeTab = 'all' }
 
   return (
     <div id="tool-home" className="w-full max-w-[1200px] mx-auto">
-      <div className="mb-8 flex flex-col gap-1.5">
-        <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">Welcome to Small Web Tools! 👋</h1>
-        <p className="text-[0.95rem] text-text-muted leading-[1.5]">Explore your developer and utility toolkit.</p>
+      <div className="mb-6 flex flex-col gap-1.5">
+        <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">{mode.heading}</h1>
+        <p className="text-[0.95rem] text-text-muted leading-[1.5]">{mode.description}</p>
       </div>
 
-      {activeTab === 'all' ? (
+      <section className="mb-8 rounded-xl border border-border bg-card p-4 shadow-card" aria-labelledby="tool-mode-heading">
+        <div className="grid gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)] lg:items-end">
+          <div>
+            <label id="tool-mode-heading" htmlFor="tool-mode" className="mb-2 block text-sm font-bold text-text-main">
+              Choose your workspace
+            </label>
+            <select
+              id="tool-mode"
+              value={mode.id}
+              onChange={(event) => {
+                setAddressStatus('');
+                onSelectMode(event.target.value);
+              }}
+              className="w-full rounded-lg border border-border bg-app px-3 py-2 text-sm text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
+            >
+              {TOOL_MODES.map((option) => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="tool-mode-address" className="mb-2 block text-sm font-bold text-text-main">
+              Shareable mode address
+            </label>
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+              <input
+                id="tool-mode-address"
+                type="text"
+                readOnly
+                value={modeAddress}
+                className="min-w-0 flex-1 rounded-lg border border-border bg-app px-3 py-2 font-mono text-xs text-text-muted"
+              />
+              <Button type="button" size="sm" onClick={handleCopyAddress}>Copy address</Button>
+            </div>
+          </div>
+        </div>
+        <p className="mt-2 min-h-4 text-xs text-text-muted" role="status" aria-live="polite">{addressStatus}</p>
+      </section>
+
+      {isCuratedMode ? (
+        <section aria-label={`${mode.label} tools`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-text-main">
+              {activeCategory
+                ? `${activeCategory.name} tools`
+                : mode.simplified
+                  ? 'Frequently used tools'
+                  : `Recommended for ${mode.label.toLowerCase()}`}
+            </h2>
+            <span className="rounded-full border border-border bg-app px-3 py-1 text-xs font-semibold text-text-muted">
+              {curatedTools.length} {curatedTools.length === 1 ? 'tool' : 'tools'}
+            </span>
+          </div>
+          {renderGrid(curatedTools)}
+        </section>
+      ) : activeTab === 'all' ? (
         categories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;

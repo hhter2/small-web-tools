@@ -5,6 +5,12 @@ import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { NAVIGATION_ROUTES, PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, getToolRoute } from './toolRegistry.js';
 import { TOOL_ICONS } from './toolIcons.jsx';
+import {
+  buildModeUrl,
+  filterToolsForMode,
+  getModeIdFromSearch,
+  getToolMode,
+} from './toolModes.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -115,6 +121,14 @@ export default function App() {
     }
   });
 
+  const [toolMode, setToolMode] = useState(() => {
+    try {
+      return getModeIdFromSearch(window.location.search);
+    } catch {
+      return 'all';
+    }
+  });
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem("sidebarCollapsed") === "true";
@@ -190,6 +204,8 @@ export default function App() {
     }
   }, [theme]);
 
+  const modeProfile = getToolMode(toolMode);
+
   // Sync activeTool state, sessionStorage, and document title
   useEffect(() => {
     try {
@@ -197,32 +213,40 @@ export default function App() {
       const route = getToolRoute(activeTool);
       document.title = route?.id === 'privacy'
         ? 'Privacy & Network Services — Small Web Tools'
+        : route?.id === 'tool-home' && modeProfile.id !== 'all'
+          ? `${modeProfile.label} – Small Web Tools`
         : route && route.id !== 'tool-home'
           ? `${route.title} – Small Web Tools`
           : 'Small Web Tools — Simple, Private Browser Utilities';
     } catch (e) {
       // Storage access can be blocked by the browser; navigation still works.
     }
-  }, [activeTool]);
+  }, [activeTool, modeProfile.id, modeProfile.label]);
 
-  // Listen for hashchange events to sync to activeTool and normalize invalid routes
+  // Listen for address changes to sync the active tool and audience/simple mode.
   useEffect(() => {
-    const handleHashChange = () => {
+    const handleLocationChange = () => {
       try {
         const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
         if (rawHash && !VALID_TOOL_IDS.has(rawHash)) {
-          window.history.replaceState(null, '', '#tool-home');
+          window.history.replaceState(null, '', buildModeUrl(window.location.href, getModeIdFromSearch(window.location.search)));
           setActiveTool('tool-home');
           return;
         }
         const validId = getValidToolId(rawHash);
         setActiveTool(validId);
+        setToolMode(getModeIdFromSearch(window.location.search));
       } catch (e) {
         setActiveTool('tool-home');
+        setToolMode('all');
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, []);
 
   // Keyboard shortcut '/' to focus search
@@ -243,21 +267,18 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Sync activeTool to sessionStorage and window.location.hash
+  // Keep tool and mode navigation in one canonical, bookmarkable address.
   useEffect(() => {
     try {
       sessionStorage.setItem("activeTool", activeTool);
-      if (activeTool === 'tool-home') {
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
-      } else {
-        window.location.hash = activeTool;
+      const nextAddress = buildModeUrl(window.location.href, toolMode, activeTool);
+      if (nextAddress !== window.location.href) {
+        window.history.replaceState(null, '', nextAddress);
       }
     } catch (e) {
       // Storage access can be blocked by the browser; the UI remains usable.
     }
-  }, [activeTool]);
+  }, [activeTool, toolMode]);
 
   // Sync sidebarCollapsed to localStorage
   useEffect(() => {
@@ -277,7 +298,22 @@ export default function App() {
   };
 
   const handleNavClick = (toolId) => {
+    const nextAddress = buildModeUrl(window.location.href, toolMode, toolId);
+    if (nextAddress !== window.location.href) {
+      window.history.pushState(null, '', nextAddress);
+    }
     setActiveTool(toolId);
+    setMobileSidebarOpen(false);
+  };
+
+  const handleModeChange = (nextModeId) => {
+    const nextMode = getToolMode(nextModeId);
+    const nextAddress = buildModeUrl(window.location.href, nextMode.id);
+    window.history.pushState(null, '', nextAddress);
+    setToolMode(nextMode.id);
+    setActiveTool('tool-home');
+    setSelectedHomeTab('all');
+    setSearchQuery('');
     setMobileSidebarOpen(false);
   };
 
@@ -298,17 +334,26 @@ export default function App() {
     setTooltipState(prev => ({ ...prev, visible: false }));
   };
 
-  // Filter navigation items
-  const filteredNavItems = navItems.filter(item =>
+  // Audience and Simple modes filter every place that surfaces tools.
+  const modeNavItems = filterToolsForMode(navItems, toolMode);
+  const filteredNavItems = modeNavItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
+  const modeAddress = buildModeUrl(window.location.href, toolMode);
 
   // Render the active registry component.
   const renderActiveTool = () => {
     const route = getToolRoute(activeTool) || getToolRoute('tool-home');
     const ToolComponent = route.component;
     const componentProps = route.id === 'tool-home'
-      ? { tools: filteredNavItems, onSelectTool: handleNavClick, activeTab: selectedHomeTab }
+      ? {
+        tools: filteredNavItems,
+        onSelectTool: handleNavClick,
+        activeTab: selectedHomeTab,
+        modeId: modeProfile.id,
+        modeAddress,
+        onSelectMode: handleModeChange,
+      }
       : route.componentProps;
     return (
       <ErrorBoundary key={activeTool}>
@@ -319,7 +364,9 @@ export default function App() {
     );
   };
 
-  const activeTitle = getToolRoute(activeTool)?.title || '';
+  const activeTitle = activeTool === 'tool-home' && modeProfile.id !== 'all'
+    ? modeProfile.label
+    : getToolRoute(activeTool)?.title || '';
 
   // --banner-height is 0px by default, 36px when SHOW_CHANNEL_ALERT is true
   // We must use inline styles for calc() expressions using this CSS variable
@@ -643,9 +690,9 @@ export default function App() {
             </div>
 
             {/* Center: Nav Dropdowns */}
-            <nav className="flex min-w-0 items-center gap-0 xl:gap-2">
+            <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 xl:gap-2`}>
               {categories.map(cat => {
-                const catItems = navItems.filter(item => item.category === cat.id);
+                const catItems = modeNavItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
                 const isOpen = openDropdown === cat.id;
                 return (
@@ -659,7 +706,7 @@ export default function App() {
                       className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent lg:px-3 lg:gap-2 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveTool('tool-home');
+                        handleNavClick('tool-home');
                         setSelectedHomeTab(cat.id);
                         setOpenDropdown(null);
                       }}
@@ -786,7 +833,7 @@ export default function App() {
 
               {/* Language Selector */}
               <div
-                className={`flex items-center gap-[6px] bg-app border border-border pl-[10px] pr-2 rounded h-8 text-text-muted transition-all duration-150 cursor-pointer relative hover:border-border-hover ${langDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)] text-text-main' : ''}`}
+                className={`${modeProfile.simplified ? 'hidden' : 'flex'} items-center gap-[6px] bg-app border border-border pl-[10px] pr-2 rounded h-8 text-text-muted transition-all duration-150 cursor-pointer relative hover:border-border-hover ${langDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)] text-text-main' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setLangDropdownOpen(!langDropdownOpen);
@@ -891,10 +938,10 @@ export default function App() {
           {/* Footer */}
           <footer className="mt-auto w-full bg-footer border-t border-border">
             {/* Footer Links Grid */}
-            {activeTool === 'tool-home' && (
+            {activeTool === 'tool-home' && modeProfile.id === 'all' && (
               <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
                 {categories.map(cat => {
-                  const catItems = navItems.filter(item => item.category === cat.id);
+                  const catItems = modeNavItems.filter(item => item.category === cat.id);
                   if (catItems.length === 0) return null;
                   return (
                     <div key={cat.id} className="flex flex-col gap-[10px]">

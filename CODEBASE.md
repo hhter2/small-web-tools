@@ -53,6 +53,7 @@ small-web-tools/
 │   ├── main.jsx              React mount and global stylesheet import
 │   ├── App.jsx               Hash synchronization, application shell, and registry renderer
 │   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
+│   ├── toolModes.js          Audience/Simple mode profiles, filtering, and canonical URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
@@ -85,10 +86,29 @@ small-web-tools/
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
+- `toolMode` is initialized from the validated `mode` query parameter. The mode
+  remains in the URL while hash navigation changes tools.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
+
+### Audience and Simple modes
+
+`src/toolModes.js` defines the complete dashboard plus five audience profiles:
+daily users, developers, bioinformatics researchers, designers, and students.
+It also defines Simple mode as a smaller high-frequency tool set. App-level
+filtering applies the active profile consistently to dashboard cards, sidebar
+navigation, desktop navigation, and search results; the full footer catalog is
+shown only in the complete dashboard.
+
+`HomeGrid.jsx` renders the workspace selector, the complete copyable address,
+and a flat recommended-tool grid for audience and Simple modes. Simple mode also
+hides desktop category navigation, the inactive language control, and the
+duplicated dashboard footer. Mode selection uses `history.pushState()` and the
+canonical `?mode=<id>#<tool-id>` format, so browser history, direct links, and
+reloads preserve both the workspace and selected tool. Focused profile, URL, and
+component coverage lives in `toolModes.test.js` and `homeGrid.test.jsx`.
 
 ### Shared tool-page contract
 

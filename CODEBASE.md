@@ -51,7 +51,7 @@ small-web-tools/
 │   └── favicon.svg           Static site icon
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
-│   ├── App.jsx               Hash synchronization, application shell, and registry renderer
+│   ├── App.jsx               Path synchronization, application shell, and registry renderer
 │   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
@@ -279,8 +279,9 @@ are version-controlled. Local Wrangler state and credentials are not:
   `.dev.vars.example` remains tracked as the safe template.
 - `dist/`, `coverage/`, `.playwright-cli/`, `test-results/`, and
   `playwright-report/` are generated locally and ignored.
-- `code_reviews/` contains local review working records. The entire directory is
-  ignored and review artifacts are not version-controlled.
+- `code_reviews/` contains ignored, local review working records. They are dated
+  historical snapshots, are not version-controlled, and are not current project
+  status or canonical instructions.
 
 ### Repository hygiene
 
@@ -318,7 +319,7 @@ Color Converter exposes Color Sync as a high-contrast pressed toggle.
 
 ## Network-service policy
 
-`config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the `#privacy` route consume this inventory. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.
+`config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the canonical `/home/privacy` route consume this inventory. Legacy hash addresses are accepted only for backward-compatible redirects. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.
 
 ## Dependencies
 
@@ -344,7 +345,8 @@ Color Converter exposes Color Sync as a high-contrast pressed toggle.
 ## Local development
 
 ```bash
-npm install
+npm install --global npm@10.9.2
+npm ci
 npm run dev
 npm run build
 npm run verify
@@ -352,7 +354,13 @@ npm run test:e2e
 npm run preview
 ```
 
-Node.js 22 and Node.js 24 are supported. `npm run verify` is the baseline gate: version consistency, a non-increasing ESLint warning budget, normal and strict checkJs, coverage thresholds, production build, bundle budgets, static header policy, the external-host inventory, Cloudflare topology, and documentation consistency. CI additionally runs dependency checks, Playwright journeys, and `npm audit`.
+Node.js 22 and Node.js 24 are supported. Use the `npm@10.9.2` release pinned by
+`package.json`; CI installs and verifies that exact version. `npm run verify` is
+the baseline gate: version consistency, a non-increasing ESLint warning budget,
+normal and strict checkJs, coverage thresholds, production build, bundle budgets,
+static header policy, the external-host inventory, Cloudflare topology, and
+documentation consistency. CI additionally runs dependency checks, Playwright
+journeys, and `npm audit`.
 
 ## Adding or changing a tool
 

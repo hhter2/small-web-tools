@@ -6,7 +6,14 @@ current architecture, route inventory, API topology, and project map.
 ## Supported environment
 
 - Node.js 22 and Node.js 24 are supported; `.nvmrc` selects Node 22.
-- Install exactly from the lockfile with `npm ci`.
+- Use npm 10.9.2, pinned by the `packageManager` field. CI rejects a different
+  npm version, so install it before restoring dependencies:
+
+  ```bash
+  npm install --global npm@10.9.2
+  npm ci
+  ```
+
 - The frontend is React 18 and Vite 6.
 - Production APIs use Cloudflare Pages Functions plus the dedicated rate-limiter Worker
   in `workers/rate-limiter/`.
@@ -68,7 +75,7 @@ documentation-consistency gates. CI runs it on Node 22 and Node 24.
 ## Engineering standards
 
 - Use functional React components and hooks. Route metadata belongs in the shared
-  tool registry; preserve public hashes and aliases.
+  tool registry; preserve canonical public paths and backward-compatible aliases.
 - Use Tailwind utilities, the design tokens in `src/styles.css`, and primitives in
   `src/components/ui/`. Keep controls keyboard accessible and visibly focused.
 - Client-side tools must keep user content in the browser. Add server or third-party

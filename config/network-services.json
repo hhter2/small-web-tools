@@ -45,7 +45,7 @@
     "dataTransmitted": "The target URL; target servers receive the Function's request metadata.",
     "consentMode": "explicit-consent",
     "fallback": "Do not run the website scan.",
-    "policyUrl": "/#privacy"
+    "policyUrl": "/home/privacy"
   },
   {
     "id": "osm",

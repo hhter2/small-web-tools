@@ -2,11 +2,11 @@
 
 **First Published:** July 19, 2026
 
-**Last Updated:** July 23, 2026
+**Last Updated:** July 30, 2026
 
-**In-app policy:** `#privacy`
+**In-app policy:** `/home/privacy`
 
-**Repository:** [github.com/hhter2/small-web-tools](https://github.com/hhter2/small-web-tools) (MIT License)
+**Source repository:** [github.com/hhter2/small-web-tools](https://github.com/hhter2/small-web-tools) (MIT License; GitHub access may be required)
 
 **Maintainer Contact:** Rhosiqs (<emailforvirtualmachine@gmail.com>)
 
@@ -18,7 +18,7 @@ Local-first does not mean offline-only. The hosted application, named network-de
 
 ## 2. Network-service inventory
 
-`config/network-services.json` is the machine-readable policy source of truth. The in-app `#privacy` route renders the same service inventory.
+`config/network-services.json` is the machine-readable policy source of truth. The in-app `/home/privacy` route renders the same service inventory.
 
 | Service | Purpose and trigger | Data transmitted | Mode | Fallback |
 | --- | --- | --- | --- | --- |
@@ -51,10 +51,13 @@ Image, audio, video, Office metadata, Folder Analyzer, Media Splitter, and relat
 
 ## 6. Open source and updates
 
-The project is licensed under the [MIT License](LICENSE). Policy behavior can be reviewed in the repository and in the in-app service table.
+The project is licensed under the [MIT License](LICENSE). Policy behavior can be
+reviewed in the in-app service table and, when repository access is available, in
+the source repository.
 
 ### Change log
 
 - **July 19, 2026:** Initial publication.
 - **July 22, 2026:** Added data-flow disclosure, local fallbacks, and consent keys.
 - **July 23, 2026:** Added the in-app policy, machine-readable inventory, self-hosted UI fonts, metadata-only Font Extractor, integrity-verified FFmpeg disclosure, and shared OSM consent behavior.
+- **July 30, 2026:** Updated the maintainer contact and documented the canonical path-based privacy route.

@@ -21,7 +21,7 @@ describe('third-party consent registry', () => {
         purpose: expect.any(String),
         dataTransmitted: expect.any(String),
         trigger: expect.any(String),
-        privacyUrl: expect.stringMatching(/^(https:|\/#)/),
+        privacyUrl: expect.stringMatching(/^(https:|\/(?!\/))/),
         fallback: expect.any(String),
         consentVersion: CURRENT_CONSENT_VERSION,
       });

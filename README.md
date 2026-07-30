@@ -47,6 +47,8 @@ essentials. Tools opened there remain in the reduced shell at addresses such as
 
 - **Slashes Converter** — convert Windows and web-style paths.
 - **ASCII Converter** and **Unicode Converter** — convert text to and from character codes.
+- **URL Encoder & Decoder** — encode or decode complete URLs, components, and non-ASCII text.
+- **Markdown Previewer** — edit, upload, preview, and download Markdown locally.
 - **Base Converter** — convert values among binary, octal, decimal, hexadecimal, and sexagesimal.
 - **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads.
 - **Website Font Extractor** — inspect the fonts used by a public website.
@@ -60,17 +62,20 @@ essentials. Tools opened there remain in the reduced shell at addresses such as
 ### Media
 
 - **Color Converter** — work with color codes, palettes, and the HSL spectrum.
-- **Image Metadata**, **Office Metadata**, **Audio Metadata**, and **Video Metadata** — inspect supported local files and their metadata.
+- **Image Metadata**, **Documents Metadata**, **Audio Metadata**, and **Video Metadata** — inspect supported local files and their metadata.
 - **Media Splitter** — extract a video's audio track and silent video track.
+- **SVG to PNG** — preview SVG markup and export a PNG with a transparent or white background.
 
 ### Bioinfo
 
 - **DNA/RNA Converter** — transform sequence direction, complements, and display modes.
-- **RNA Codon Table** — explore RNA codons, amino acids, and filters.
+- **Codon Table** — explore RNA codons, amino acids, and filters.
+- **Phred Scale Converter** — convert base-call and mapping-quality scores to error probabilities.
 
 ### Utilities
 
-- **Currency Converter** and **Date Counter** — perform common calculations.
+- **Currency Converter** and **Date & Time Counter** — perform common calculations.
+- **Roman Numeral Converter** — convert validated values between decimal and Roman notation.
 - **QR Code Generator** and **Barcode Generator** — create downloadable codes.
 - **QR & Barcode Scanner** — scan with a camera or image file.
 - **Password Generator** and **Password Strength** — generate or assess passwords.
@@ -88,14 +93,19 @@ File-focused tools process selected files in the browser whenever possible; file
 - Media Splitter downloads the pinned FFmpeg WebAssembly engine from unpkg on the first processing action and verifies its size and SHA-256 before execution. Media stays in the browser.
 - Camera scanning requires browser camera permission.
 
-The footer’s **Privacy** route lists every declared network service, trigger, transmitted data, consent mode, and fallback. Review that policy, a tool's own labels, and your browser permissions before using sensitive content.
+The footer’s **Privacy** route at `/home/privacy` lists every declared network
+service, trigger, transmitted data, consent mode, and fallback. Review that policy,
+a tool's own labels, and your browser permissions before using sensitive content.
 
 ## Run locally
 
-Requires Node.js 22 or Node.js 24 and npm. Node 22 is the repository default (`.nvmrc`); CI verifies both supported releases.
+Requires Node.js 22 or Node.js 24 and npm 10.9.2. Node 22 is the repository
+default (`.nvmrc`); `package.json` pins the npm version, and CI verifies both
+supported Node.js releases with that exact npm release.
 
 ```bash
-npm install
+npm install --global npm@10.9.2
+npm ci
 npm run dev
 ```
 

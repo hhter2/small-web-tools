@@ -8,6 +8,9 @@ const docs = {
   README: read('README.md'),
   CODEBASE: read('CODEBASE.md'),
   CONTRIBUTING: read('CONTRIBUTING.md'),
+  PRIVACY: read('PRIVACY.md'),
+  TODO: read('TODO.md'),
+  AGENTS: read('.agents/AGENTS.md'),
 };
 
 const failures = [];
@@ -18,6 +21,10 @@ const requireText = (documentName, text, description = text) => {
 };
 
 requireText('CODEBASE', `Version | \`${pkg.version}\``, `package version ${pkg.version}`);
+const npmVersion = pkg.packageManager.replace(/^npm@/, '');
+for (const documentName of ['README', 'CODEBASE', 'CONTRIBUTING']) {
+  requireText(documentName, npmVersion, `pinned npm version ${npmVersion}`);
+}
 for (const major of ['22', '24']) {
   requireText('README', `Node.js ${major}`, `supported Node.js ${major}`);
   requireText('CODEBASE', major, `supported Node.js ${major}`);
@@ -45,6 +52,34 @@ if (mirroredEndpoints.join(',') !== '/api/iplookup' || !documentedMirror) {
 
 requireText('CONTRIBUTING', 'Cloudflare Pages', 'Cloudflare Pages local-runtime guidance');
 requireText('CONTRIBUTING', 'rate-limiter Worker', 'rate-limiter Worker guidance');
+
+for (const documentName of ['README', 'CODEBASE', 'PRIVACY']) {
+  requireText(documentName, '/home/privacy', 'canonical privacy route /home/privacy');
+}
+
+const networkServices = JSON.parse(read('config/network-services.json'));
+const fontExtractor = networkServices.find((service) => service.id === 'fontextractor');
+if (fontExtractor?.policyUrl !== '/home/privacy') {
+  failures.push('Font Extractor policy URL must use the canonical /home/privacy route');
+}
+
+requireText('TODO', 'src/toolRegistry.js', 'canonical tool registration location');
+requireText('TODO', 'npm run verify', 'baseline verification command');
+requireText('AGENTS', 'canonical path', 'canonical path-routing guidance');
+
+const registrySource = read('src/toolRegistry.js');
+const documentedRoutes = new Set(
+  [...docs.CODEBASE.matchAll(/\| `(tool-[^`]+|privacy)` \|/g)]
+    .map((match) => match[1]),
+);
+const registryRoutes = [
+  ...registrySource.matchAll(/\bid:\s*['"](tool-[^'"]+|privacy)['"]/g),
+].map((match) => match[1]);
+for (const routeId of registryRoutes) {
+  if (!documentedRoutes.has(routeId)) {
+    failures.push(`CODEBASE.md route inventory is missing ${routeId}`);
+  }
+}
 
 if (failures.length > 0) {
   console.error(`Documentation consistency check failed:\n- ${failures.join('\n- ')}`);

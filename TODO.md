@@ -6,7 +6,7 @@ This file is the working backlog and update checklist for Small Web Tools. Keep 
 
 - `feat` — new or expanded user capability.
 - `fix` — corrected behavior or regression.
-- `chore` - the other modification
+- `chore` — maintenance that is not a feature, fix, or documentation-only change.
 - `docs` — documentation-only work.
 - `hotfix` — urgent production correction.
 
@@ -15,9 +15,9 @@ This file is the working backlog and update checklist for Small Web Tools. Keep 
 Use this sequence for each meaningful update:
 
 1. **Define the change.** Record the task below with an appropriate label and confirm the affected tools, routes, APIs, or shared components.
-2. **Implement in the right place.** Keep tool registration in `src/App.jsx`; use the shared `Card` and `ToolHeader` primitives for tool pages; add server functionality under `functions/api/` only when browser-only code is insufficient.
-3. **Validate.** Run `npm run build`. For layout or interaction work, also check the affected routes at desktop and mobile widths and review browser console errors.
-4. **Update documentation.** Refresh `README.md` for changed user behavior, `CODEBASE.md` for structural changes, and this file for the task state. Do not turn the README into a changelog.
+2. **Implement in the right place.** Keep tool registration in `src/toolRegistry.js`; use the shared `Card` and `ToolHeader` primitives for tool pages; add server functionality under `functions/api/` only when browser-only code is insufficient.
+3. **Validate.** Run `npm run verify`. For layout or interaction work, also run the relevant Playwright journeys, check the affected routes at desktop and mobile widths, and review browser console errors.
+4. **Update documentation.** Refresh `README.md` for changed user behavior and `CODEBASE.md` for structural changes. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
 5. **Review and commit.** Check `git diff` and `git status`, then create a focused commit after each completed logical stage.
 6. **Prepare a release when appropriate.** Confirm the version in `package.json`; create or update the git tag only as part of an agreed release. The app displays the newest git tag when one is available, otherwise it falls back to the package version.
 

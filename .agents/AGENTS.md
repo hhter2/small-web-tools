@@ -68,7 +68,7 @@ Follow this sequence:
 7. Update `CODEBASE.md`: add the route to the Route Inventory and update the
    Repository Map and affected API/runtime sections. Update other user-facing
    documentation only when the task permits it.
-8. Run `npm run verify`. Confirm the canonical hash and every alias resolve,
+8. Run `npm run verify`. Confirm the canonical path and every alias resolve,
    the lazy component renders, catalog/search/icon behavior matches
    `navigationVisible`, and the route works at desktop and mobile widths.
 
@@ -78,7 +78,7 @@ Follow this sequence:
 
 | Constraint | Rule |
 |---|---|
-| Routing | `src/toolRegistry.js` is the only route metadata source. `App.jsx` synchronizes registry IDs and aliases with URL hashes and resolves routes through `getToolRoute()`. **Do not add parallel route metadata or introduce React Router or another router library.** |
+| Routing | `src/toolRegistry.js` is the only route metadata source. `App.jsx` synchronizes registry IDs and aliases with canonical `/home` and `/simple` URL paths while retaining legacy hash compatibility, and resolves routes through `getToolRoute()`. **Do not add parallel route metadata or introduce React Router or another router library.** |
 | Styling | Use Tailwind utility classes, existing design tokens, and the shared primitives in `src/components/ui/`. Add global CSS only for truly shared behavior or component-specific rules that existing utilities cannot express clearly. **Do not introduce CSS-in-JS.** |
 | State management | Local `useState`/`useReducer` only. **Do not introduce Redux, Zustand, or any global state library.** |
 | API calls | Prefer browser-local processing. Add server or direct third-party data flows only when required, bounded, consented where appropriate, and declared in `config/network-services.json` and `PRIVACY.md`. Use `functions/api/` when a same-origin server boundary is required. |

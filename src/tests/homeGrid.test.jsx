@@ -28,67 +28,39 @@ let container;
 let root;
 
 beforeEach(() => {
-  Object.defineProperty(navigator, 'clipboard', {
-    configurable: true,
-    value: { writeText: vi.fn().mockResolvedValue(undefined) },
-  });
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
 });
 
 afterEach(async () => {
-  vi.restoreAllMocks();
   await act(async () => root.unmount());
   container.remove();
 });
 
-describe('HomeGrid workspace modes', () => {
-  it('renders Simple mode as a flat essential-tool workspace', async () => {
+describe('HomeGrid audience presentation', () => {
+  it('keeps the complete categorized homepage without workspace controls', async () => {
     await act(async () => root.render(
-      <HomeGrid
-        tools={tools}
-        onSelectTool={vi.fn()}
-        modeId="simple"
-        modeAddress="https://tools.example/home/simple"
-        onSelectMode={vi.fn()}
-      />,
+      <HomeGrid tools={tools} onSelectTool={vi.fn()} modeId="all" />,
     ));
 
-    expect(container).toHaveTextContent('Essential tools');
-    expect(container).toHaveTextContent('Frequently used tools');
-    expect(container).toHaveTextContent('2 tools');
-    expect(container.querySelector('#tool-mode')).toHaveValue('simple');
-    expect(container.querySelector('#tool-mode-address'))
-      .toHaveValue('https://tools.example/home/simple');
-    expect([...container.querySelectorAll('h3')].map((heading) => heading.textContent))
-      .toEqual(['Word Counter', 'Date & Time Counter']);
+    expect(container).toHaveTextContent('Welcome to Small Web Tools!');
+    expect(container).toHaveTextContent('Text');
+    expect(container).toHaveTextContent('Calculators');
+    expect(container).not.toHaveTextContent('Choose your workspace');
+    expect(container).not.toHaveTextContent('Shareable mode address');
+    expect(container.querySelector('#tool-mode')).toBeNull();
   });
 
-  it('redirects mode selection and copies the complete address', async () => {
-    const onSelectMode = vi.fn();
+  it('renders an audience as a flat recommended-tool workspace', async () => {
     await act(async () => root.render(
-      <HomeGrid
-        tools={tools}
-        onSelectTool={vi.fn()}
-        modeId="daily"
-        modeAddress="https://tools.example/home/daily"
-        onSelectMode={onSelectMode}
-      />,
+      <HomeGrid tools={tools} onSelectTool={vi.fn()} modeId="daily" />,
     ));
 
-    const selector = container.querySelector('#tool-mode');
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(selector, 'developer');
-      selector.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    expect(onSelectMode).toHaveBeenCalledWith('developer');
-
-    const copyButton = [...container.querySelectorAll('button')]
-      .find((button) => button.textContent.trim() === 'Copy address');
-    await act(async () => copyButton.click());
-    expect(navigator.clipboard.writeText)
-      .toHaveBeenCalledWith('https://tools.example/home/daily');
-    expect(container).toHaveTextContent('Mode address copied.');
+    expect(container).toHaveTextContent('Everyday essentials');
+    expect(container).toHaveTextContent('Recommended for daily users');
+    expect(container).toHaveTextContent('2 tools');
+    expect([...container.querySelectorAll('h3')].map((heading) => heading.textContent))
+      .toEqual(['Word Counter', 'Date & Time Counter']);
   });
 });

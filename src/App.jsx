@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
+import AudienceSwitcher from './components/AudienceSwitcher.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -167,7 +168,6 @@ export default function App() {
   const searchRef = useRef(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
-  const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -197,7 +197,6 @@ export default function App() {
   // Close dropdowns on clicking outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      setOpenDropdown(null);
       setLangDropdownOpen(false);
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchFocused(false);
@@ -370,8 +369,6 @@ export default function App() {
   const filteredNavItems = modeNavItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
-  const modeAddress = buildModeUrl(window.location.href, toolMode);
-
   // Render the active registry component.
   const renderActiveTool = () => {
     const route = getToolRoute(activeTool) || getToolRoute('tool-home');
@@ -382,8 +379,6 @@ export default function App() {
         onSelectTool: handleNavClick,
         activeTab: selectedHomeTab,
         modeId: modeProfile.id,
-        modeAddress,
-        onSelectMode: handleModeChange,
       }
       : route.componentProps;
     return (
@@ -471,6 +466,20 @@ export default function App() {
           </button>
           <span className="font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
         </header>
+
+        {!modeProfile.simplified && (
+          <div
+            id="mobile-audience-switcher"
+            className="fixed left-0 right-0 z-[89] hidden h-11 items-center overflow-x-auto border-b border-border bg-header px-3 max-md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ top: 'calc(var(--banner-height) + 60px)' }}
+          >
+            <AudienceSwitcher
+              activeModeId={modeProfile.id}
+              onSelectMode={handleModeChange}
+              mobile
+            />
+          </div>
+        )}
 
         {/* Sidebar — hidden on desktop (md+), slide-in on mobile */}
         <aside
@@ -720,96 +729,10 @@ export default function App() {
               </button>
             </div>
 
-            {/* Center: Nav Dropdowns */}
-            <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 xl:gap-2`}>
-              {categories.map(cat => {
-                const catItems = modeNavItems.filter(item => item.category === cat.id);
-                if (catItems.length === 0) return null;
-                const isOpen = openDropdown === cat.id;
-                return (
-                  <div
-                    key={cat.id}
-                    className="relative"
-                    onMouseEnter={() => setOpenDropdown(cat.id)}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                  >
-                    <button
-                      className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent lg:px-3 lg:gap-2 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNavClick('tool-home');
-                        setSelectedHomeTab(cat.id);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      {/* Cat Icon */}
-                      <span className="inline-flex items-center justify-center w-4 h-4 [&_svg]:w-full [&_svg]:h-full">
-                        {cat.icon}
-                      </span>
-                      {/* Cat Name */}
-                      <span className="hidden font-display font-semibold lg:inline">{cat.name}</span>
-                      {/* Triangle Icon */}
-                      <span className={`inline-flex items-center justify-center ml-0.5 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-text-muted [&_svg]:w-[10px] [&_svg]:h-[10px] ${isOpen ? 'rotate-180 text-accent' : ''}`}>
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </span>
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    <div
-                      className={`absolute top-full left-0 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-2 min-w-[200px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1 transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'opacity-100 visible translate-y-1' : 'opacity-0 invisible translate-y-[10px]'}`}
-                    >
-                      {cat.id === 'utilities' ? (
-                        (() => {
-                          const subGroups = {};
-                          catItems.forEach(item => {
-                            const sg = item.subGroup || 'Utilities';
-                            if (!subGroups[sg]) subGroups[sg] = [];
-                            subGroups[sg].push(item);
-                          });
-                          const sortedSubGroupNames = Object.keys(subGroups).sort();
-                          return sortedSubGroupNames.map(sgName => (
-                            <div key={sgName} className="flex flex-col gap-0.5 border-b border-border pb-1 mb-1 last:border-b-0 last:pb-0 last:mb-0">
-                              <div className="px-3 py-[2px] pt-1 text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50">
-                                {sgName}
-                              </div>
-                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                                <button
-                                  key={item.id}
-                                  className={`flex items-center gap-[10px] w-full pl-[18px] pr-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
-                                  onClick={() => {
-                                    handleNavClick(item.id);
-                                    setOpenDropdown(null);
-                                  }}
-                                >
-                                  <span className="item-icon">{item.icon}</span>
-                                  <span className="font-medium">{item.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          ));
-                        })()
-                      ) : (
-                        catItems.map(item => (
-                          <button
-                            key={item.id}
-                            className={`flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
-                            onClick={() => {
-                              handleNavClick(item.id);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span className="item-icon">{item.icon}</span>
-                            <span className="font-medium">{item.name}</span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </nav>
+            {/* Center: fast audience switcher */}
+            <div className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 flex-1 justify-center px-3`}>
+              <AudienceSwitcher activeModeId={modeProfile.id} onSelectMode={handleModeChange} />
+            </div>
 
             {/* Right: Search + Language + Theme */}
             <div className="flex shrink-0 items-center gap-2 xl:gap-4">
@@ -868,7 +791,6 @@ export default function App() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setLangDropdownOpen(!langDropdownOpen);
-                  setOpenDropdown(null);
                 }}
               >
                 <svg className="flex-shrink-0 opacity-80 text-text-muted" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -921,7 +843,7 @@ export default function App() {
           <div
             id="mobile-breadcrumb"
             className="hidden max-md:flex items-center justify-between py-3 border-b border-border min-h-[52px] sticky bg-app z-10 px-4"
-            style={{ top: '60px' }}
+            style={{ top: modeProfile.simplified ? '60px' : '104px' }}
           >
             <div className="flex items-center gap-2">
               {/* Brand logo for mobile breadcrumb */}
@@ -962,7 +884,7 @@ export default function App() {
           </div>
 
           {/* Tool Stage */}
-          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.has(activeTool) ? 'tool-stage--static py-4 md:py-1.5 max-md:pt-[100px] md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto' : 'py-8 max-md:pt-[100px]'}`}>
+          <section className={`tool-stage w-full flex-1 flex flex-col items-center px-12 max-md:px-[14px] max-[500px]:px-[10px] ${staticTools.has(activeTool) ? `tool-stage--static py-4 md:py-1.5 ${modeProfile.simplified ? 'max-md:pt-[100px]' : 'max-md:pt-[144px]'} md:max-h-[calc(100vh-var(--banner-height)-98px)] md:overflow-y-auto` : `py-8 ${modeProfile.simplified ? 'max-md:pt-[100px]' : 'max-md:pt-[144px]'}`}`}>
             {renderActiveTool()}
           </section>
 

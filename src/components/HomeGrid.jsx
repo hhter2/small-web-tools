@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import BioinfoIcon from './BioinfoIcon.jsx';
-import { TOOL_MODES, getToolMode } from '../toolModes.js';
-import Button from './ui/Button.jsx';
+import { getToolMode } from '../toolModes.js';
 import Card from './ui/Card.jsx';
 
 const categories = [
@@ -112,25 +111,13 @@ export default function HomeGrid({
   onSelectTool,
   activeTab = 'all',
   modeId = 'all',
-  modeAddress = '',
-  onSelectMode,
 }) {
-  const [addressStatus, setAddressStatus] = useState('');
   const mode = getToolMode(modeId);
   const isCuratedMode = mode.id !== 'all';
   const curatedTools = activeTab === 'all'
     ? tools
     : tools.filter((tool) => tool.category === activeTab);
   const activeCategory = categories.find((category) => category.id === activeTab);
-
-  const handleCopyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(modeAddress);
-      setAddressStatus('Mode address copied.');
-    } catch {
-      setAddressStatus('Could not copy the address. Select it and copy manually.');
-    }
-  };
 
   function renderGrid(toolList) {
     return (
@@ -166,46 +153,6 @@ export default function HomeGrid({
         <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">{mode.heading}</h1>
         <p className="text-[0.95rem] text-text-muted leading-[1.5]">{mode.description}</p>
       </div>
-
-      <section className="mb-8 rounded-xl border border-border bg-card p-4 shadow-card" aria-labelledby="tool-mode-heading">
-        <div className="grid gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)] lg:items-end">
-          <div>
-            <label id="tool-mode-heading" htmlFor="tool-mode" className="mb-2 block text-sm font-bold text-text-main">
-              Choose your workspace
-            </label>
-            <select
-              id="tool-mode"
-              value={mode.id}
-              onChange={(event) => {
-                setAddressStatus('');
-                onSelectMode(event.target.value);
-              }}
-              className="w-full rounded-lg border border-border bg-app px-3 py-2 text-sm text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-            >
-              {TOOL_MODES.map((option) => (
-                <option key={option.id} value={option.id}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="tool-mode-address" className="mb-2 block text-sm font-bold text-text-main">
-              Shareable mode address
-            </label>
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
-              <input
-                id="tool-mode-address"
-                type="text"
-                readOnly
-                value={modeAddress}
-                className="min-w-0 flex-1 rounded-lg border border-border bg-app px-3 py-2 font-mono text-xs text-text-muted"
-              />
-              <Button type="button" size="sm" onClick={handleCopyAddress}>Copy address</Button>
-            </div>
-          </div>
-        </div>
-        <p className="mt-2 min-h-4 text-xs text-text-muted" role="status" aria-live="polite">{addressStatus}</p>
-      </section>
 
       {isCuratedMode ? (
         <section aria-label={`${mode.label} tools`}>

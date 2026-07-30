@@ -13,13 +13,12 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 
 ### Audience and Simple modes
 
-The dashboard workspace selector can show all tools or a curated set for daily
-users, developers, bioinformatics researchers, designers, or students. Simple
-mode presents only frequently used tools and removes the category navigation and
-other nonessential dashboard controls.
+The header audience switcher can show the unchanged full homepage or a curated
+set for daily users, developers, bioinformatics researchers, designers, or
+students. Simple mode presents only frequently used tools and removes the
+category navigation and other nonessential dashboard controls.
 
-Every selection redirects to a bookmarkable address and displays the complete
-address for copying. The canonical mode addresses are:
+Every audience selection redirects to a bookmarkable address:
 
 - `/home`
 - `/home/daily`

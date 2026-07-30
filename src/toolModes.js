@@ -121,6 +121,8 @@ export const TOOL_MODES = modeDefinitions.map((mode) => ({
   toolIds: mode.toolIds ? [...mode.toolIds] : null,
 }));
 
+export const AUDIENCE_MODES = TOOL_MODES.filter((mode) => mode.id !== 'simple');
+
 const modesById = new Map(TOOL_MODES.map((mode) => [mode.id, mode]));
 
 export function getToolMode(modeId) {

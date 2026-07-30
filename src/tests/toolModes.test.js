@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NAVIGATION_ROUTES } from '../toolRegistry.js';
 import {
+  AUDIENCE_MODES,
   TOOL_MODES,
   buildModeUrl,
   filterToolsForMode,
@@ -23,6 +24,14 @@ describe('tool modes', () => {
     ]);
     expect(getToolMode('simple').simplified).toBe(true);
     expect(getToolMode('unknown').id).toBe('all');
+    expect(AUDIENCE_MODES.map(({ id }) => id)).toEqual([
+      'all',
+      'daily',
+      'developer',
+      'bioinformatics',
+      'designer',
+      'student',
+    ]);
   });
 
   it('references only registered tools and provides a useful set for every mode', () => {

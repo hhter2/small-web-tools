@@ -102,8 +102,9 @@ filtering applies the active profile consistently to dashboard cards, sidebar
 navigation, desktop navigation, and search results; the full footer catalog is
 shown only in the complete dashboard.
 
-`HomeGrid.jsx` renders the workspace selector, the complete copyable address,
-and a flat recommended-tool grid for audience and Simple modes. Simple mode also
+`AudienceSwitcher.jsx` renders the header segmented control for the complete
+homepage and five audience profiles. `HomeGrid.jsx` keeps the complete categorized
+dashboard and renders a flat recommended-tool grid for audience and Simple modes. Simple mode also
 hides desktop category navigation, the inactive language control, and the
 duplicated dashboard footer. Mode selection uses `history.pushState()` and the
 canonical `/home[/<mode>][/<tool-slug>]` format, so browser history, direct links, and

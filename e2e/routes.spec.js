@@ -27,7 +27,7 @@ for (const route of toolRoutes) {
 
 test('unknown path is normalized to the dashboard', async ({ page }) => {
   await blockExternalRequests(page);
-  await page.goto('/home/tool-does-not-exist', { waitUntil: 'domcontentloaded' });
+  await page.goto('/home/does-not-exist', { waitUntil: 'domcontentloaded' });
   await expect(page).not.toHaveURL(/tool-does-not-exist/);
   await expect(page.locator('main')).toBeVisible();
 });
@@ -35,7 +35,7 @@ test('unknown path is normalized to the dashboard', async ({ page }) => {
 test('mobile header, breadcrumb, and tool content do not overlap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await blockExternalRequests(page);
-  await page.goto('/home/tool-iplookup', { waitUntil: 'domcontentloaded' });
+  await page.goto('/home/iplookup', { waitUntil: 'domcontentloaded' });
 
   const banner = page.locator('#channel-alert-banner');
   const header = page.locator('#mobile-header');

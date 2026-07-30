@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('repeated media additions cannot bypass the queue limit', async ({ page }) => {
-  await page.goto('/home/tool-mediasplit');
+  await page.goto('/home/mediasplit');
   const input = page.locator('input[type="file"]');
   const firstBatch = Array.from({ length: 10 }, (_, index) => ({
     name: `queued-${index}.mp4`,

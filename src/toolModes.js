@@ -166,7 +166,14 @@ export function getRouteIdFromLocation(pathname, hash = '') {
 
   const firstPathId = pathSegments[1];
   const hasModeSegment = firstPathId && firstPathId !== 'all' && modesById.has(firstPathId);
-  return (hasModeSegment ? pathSegments[2] : firstPathId) || 'tool-home';
+  const routeSlug = hasModeSegment ? pathSegments[2] : firstPathId;
+  if (!routeSlug || routeSlug === 'home') {
+    return 'tool-home';
+  }
+  if (routeSlug === 'privacy' || routeSlug.startsWith('tool-')) {
+    return routeSlug;
+  }
+  return `tool-${routeSlug}`;
 }
 
 export function filterToolsForMode(tools, modeId) {
@@ -184,7 +191,7 @@ export function buildModeUrl(currentHref, modeId, routeId = 'tool-home') {
     pathSegments.push(profile.id);
   }
   if (routeId !== 'tool-home') {
-    pathSegments.push(routeId);
+    pathSegments.push(routeId.replace(/^tool-/, ''));
   }
   url.pathname = `/${pathSegments.map(encodeURIComponent).join('/')}`;
   url.search = '';

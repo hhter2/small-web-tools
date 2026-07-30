@@ -29,11 +29,11 @@ test('consent dialog traps focus, announces changes, closes with Escape, and res
 test('brand and folder-selection controls use native button semantics', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Go to home' }).first()).toBeVisible();
-  await page.goto('/home/tool-folder-analyzer');
+  await page.goto('/home/folder-analyzer');
   await expect(page.getByRole('button', { name: 'Select a folder to analyze' })).toBeVisible();
 });
 
-for (const route of ['/home', '/home/privacy', '/home/tool-currency', '/home/tool-folder-analyzer']) {
+for (const route of ['/home', '/home/privacy', '/home/currency', '/home/folder-analyzer']) {
   test(`${route} has no serious or critical automated accessibility findings`, async ({ page }) => {
     await page.goto(route);
     const results = await new AxeBuilder({ page }).analyze();

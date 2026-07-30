@@ -49,7 +49,7 @@ test('FFmpeg is disclosed persistently and requested only after processing start
   });
   await page.route('https://unpkg.com/**', (route) => route.abort());
 
-  await page.goto('/home/tool-mediasplit');
+  await page.goto('/home/mediasplit');
   await expect(page.getByText(/downloads the pinned FFmpeg 0\.12\.6/)).toBeVisible();
   expect(unpkgRequests).toHaveLength(0);
 

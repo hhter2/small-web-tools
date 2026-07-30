@@ -5,7 +5,7 @@ test('rejects hostile custom plans and confirms the exact high-traffic total', a
   page.on('request', (request) => {
     if (request.url().startsWith('https://speed.cloudflare.com/')) speedRequests += 1;
   });
-  await page.goto('/home/tool-speedtest');
+  await page.goto('/home/speedtest');
   await page.getByRole('button', { name: 'Allow speed test' }).click();
   await page.getByLabel('Test Size Limit').selectOption('custom');
 
@@ -29,7 +29,7 @@ test('stop immediately aborts a hanging active request', async ({ page }) => {
   await page.route('**/api/iplookup', (route) => route.fulfill({
     json: { ok: true, data: { ip: '192.0.2.1', org: 'Example' } },
   }));
-  await page.goto('/home/tool-speedtest');
+  await page.goto('/home/speedtest');
   await page.getByRole('button', { name: 'Allow speed test' }).click();
   await page.getByRole('button', { name: 'Start Test' }).click();
   await page.getByRole('button', { name: 'Stop Test' }).click();

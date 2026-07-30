@@ -5,7 +5,7 @@ Small Web Tools is a browser-based collection of everyday utilities for text, de
 ## Using the site
 
 1. Start at the dashboard and choose a category or use the search box.
-2. Select a tool from the navigation. Each tool has its own URL path, so a page such as `/home/tool-color` can be bookmarked or shared.
+2. Select a tool from the navigation. Each tool has its own URL path, so a page such as `/home/color` can be bookmarked or shared.
 3. Enter text, choose a file, or use the relevant controls. Results update in the current page.
 4. Use the light/dark toggle when needed. The selected theme, collapsed desktop sidebar, and most recently opened tool are remembered in the browser.
 
@@ -30,7 +30,7 @@ address for copying. The canonical mode addresses are:
 - `/home/simple`
 
 The workspace path remains in the address while opening tools, so a link such as
-`/home/developer/tool-code-preview` restores both the selected workspace and the
+`/home/developer/code-preview` restores both the selected workspace and the
 requested tool.
 
 ## Tool guide

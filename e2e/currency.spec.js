@@ -24,7 +24,7 @@ test('does not request or fabricate live rates before consent', async ({ page })
     await route.fulfill({ json: validRatePayload() });
   });
 
-  await page.goto('/home/tool-currency');
+  await page.goto('/home/currency');
   await expect(page.getByText('Rate unavailable', { exact: true })).toBeVisible();
   expect(requests).toBe(0);
 });
@@ -36,7 +36,7 @@ test('shows unavailable on provider failure and accepts only a valid manual rate
     body: JSON.stringify({ ok: false, error: 'Unable to retrieve live exchange rates' }),
   }));
 
-  await page.goto('/home/tool-currency');
+  await page.goto('/home/currency');
   await page.getByRole('button', { name: 'Allow live rates' }).click();
   await expect(page.getByText('Rate unavailable', { exact: true })).toBeVisible();
 
@@ -66,7 +66,7 @@ test('retains a previously validated rate as visibly stale after refresh failure
     }
   });
 
-  await page.goto('/home/tool-currency');
+  await page.goto('/home/currency');
   await page.getByRole('button', { name: 'Allow live rates' }).click();
   await expect(page.getByText(/Test exchange provider$/)).toBeVisible();
 

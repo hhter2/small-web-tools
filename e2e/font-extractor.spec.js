@@ -29,7 +29,7 @@ test('font extractor renders metadata and never fetches discovered font files', 
     });
   });
 
-  await page.goto('/home/tool-fontextractor');
+  await page.goto('/home/fontextractor');
   await page.getByRole('button', { name: 'Allow website analysis' }).click();
   await page.getByLabel('Website URL').fill('https://example.com');
   await page.getByRole('button', { name: 'Scan declarations' }).click();

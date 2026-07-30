@@ -41,20 +41,21 @@ describe('tool modes', () => {
     expect(buildModeUrl('https://tools.example/app?ref=test#tool-wc', 'developer'))
       .toBe('https://tools.example/home/developer');
     expect(buildModeUrl('https://tools.example/app?mode=developer#tool-wc', 'developer', 'tool-code-preview'))
-      .toBe('https://tools.example/home/developer/tool-code-preview');
+      .toBe('https://tools.example/home/developer/code-preview');
     expect(buildModeUrl('https://tools.example/app#tool-wc', 'all', 'tool-color'))
-      .toBe('https://tools.example/home/tool-color');
+      .toBe('https://tools.example/home/color');
     expect(buildModeUrl('https://tools.example/app?mode=simple#tool-home', 'all'))
       .toBe('https://tools.example/home');
     expect(getModeIdFromLocation('/home/bioinformatics')).toBe('bioinformatics');
-    expect(getModeIdFromLocation('/home/student/tool-wc')).toBe('student');
+    expect(getModeIdFromLocation('/home/student/wc')).toBe('student');
     expect(getModeIdFromLocation('/home/unknown')).toBe('all');
     expect(getModeIdFromLocation('/', '?mode=designer')).toBe('designer');
-    expect(getRouteIdFromLocation('/home/developer/tool-code-preview')).toBe('tool-code-preview');
+    expect(getRouteIdFromLocation('/home/developer/code-preview')).toBe('tool-code-preview');
+    expect(getRouteIdFromLocation('/home/color')).toBe('tool-color');
     expect(getRouteIdFromLocation('/home/tool-color')).toBe('tool-color');
     expect(getRouteIdFromLocation('/home/developer')).toBe('tool-home');
     expect(getRouteIdFromLocation('/', '#tool-wc')).toBe('tool-wc');
-    expect(isToolPath('/home/developer/tool-code-preview')).toBe(true);
+    expect(isToolPath('/home/developer/code-preview')).toBe(true);
     expect(isToolPath('/')).toBe(false);
   });
 });

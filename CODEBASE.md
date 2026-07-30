@@ -85,7 +85,7 @@ small-web-tools/
 - `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
-- `activeTool` is initialized from the `/home[/<mode>]/<tool-id>` path or `sessionStorage` and is synchronized back to the path.
+- `activeTool` is initialized from the `/home[/<mode>]/<tool-slug>` path or `sessionStorage` and is synchronized back to the path.
 - `toolMode` is initialized from the validated `/home` path. The workspace path
   remains in the URL while path navigation changes tools.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
@@ -106,7 +106,7 @@ shown only in the complete dashboard.
 and a flat recommended-tool grid for audience and Simple modes. Simple mode also
 hides desktop category navigation, the inactive language control, and the
 duplicated dashboard footer. Mode selection uses `history.pushState()` and the
-canonical `/home[/<mode>][/<tool-id>]` format, so browser history, direct links, and
+canonical `/home[/<mode>][/<tool-slug>]` format, so browser history, direct links, and
 reloads preserve both the workspace and selected tool. Focused profile, URL, and
 component coverage lives in `toolModes.test.js` and `homeGrid.test.jsx`.
 

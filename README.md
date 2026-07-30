@@ -13,9 +13,9 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 
 ### Audience and Simple modes
 
-The header audience switcher can show the unchanged full homepage or a curated
-set for daily users, developers, bioinformatics researchers, designers, or
-students.
+The audience switcher beside the homepage introduction can show the unchanged
+full homepage or a curated set for daily users, developers, bioinformatics
+researchers, designers, or students. The top header retains the category menus.
 
 Every audience selection redirects to a bookmarkable address:
 

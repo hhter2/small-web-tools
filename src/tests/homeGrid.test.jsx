@@ -50,6 +50,7 @@ describe('HomeGrid audience presentation', () => {
     expect(container).not.toHaveTextContent('Choose your workspace');
     expect(container).not.toHaveTextContent('Shareable mode address');
     expect(container.querySelector('#tool-mode')).toBeNull();
+    expect(container.querySelector('[aria-label="Choose audience"]')).toBeInTheDocument();
   });
 
   it('renders an audience as a flat recommended-tool workspace', async () => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import AudienceSwitcher from './AudienceSwitcher.jsx';
 import BioinfoIcon from './BioinfoIcon.jsx';
 import { getToolMode } from '../toolModes.js';
 import Card from './ui/Card.jsx';
@@ -111,6 +112,7 @@ export default function HomeGrid({
   onSelectTool,
   activeTab = 'all',
   modeId = 'all',
+  onSelectMode = () => {},
 }) {
   const mode = getToolMode(modeId);
   const isCuratedMode = mode.id !== 'all';
@@ -149,9 +151,18 @@ export default function HomeGrid({
 
   return (
     <div id="tool-home" className="w-full max-w-[1200px] mx-auto">
-      <div className="mb-6 flex flex-col gap-1.5">
-        <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">{mode.heading}</h1>
-        <p className="text-[0.95rem] text-text-muted leading-[1.5]">{mode.description}</p>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">{mode.heading}</h1>
+          <p className="text-[0.95rem] text-text-muted leading-[1.5]">{mode.description}</p>
+        </div>
+        <div className="max-w-full overflow-x-auto pb-1 lg:shrink-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <AudienceSwitcher
+            activeModeId={mode.id}
+            onSelectMode={onSelectMode}
+            mobile
+          />
+        </div>
       </div>
 
       {isCuratedMode ? (

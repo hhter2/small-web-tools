@@ -103,8 +103,9 @@ filtering applies audience profiles consistently to dashboard cards, sidebar,
 and search; the Simple sidebar remains limited to its essentials while Simple
 search can open any registered tool.
 
-`AudienceSwitcher.jsx` renders the header segmented control for the complete
-homepage and five audience profiles. `HomeGrid.jsx` preserves the complete
+`AudienceSwitcher.jsx` renders the homepage segmented control for the complete
+homepage and five audience profiles. `HomeGrid.jsx` places it beside the
+introduction while preserving the complete
 categorized dashboard and renders flat audience recommendations. `SimpleHome.jsx`
 provides an all-tool search and eight compact shortcuts inside the reduced shell.
 Routing uses `/home[/<audience>][/<tool-slug>]` and

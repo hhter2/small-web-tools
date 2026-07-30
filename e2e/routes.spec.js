@@ -42,28 +42,23 @@ test('mobile header, breadcrumb, and tool content do not overlap', async ({ page
 
   const banner = page.locator('#channel-alert-banner');
   const header = page.locator('#mobile-header');
-  const audience = page.locator('#mobile-audience-switcher');
   const breadcrumb = page.locator('#mobile-breadcrumb');
   const toolCard = page.locator('#tool-iplookup');
 
   await expect(header).toBeVisible();
-  await expect(audience).toBeVisible();
   await expect(breadcrumb).toBeVisible();
   await expect(toolCard).toBeVisible();
 
   const bannerBox = await banner.isVisible() ? await banner.boundingBox() : null;
   const headerBox = await header.boundingBox();
-  const audienceBox = await audience.boundingBox();
   const breadcrumbBox = await breadcrumb.boundingBox();
   const toolCardBox = await toolCard.boundingBox();
 
   expect(headerBox).not.toBeNull();
-  expect(audienceBox).not.toBeNull();
   expect(breadcrumbBox).not.toBeNull();
   expect(toolCardBox).not.toBeNull();
 
   const headerBottom = headerBox.y + headerBox.height;
-  const audienceBottom = audienceBox.y + audienceBox.height;
   const breadcrumbBottom = breadcrumbBox.y + breadcrumbBox.height;
 
   if (bannerBox) {
@@ -71,9 +66,7 @@ test('mobile header, breadcrumb, and tool content do not overlap', async ({ page
   } else {
     expect(headerBox.y).toBeLessThanOrEqual(1);
   }
-  expect(audienceBox.y).toBeGreaterThanOrEqual(headerBottom - 1);
-  expect(audienceBox.y - headerBottom).toBeLessThanOrEqual(1);
-  expect(breadcrumbBox.y).toBeGreaterThanOrEqual(audienceBottom - 1);
-  expect(breadcrumbBox.y - audienceBottom).toBeLessThanOrEqual(1);
+  expect(breadcrumbBox.y).toBeGreaterThanOrEqual(headerBottom - 1);
+  expect(breadcrumbBox.y - headerBottom).toBeLessThanOrEqual(1);
   expect(toolCardBox.y).toBeGreaterThanOrEqual(breadcrumbBottom - 1);
 });

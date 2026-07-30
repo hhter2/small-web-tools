@@ -160,9 +160,7 @@ export default function HomeGrid({
             <h2 className="text-lg font-bold text-text-main">
               {activeCategory
                 ? `${activeCategory.name} tools`
-                : mode.simplified
-                  ? 'Frequently used tools'
-                  : `Recommended for ${mode.label.toLowerCase()}`}
+                : `Recommended for ${mode.label.toLowerCase()}`}
             </h2>
             <span className="rounded-full border border-border bg-app px-3 py-1 text-xs font-semibold text-text-muted">
               {curatedTools.length} {curatedTools.length === 1 ? 'tool' : 'tools'}

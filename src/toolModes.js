@@ -97,23 +97,6 @@ const modeDefinitions = [
     ],
     simplified: false,
   },
-  {
-    id: 'simple',
-    label: 'Simple mode',
-    heading: 'Essential tools',
-    description: 'A reduced workspace containing only frequently used tools.',
-    toolIds: [
-      'tool-wc',
-      'tool-casing',
-      'tool-url',
-      'tool-date',
-      'tool-currency',
-      'tool-color',
-      'tool-qrcode',
-      'tool-password',
-    ],
-    simplified: true,
-  },
 ];
 
 export const TOOL_MODES = modeDefinitions.map((mode) => ({
@@ -121,11 +104,32 @@ export const TOOL_MODES = modeDefinitions.map((mode) => ({
   toolIds: mode.toolIds ? [...mode.toolIds] : null,
 }));
 
-export const AUDIENCE_MODES = TOOL_MODES.filter((mode) => mode.id !== 'simple');
+export const AUDIENCE_MODES = [...TOOL_MODES];
+
+export const SIMPLE_WORKSPACE = {
+  id: 'simple',
+  label: 'Simple',
+  heading: 'Quick tools',
+  description: 'Search every tool or open an everyday essential.',
+  toolIds: [
+    'tool-wc',
+    'tool-casing',
+    'tool-url',
+    'tool-date',
+    'tool-currency',
+    'tool-color',
+    'tool-qrcode',
+    'tool-password',
+  ],
+  simplified: true,
+};
 
 const modesById = new Map(TOOL_MODES.map((mode) => [mode.id, mode]));
 
 export function getToolMode(modeId) {
+  if (modeId === SIMPLE_WORKSPACE.id) {
+    return SIMPLE_WORKSPACE;
+  }
   return modesById.get(modeId) ?? modesById.get('all');
 }
 
@@ -137,13 +141,20 @@ function getPathSegments(pathname) {
 }
 
 export function isToolPath(pathname) {
-  return getPathSegments(pathname)[0] === 'home';
+  const rootSegment = getPathSegments(pathname)[0];
+  return rootSegment === 'home' || rootSegment === 'simple';
 }
 
 export function getModeIdFromLocation(pathname, search = '') {
   const pathSegments = getPathSegments(pathname);
+  if (pathSegments[0] === 'simple') {
+    return 'simple';
+  }
   if (pathSegments[0] === 'home') {
     const pathModeId = pathSegments[1];
+    if (pathModeId === 'simple') {
+      return 'simple';
+    }
     return pathModeId && pathModeId !== 'all' && modesById.has(pathModeId)
       ? pathModeId
       : 'all';
@@ -162,12 +173,23 @@ export function getRouteIdFromLocation(pathname, hash = '') {
   }
 
   const pathSegments = getPathSegments(pathname);
+  if (pathSegments[0] === 'simple') {
+    const routeSlug = pathSegments[1];
+    if (!routeSlug || routeSlug === 'home') {
+      return 'tool-home';
+    }
+    if (routeSlug === 'privacy' || routeSlug.startsWith('tool-')) {
+      return routeSlug;
+    }
+    return `tool-${routeSlug}`;
+  }
   if (pathSegments[0] !== 'home') {
     return null;
   }
 
   const firstPathId = pathSegments[1];
-  const hasModeSegment = firstPathId && firstPathId !== 'all' && modesById.has(firstPathId);
+  const hasModeSegment = firstPathId === 'simple'
+    || (firstPathId && firstPathId !== 'all' && modesById.has(firstPathId));
   const routeSlug = hasModeSegment ? pathSegments[2] : firstPathId;
   if (!routeSlug || routeSlug === 'home') {
     return 'tool-home';
@@ -188,8 +210,8 @@ export function filterToolsForMode(tools, modeId) {
 export function buildModeUrl(currentHref, modeId, routeId = 'tool-home') {
   const profile = getToolMode(modeId);
   const url = new URL(currentHref);
-  const pathSegments = ['home'];
-  if (profile.id !== 'all') {
+  const pathSegments = profile.id === 'simple' ? ['simple'] : ['home'];
+  if (profile.id !== 'all' && profile.id !== 'simple') {
     pathSegments.push(profile.id);
   }
   if (routeId !== 'tool-home') {

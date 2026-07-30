@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NAVIGATION_ROUTES } from '../toolRegistry.js';
 import {
   AUDIENCE_MODES,
+  SIMPLE_WORKSPACE,
   TOOL_MODES,
   buildModeUrl,
   filterToolsForMode,
@@ -12,7 +13,7 @@ import {
 } from '../toolModes.js';
 
 describe('tool modes', () => {
-  it('defines every requested audience plus the simplified workspace', () => {
+  it('keeps the requested audiences separate from the simplified workspace', () => {
     expect(TOOL_MODES.map(({ id }) => id)).toEqual([
       'all',
       'daily',
@@ -20,9 +21,10 @@ describe('tool modes', () => {
       'bioinformatics',
       'designer',
       'student',
-      'simple',
     ]);
-    expect(getToolMode('simple').simplified).toBe(true);
+    expect(SIMPLE_WORKSPACE.simplified).toBe(true);
+    expect(SIMPLE_WORKSPACE.toolIds).toHaveLength(8);
+    expect(getToolMode('simple')).toBe(SIMPLE_WORKSPACE);
     expect(getToolMode('unknown').id).toBe('all');
     expect(AUDIENCE_MODES.map(({ id }) => id)).toEqual([
       'all',
@@ -42,7 +44,7 @@ describe('tool modes', () => {
       expect(filterToolsForMode(NAVIGATION_ROUTES, mode.id).map(({ id }) => id))
         .toEqual(NAVIGATION_ROUTES.filter(({ id }) => mode.toolIds.includes(id)).map(({ id }) => id));
     }
-    expect(getToolMode('simple').toolIds.length)
+    expect(SIMPLE_WORKSPACE.toolIds.length)
       .toBeLessThan(getToolMode('daily').toolIds.length);
   });
 
@@ -55,16 +57,25 @@ describe('tool modes', () => {
       .toBe('https://tools.example/home/color');
     expect(buildModeUrl('https://tools.example/app?mode=simple#tool-home', 'all'))
       .toBe('https://tools.example/home');
+    expect(buildModeUrl('https://tools.example/home/simple/tool-color', 'simple'))
+      .toBe('https://tools.example/simple');
+    expect(buildModeUrl('https://tools.example/home/simple/tool-color', 'simple', 'tool-color'))
+      .toBe('https://tools.example/simple/color');
     expect(getModeIdFromLocation('/home/bioinformatics')).toBe('bioinformatics');
     expect(getModeIdFromLocation('/home/student/wc')).toBe('student');
     expect(getModeIdFromLocation('/home/unknown')).toBe('all');
     expect(getModeIdFromLocation('/', '?mode=designer')).toBe('designer');
+    expect(getModeIdFromLocation('/simple/color')).toBe('simple');
+    expect(getModeIdFromLocation('/home/simple/color')).toBe('simple');
     expect(getRouteIdFromLocation('/home/developer/code-preview')).toBe('tool-code-preview');
     expect(getRouteIdFromLocation('/home/color')).toBe('tool-color');
     expect(getRouteIdFromLocation('/home/tool-color')).toBe('tool-color');
     expect(getRouteIdFromLocation('/home/developer')).toBe('tool-home');
+    expect(getRouteIdFromLocation('/simple/color')).toBe('tool-color');
+    expect(getRouteIdFromLocation('/home/simple/color')).toBe('tool-color');
     expect(getRouteIdFromLocation('/', '#tool-wc')).toBe('tool-wc');
     expect(isToolPath('/home/developer/code-preview')).toBe(true);
+    expect(isToolPath('/simple/code-preview')).toBe(true);
     expect(isToolPath('/')).toBe(false);
   });
 });

@@ -18,7 +18,7 @@
 | Testing | Vitest 4 + React Testing Library + jsdom |
 | Linting & Types | ESLint 9, JSDoc + normal and strict checkJs projects |
 | Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
-| Routing | In-app state synchronized to `/home` URL paths with `React.lazy()` code splitting; no React Router |
+| Routing | In-app state synchronized to `/home` and `/simple` URL paths with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
 At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically. `npm run version:check`, included in `verify`, prevents release tag and npm package metadata from silently drifting apart.
@@ -53,14 +53,15 @@ small-web-tools/
 │   ├── main.jsx              React mount and global stylesheet import
 │   ├── App.jsx               Hash synchronization, application shell, and registry renderer
 │   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
-│   ├── toolModes.js          Audience/Simple mode profiles, filtering, and canonical URL helpers
+│   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
 │   ├── tests/                Vitest unit test suites and setup
 │   └── components/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
-│       ├── HomeGrid.jsx      Dashboard tool grid
+│       ├── HomeGrid.jsx      Full and audience dashboard tool grid
+│       ├── SimpleHome.jsx    Search-first essential-tool launcher
 │       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
 │       ├── useMediaSeparator.js
@@ -85,31 +86,31 @@ small-web-tools/
 - `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
-- `activeTool` is initialized from the `/home[/<mode>]/<tool-slug>` path or `sessionStorage` and is synchronized back to the path.
-- `toolMode` is initialized from the validated `/home` path. The workspace path
+- `activeTool` is initialized from `/home[/<audience>]/<tool-slug>` or `/simple/<tool-slug>` and is synchronized back to the path.
+- `toolMode` is initialized from the validated `/home` or `/simple` path. The workspace path
   remains in the URL while path navigation changes tools.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
 
-### Audience and Simple modes
+### Audience and Simple workspaces
 
 `src/toolModes.js` defines the complete dashboard plus five audience profiles:
 daily users, developers, bioinformatics researchers, designers, and students.
-It also defines Simple mode as a smaller high-frequency tool set. App-level
-filtering applies the active profile consistently to dashboard cards, sidebar
-navigation, desktop navigation, and search results; the full footer catalog is
-shown only in the complete dashboard.
+The separate `SIMPLE_WORKSPACE` defines eight high-frequency tools. App-level
+filtering applies audience profiles consistently to dashboard cards, sidebar,
+and search; the Simple sidebar remains limited to its essentials while Simple
+search can open any registered tool.
 
 `AudienceSwitcher.jsx` renders the header segmented control for the complete
-homepage and five audience profiles. `HomeGrid.jsx` keeps the complete categorized
-dashboard and renders a flat recommended-tool grid for audience and Simple modes. Simple mode also
-hides desktop category navigation, the inactive language control, and the
-duplicated dashboard footer. Mode selection uses `history.pushState()` and the
-canonical `/home[/<mode>][/<tool-slug>]` format, so browser history, direct links, and
-reloads preserve both the workspace and selected tool. Focused profile, URL, and
-component coverage lives in `toolModes.test.js` and `homeGrid.test.jsx`.
+homepage and five audience profiles. `HomeGrid.jsx` preserves the complete
+categorized dashboard and renders flat audience recommendations. `SimpleHome.jsx`
+provides an all-tool search and eight compact shortcuts inside the reduced shell.
+Routing uses `/home[/<audience>][/<tool-slug>]` and
+`/simple[/<tool-slug>]`; legacy `/home/simple` addresses redirect to `/simple`.
+Focused coverage lives in `toolModes.test.js`, `homeGrid.test.jsx`,
+`audienceSwitcher.test.jsx`, and `simpleHome.test.jsx`.
 
 ### Shared tool-page contract
 

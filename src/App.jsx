@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import AudienceSwitcher from './components/AudienceSwitcher.jsx';
+import SimpleHome from './components/SimpleHome.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -366,16 +367,27 @@ export default function App() {
 
   // Audience and Simple modes filter every place that surfaces tools.
   const modeNavItems = filterToolsForMode(navItems, toolMode);
-  const filteredNavItems = modeNavItems.filter(item =>
+  const searchNavItems = modeProfile.simplified ? navItems : modeNavItems;
+  const filteredModeNavItems = modeNavItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+  const filteredSearchNavItems = searchNavItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
   // Render the active registry component.
   const renderActiveTool = () => {
     const route = getToolRoute(activeTool) || getToolRoute('tool-home');
+    if (route.id === 'tool-home' && modeProfile.simplified) {
+      return (
+        <ErrorBoundary key="simple-home">
+          <SimpleHome tools={navItems} onSelectTool={handleNavClick} />
+        </ErrorBoundary>
+      );
+    }
     const ToolComponent = route.component;
     const componentProps = route.id === 'tool-home'
       ? {
-        tools: filteredNavItems,
+        tools: filteredModeNavItems,
         onSelectTool: handleNavClick,
         activeTab: selectedHomeTab,
         modeId: modeProfile.id,
@@ -464,7 +476,14 @@ export default function App() {
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
-          <span className="font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
+          <span className="min-w-0 flex-1 truncate font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
+          <button
+            type="button"
+            onClick={() => handleModeChange(modeProfile.simplified ? 'all' : 'simple')}
+            className="shrink-0 rounded-lg border border-border bg-app px-2.5 py-1.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          >
+            {modeProfile.simplified ? 'Full Home' : 'Quick Home'}
+          </button>
         </header>
 
         {!modeProfile.simplified && (
@@ -560,7 +579,7 @@ export default function App() {
           {/* Sidebar Nav */}
           <nav className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded-[3px]">
             {searchQuery.trim() !== '' ? (
-              filteredNavItems.map(item => (
+              filteredModeNavItems.map(item => (
                 <button
                   key={item.id}
                   className={`${navItemBase} ${navItemHover} ${activeTool === item.id ? navItemActive : ''} ${isSidebarCollapsed ? 'md:justify-center md:px-0 md:py-2' : ''}`}
@@ -576,7 +595,7 @@ export default function App() {
               ))
             ) : (
               categories.map(cat => {
-                const catItems = filteredNavItems.filter(item => item.category === cat.id);
+                const catItems = filteredModeNavItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
 
                 if (cat.id === 'utilities') {
@@ -736,10 +755,18 @@ export default function App() {
 
             {/* Right: Search + Language + Theme */}
             <div className="flex shrink-0 items-center gap-2 xl:gap-4">
+              <button
+                type="button"
+                onClick={() => handleModeChange(modeProfile.simplified ? 'all' : 'simple')}
+                className="flex h-8 shrink-0 items-center rounded border border-border bg-app px-2.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:px-3"
+              >
+                <span className="xl:hidden">{modeProfile.simplified ? 'Full' : 'Quick'}</span>
+                <span className="hidden xl:inline">{modeProfile.simplified ? 'Full Home' : 'Quick Home'}</span>
+              </button>
               {/* Header Search */}
               <div
                 ref={searchRef}
-                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] md:block"
+                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] lg:block"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative flex items-center">
@@ -764,8 +791,8 @@ export default function App() {
                 </div>
                 {searchQuery.trim() !== '' && isSearchFocused && (
                   <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-md w-[280px] max-h-[300px] overflow-y-auto shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] p-[6px] z-[1200] flex flex-col gap-0.5">
-                    {filteredNavItems.length > 0 ? (
-                      filteredNavItems.map(item => (
+                    {filteredSearchNavItems.length > 0 ? (
+                      filteredSearchNavItems.map(item => (
                         <button
                           key={item.id}
                           className="flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] text-text-main cursor-pointer text-left font-sans transition-colors duration-150 hover:bg-accent-light hover:text-accent [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon]:text-text-muted [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:[&_.item-icon]:text-accent"

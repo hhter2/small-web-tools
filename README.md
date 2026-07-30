@@ -15,8 +15,7 @@ On a phone or narrow screen, the navigation becomes a drawer opened by the menu 
 
 The header audience switcher can show the unchanged full homepage or a curated
 set for daily users, developers, bioinformatics researchers, designers, or
-students. Simple mode presents only frequently used tools and removes the
-category navigation and other nonessential dashboard controls.
+students.
 
 Every audience selection redirects to a bookmarkable address:
 
@@ -26,11 +25,15 @@ Every audience selection redirects to a bookmarkable address:
 - `/home/bioinformatics`
 - `/home/designer`
 - `/home/student`
-- `/home/simple`
 
 The workspace path remains in the address while opening tools, so a link such as
 `/home/developer/code-preview` restores both the selected workspace and the
 requested tool.
+
+The separate **Quick Home** interface is available at `/simple`. It provides a
+large search across every tool and compact shortcuts to eight everyday
+essentials. Tools opened there remain in the reduced shell at addresses such as
+`/simple/color`; use **Full Home** to return to `/home`.
 
 ## Tool guide
 

@@ -9,8 +9,9 @@ import {
   buildModeUrl,
   filterToolsForMode,
   getModeIdFromLocation,
+  getRouteIdFromLocation,
   getToolMode,
-  isToolModePath,
+  isToolPath,
 } from './toolModes.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -104,10 +105,13 @@ function getValidToolId(rawId) {
 export default function App() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
-      const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
-      if (rawHash) {
-        if (VALID_TOOL_IDS.has(rawHash)) {
-          return rawHash;
+      const locationRouteId = getRouteIdFromLocation(
+        window.location.pathname,
+        window.location.hash,
+      );
+      if (locationRouteId) {
+        if (VALID_TOOL_IDS.has(locationRouteId)) {
+          return locationRouteId;
         }
         window.history.replaceState(
           null,
@@ -119,7 +123,7 @@ export default function App() {
         );
         return 'tool-home';
       }
-      if (isToolModePath(window.location.pathname)) {
+      if (isToolPath(window.location.pathname)) {
         return 'tool-home';
       }
       const saved = sessionStorage.getItem("activeTool");
@@ -238,22 +242,31 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       try {
-        const rawHash = decodeURIComponent(window.location.hash.replace('#', '').trim());
-        if (rawHash && !VALID_TOOL_IDS.has(rawHash)) {
+        const nextModeId = getModeIdFromLocation(
+          window.location.pathname,
+          window.location.search,
+        );
+        const locationRouteId = getRouteIdFromLocation(
+          window.location.pathname,
+          window.location.hash,
+        );
+        if (locationRouteId && !VALID_TOOL_IDS.has(locationRouteId)) {
           window.history.replaceState(
             null,
             '',
-            buildModeUrl(
-              window.location.href,
-              getModeIdFromLocation(window.location.pathname, window.location.search),
-            ),
+            buildModeUrl(window.location.href, nextModeId),
           );
           setActiveTool('tool-home');
+          setToolMode(nextModeId);
           return;
         }
-        const validId = getValidToolId(rawHash);
+        const validId = getValidToolId(locationRouteId);
+        const canonicalAddress = buildModeUrl(window.location.href, nextModeId, validId);
+        if (canonicalAddress !== window.location.href) {
+          window.history.replaceState(null, '', canonicalAddress);
+        }
         setActiveTool(validId);
-        setToolMode(getModeIdFromLocation(window.location.pathname, window.location.search));
+        setToolMode(nextModeId);
       } catch (e) {
         setActiveTool('tool-home');
         setToolMode('all');

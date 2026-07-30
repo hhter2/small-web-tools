@@ -23,7 +23,7 @@ test('IP coordinates do not contact OpenStreetMap before consent and reset remov
     body: '<html></html>',
   }));
 
-  await page.goto('/#tool-iplookup');
+  await page.goto('/home/tool-iplookup');
   await page.getByRole('button', { name: 'Allow IP lookup' }).click();
   await page.getByRole('button', { name: 'Lookup', exact: true }).click();
   await expect(page.getByText('25.033, 121.5654')).toBeVisible();

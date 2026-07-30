@@ -127,20 +127,46 @@ export function getToolMode(modeId) {
   return modesById.get(modeId) ?? modesById.get('all');
 }
 
-export function isToolModePath(pathname) {
-  return /^\/home(?:\/[^/]+)?\/?$/.test(pathname);
+function getPathSegments(pathname) {
+  return pathname
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => decodeURIComponent(segment));
+}
+
+export function isToolPath(pathname) {
+  return getPathSegments(pathname)[0] === 'home';
 }
 
 export function getModeIdFromLocation(pathname, search = '') {
-  const pathMatch = pathname.match(/^\/home(?:\/([^/]+))?\/?$/);
-  if (pathMatch) {
-    return getToolMode(pathMatch[1] || 'all').id;
+  const pathSegments = getPathSegments(pathname);
+  if (pathSegments[0] === 'home') {
+    const pathModeId = pathSegments[1];
+    return pathModeId && pathModeId !== 'all' && modesById.has(pathModeId)
+      ? pathModeId
+      : 'all';
   }
 
   // Read old query-based links once so the app can redirect them to the
   // canonical path without breaking existing bookmarks.
   const legacyModeId = new URLSearchParams(search).get('mode');
   return getToolMode(legacyModeId).id;
+}
+
+export function getRouteIdFromLocation(pathname, hash = '') {
+  const legacyRouteId = decodeURIComponent(hash.replace(/^#/, '').trim());
+  if (legacyRouteId) {
+    return legacyRouteId;
+  }
+
+  const pathSegments = getPathSegments(pathname);
+  if (pathSegments[0] !== 'home') {
+    return null;
+  }
+
+  const firstPathId = pathSegments[1];
+  const hasModeSegment = firstPathId && firstPathId !== 'all' && modesById.has(firstPathId);
+  return (hasModeSegment ? pathSegments[2] : firstPathId) || 'tool-home';
 }
 
 export function filterToolsForMode(tools, modeId) {
@@ -153,8 +179,15 @@ export function filterToolsForMode(tools, modeId) {
 export function buildModeUrl(currentHref, modeId, routeId = 'tool-home') {
   const profile = getToolMode(modeId);
   const url = new URL(currentHref);
-  url.pathname = profile.id === 'all' ? '/home' : `/home/${profile.id}`;
+  const pathSegments = ['home'];
+  if (profile.id !== 'all') {
+    pathSegments.push(profile.id);
+  }
+  if (routeId !== 'tool-home') {
+    pathSegments.push(routeId);
+  }
+  url.pathname = `/${pathSegments.map(encodeURIComponent).join('/')}`;
   url.search = '';
-  url.hash = routeId === 'tool-home' ? '' : routeId;
+  url.hash = '';
   return url.toString();
 }

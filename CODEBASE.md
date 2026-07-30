@@ -18,7 +18,7 @@
 | Testing | Vitest 4 + React Testing Library + jsdom |
 | Linting & Types | ESLint 9, JSDoc + normal and strict checkJs projects |
 | Styling | Tailwind CSS utilities plus `src/styles.css` design tokens and component-specific rules |
-| Routing | In-app state synchronized to URL hashes with `React.lazy()` code splitting; no React Router |
+| Routing | In-app state synchronized to `/home` URL paths with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
 At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically. `npm run version:check`, included in `verify`, prevents release tag and npm package metadata from silently drifting apart.
@@ -85,9 +85,9 @@ small-web-tools/
 - `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
-- `activeTool` is initialized from `window.location.hash` or `sessionStorage` and is synchronized back to both.
+- `activeTool` is initialized from the `/home[/<mode>]/<tool-id>` path or `sessionStorage` and is synchronized back to the path.
 - `toolMode` is initialized from the validated `/home` path. The workspace path
-  remains in the URL while hash navigation changes tools.
+  remains in the URL while path navigation changes tools.
 - `theme` and `sidebarCollapsed` are persisted in `localStorage`.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
@@ -106,7 +106,7 @@ shown only in the complete dashboard.
 and a flat recommended-tool grid for audience and Simple modes. Simple mode also
 hides desktop category navigation, the inactive language control, and the
 duplicated dashboard footer. Mode selection uses `history.pushState()` and the
-canonical `/home[/<mode>][#<tool-id>]` format, so browser history, direct links, and
+canonical `/home[/<mode>][/<tool-id>]` format, so browser history, direct links, and
 reloads preserve both the workspace and selected tool. Focused profile, URL, and
 component coverage lives in `toolModes.test.js` and `homeGrid.test.jsx`.
 

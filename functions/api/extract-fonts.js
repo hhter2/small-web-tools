@@ -229,7 +229,7 @@ async function extractFontMetadata(targetUrl, limits) {
         continue;
       }
       if (!result) return;
-      const parsed = parseCss(new TextDecoder().decode(result.buffer), job.url);
+      const parsed = parseCss(new TextDecoder().decode(result.buffer), result.url || job.url);
       budget.addFonts(parsed.fonts, allFonts);
       for (const importedUrl of parsed.imports) {
         if (job.depth >= limits.importDepth) {

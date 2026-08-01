@@ -4,6 +4,7 @@ import Card from './ui/Card.jsx';
 import FullscreenPreview, { FullscreenPreviewButton } from './ui/FullscreenPreview.jsx';
 import ToolHeader from './ui/ToolHeader.jsx';
 import {
+  CODE_FILE_LIMIT_BYTES,
   CODE_LANGUAGES,
   getDefaultFilename,
   getLineCount,
@@ -152,6 +153,10 @@ export default function CodePreviewer() {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    if (file.size > CODE_FILE_LIMIT_BYTES) {
+      setStatus('The code file must be 2 MiB or smaller.');
+      return;
+    }
 
     try {
       const nextLanguage = inferLanguageFromFilename(file.name);

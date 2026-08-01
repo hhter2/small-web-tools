@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CODE_FILE_LIMIT_BYTES,
   CODE_LANGUAGES,
   getLineCount,
   getSyntaxTheme,
@@ -112,6 +113,10 @@ describe('code preview domain', () => {
     expect(normalizeCodeFilename('query.sql', 'sql')).toBe('query.sql');
     expect(inferLanguageFromFilename('component.tsx')).toBe('typescript');
     expect(inferLanguageFromFilename('unknown.custom')).toBe('plaintext');
+  });
+
+  it('keeps the code upload limit bounded', () => {
+    expect(CODE_FILE_LIMIT_BYTES).toBe(2 * 1024 * 1024);
   });
 
   it('keeps line numbering and syntax contrast deterministic', () => {

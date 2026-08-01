@@ -27,10 +27,11 @@ function postContext(body, rawBody) {
   };
 }
 
-function fetched(text) {
+function fetched(text, url) {
   return {
     response: new Response(text),
     buffer: new TextEncoder().encode(text).buffer,
+    url,
   };
 }
 
@@ -99,5 +100,43 @@ describe('extract-fonts API handler failures', () => {
       expect.objectContaining({ family: 'Linked', format: 'TRUETYPE' }),
     ]);
     expect(safeExternalFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('resolves redirected stylesheet imports and font sources from the final URL', async () => {
+    safeExternalFetch
+      .mockResolvedValueOnce(fetched(
+        '<link rel="stylesheet" href="/site.css">',
+        'https://fonts.google.com/page',
+      ))
+      .mockResolvedValueOnce(fetched([
+        '@import "./nested.css";',
+        '@font-face { font-family: Redirected; src: url("./fonts/redirected.woff2"); }',
+      ].join('\n'), 'https://cdn.example/assets/site.css'))
+      .mockResolvedValueOnce(fetched(
+        '@font-face { font-family: Nested; src: url("./nested.woff2"); }',
+        'https://cdn.example/assets/nested.css',
+      ));
+
+    const response = await onRequestPost(postContext({ url: 'https://fonts.google.com/page' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.fonts).toEqual([
+      expect.objectContaining({
+        family: 'Nested',
+        name: 'nested.woff2',
+        sourceHost: 'cdn.example',
+      }),
+      expect.objectContaining({
+        family: 'Redirected',
+        name: 'redirected.woff2',
+        sourceHost: 'cdn.example',
+      }),
+    ]);
+    expect(safeExternalFetch).toHaveBeenNthCalledWith(
+      3,
+      'https://cdn.example/assets/nested.css',
+      expect.any(Object),
+    );
   });
 });

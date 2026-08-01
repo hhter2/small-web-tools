@@ -1,5 +1,11 @@
 # Privacy Policy & Data Processing Disclosure
 
+<p align="center">
+  <a href="PRIVACY.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="PRIVACY.zh-TW.md">繁體中文</a>
+</p>
+
 **First Published:** July 19, 2026
 
 **Last Updated:** July 30, 2026

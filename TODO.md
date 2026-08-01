@@ -2,6 +2,12 @@
 
 This file is the working backlog and update checklist for Small Web Tools. Keep it focused on planned work, completed maintenance, and release preparation. User-facing instructions belong in `README.md`; architecture belongs in `ARCHITECTURE.md`.
 
+Work tracking is complementary: AI agents may create GitHub issues, prepare and
+push branches, and open pull requests for some work. Not every issue, pull
+request, or completed change is recorded in this file; check the repository's
+GitHub Issues and Pull Requests for the complete work history. TODO.md is
+intentionally maintained in English only.
+
 ## Labels
 
 - `feat` — new or expanded user capability.
@@ -17,7 +23,7 @@ Use this sequence for each meaningful update:
 1. **Define the change.** Record the task below with an appropriate label and confirm the affected tools, routes, APIs, or shared components.
 2. **Implement in the right place.** Keep tool registration in `src/toolRegistry.js`; use the shared `Card` and `ToolHeader` primitives for tool pages; add server functionality under `functions/api/` only when browser-only code is insufficient.
 3. **Validate.** Run `npm run verify`. For layout or interaction work, also run the relevant Playwright journeys, check the affected routes at desktop and mobile widths, and review browser console errors.
-4. **Update documentation.** Refresh `README.md` for changed user behavior and `ARCHITECTURE.md` for structural changes. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
+4. **Update documentation.** Refresh the relevant English and Traditional Chinese companion documents for changed user behavior or structure. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
 5. **Review and commit.** Check `git diff` and `git status`, then create a focused commit after each completed logical stage.
 6. **Prepare a release when appropriate.** Confirm the version in `package.json`; create or update the git tag only as part of an agreed release. The app displays the newest git tag when one is available, otherwise it falls back to the package version.
 

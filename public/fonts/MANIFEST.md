@@ -1,5 +1,11 @@
 # Bundled UI Fonts
 
+<p align="center">
+  <a href="MANIFEST.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="MANIFEST.zh-TW.md">繁體中文</a>
+</p>
+
 These WOFF2 files are repository-owned copies of the exact Google Fonts families used by the application. They were retrieved on 2026-07-23 from the versioned `fonts.gstatic.com` URLs returned by the Google Fonts CSS API.
 
 | Family | Upstream version | Bundled weight range | Subsets | License |

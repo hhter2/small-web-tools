@@ -168,9 +168,16 @@ operational approval; subdomains and preload require an explicit full-domain aud
 
 ## Documentation
 
+Maintained explanatory guides use an English file plus a Traditional Chinese
+companion with the .zh-TW.md suffix. The language links at the top of each
+guide keep navigation in one language. TODO.md is intentionally maintained in
+English only.
+
 `CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `ARCHITECTURE.md`
 is the canonical architecture and route reference.
 
+- [CONTRIBUTING.md](CONTRIBUTING.md) — engineering standards and local-runtime instructions.
+- [PRIVACY.md](PRIVACY.md) — privacy policy and network-service disclosure.
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 

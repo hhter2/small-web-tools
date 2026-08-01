@@ -1,14 +1,28 @@
 # Architecture Guide: Small Web Tools
 
+<p align="center">
+  <a href="ARCHITECTURE.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="ARCHITECTURE.zh-TW.md">繁體中文</a>
+</p>
+
 `small-web-tools` is a React 18 and Vite single-page application containing browser-based utility tools. This document is the technical reference for maintaining the current application. Keep it updated when routes, shared components, APIs, or dependencies change.
+
+The project is transitioning to bilingual documentation. The maintained
+explanatory guides have Traditional Chinese companions using the .zh-TW.md
+suffix; TODO.md remains the English-only backlog. Keep the English and Chinese
+versions synchronized when the documented behavior or structure changes.
 
 ## Documentation roles
 
 - `README.md` is the brief English manual for people using the site; `README.zh-TW.md`
   is its Traditional Chinese translation.
-- `CONTRIBUTING.md` is the single source of truth for contribution standards and AI guidelines.
-- `TODO.md` is the maintained backlog, completed-work log, and update process.
-- `ARCHITECTURE.md` is this architecture and maintenance reference.
+- `CONTRIBUTING.md` is the English source for contribution standards and AI guidelines;
+  `CONTRIBUTING.zh-TW.md` is its Traditional Chinese companion.
+- `TODO.md` is the maintained English-only backlog, completed-work log, and update process.
+- `ARCHITECTURE.md` is this English architecture and maintenance reference;
+  `ARCHITECTURE.zh-TW.md` is its Traditional Chinese companion.
+- `PRIVACY.md` and `PRIVACY.zh-TW.md` are the paired privacy policy and data-flow disclosures.
 
 ## Quick facts
 
@@ -26,6 +40,13 @@
 At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. It first checks local tags, then queries the repository's remote tags when a deployment build has no local tag refs. Build archives without Git metadata can still use `VITE_VERSION_REPOSITORY` or the repository URL in `package.json`; `VITE_APP_VERSION` remains the final explicit fallback. The npm manifest uses the fixed non-release placeholder `0.0.0-private`, which is never used as the application version or updated for releases. CI checks out full tag history, and `npm run version:check`, included in `verify`, confirms that a Git tag or explicit archive fallback supplied the displayed version.
 
 ## Repository map
+
+The maintained documentation pairs are README.md/README.zh-TW.md,
+CONTRIBUTING.md/CONTRIBUTING.zh-TW.md, ARCHITECTURE.md/ARCHITECTURE.zh-TW.md,
+and PRIVACY.md/PRIVACY.zh-TW.md. TODO.md is intentionally English-only.
+Supporting explanatory documents are public/fonts/MANIFEST.md with its
+Traditional Chinese companion, the two SSRF harness READMEs, and the paired
+agent instructions in .agents/.
 
 ```text
 small-web-tools/
@@ -378,4 +399,8 @@ journeys, and `npm audit`.
 
 ## Documentation maintenance
 
-When user behavior changes, update the relevant entry in `README.md`. When implementation structure changes, update this document. Record the work and follow the validation/commit sequence in `TODO.md`.
+When user behavior changes, update the relevant entries in `README.md` and
+`README.zh-TW.md`. When implementation structure changes, update this document
+and `ARCHITECTURE.zh-TW.md`. Keep the CONTRIBUTING and PRIVACY pairs
+synchronized when engineering or data-flow policy changes. Record the work and
+follow the validation/commit sequence in `TODO.md`.

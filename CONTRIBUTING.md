@@ -1,5 +1,11 @@
 # Contributing to Small Web Tools
 
+<p align="center">
+  <a href="CONTRIBUTING.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="CONTRIBUTING.zh-TW.md">繁體中文</a>
+</p>
+
 `CONTRIBUTING.md` is the canonical engineering guide. Use `ARCHITECTURE.md` for the
 current architecture, route inventory, API topology, and project map.
 
@@ -90,7 +96,10 @@ Node 24.
 ## Documentation and commits
 
 - Update `ARCHITECTURE.md` for structural, route, API, dependency, or runtime changes.
-- Update `README.md` and `PRIVACY.md` when user-visible behavior or data flow changes.
+- Update `README.md` and `README.zh-TW.md`, plus `PRIVACY.md` and
+  `PRIVACY.zh-TW.md`, when user-visible behavior or data flow changes.
+- Keep the English and Traditional Chinese companion documents synchronized when
+  a maintained explanatory document changes. TODO.md is intentionally English-only.
 - Do not edit owner-maintained `TODO.md` unless explicitly requested.
 - Commit coherent phases separately. Do not include generated output, secrets, or
   unrelated working-tree changes.

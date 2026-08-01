@@ -1,5 +1,7 @@
 import hljs from 'highlight.js/lib/common';
 
+export const CODE_FILE_LIMIT_BYTES = 2 * 1024 * 1024;
+
 export const CODE_LANGUAGES = [
   { id: 'plaintext', label: 'Plain text', extension: 'txt', aliases: ['txt', 'text'] },
   { id: 'bash', label: 'Bash / Shell', extension: 'sh', aliases: ['sh', 'shell', 'zsh'] },

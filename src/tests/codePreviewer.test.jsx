@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CodePreviewer from '../components/CodePreviewer.jsx';
+import { CODE_FILE_LIMIT_BYTES } from '../components/CodePreviewer/lib/codePreviewDomain.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -108,6 +109,22 @@ describe('Code Previewer', () => {
 
     expect(click).toHaveBeenCalledOnce();
     expect(container).toHaveTextContent('Downloaded snippet.js.');
+  });
+
+  it('rejects oversized code files before reading them', async () => {
+    const file = {
+      name: 'large.js',
+      size: CODE_FILE_LIMIT_BYTES + 1,
+      text: vi.fn(),
+    };
+    const input = container.querySelector('[aria-label="Upload code file"]');
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+
+    expect(file.text).not.toHaveBeenCalled();
+    expect(container).toHaveTextContent('The code file must be 2 MiB or smaller.');
+    expect(container.querySelector('[aria-label="Code editor"]')).toHaveValue('');
   });
 
   it('opens and closes an icon-only fullscreen code preview', async () => {

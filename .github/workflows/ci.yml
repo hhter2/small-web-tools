@@ -45,6 +45,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Provide CI version fallback
+        shell: bash
+        run: echo "VITE_APP_VERSION=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
       - name: Verify
         run: npm run verify
 

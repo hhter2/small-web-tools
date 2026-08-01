@@ -4,7 +4,8 @@
 
 ## Documentation roles
 
-- `README.md` is the brief manual for people using the site.
+- `README.md` is the brief English manual for people using the site; `README.zh-TW.md`
+  is its Traditional Chinese translation.
 - `CONTRIBUTING.md` is the single source of truth for contribution standards and AI guidelines.
 - `TODO.md` is the maintained backlog, completed-work log, and update process.
 - `ARCHITECTURE.md` is this architecture and maintenance reference.
@@ -27,7 +28,8 @@ At build time, `scripts/resolve-version.mjs` selects the newest version-sorted G
 
 ```text
 small-web-tools/
-├── README.md                 User-facing site manual
+├── README.md                 English user-facing site manual
+├── README.zh-TW.md           Traditional Chinese user-facing site manual
 ├── PRIVACY.md                User-facing privacy policy and disclaimers
 ├── TODO.md                   Backlog, completed work, and update process
 ├── ARCHITECTURE.md           Architecture and maintenance reference
@@ -296,7 +298,7 @@ build, test, operate, or maintain the project:
   configuration files define reproducible local development and verification.
 - `.github/` contains CI and dependency-maintenance configuration, while
   `.agents/AGENTS.md` contains repository-scoped development instructions.
-- `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `PRIVACY.md`, `TODO.md`, and
+- `README.md`, `README.zh-TW.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `PRIVACY.md`, `TODO.md`, and
   `LICENSE` are maintained project documentation or legal material.
 - `.dev.vars.example` is safe, non-secret local-runtime documentation. Actual
   `.dev.vars*` files remain ignored.

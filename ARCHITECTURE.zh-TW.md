@@ -18,8 +18,9 @@ small-web-tools 是一個使用 React 18 與 Vite 的單頁應用程式，提供
 - TODO.md 是刻意維持英文單一版本的待辦事項、已完成工作紀錄與更新流程。
 - ARCHITECTURE.md 是英文架構與維護參考；本檔案是繁體中文對照檔。
 
-本專案正在轉為雙語文件。具有說明性的文件使用英文檔名搭配 .zh-TW.md 結尾的
-繁中檔案；修改文件描述的行為或結構時，請同步維護兩個版本。
+本專案正在轉為雙語文件，範圍是給使用者與人類開發者閱讀的說明文件。這些文件使用
+英文檔名搭配 .zh-TW.md 結尾的繁中檔案；修改文件描述的行為或結構時，請同步維護
+兩個版本。只供 AI agent 使用的 .agents/AGENTS.md 與 TODO.md 刻意維持英文單一版本。
 
 ## 快速資訊
 
@@ -52,7 +53,7 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - PRIVACY.md／PRIVACY.zh-TW.md：隱私權政策與資料流揭露。
 - TODO.md：英文待辦事項、已完成工作與更新流程。
 - ARCHITECTURE.md／ARCHITECTURE.zh-TW.md：英文與繁中架構參考。
-- .agents/AGENTS.md／.agents/AGENTS.zh-TW.md：英文 agent 規則與繁中人類閱讀版本。
+- .agents/AGENTS.md：只供 AI agent 使用的英文規則；不建立繁中版本。
 - package.json：指令、相依套件與 pipeline 命令。
 - jsconfig.json：JavaScript 的 TypeScript checkJs 設定。
 - eslint.config.js：React、hooks 與 Cloudflare Functions 的 ESLint flat config。

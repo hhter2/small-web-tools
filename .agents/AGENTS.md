@@ -8,12 +8,6 @@
 
 ---
 
-<p align="center">
-  <a href="AGENTS.md">English</a>
-  &nbsp;·&nbsp;
-  <a href="AGENTS.zh-TW.md">繁體中文</a>
-</p>
-
 ## 1. Orientation (Read Before Any Task)
 
 1. Read `ARCHITECTURE.md` for the full project map — do **not** scan the entire codebase from scratch.
@@ -170,19 +164,21 @@ Before producing any code, confirm:
 ## Bilingual documentation transition
 
 This project is transitioning to bilingual English and Traditional Chinese
-documentation. Before changing an explanatory document, check whether a
-Traditional Chinese companion with the .zh-TW.md suffix exists. When the
-documented behavior, structure, policy, or workflow changes, update both
-language versions and keep English links pointing to English documents and
-Chinese links pointing to Chinese documents.
+documentation for users and human developers. Before changing a user-facing or
+developer-facing explanatory document, check whether a Traditional Chinese
+companion with the .zh-TW.md suffix exists. When the documented behavior,
+structure, policy, or workflow changes, update both language versions and keep
+English links pointing to English documents and Chinese links pointing to
+Chinese documents.
 
-The English files remain authoritative for automated agent instructions; the
-AGENTS.zh-TW.md file is the human-facing Traditional Chinese translation.
-TODO.md is intentionally English-only. Work may also be tracked by AI agents
-through GitHub Issues and Pull Requests, so not every issue, pull request, or
-completed change will appear in TODO.md. Before finishing a documentation task,
-check README, CONTRIBUTING, ARCHITECTURE, PRIVACY, font manifests, test-harness
-guides, and this agent guide for paired updates.
+AGENTS.md is an AI-facing instruction file and is intentionally English-only;
+do not create or maintain a Chinese counterpart. TODO.md is also intentionally
+English-only. Work may additionally be tracked by AI agents through GitHub
+Issues and Pull Requests, so not every issue, pull request, or completed change
+will appear in TODO.md. Before finishing a documentation task, check README,
+CONTRIBUTING, ARCHITECTURE, PRIVACY, font manifests, and test-harness guides
+for paired updates; exclude this agent guide and TODO.md from the bilingual
+document set.
 
 ## 10. Styling Migration Status (Tailwind CSS)
 

@@ -45,8 +45,8 @@ The maintained documentation pairs are README.md/README.zh-TW.md,
 CONTRIBUTING.md/CONTRIBUTING.zh-TW.md, ARCHITECTURE.md/ARCHITECTURE.zh-TW.md,
 and PRIVACY.md/PRIVACY.zh-TW.md. TODO.md is intentionally English-only.
 Supporting explanatory documents are public/fonts/MANIFEST.md with its
-Traditional Chinese companion, the two SSRF harness READMEs, and the paired
-agent instructions in .agents/.
+Traditional Chinese companion, the two SSRF harness READMEs, and the
+English-only AI agent instructions in .agents/.
 
 ```text
 small-web-tools/

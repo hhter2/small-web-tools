@@ -136,6 +136,10 @@ const formatAminoAcids = (seq, direction) => {
   }
 };
 
+export const stripDirectionLabels = (text) => text
+  .replace(/^\s*[53]['’]\s*-\s*/, '')
+  .replace(/\s*-\s*[53]['’]\s*$/, '');
+
 const getStrandGroups = (strandBases, direction, isRna) => {
   const len = strandBases.length;
   const groups = [];
@@ -176,6 +180,7 @@ export default function DnaConverter() {
   const [codonMode, setCodonMode] = useState('none'); // 'none', 'codon', 'amino'
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [viewMode, setViewMode] = useState('text'); // 'text' or 'figure'
+  const [copyWithoutDirectionLabels, setCopyWithoutDirectionLabels] = useState(false);
 
   // States to keep track of warning colors & messages
   const [statusText, setStatusText] = useState('Enter a sequence to convert.');
@@ -189,7 +194,8 @@ export default function DnaConverter() {
 
   const handleCopy = (text, key) => {
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
+    const clipboardText = copyWithoutDirectionLabels ? stripDirectionLabels(text) : text;
+    navigator.clipboard.writeText(clipboardText).then(() => {
       setCopiedBtn(key);
       setTimeout(() => {
         setCopiedBtn(null);
@@ -245,7 +251,7 @@ export default function DnaConverter() {
 
     let warningMessage = "";
     if (cleaned.includes("N")) {
-      warningMessage = "Notification: 'N' detected (can attach to any base: A, T, C, or G).";
+      warningMessage = "Notification: 'N' detected (N represents any or unknown nucleotide).";
     }
 
     // 3. Auto-detect sequence type (DNA vs RNA)
@@ -384,22 +390,22 @@ export default function DnaConverter() {
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444]"></span>
-                  <span>Sense Strand (Input: 5' → 3')</span>
+                  <span>Input Strand (5' → 3')</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6] opacity-30"></span>
-                  <span>Anti-sense Strand (Target: 3' → 5')</span>
+                  <span>Complementary Strand (3' → 5')</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6]"></span>
-                  <span>Anti-sense Strand (Input: 3' → 5')</span>
+                  <span>Input Strand (3' → 5')</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444] opacity-30"></span>
-                  <span>Sense Strand (Target: 5' → 3')</span>
+                  <span>Complementary Strand (5' → 3')</span>
                 </div>
               </>
             )}
@@ -570,7 +576,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Sense Strand Direction (5' → 3')" : "Sense Strand (Target) Direction (5' → 3')"}
+                  {isTopSense ? "Input Strand Direction (5' → 3')" : "Complementary Strand Direction (5' → 3')"}
                 </text>
               </g>
 
@@ -595,7 +601,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Anti-sense Strand (Target) Direction (5' → 3')" : "Anti-sense Strand Direction (3' → 5')"}
+                  {isTopSense ? "Complementary Strand Direction (3' → 5')" : "Input Strand Direction (3' → 5')"}
                 </text>
               </g>
             </svg>
@@ -606,7 +612,7 @@ export default function DnaConverter() {
   };
 
   return (
-    <Card id="tool-dna" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-dna" variant="tool" size="wide">
       <ToolHeader title="DNA/RNA Direction Transfer" />
       
       <div className="flex flex-col md:flex-row gap-4 w-full">
@@ -668,28 +674,42 @@ export default function DnaConverter() {
         <textarea
           id="dna-input"
           className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
-          rows="3"
+          rows={3}
           placeholder="Enter sequence (e.g., 5'-CACGT-3' or simply CACGT)"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
       </div>
 
-      <div className="align-self-start flex w-fit gap-2 rounded-md border border-border bg-app p-1">
-        <button
-          type="button"
-          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
-          onClick={() => setViewMode('text')}
-        >
-          Text Mode
-        </button>
-        <button
-          type="button"
-          className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
-          onClick={() => setViewMode('figure')}
-        >
-          Figure Mode
-        </button>
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <div className="align-self-start flex w-fit gap-2 rounded-md border border-border bg-app p-1">
+          <button
+            type="button"
+            className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
+            onClick={() => setViewMode('text')}
+          >
+            Text Mode
+          </button>
+          <button
+            type="button"
+            className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
+            onClick={() => setViewMode('figure')}
+          >
+            Figure Mode
+          </button>
+        </div>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-app px-3 py-2 text-sm font-semibold text-text-main">
+          <input
+            type="checkbox"
+            checked={copyWithoutDirectionLabels}
+            onChange={(event) => {
+              setCopyWithoutDirectionLabels(event.target.checked);
+              setCopiedBtn(null);
+            }}
+            className="h-4 w-4 accent-accent"
+          />
+          Copy without 5'/3' labels
+        </label>
       </div>
 
       {viewMode === 'text' ? (
@@ -753,6 +773,9 @@ export default function DnaConverter() {
         renderVisualDna()
       )}
       {input.trim() && statusText && <p className="text-sm font-medium text-red-500" id="dna-status" style={statusStyle}>{statusText}</p>}
+      <p className="text-xs text-text-muted mt-1">
+        Supports standard bases (A, C, G, T, U) and full IUPAC ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N). N represents any or unknown nucleotide.
+      </p>
     </Card>
   );
 }

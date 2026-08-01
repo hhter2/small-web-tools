@@ -1,59 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
-import FieldInput from './ui/FieldInput';
 import ToolHeader from './ui/ToolHeader';
+import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
+import { parseIpInput } from '../lib/ipValidation';
+import ExternalMapPreview from './ExternalMapPreview';
 
 async function ipLookup(ip) {
-  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-
-  if (isDev) {
-    const qs = ip ? `?ip=${encodeURIComponent(ip.trim())}` : '';
-    const res = await fetch(`/api/iplookup${qs}`);
-    const result = await res.json();
-    if (!result.ok) throw new Error(result.error || 'Server-side IP lookup failed');
-    return result.data;
+  const parsed = parseIpInput(ip);
+  if (parsed.error) throw new Error(parsed.error);
+  const query = parsed.value ? '?ip=' + encodeURIComponent(parsed.value) : '';
+  const response = await fetch('/api/iplookup' + query);
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    throw new Error(result.error || 'Server-side IP lookup failed');
   }
-
-  const tryProvider = async (url, normalize) => {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`${url} returned ${r.status}`);
-    return normalize(await r.json());
-  };
-
-  const providers = [
-    () => tryProvider(
-      ip ? `https://api.ip.sb/geoip/${ip}` : 'https://api.ip.sb/geoip',
-      (d) => ({
-        ip: d.ip, city: d.city || '', region: d.region || '',
-        country_name: d.country || '', country_code: d.country_code || '',
-        postal: '', org: d.isp || d.organization || '',
-        asn: d.asn ? `AS${d.asn}` : '', timezone: d.timezone || '',
-        utc_offset: '', latitude: d.latitude, longitude: d.longitude,
-      })
-    ),
-    () => tryProvider(
-      ip ? `https://ipapi.co/${ip}/json/` : 'https://ipapi.co/json/',
-      (d) => {
-        if (d.error) throw new Error(d.reason || 'ipapi.co error');
-        return {
-          ip: d.ip, city: d.city || '', region: d.region || '',
-          country_name: d.country_name || '', country_code: d.country_code || '',
-          postal: d.postal || '', org: d.org || '', asn: d.asn || '',
-          timezone: d.timezone || '', utc_offset: d.utc_offset || '',
-          latitude: d.latitude, longitude: d.longitude,
-        };
-      }
-    ),
-  ];
-
-  let lastErr = null;
-  for (const p of providers) {
-    try { return await p(); } catch (e) { lastErr = e; }
-  }
-  throw new Error(`IP lookup failed: ${lastErr?.message}`);
+  return result.data;
 }
-
 function getFlagEmoji(countryCode) {
   if (!countryCode) return "";
   return countryCode
@@ -63,7 +26,6 @@ function getFlagEmoji(countryCode) {
     );
 }
 
-/** Inline copy button styled to match legacy .copy-btn-inline */
 function CopyBtn({ value, copiedKey, thisKey, onCopy }) {
   const isCopied = copiedKey === thisKey;
   return (
@@ -87,6 +49,15 @@ export default function IpLookup() {
   const [status, setStatus] = useState('');
   const [copiedBtn, setCopiedBtn] = useState(null);
   const [result, setResult] = useState(null);
+  const [lookupAllowed, setLookupAllowed] = useState(() => hasConsent('iplookup'));
+
+  useEffect(() => {
+    const handleConsentUpdate = () => {
+      setLookupAllowed(hasConsent('iplookup'));
+    };
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
 
   const handleCopy = (val, key) => {
     if (!val) return;
@@ -97,12 +68,23 @@ export default function IpLookup() {
   };
 
   const doLookup = async () => {
+    if (!lookupAllowed) {
+      setStatus('IP lookup is blocked until you allow the disclosed third-party service.');
+      return;
+    }
+    const parsed = parseIpInput(ipInput);
+    if (parsed.error) {
+      setStatus('Error: ' + parsed.error);
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setStatus('');
 
     try {
-      const data = await ipLookup(ipInput);
+      const data = await ipLookup(parsed.value);
       setResult(data);
     } catch (err) {
       setStatus(`Error: ${err.message}`);
@@ -111,14 +93,12 @@ export default function IpLookup() {
     }
   };
 
-  // Render variables
   const showResults = result && !loading;
 
   let locationVal = '';
   let regionCountryVal = '';
   let timezoneVal = '';
   let coordsVal = '';
-  let mapSrc = '';
 
   if (result) {
     const city = result.city || '';
@@ -135,9 +115,6 @@ export default function IpLookup() {
 
     if (result.latitude !== undefined && result.latitude !== null && result.longitude !== undefined && result.longitude !== null) {
       coordsVal = `${result.latitude}, ${result.longitude}`;
-      const lat = result.latitude;
-      const lon = result.longitude;
-      mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.02}%2C${lat - 0.02}%2C${lon + 0.02}%2C${lat + 0.02}&layer=mapnik&marker=${lat}%2C${lon}`;
     } else {
       coordsVal = "Unknown";
     }
@@ -146,6 +123,19 @@ export default function IpLookup() {
   return (
     <Card id="tool-iplookup" variant="tool" size="wide">
       <ToolHeader title="IP Address Lookup" />
+      <p className="text-xs text-text-muted">
+        Lookup sends the requested IP through this site to a geolocation provider; the map separately contacts OpenStreetMap only after permission.
+      </p>
+      {!lookupAllowed && (
+        <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
+          <span>
+            Lookup sends the requested IP to this site’s server, which contacts a geolocation provider.
+          </span>
+          <Button variant="secondary" onClick={() => grantConsent('iplookup')}>
+            Allow IP lookup
+          </Button>
+        </div>
+      )}
       <div className="flex flex-col gap-2 w-full">
         <label htmlFor="iplookup-input" className="text-sm font-semibold text-text-main">IP Address</label>
         <div className="flex gap-3 w-full">
@@ -209,29 +199,20 @@ export default function IpLookup() {
               ))}
             </div>
 
-            {/* Interactive Map */}
-            {mapSrc && (
-              <div className="flex flex-col gap-2 w-full h-full">
-                <label className="text-sm font-semibold text-text-main">Map Preview</label>
-                <div className="rounded-xl overflow-hidden border border-border bg-app flex-1 min-h-[250px]">
-                  <iframe
-                    id="iplookup-map"
-                    title="IP Location Map"
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0, borderRadius: '10px' }}
-                    allowFullScreen
-                    src={mapSrc}
-                  />
-                </div>
-              </div>
+            {/* Interactive Map Section */}
+            {result.latitude != null && result.longitude != null && (
+              <ExternalMapPreview
+                latitude={Number(result.latitude)}
+                longitude={Number(result.longitude)}
+                title="IP Location"
+                delta={0.02}
+              />
             )}
           </div>
         </div>
       )}
 
-      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm" id="iplookup-status">{status}</p>}
+      {status && <p className="min-h-[18px] text-red-500 font-medium text-sm mt-2" id="iplookup-status">{status}</p>}
     </Card>
   );
 }

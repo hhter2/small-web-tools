@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Card from './ui/Card';
+import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -11,6 +12,15 @@ const BASE_OPTIONS = [
   { base: 16, short: 'HEX', label: 'Hexadecimal', example: 'FF' },
   { base: 60, short: 'BASE 60', label: 'Sexagesimal', example: '3:25:15' },
 ];
+
+const COMMON_BASES = [
+  { base: 2, short: 'BIN', label: 'Binary' },
+  { base: 8, short: 'OCT', label: 'Octal' },
+  { base: 10, short: 'DEC', label: 'Decimal' },
+  { base: 16, short: 'HEX', label: 'Hexadecimal' },
+];
+
+const COMMON_VALUES = Array.from({ length: 16 }, (_, value) => value);
 
 function parseBigIntFromBase(value, base) {
   let text = value.trim().toUpperCase();
@@ -81,10 +91,22 @@ function CopyIcon() {
   );
 }
 
+function PasteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="18" rx="2" />
+      <path d="M9 4V2h6v2M9 12h6M12 9v6" />
+    </svg>
+  );
+}
+
 export default function BaseConverter() {
   const [input, setInput] = useState('');
   const [baseFrom, setBaseFrom] = useState(10);
   const [copiedBase, setCopiedBase] = useState(null);
+  const [copyState, setCopyState] = useState('idle');
+  const [pasteState, setPasteState] = useState('idle');
+  const [selectedReferenceValue, setSelectedReferenceValue] = useState(null);
 
   const trimmed = input.trim();
   const parsed = trimmed
@@ -103,10 +125,16 @@ export default function BaseConverter() {
     { base: 60, short: 'BASE 60', label: 'Sexagesimal', value: parsed === null ? '' : formatBase60(parsed) },
   ];
 
-  const useAsInput = (result) => {
-    setInput(result.value);
-    setBaseFrom(result.base);
+  const selectInputBase = (base) => {
+    const matchingResult = results.find((result) => result.base === base);
+    if (parsed !== null && matchingResult?.value) {
+      setInput(matchingResult.value);
+    }
+    setBaseFrom(base);
+    setSelectedReferenceValue(null);
     setCopiedBase(null);
+    setCopyState('idle');
+    setPasteState('idle');
   };
 
   const copyValue = async (result) => {
@@ -114,18 +142,46 @@ export default function BaseConverter() {
     try {
       await navigator.clipboard.writeText(result.value);
       setCopiedBase(result.base);
+      setCopyState('copied');
     } catch {
-      setCopiedBase(null);
+      setCopiedBase(result.base);
+      setCopyState('error');
     }
   };
 
+  const pasteInput = async () => {
+    setPasteState('reading');
+    try {
+      const text = await navigator.clipboard.readText();
+      setInput(text);
+      setSelectedReferenceValue(null);
+      setCopiedBase(null);
+      setCopyState('idle');
+      setPasteState('pasted');
+    } catch {
+      setPasteState('error');
+    }
+  };
+
+  const selectReferenceValue = (base, value) => {
+    setInput(value.toString(base).toUpperCase());
+    setBaseFrom(base);
+    setSelectedReferenceValue(value);
+    setCopiedBase(null);
+    setCopyState('idle');
+    setPasteState('idle');
+  };
+
   return (
-    <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px] !gap-3 !p-5">
+    <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px]">
       <ToolHeader title="Base Converter" />
 
-      <section className="flex flex-col gap-3 rounded-xl border border-border bg-app/70 p-3">
+      <section className="flex flex-col gap-2.5 rounded-xl border border-border bg-app/70 p-3" aria-labelledby="base-conversion-title">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-text-main">Choose the input base</p>
+          <div>
+            <h3 id="base-conversion-title" className="text-sm font-bold text-text-main">Input base &amp; converted values</h3>
+            <p className="text-xs text-text-muted">Choose an input base to edit the current value in that notation.</p>
+          </div>
           <span className="rounded-full border border-accent/25 bg-accent-light px-2.5 py-1 text-xs font-bold text-accent">
             Base {baseFrom}
           </span>
@@ -139,10 +195,7 @@ export default function BaseConverter() {
                 key={option.base}
                 type="button"
                 aria-pressed={active}
-                onClick={() => {
-                  setBaseFrom(option.base);
-                  setCopiedBase(null);
-                }}
+                onClick={() => selectInputBase(option.base)}
                 className={`rounded-lg border px-2.5 py-1.5 text-left transition-all ${active
                   ? 'border-accent bg-accent text-white shadow-[0_4px_12px_var(--accent-light)]'
                   : 'border-border bg-card text-text-muted hover:border-accent hover:text-text-main'}`}
@@ -168,7 +221,10 @@ export default function BaseConverter() {
               value={input}
               onChange={(event) => {
                 setInput(event.target.value);
+                setSelectedReferenceValue(null);
                 setCopiedBase(null);
+                setCopyState('idle');
+                setPasteState('idle');
               }}
               placeholder={selectedBase.example}
               className={`min-w-0 flex-1 rounded-lg border bg-card px-4 py-2.5 font-mono text-lg font-semibold text-text-main outline-none transition-all placeholder:text-text-muted/45 focus:ring-2 ${hasError
@@ -177,12 +233,27 @@ export default function BaseConverter() {
               aria-invalid={hasError || undefined}
               aria-describedby="base-status"
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pasteState === 'reading'}
+              onClick={pasteInput}
+              aria-label={pasteState === 'error' ? 'Retry pasting from clipboard' : 'Paste from clipboard'}
+              className="min-w-[74px]"
+            >
+              <PasteIcon />
+              {pasteState === 'reading' ? 'Pasting' : pasteState === 'pasted' ? 'Pasted' : pasteState === 'error' ? 'Retry' : 'Paste'}
+            </Button>
             <button
               type="button"
               disabled={!input}
               onClick={() => {
                 setInput('');
+                setSelectedReferenceValue(null);
                 setCopiedBase(null);
+                setCopyState('idle');
+                setPasteState('idle');
               }}
               className="rounded-lg border border-border bg-card px-4 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
             >
@@ -190,8 +261,6 @@ export default function BaseConverter() {
             </button>
           </div>
         </div>
-      </section>
-
       <div
         id="base-status"
         role={hasError ? 'alert' : 'status'}
@@ -207,20 +276,13 @@ export default function BaseConverter() {
             : 'Enter a number to generate all base representations automatically.'}</span>
       </div>
 
-      <section className="flex flex-col gap-2.5" aria-labelledby="base-results-title">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h3 id="base-results-title" className="text-sm font-bold text-text-main">Converted values</h3>
-            <p className="text-xs text-text-muted">Copy a result or use it as the next input.</p>
-          </div>
-        </div>
-
+      <div className="flex flex-col gap-2" aria-label="Converted values">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {results.map((result) => (
             <div
               key={result.base}
               data-base-result={result.base}
-              className={`flex min-w-0 flex-col gap-1.5 rounded-xl border p-2.5 transition-colors ${result.base === baseFrom
+              className={`flex min-w-0 flex-col gap-1 rounded-xl border p-2 transition-colors ${result.base === baseFrom
                 ? 'border-accent/40 bg-accent-light/45'
                 : 'border-border bg-card hover:border-border-hover'} ${result.base === 60 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
             >
@@ -233,29 +295,82 @@ export default function BaseConverter() {
               <code className={`min-h-6 break-all font-mono text-[0.9rem] font-semibold leading-6 ${result.value ? 'text-text-main' : 'text-text-muted/45'}`}>
                 {result.value || '—'}
               </code>
-              <div className="flex items-center justify-end gap-1 border-t border-border/70 pt-1.5">
-                <button
+              <div className="flex items-center justify-end border-t border-border/70 pt-1">
+                <Button
                   type="button"
-                  disabled={!result.value}
-                  onClick={() => useAsInput(result)}
-                  aria-label={`Use ${result.label} value as input`}
-                  className="rounded-md px-2 py-0.5 text-[0.7rem] font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-accent disabled:cursor-default disabled:opacity-35"
-                >
-                  Set input
-                </button>
-                <button
-                  type="button"
+                  size="sm"
+                  variant="secondary"
                   disabled={!result.value}
                   onClick={() => copyValue(result)}
-                  aria-label={`Copy ${result.label} value`}
-                  className="inline-flex min-w-[64px] items-center justify-center gap-1 rounded-md border border-border bg-app px-2 py-0.5 text-[0.7rem] font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
+                  aria-label={copiedBase === result.base && copyState === 'error'
+                    ? `Retry copying ${result.label} value`
+                    : `Copy ${result.label} value`}
+                  className="min-w-[64px] !px-2 !py-0.5 !text-[0.7rem]"
                 >
                   <CopyIcon />
-                  {copiedBase === result.base ? 'Copied' : 'Copy'}
-                </button>
+                  {copiedBase === result.base
+                    ? copyState === 'error' ? 'Retry' : 'Copied'
+                    : 'Copy'}
+                </Button>
               </div>
             </div>
           ))}
+        </div>
+      </div>
+      </section>
+
+      <section className="flex flex-col gap-2" aria-labelledby="common-base-reference-title">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h3 id="common-base-reference-title" className="text-sm font-bold text-text-main">0–15 quick reference</h3>
+            <p className="text-xs text-text-muted">Select any value to use that representation as the input.</p>
+          </div>
+          <span className="text-[0.68rem] font-semibold text-text-muted">BIN · OCT · DEC · HEX</span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-border bg-app/70 p-1.5">
+          <div className="grid min-w-[760px] grid-cols-[58px_repeat(16,minmax(38px,1fr))] gap-1" role="grid" aria-label="Common base conversions for decimal 0 through 15">
+            <div className="flex items-center justify-center text-[0.6rem] font-extrabold uppercase tracking-wide text-text-muted" role="columnheader">
+              Base
+            </div>
+            {COMMON_VALUES.map((value) => (
+              <div key={`heading-${value}`} className={`flex min-h-6 items-center justify-center rounded text-[0.62rem] font-bold tabular-nums ${selectedReferenceValue === value ? 'bg-accent text-white' : 'text-text-muted'}`} role="columnheader">
+                {value}
+              </div>
+            ))}
+
+            {COMMON_BASES.map((row) => (
+              <React.Fragment key={row.base}>
+                <div className="flex min-h-8 flex-col items-center justify-center rounded-md border border-border bg-card leading-none" role="rowheader" title={`${row.label} (base ${row.base})`}>
+                  <span className="text-[0.64rem] font-extrabold text-accent">{row.short}</span>
+                  <span className="mt-0.5 text-[0.5rem] text-text-muted">{row.base}</span>
+                </div>
+                {COMMON_VALUES.map((value) => {
+                  const displayValue = value.toString(row.base).toUpperCase();
+                  const selected = selectedReferenceValue === value;
+                  const exactInput = selected && baseFrom === row.base;
+                  return (
+                    <button
+                      key={`${row.base}-${value}`}
+                      type="button"
+                      role="gridcell"
+                      aria-pressed={exactInput}
+                      aria-label={`${row.label} ${displayValue}, decimal ${value}`}
+                      title={`${displayValue} (base ${row.base}) = ${value} (decimal)`}
+                      onClick={() => selectReferenceValue(row.base, value)}
+                      className={`min-h-8 rounded-md border px-1 font-mono text-[0.72rem] font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${exactInput
+                        ? 'border-accent bg-accent text-white shadow-[0_2px_8px_var(--accent-light)]'
+                        : selected
+                          ? 'border-accent/45 bg-accent-light text-accent'
+                          : 'border-border bg-card text-text-main hover:border-accent hover:bg-accent-light hover:text-accent'}`}
+                    >
+                      {displayValue}
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </section>
     </Card>

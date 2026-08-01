@@ -303,19 +303,31 @@ function rgbToLab({ r, g, b }) {
   rL = rL > 0.04045 ? Math.pow((rL + 0.055) / 1.055, 2.4) : rL / 12.92;
   gL = gL > 0.04045 ? Math.pow((gL + 0.055) / 1.055, 2.4) : gL / 12.92;
   bL = bL > 0.04045 ? Math.pow((bL + 0.055) / 1.055, 2.4) : bL / 12.92;
-  const x = rL * 0.4124 + gL * 0.3576 + bL * 0.1805;
-  const y = rL * 0.2126 + gL * 0.7152 + bL * 0.0722;
-  const z = rL * 0.0193 + gL * 0.1192 + bL * 0.9505;
-  const xN = x * 100 / 95.047;
-  const yN = y * 100 / 100.000;
-  const zN = z * 100 / 108.883;
-  const f = (t) => t > 0.008856 ? Math.pow(t, 1/3) : 7.787 * t + 16/116;
+
+  // sRGB to D65 XYZ
+  const x65 = rL * 0.4124564 + gL * 0.3575761 + bL * 0.1804375;
+  const y65 = rL * 0.2126729 + gL * 0.7151522 + bL * 0.0721750;
+  const z65 = rL * 0.0193339 + gL * 0.1191920 + bL * 0.9503041;
+
+  // Bradford chromatic adaptation: D65 -> D50 XYZ (CSS Color 4)
+  const xD50 = 0.9555766 * x65 - 0.0230393 * y65 + 0.0631636 * z65;
+  const yD50 = -0.0282895 * x65 + 1.0099916 * y65 + 0.0210077 * z65;
+  const zD50 = 0.0122982 * x65 - 0.0204830 * y65 + 1.3299098 * z65;
+
+  // D50 reference white
+  const xN = xD50 / 0.96422;
+  const yN = yD50 / 1.00000;
+  const zN = zD50 / 0.82521;
+
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
   const fx = f(xN);
   const fy = f(yN);
   const fz = f(zN);
+
   const lVal = 116 * fy - 16;
   const aVal = 500 * (fx - fy);
   const bVal = 200 * (fy - fz);
+
   return {
     l: Math.round(lVal),
     a: Math.round(aVal),
@@ -327,25 +339,35 @@ function labToRgb({ l, a, b }) {
   const fy = (l + 16) / 116;
   const fx = a / 500 + fy;
   const fz = fy - b / 200;
-  const fx3 = Math.pow(fx, 3);
-  const fy3 = Math.pow(fy, 3);
-  const fz3 = Math.pow(fz, 3);
-  const xN = fx3 > 0.008856 ? fx3 : (fx - 16/116) / 7.787;
-  const yN = fy3 > 0.008856 ? fy3 : (fy - 16/116) / 7.787;
-  const zN = fz3 > 0.008856 ? fz3 : (fz - 16/116) / 7.787;
-  const x = xN * 95.047 / 100;
-  const y = yN * 100.000 / 100;
-  const z = zN * 108.883 / 100;
-  let rL = x * 3.2406 + y * -1.5372 + z * -0.4986;
-  let gL = x * -0.9689 + y * 1.8758 + z * 0.0415;
-  let bL = x * 0.0557 + y * -0.2040 + z * 1.0570;
+
+  const f = (t) => (t > 0.20689655 ? Math.pow(t, 3) : (t - 16 / 116) / 7.787);
+  const xN = f(fx);
+  const yN = f(fy);
+  const zN = f(fz);
+
+  const xD50 = xN * 0.96422;
+  const yD50 = yN * 1.00000;
+  const zD50 = zN * 0.82521;
+
+  // Inverse Bradford chromatic adaptation: D50 -> D65 XYZ
+  const x65 = 1.0478112 * xD50 + 0.0228866 * yD50 - 0.0501270 * zD50;
+  const y65 = 0.0295424 * xD50 + 0.9904844 * yD50 - 0.0170491 * zD50;
+  const z65 = -0.0092345 * xD50 + 0.0150436 * yD50 + 0.7521316 * zD50;
+
+  // D65 XYZ to Linear sRGB
+  let rL = 3.2404542 * x65 - 1.5371385 * y65 - 0.4985314 * z65;
+  let gL = -0.9692660 * x65 + 1.8760108 * y65 + 0.0415560 * z65;
+  let bL = 0.0556434 * x65 - 0.2040259 * y65 + 1.0572252 * z65;
+
   rL = Math.max(0, Math.min(1, rL));
   gL = Math.max(0, Math.min(1, gL));
   bL = Math.max(0, Math.min(1, bL));
-  const toSrgb = (c) => c > 0.0031308 ? 1.055 * Math.pow(c, 1/2.4) - 0.055 : 12.92 * c;
+
+  const toSrgb = (c) => (c > 0.0031308 ? 1.055 * Math.pow(c, 1 / 2.4) - 0.055 : 12.92 * c);
   const rOut = Math.round(toSrgb(rL) * 255);
   const gOut = Math.round(toSrgb(gL) * 255);
   const bOut = Math.round(toSrgb(bL) * 255);
+
   return {
     r: Math.max(0, Math.min(255, rOut)),
     g: Math.max(0, Math.min(255, gOut)),
@@ -412,7 +434,9 @@ const getCookie = (name) => {
   if (parts.length === 2) {
     try {
       return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
-    } catch (e) {}
+    } catch (e) {
+      // Ignore malformed legacy cookie data and use the default palette.
+    }
   }
   return null;
 };
@@ -454,7 +478,9 @@ export default function ColorConverter() {
     try {
       const savedLocal = localStorage.getItem("customPresets");
       if (savedLocal) return JSON.parse(savedLocal);
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the in-memory palette remains usable.
+    }
 
     const savedCookie = getCookie("customPresets");
     if (savedCookie) return savedCookie;
@@ -579,7 +605,9 @@ export default function ColorConverter() {
       const next = [formatted, ...filtered].slice(0, 8);
       try {
         localStorage.setItem("recentColors", JSON.stringify(next));
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; recent colors remain in memory.
+      }
       return next;
     });
   };
@@ -589,15 +617,18 @@ export default function ColorConverter() {
     setRecentColors([]);
     try {
       localStorage.removeItem("recentColors");
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; clearing the in-memory list is sufficient.
+    }
   };
 
   // Eyedropper API
   const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
   const handleEyeDropper = async () => {
-    if (!hasEyeDropper) return;
+    const EyeDropperClass = window.EyeDropper;
+    if (!hasEyeDropper || !EyeDropperClass) return;
     try {
-      const eyeDropper = new window.EyeDropper();
+      const eyeDropper = new EyeDropperClass();
       const result = await eyeDropper.open();
       const hex = result.sRGBHex;
       setInput(hex);
@@ -822,7 +853,9 @@ export default function ColorConverter() {
       setPresets(next);
       try {
         localStorage.setItem("customPresets", JSON.stringify(next));
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; the in-memory palette remains usable.
+      }
       saveCookie("customPresets", next);
     }
   };
@@ -832,7 +865,9 @@ export default function ColorConverter() {
     setPresets(next);
     try {
       localStorage.setItem("customPresets", JSON.stringify(next));
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the in-memory palette remains usable.
+    }
     saveCookie("customPresets", next);
   };
 
@@ -841,7 +876,9 @@ export default function ColorConverter() {
       setPresets(DEFAULT_PRESETS);
       try {
         localStorage.removeItem("customPresets");
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; the default palette remains active.
+      }
       document.cookie = "customPresets=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
   };
@@ -863,12 +900,14 @@ export default function ColorConverter() {
 
     fileReader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target.result);
+        const parsed = JSON.parse(String(event.target?.result || ''));
         if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string' && item.startsWith('#'))) {
           setPresets(parsed);
           try {
             localStorage.setItem("customPresets", JSON.stringify(parsed));
-          } catch (e) {}
+          } catch (e) {
+            // Storage may be unavailable; the imported palette remains in memory.
+          }
           saveCookie("customPresets", parsed);
         } else {
           alert("Invalid file format. The JSON file must contain an array of hex color strings (e.g. ['#FF0000', '#00FF00']).");
@@ -1047,6 +1086,7 @@ export default function ColorConverter() {
         <div className="flex items-center justify-between border-t border-border pt-2">
           <div className="relative">
             <select
+              aria-label="Color slider model"
               value={sliderModel}
               onChange={(e) => setSliderModel(e.target.value)}
               className="px-3 py-1.5 rounded-md bg-app border border-border text-text-main font-sans text-sm cursor-pointer outline-none hover:bg-border-hover"
@@ -1101,7 +1141,7 @@ export default function ColorConverter() {
   };
 
   return (
-    <Card id="tool-color" variant="tool" size="wide" className="!gap-2 !p-2.5">
+    <Card id="tool-color" variant="tool" size="wide">
       <ToolHeader 
         title="Color Code Converter & HSL Selector" 
       />
@@ -1180,10 +1220,21 @@ export default function ColorConverter() {
             <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider">HSL Swatches</h3>
             <button
               type="button"
-              className={`sync-toggle-btn ${isSynced ? 'synced' : ''}`}
+              className={`inline-flex min-h-9 items-center gap-2 rounded-full border-2 px-3 py-1.5 text-xs font-extrabold tracking-wide shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                isSynced
+                  ? 'border-accent bg-accent text-white shadow-[0_3px_12px_var(--accent-light)] hover:bg-accent-hover'
+                  : 'border-amber-500 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+              }`}
               onClick={handleSyncToggle}
               title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
+              aria-pressed={isSynced}
             >
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 rounded-full border-2 ${
+                  isSynced ? 'border-white bg-white' : 'border-amber-500 bg-transparent'
+                }`}
+              />
               {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
             </button>
           </div>

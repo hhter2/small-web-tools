@@ -40,15 +40,36 @@ function looksLikeUnicodeCodes(text) {
     && values.some((value) => /\d/.test(value));
 }
 
-function analyzeUnicode(input) {
+function analyzeUnicode(input, mode = 'auto') {
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      sourceLabel: 'Text or code points',
-      targetLabel: '',
+      sourceLabel: mode === 'encode' ? 'Plain text' : mode === 'decode' ? 'Unicode code points' : 'Text or code points',
+      targetLabel: mode === 'encode' ? 'Unicode code points' : mode === 'decode' ? 'Plain text' : '',
       output: '',
       outputPlaceholder: 'The converted result appears here.',
       error: null,
+    };
+  }
+
+  if (mode === 'encode') {
+    return {
+      sourceLabel: 'Plain text',
+      targetLabel: 'Unicode code points',
+      output: encodeUnicode(input),
+      outputPlaceholder: 'Unicode code points appear here.',
+      error: null,
+    };
+  }
+
+  if (mode === 'decode') {
+    const decoded = decodeUnicode(trimmed);
+    return {
+      sourceLabel: 'Unicode code points',
+      targetLabel: 'Plain text',
+      output: decoded.output,
+      outputPlaceholder: 'Decoded text appears here.',
+      error: decoded.error,
     };
   }
 
@@ -77,7 +98,6 @@ export default function UnicodeConverter() {
     <AutoDetectConverter
       toolId="tool-unicode"
       title="Unicode Converter"
-      description="Convert between text and hexadecimal Unicode code points with automatic format detection."
       inputPlaceholder={'Hello 👋\nor\nU+0048 U+0065 U+006C U+006C U+006F'}
       emptyTargetLabel="Converted result"
       analyze={analyzeUnicode}

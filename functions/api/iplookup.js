@@ -1,122 +1,164 @@
-// Server-side geo lookup — runs on Cloudflare Pages, bypasses browser network restrictions
-async function geoLookup(ip) {
-  const withTimeout = (fn, ms = 5000) => {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), ms);
-    return fn(ctrl.signal).finally(() => clearTimeout(timer));
+import { enforceRateLimit } from '../_shared/rateLimit';
+import { errorResponse } from '../_shared/errorResponse';
+import { parseIpInput } from '../../src/lib/ipValidation';
+
+function countryNameFromCode(code) {
+  if (!code || !/^[A-Z]{2}$/i.test(code)) return '';
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase()) || '';
+  } catch {
+    return '';
+  }
+}
+
+function finiteCoordinate(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+export function normalizeProviderResponse(provider, data) {
+  const common = {
+    ip: data.ip || '',
+    city: data.city || '',
+    region: data.region || '',
+    postal: data.postal || '',
+    org: data.org || data.isp || data.organization || '',
+    asn: data.asn ? String(data.asn).replace(/^AS/i, 'AS') : '',
+    timezone: data.timezone || '',
+    utc_offset: data.utc_offset || '',
+    latitude: finiteCoordinate(data.latitude),
+    longitude: finiteCoordinate(data.longitude),
   };
 
+  if (provider === 'api.ip.sb') {
+    return {
+      ...common,
+      country_name: data.country || '',
+      country_code: (data.country_code || '').toUpperCase(),
+      asn: data.asn ? 'AS' + String(data.asn).replace(/^AS/i, '') : '',
+    };
+  }
+  if (provider === 'ipinfo.io') {
+    const [latitude, longitude] = data.loc
+      ? data.loc.split(',').map(finiteCoordinate)
+      : [null, null];
+    const countryCode = (data.country || '').toUpperCase();
+    return {
+      ...common,
+      country_name: countryNameFromCode(countryCode),
+      country_code: countryCode,
+      latitude,
+      longitude,
+    };
+  }
+  return {
+    ...common,
+    country_name: data.country_name || '',
+    country_code: (data.country_code || '').toUpperCase(),
+  };
+}
+
+async function fetchJson(url, signal) {
+  const response = await fetch(url, {
+    signal,
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'Small-Web-Tools/1.0',
+    },
+  });
+  if (!response.ok) throw new Error('Provider returned ' + response.status);
+  return response.json();
+}
+
+async function withTimeout(operation, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await operation(controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function geoLookup(ip) {
+  const encodedIp = encodeURIComponent(ip);
   const providers = [
-    // 1. api.ip.sb — widely accessible, no key required
-    () => withTimeout(async (signal) => {
-      const url = ip ? `https://api.ip.sb/geoip/${ip}` : `https://api.ip.sb/geoip`;
-      const r = await fetch(url, {
-        signal,
-        headers: { 'User-Agent': 'curl/7.88.1', 'Accept': 'application/json' },
-      });
-      if (!r.ok) throw new Error(`api.ip.sb ${r.status}`);
-      const d = await r.json();
-      return {
-        ip: d.ip, city: d.city || '', region: d.region || '',
-        country_name: d.country || '', country_code: d.country_code || '',
-        postal: '', org: d.isp || d.organization || '',
-        asn: d.asn ? `AS${d.asn}` : '', timezone: d.timezone || '',
-        utc_offset: '', latitude: d.latitude, longitude: d.longitude,
-      };
-    }),
-
-    // 2. ipapi.co
-    () => withTimeout(async (signal) => {
-      const url = ip ? `https://ipapi.co/${ip}/json/` : `https://ipapi.co/json/`;
-      const r = await fetch(url, { signal, headers: { 'User-Agent': 'curl/7.88.1' } });
-      if (!r.ok) throw new Error(`ipapi.co ${r.status}`);
-      const d = await r.json();
-      if (d.error) throw new Error(d.reason || 'ipapi.co error');
-      return {
-        ip: d.ip, city: d.city || '', region: d.region || '',
-        country_name: d.country_name || '', country_code: d.country_code || '',
-        postal: d.postal || '', org: d.org || '', asn: d.asn || '',
-        timezone: d.timezone || '', utc_offset: d.utc_offset || '',
-        latitude: d.latitude, longitude: d.longitude,
-      };
-    }),
-
-    // 3. ipinfo.io
-    () => withTimeout(async (signal) => {
-      const url = ip ? `https://ipinfo.io/${ip}/json` : `https://ipinfo.io/json`;
-      const r = await fetch(url, { signal, headers: { 'User-Agent': 'curl/7.88.1' } });
-      if (!r.ok) throw new Error(`ipinfo.io ${r.status}`);
-      const d = await r.json();
-      const [lat, lon] = d.loc ? d.loc.split(',').map(Number) : [null, null];
-      return {
-        ip: d.ip, city: d.city || '', region: d.region || '',
-        country_name: d.country || '', country_code: d.country || '',
-        postal: d.postal || '', org: d.org || '', asn: '',
-        timezone: d.timezone || '', utc_offset: '',
-        latitude: lat, longitude: lon,
-      };
-    }),
+    {
+      name: 'api.ip.sb',
+      url: ip ? 'https://api.ip.sb/geoip/' + encodedIp : 'https://api.ip.sb/geoip',
+    },
+    {
+      name: 'ipapi.co',
+      url: ip ? 'https://ipapi.co/' + encodedIp + '/json/' : 'https://ipapi.co/json/',
+    },
+    {
+      name: 'ipinfo.io',
+      url: ip ? 'https://ipinfo.io/' + encodedIp + '/json' : 'https://ipinfo.io/json',
+    },
   ];
 
-  let lastErr = 'no providers';
-  for (const p of providers) {
-    try { return await p(); } catch (e) {
-      lastErr = e.message;
-      console.warn('[ip-lookup]', e.message);
+  for (const provider of providers) {
+    try {
+      const data = await withTimeout((signal) => fetchJson(provider.url, signal));
+      if (data.error) throw new Error('Provider rejected lookup');
+      return normalizeProviderResponse(provider.name, data);
+    } catch {
+      // Continue to the next normalized server-side provider.
     }
   }
-  throw new Error(lastErr);
+  throw new Error('All IP lookup providers failed');
+}
+
+function jsonResponse(body, init = {}) {
+  return Response.json(body, {
+    ...init,
+    headers: {
+      'Cache-Control': 'no-store',
+      ...init.headers,
+    },
+  });
 }
 
 export async function onRequestGet(context) {
-  const { request } = context;
-  const urlObj = new URL(request.url);
-  const ip = (urlObj.searchParams.get('ip') || '').trim();
-
-  // If no IP parameter is requested, we can use request.cf to optimize speed and bypass limits
-  if (!ip && request.cf) {
-    const cf = request.cf;
-    const clientIp = request.headers.get('cf-connecting-ip') || '';
-    return new Response(JSON.stringify({
-      ok: true,
-      data: {
-        ip: clientIp,
-        city: cf.city || '',
-        region: cf.region || '',
-        country_name: cf.country || '',
-        country_code: cf.country || '',
-        postal: cf.postalCode || '',
-        org: cf.asOrganization || '',
-        asn: cf.asn ? `AS${cf.asn}` : '',
-        timezone: cf.timezone || '',
-        utc_offset: '',
-        latitude: cf.latitude ? parseFloat(cf.latitude) : null,
-        longitude: cf.longitude ? parseFloat(cf.longitude) : null,
-      }
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+  const url = new URL(context.request.url);
+  const parsed = parseIpInput(url.searchParams.get('ip') || '');
+  if (parsed.error) {
+    return errorResponse('VALIDATION_FAILED', 400, {
+      diagnostic: 'ip-input',
     });
   }
 
-  try {
-    const data = await geoLookup(ip);
-    return new Response(JSON.stringify({ ok: true, data }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+  if (!parsed.value && context.request.cf) {
+    const cf = context.request.cf;
+    return jsonResponse({
+      ok: true,
+      data: {
+        ip: context.request.headers.get('CF-Connecting-IP') || '',
+        city: cf.city || '',
+        region: cf.region || '',
+        country_name: countryNameFromCode(cf.country),
+        country_code: cf.country || '',
+        postal: cf.postalCode || '',
+        org: cf.asOrganization || '',
+        asn: cf.asn ? 'AS' + cf.asn : '',
+        timezone: cf.timezone || '',
+        utc_offset: '',
+        latitude: finiteCoordinate(cf.latitude),
+        longitude: finiteCoordinate(cf.longitude),
+      },
     });
-  } catch (e) {
-    console.error('[ip-lookup] all providers failed:', e.message);
-    return new Response(JSON.stringify({ ok: false, error: e.message }), {
-      status: 502,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+  }
+
+  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
+  if (limited) return limited;
+
+  try {
+    return jsonResponse({ ok: true, data: await geoLookup(parsed.value) });
+  } catch (error) {
+    return errorResponse('PROVIDER_UNAVAILABLE', 502, {
+      error,
+      diagnostic: 'ip-geolocation-providers',
     });
   }
 }

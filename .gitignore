@@ -18,8 +18,15 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 
+# Local Cloudflare/Wrangler state and disposable integration workspaces
+.wrangler/
+.wrangler-*/
+.tmp-*/
+
 # Output directory for production build
 dist/
+coverage/
+.playwright-cli/
 
 # Local env files
 .env*.local
@@ -40,6 +47,8 @@ Thumbs.db
 
 # Temporary/test development files
 test-*.js
+test-results/
+playwright-report/
 sample.cr3
 thumbnail.jpg
 *.tmp
@@ -47,6 +56,9 @@ temp/
 _incoming/
 
 # Private environment variables
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 .env
 .env.local
 .env.development.local
@@ -64,5 +76,6 @@ _incoming/
 *.bak
 *.swp
 
-# Track files
-TODO.md
+# Local code-review artifacts
+code_reviews/
+.codex-remote-attachments/

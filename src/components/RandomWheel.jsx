@@ -3,6 +3,10 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import {
+  createDrawRecord,
+  verifyDrawRecord,
+} from '../lib/verifiableRandom';
 
 const colors = [
   "hsl(224, 76%, 60%)",  // indigo
@@ -37,6 +41,10 @@ export default function RandomWheel() {
   const [allowDuplicate, setAllowDuplicate] = useState(false);
   
   const [showClearModal, setShowClearModal] = useState(false);
+  const [drawRecord, setDrawRecord] = useState(null);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationInput, setVerificationInput] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState('');
 
   const canvasRef = useRef(null);
   const rotationAngleRef = useRef(0);
@@ -210,7 +218,7 @@ export default function RandomWheel() {
     // Keyboard Shortcuts
     const handleKeyDown = (e) => {
       // Do not intercept if focus is inside input/textarea fields
-      const activeEl = document.activeElement;
+      const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
         if (e.key === "Escape" && activeEl.id === "wheel-text-input") {
           setIsEditing(false);
@@ -241,7 +249,7 @@ export default function RandomWheel() {
     };
   }, [items, isSpinning, allowDuplicate]);
 
-  const spin = () => {
+  const spin = async () => {
     if (isSpinning) return;
     
     // Auto-save edit mode if open
@@ -253,15 +261,23 @@ export default function RandomWheel() {
       return;
     }
 
+    let record;
+    try {
+      record = await createDrawRecord(activeItems.map((item) => item.text));
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
+
+    setDrawRecord(record);
     setIsSpinning(true);
     setShowWinnerBanner(false);
 
-    // Select winner
-    const winIndex = Math.floor(Math.random() * activeItems.length);
+    const winIndex = record.winnerIndex;
     const arcSize = (2 * Math.PI) / activeItems.length;
     
     const targetSectorCenter = winIndex * arcSize + arcSize / 2;
-    const spinsCount = 6 + Math.floor(Math.random() * 4); // 6 to 9 full spins
+    const spinsCount = 7;
     const targetAngle = 2 * Math.PI * spinsCount - targetSectorCenter;
 
     const startAngleVal = rotationAngleRef.current % (2 * Math.PI);
@@ -310,6 +326,36 @@ export default function RandomWheel() {
     setShowWinnerBanner(false);
   };
 
+  const copyDrawRecord = async () => {
+    if (!drawRecord) return;
+    await navigator.clipboard.writeText(JSON.stringify(drawRecord, null, 2));
+  };
+
+  const downloadDrawRecord = () => {
+    if (!drawRecord) return;
+    const blob = new Blob([JSON.stringify(drawRecord, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'random-wheel-draw-record.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const verifyImportedRecord = async () => {
+    try {
+      const record = JSON.parse(verificationInput);
+      const result = await verifyDrawRecord(record);
+      setVerificationStatus(result.valid
+        ? 'Verified winner: ' + result.winnerName
+        : 'Invalid record: ' + result.error);
+    } catch {
+      setVerificationStatus('Invalid record: JSON could not be parsed');
+    }
+  };
+
   const confirmClear = () => {
     setShowClearModal(false);
     setTextareaVal("");
@@ -319,7 +365,7 @@ export default function RandomWheel() {
   };
 
   return (
-    <Card id="tool-wheel" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-wheel" variant="tool" size="wide">
       <ToolHeader 
         title="Random Decision Wheel" 
       />
@@ -394,6 +440,7 @@ export default function RandomWheel() {
                   placeholder="Type options here, one per line..."
                   value={textareaVal}
                   onChange={(e) => handleTextareaChange(e.target.value)}
+                  disabled={isSpinning}
                 />
               )}
             </div>
@@ -406,8 +453,9 @@ export default function RandomWheel() {
                   className="w-auto cursor-pointer"
                   checked={allowDuplicate}
                   onChange={(e) => setAllowDuplicate(e.target.checked)}
+                  disabled={isSpinning}
                 />
-                <span className="text-xs text-text-muted font-medium">Allow duplicates</span>
+                <span className="text-xs text-text-muted font-medium">Allow repeat winners</span>
               </label>
 
               <Button
@@ -415,6 +463,7 @@ export default function RandomWheel() {
                 size="sm"
                 variant="secondary"
                 onClick={() => setShowTitleInput(prev => !prev)}
+                disabled={isSpinning}
               >
                 Title
               </Button>
@@ -423,6 +472,7 @@ export default function RandomWheel() {
                 size="sm"
                 variant={isEditing ? 'primary' : 'secondary'}
                 onClick={() => setIsEditing(prev => !prev)}
+                disabled={isSpinning}
               >
                 {isEditing ? 'Done' : 'Edit'}
               </Button>
@@ -436,6 +486,39 @@ export default function RandomWheel() {
                 Clear
               </Button>
             </div>
+          </div>
+
+          {drawRecord && (
+            <div className="flex flex-wrap gap-2 rounded-xl border border-border bg-app p-3">
+              <span className="w-full text-xs text-text-muted">
+                Recorded locally with {drawRecord.algorithm}; winner index {drawRecord.winnerIndex}.
+              </span>
+              <Button size="sm" variant="secondary" onClick={copyDrawRecord}>Copy record</Button>
+              <Button size="sm" variant="secondary" onClick={downloadDrawRecord}>Download JSON</Button>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border bg-app p-3">
+            <button
+              type="button"
+              className="text-xs font-semibold text-accent"
+              onClick={() => setShowVerification((value) => !value)}
+            >
+              {showVerification ? 'Hide record verification' : 'Verify a draw record'}
+            </button>
+            {showVerification && (
+              <div className="mt-2 flex flex-col gap-2">
+                <textarea
+                  aria-label="Draw record JSON"
+                  value={verificationInput}
+                  onChange={(event) => setVerificationInput(event.target.value)}
+                  placeholder="Paste draw record JSON"
+                  className="h-28 resize-y rounded border border-border bg-card p-2 font-mono text-xs text-text-main"
+                />
+                <Button size="sm" variant="secondary" onClick={verifyImportedRecord}>Verify record</Button>
+                {verificationStatus && <p className="text-xs text-text-muted">{verificationStatus}</p>}
+              </div>
+            )}
           </div>
 
           {showTitleInput && (
@@ -453,6 +536,9 @@ export default function RandomWheel() {
 
           <p className="text-center text-[0.72rem] text-text-muted">
             Shortcuts: Space spin · E edit · R reset · C clear
+          </p>
+          <p className="text-center text-[0.72rem] text-text-muted">
+            Recorded draws are reproducible locally. This does not prevent an organizer from discarding a draw and spinning again before publication.
           </p>
         </div>
 

@@ -3,6 +3,13 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import {
+  detectCodeLanguage,
+  detectLanguage,
+  parseTemplate,
+  repeatToTarget,
+} from './TypingSpeedTest/lib/templateDomain';
+import { calculateTypingMetrics } from './TypingSpeedTest/lib/metricsDomain';
 
 // Preset templates
 const PRESETS = {
@@ -213,106 +220,6 @@ fit_model <- function(x, y) {
   animation: blink 1s step-end infinite;
 }`
   ]
-};
-
-// Repeat template text until it matches or exceeds the target count
-const repeatToTarget = (text, target, isChinese, isCode) => {
-  if (target <= 0) return text;
-  
-  if (isChinese) {
-    if (text.length >= target) return text;
-    let repeated = text;
-    while (repeated.length < target) {
-      repeated += text;
-    }
-    return repeated;
-  } else {
-    const getWordCount = (t) => t.split(/[\s\n]+/).filter(Boolean).length;
-    const count = getWordCount(text);
-    if (count >= target || count === 0) return text;
-    
-    let repeated = text;
-    const separator = isCode ? '\n\n' : ' ';
-    while (getWordCount(repeated) < target) {
-      repeated += separator + text;
-    }
-    return repeated;
-  }
-};
-
-// Detect programming language from code template text
-const detectCodeLanguage = (text) => {
-  const code = text.trim();
-  if (/<[a-z]+[^>]*>/i.test(code) && /<\/?[a-z]+>/i.test(code)) return 'HTML';
-  if (/^([{}]|.*{.*}|[.#a-zA-Z0-9_-]+\s*\{)/s.test(code) && /color:|margin:|padding:|display:|flex/i.test(code)) return 'CSS';
-  if (/def\s+[a-zA-Z_]\w*\(|import\s+[a-zA-Z_]\w*|print\s*\(|if\s+__name__\s*==/i.test(code)) return 'Python';
-  if (/public\s+class\s+|System\.out\.print|public\s+static\s+void\s+main/i.test(code)) return 'Java';
-  if (/#include\s+<|std::cout|int\s+main\s*\(/i.test(code)) return 'C++';
-  if (/<-|library\s*\(\s*[a-zA-Z_]\w*\s*\)|ggplot\s*\(|install\.packages\s*\(/i.test(code)) return 'R';
-  if (/const\s+|let\s+|var\s+|console\.log|function\s+|=>/i.test(code)) return 'JavaScript';
-  return 'Code';
-};
-
-// Parse template into words with positions
-const parseTemplate = (text, isChinese) => {
-  const words = [];
-  if (isChinese) {
-    // Chinese characters: each CJK character is treated as a separate "word" for tooltip positioning
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      words.push({
-        id: i,
-        text: char,
-        start: i,
-        end: i + 1,
-        chars: [char],
-        hasSpaceAfter: false
-      });
-    }
-  } else {
-    // English/Code space-separated words
-    let wordStart = 0;
-    let currentWord = [];
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (/\s/.test(char)) {
-        if (currentWord.length > 0) {
-          words.push({
-            id: words.length,
-            text: currentWord.join(''),
-            start: wordStart,
-            end: i,
-            chars: [...currentWord],
-            hasSpaceAfter: char === ' '
-          });
-          currentWord = [];
-        }
-        wordStart = i + 1;
-      } else {
-        if (currentWord.length === 0) {
-          wordStart = i;
-        }
-        currentWord.push(char);
-      }
-    }
-    if (currentWord.length > 0) {
-      words.push({
-        id: words.length,
-        text: currentWord.join(''),
-        start: wordStart,
-        end: text.length,
-        chars: [...currentWord],
-        hasSpaceAfter: false
-      });
-    }
-  }
-  return words;
-};
-
-// Check if a text has CJK characters
-const detectLanguage = (text) => {
-  const cjkRegex = /[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/;
-  return cjkRegex.test(text) ? 'chinese' : 'english';
 };
 
 export default function TypingSpeedTest() {
@@ -804,62 +711,33 @@ export default function TypingSpeedTest() {
   };
 
   // Metrics calculators
-  const wpm = useMemo(() => {
-    const timeSec = elapsedTime || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0) || 1;
-    const minutes = timeSec / 60;
-
-    if (mode === 'free') {
-      // Free mode mixed parser
-      const cjkMatches = typedText.match(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g);
-      const cjkCount = cjkMatches ? cjkMatches.length : 0;
-      const cleanEnglish = typedText.replace(/[\u4e00-\u9fa5\u3040-\u30ff\u31f0-\u31ff]/g, ' ');
-      const wordsEng = cleanEnglish.split(/\s+/).filter(Boolean).length;
-      
-      if (activeLang === 'chinese') {
-        return Math.round((cjkCount + wordsEng) / minutes);
-      } else {
-        // Standard (chars / 5) / minutes
-        return Math.round((typedText.length / 5) / minutes);
-      }
-    } else {
-      // Template mode calculations
-      let correctCharCount = 0;
-      const limit = Math.min(typedText.length, templateText.length);
-      for (let i = 0; i < limit; i++) {
-        if (typedText[i] === templateText[i]) {
-          correctCharCount += 1;
-        }
-      }
-
-      if (activeLang === 'chinese') {
-        // 1 CJK character = 1 Word
-        return Math.round(correctCharCount / minutes);
-      } else {
-        // English/Code standard
-        return Math.round((correctCharCount / 5) / minutes);
-      }
-    }
-  }, [typedText, templateText, mode, activeLang, elapsedTime, isTesting]);
-
-  const cpm = useMemo(() => {
-    if (activeLang === 'chinese') return null; // Hide CPM for Chinese
-
-    const timeSec = elapsedTime || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0) || 1;
-    const minutes = timeSec / 60;
-    return Math.round(typedText.length / minutes);
-  }, [typedText, elapsedTime, isTesting, activeLang]);
-
-  const accuracy = useMemo(() => {
-    if (mode === 'free') return null;
-    if (totalKeystrokes === 0) return 100;
-    return Math.round((correctKeystrokes / totalKeystrokes) * 100);
-  }, [mode, correctKeystrokes, totalKeystrokes]);
-
-  const correctionRate = useMemo(() => {
-    const totalInputActions = totalKeystrokes + backspacesPressed;
-    if (totalInputActions === 0) return 0;
-    return Math.round((backspacesPressed / totalInputActions) * 100);
-  }, [totalKeystrokes, backspacesPressed]);
+  const metricSeconds = elapsedTime
+    || (isTesting ? Math.round((Date.now() - startTimeRef.current) / 1000) : 0)
+    || 1;
+  const {
+    wpm,
+    cpm,
+    accuracy,
+    correctionRate,
+  } = useMemo(() => calculateTypingMetrics({
+    typedText,
+    templateText,
+    mode,
+    activeLang,
+    elapsedSeconds: metricSeconds,
+    correctKeystrokes,
+    totalKeystrokes,
+    backspacesPressed,
+  }), [
+    typedText,
+    templateText,
+    mode,
+    activeLang,
+    metricSeconds,
+    correctKeystrokes,
+    totalKeystrokes,
+    backspacesPressed,
+  ]);
 
   // Save Results to history list
   const saveResult = () => {
@@ -882,7 +760,9 @@ export default function TypingSpeedTest() {
     setHistory(updated);
     try {
       localStorage.setItem('typing_test_history', JSON.stringify(updated));
-    } catch (e) {}
+    } catch (e) {
+      // Storage may be unavailable; the result remains visible in this session.
+    }
     setResultsSaved(true);
   };
 
@@ -903,7 +783,9 @@ export default function TypingSpeedTest() {
       setHistory([]);
       try {
         localStorage.removeItem('typing_test_history');
-      } catch (e) {}
+      } catch (e) {
+        // Storage may be unavailable; clearing in-memory history is sufficient.
+      }
     }
   };
 
@@ -914,7 +796,7 @@ export default function TypingSpeedTest() {
       setUploadedFileName(file.name);
       const reader = new FileReader();
       reader.onload = (event) => {
-        const text = event.target.result || '';
+        const text = String(event.target?.result || '');
         setCustomText(text);
         setSelectedPreset('custom');
       };
@@ -929,11 +811,16 @@ export default function TypingSpeedTest() {
     }
   };
 
+  const customTemplateMissing = mode === 'template'
+    && selectedPreset === 'custom'
+    && !customText.trim();
+
   return (
-    <Card id="tool-typing" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-typing" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
           title="Typing Speed Test" 
+          className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
           <Button
@@ -1185,6 +1072,35 @@ export default function TypingSpeedTest() {
       {/* Main Test Interface */}
       {!testFinished ? (
         <div className="flex flex-col gap-3">
+          {!isTesting && (
+            <section
+              className="flex flex-col items-start justify-between gap-3 rounded-xl border-2 border-accent/35 bg-accent-light p-4 sm:flex-row sm:items-center"
+              aria-labelledby="typing-ready-title"
+            >
+              <div>
+                <h3 id="typing-ready-title" className="text-base font-extrabold text-text-main">
+                  Ready to start?
+                </h3>
+                <p className="mt-1 text-sm text-text-muted">
+                  Choose your settings, select Start Test, then begin typing. The timer starts with your first keystroke.
+                </p>
+                {customTemplateMissing && (
+                  <p className="mt-1 text-xs font-semibold text-amber-600">
+                    Enter or upload custom template text before starting.
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="primary"
+                onClick={focusInput}
+                disabled={customTemplateMissing}
+                className="w-full shrink-0 sm:w-auto"
+              >
+                Start Test
+              </Button>
+            </section>
+          )}
+
           {/* Active stats display */}
           {isTesting && (
             <div className="flex justify-between items-center bg-card border border-border rounded-xl px-5 py-3 shadow-sm select-none gap-4">
@@ -1253,6 +1169,7 @@ export default function TypingSpeedTest() {
             onCompositionEnd={handleCompositionEnd}
             onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
+            aria-label="Typing input"
             placeholder={mode === 'free' ? "Click here and start typing to begin test..." : ""}
           />
 
@@ -1270,7 +1187,7 @@ export default function TypingSpeedTest() {
                     <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" className="animate-bounce">
                       <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path>
                     </svg>
-                    <span>Click here to focus and start typing</span>
+                    <span>Select Start Test above, or click here, then begin typing</span>
                   </div>
                 </div>
               )}
@@ -1453,9 +1370,11 @@ export default function TypingSpeedTest() {
                 </div>
               )}
               <textarea
+                ref={inputRef}
                 className="w-full bg-transparent border-none text-text-main outline-none resize-none p-5 font-mono text-base placeholder-text-muted/40 min-h-[140px]"
-                rows="6"
+                rows={6}
                 placeholder="Start typing here... Timer will begin automatically on the first keystroke."
+                aria-label="Typing input"
                 value={typedText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}

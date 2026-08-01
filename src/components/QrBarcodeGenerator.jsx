@@ -3,65 +3,18 @@ import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import Card from './ui/Card';
 import Button from './ui/Button';
+import FullscreenPreview, {
+  FullscreenPreviewButton,
+  TRANSPARENT_PREVIEW_CLASS,
+} from './ui/FullscreenPreview';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
-
-// Helper to escape WiFi strings for standard encoding format
-const escapeWifiString = (str) => {
-  if (!str) return '';
-  return str.replace(/\\/g, '\\\\')
-            .replace(/;/g, '\\;')
-            .replace(/:/g, '\\:')
-            .replace(/,/g, '\\,')
-            .replace(/"/g, '\\"');
-};
-
-// Barcode input validator
-const validateBarcode = (value, format) => {
-  if (!value) return "Input cannot be empty";
-  switch (format) {
-    case 'EAN13':
-      if (!/^\d{12,13}$/.test(value)) {
-        return "EAN-13 must be 12 or 13 digits";
-      }
-      break;
-    case 'EAN8':
-      if (!/^\d{7,8}$/.test(value)) {
-        return "EAN-8 must be 7 or 8 digits";
-      }
-      break;
-    case 'UPC':
-      if (!/^\d{11,12}$/.test(value)) {
-        return "UPC-A must be 11 or 12 digits";
-      }
-      break;
-    case 'CODE39':
-      if (!/^[0-9A-Z\-.\s$/+%=]+$/.test(value.toUpperCase())) {
-        return "Code 39 only supports A-Z (uppercase), 0-9, space, and characters: - . $ / + % =";
-      }
-      break;
-    case 'ITF':
-      if (!/^\d+$/.test(value)) {
-        return "ITF must be digits only";
-      }
-      if (value.length % 2 !== 0) {
-        return "ITF must contain an even number of digits";
-      }
-      break;
-    case 'CODABAR':
-      if (!/^[0-9\-$:/.+ABCD]+$/i.test(value)) {
-        return "Codabar only supports digits, - $ : / . +, and A/B/C/D start/stop characters";
-      }
-      break;
-    case 'CODE128':
-    default:
-      if (/[^\x00-\x7F]/.test(value)) {
-        return "Code 128 only supports standard ASCII characters";
-      }
-      break;
-  }
-  return null;
-};
+import ToggleSwitch from './ui/ToggleSwitch';
+import {
+  escapeWifiString,
+  estimateTextWidth,
+  validateBarcode,
+} from './QrBarcodeGenerator/lib/encoding';
 
 // Custom canvas rendering for QR Code
 const renderCustomQR = (canvas, text, options) => {
@@ -680,11 +633,6 @@ const generateQRSVG = (text, options) => {
     svgContent += `<image x="${logoX}" y="${logoY}" width="${logoPx}" height="${logoPx}" href="${logoImgData}" clip-path="url(#${clipId})" />\n`;
   }
 
-  const estimateTextWidth = (text, size, weight) => {
-    const k = weight === 'bold' || weight === 'bolder' ? 0.62 : 0.55;
-    return text.length * size * k;
-  };
-
   // Draw External Label SVG
   if (hasLabel) {
     const labelX = size / 2;
@@ -882,6 +830,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
   // Copy status
   const [copied, setCopied] = useState(false);
+  const [fullscreenPreview, setFullscreenPreview] = useState(null);
 
   // ================= Barcode State =================
   const [barcodeValue, setBarcodeValue] = useState('');
@@ -1095,7 +1044,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     setLogoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target.result;
+      const dataUrl = String(event.target?.result || '');
       setLogoBase64(dataUrl);
 
       const img = new Image();
@@ -1212,8 +1161,23 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     URL.revokeObjectURL(url);
   };
 
+  const openFullscreenPreview = () => {
+    const isQrPreview = activeTab === 'qr';
+    const canvas = isQrPreview ? qrCanvasRef.current : barcodeCanvasRef.current;
+    const unavailable = isQrPreview
+      ? !getQRValue()
+      : !barcodeValue || Boolean(barcodeError);
+    if (!canvas || unavailable) return;
+
+    setFullscreenPreview({
+      src: canvas.toDataURL('image/png'),
+      title: `${isQrPreview ? 'QR code' : 'Barcode'} fullscreen preview`,
+      transparent: isQrPreview && qrBgTransparent,
+    });
+  };
+
   // Reusable accordion header button
-  const AccordionHeader = ({ sectionKey, label, badge }) => (
+  const AccordionHeader = ({ sectionKey, label, badge = null }) => (
     <button
       type="button"
       onClick={() => toggleSection(sectionKey)}
@@ -1237,16 +1201,20 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   );
 
   return (
-    <Card id="tool-qrbarcode" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-qrbarcode" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
           title="QR Code &amp; Barcode Generator" 
+          className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
           <Button
             variant={activeTab === 'qr' ? 'primary' : 'secondary'}
             size="sm"
-            onClick={() => setActiveTab('qr')}
+            onClick={() => {
+              setFullscreenPreview(null);
+              setActiveTab('qr');
+            }}
             className="flex items-center gap-1.5"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -1260,7 +1228,10 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <Button
             variant={activeTab === 'barcode' ? 'primary' : 'secondary'}
             size="sm"
-            onClick={() => setActiveTab('barcode')}
+            onClick={() => {
+              setFullscreenPreview(null);
+              setActiveTab('barcode');
+            }}
             className="flex items-center gap-1.5"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -1315,7 +1286,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     as="textarea"
                     id="qr-text"
                     label="Plain Text Content"
-                    rows="3"
+                    rows={3}
                     placeholder="Type your text content here..."
                     value={qrText}
                     onChange={(e) => setQrText(e.target.value)}
@@ -1503,7 +1474,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               step="15"
                               className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
                               value={qrGradAngle} 
-                              onChange={(e) => setQrGradAngle(e.target.value)}
+                              onChange={(e) => setQrGradAngle(Number(e.target.value))}
                             />
                           </div>
                         )}
@@ -1961,6 +1932,13 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <option value="CODABAR">Codabar</option>
                   </select>
                 </div>
+
+                <ToggleSwitch
+                  id="barcode-display-value"
+                  checked={barcodeDisplayValue}
+                  onChange={(event) => setBarcodeDisplayValue(event.target.checked)}
+                  label="Show human-readable text beneath barcode"
+                />
               </div>
 
               <AccordionHeader sectionKey="barcode-style" label="Barcode Styling" />
@@ -2026,34 +2004,21 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-center mt-6">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
-                        <input 
-                          type="checkbox"
-                          className="rounded border-border text-accent focus:ring-accent w-4 h-4 cursor-pointer"
-                          checked={barcodeDisplayValue}
-                          onChange={(e) => setBarcodeDisplayValue(e.target.checked)}
-                        />
-                        Show Text Label
-                      </label>
+                  {barcodeDisplayValue && (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                      <input
+                        id="bc-font-size"
+                        type="range"
+                        min="10"
+                        max="24"
+                        step="1"
+                        className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
+                        value={barcodeFontSize}
+                        onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
+                      />
                     </div>
-                    {barcodeDisplayValue && (
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
-                        <input 
-                          id="bc-font-size"
-                          type="range" 
-                          min="10" 
-                          max="24" 
-                          step="1"
-                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-accent my-2.5"
-                          value={barcodeFontSize} 
-                          onChange={(e) => setBarcodeFontSize(parseInt(e.target.value))}
-                        />
-                      </div>
-                    )}
-                  </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
@@ -2088,7 +2053,12 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
             <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">Live Preview</h3>
 
-            <div className="flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
+            <div className="relative flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
+              <FullscreenPreviewButton
+                disabled={activeTab === 'qr' ? !getQRValue() : !barcodeValue || Boolean(barcodeError)}
+                label={`Open fullscreen ${activeTab === 'qr' ? 'QR code' : 'barcode'} preview`}
+                onClick={openFullscreenPreview}
+              />
               {activeTab === 'qr' ? (
                 <div className="flex items-center justify-center h-full w-full">
                   {!getQRValue() ? (
@@ -2169,6 +2139,21 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         </div>
 
       </div>
+
+      <FullscreenPreview
+        open={Boolean(fullscreenPreview)}
+        onClose={() => setFullscreenPreview(null)}
+        title={fullscreenPreview?.title}
+        surfaceClassName={fullscreenPreview?.transparent ? TRANSPARENT_PREVIEW_CLASS : 'bg-white'}
+      >
+        {fullscreenPreview && (
+          <img
+            src={fullscreenPreview.src}
+            alt={fullscreenPreview.title}
+            className="max-h-[76vh] max-w-full object-contain"
+          />
+        )}
+      </FullscreenPreview>
     </Card>
   );
 }

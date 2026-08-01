@@ -1,6 +1,7 @@
 import React from 'react';
+import AudienceSwitcher from './AudienceSwitcher.jsx';
 import BioinfoIcon from './BioinfoIcon.jsx';
-import DnaRnaIcon from './DnaRnaIcon.jsx';
+import { getToolMode } from '../toolModes.js';
 import Card from './ui/Card.jsx';
 
 const categories = [
@@ -106,7 +107,20 @@ function ToolCard({ tool, onSelectTool }) {
   );
 }
 
-export default function HomeGrid({ tools = [], onSelectTool, activeTab = 'all' }) {
+export default function HomeGrid({
+  tools = [],
+  onSelectTool,
+  activeTab = 'all',
+  modeId = 'all',
+  onSelectMode = () => {},
+}) {
+  const mode = getToolMode(modeId);
+  const isCuratedMode = mode.id !== 'all';
+  const curatedTools = activeTab === 'all'
+    ? tools
+    : tools.filter((tool) => tool.category === activeTab);
+  const activeCategory = categories.find((category) => category.id === activeTab);
+
   function renderGrid(toolList) {
     return (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 mt-6">
@@ -137,12 +151,35 @@ export default function HomeGrid({ tools = [], onSelectTool, activeTab = 'all' }
 
   return (
     <div id="tool-home" className="w-full max-w-[1200px] mx-auto">
-      <div className="mb-8 flex flex-col gap-1.5">
-        <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">Welcome to Small Web Tools! 👋</h1>
-        <p className="text-[0.95rem] text-text-muted leading-[1.5]">Explore your developer and utility toolkit.</p>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="text-[1.85rem] font-bold text-text-main tracking-[-0.02em]">{mode.heading}</h1>
+          <p className="text-[0.95rem] text-text-muted leading-[1.5]">{mode.description}</p>
+        </div>
+        <div className="max-w-full overflow-x-auto pb-1 lg:shrink-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <AudienceSwitcher
+            activeModeId={mode.id}
+            onSelectMode={onSelectMode}
+            mobile
+          />
+        </div>
       </div>
 
-      {activeTab === 'all' ? (
+      {isCuratedMode ? (
+        <section aria-label={`${mode.label} tools`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-text-main">
+              {activeCategory
+                ? `${activeCategory.name} tools`
+                : `Recommended for ${mode.label.toLowerCase()}`}
+            </h2>
+            <span className="rounded-full border border-border bg-app px-3 py-1 text-xs font-semibold text-text-muted">
+              {curatedTools.length} {curatedTools.length === 1 ? 'tool' : 'tools'}
+            </span>
+          </div>
+          {renderGrid(curatedTools)}
+        </section>
+      ) : activeTab === 'all' ? (
         categories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;

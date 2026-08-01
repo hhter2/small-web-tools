@@ -1,0 +1,9 @@
+# Local Cloudflare Pages Functions configuration.
+# Permit requests without Origin only on localhost during explicit local development.
+ALLOW_LOCAL_DEVELOPMENT=true
+
+# Explicitly enables the non-atomic, in-memory limiter only for local development.
+RATE_LIMIT_DEVELOPMENT_MODE=true
+
+# Use at least 32 random characters. Never commit the real production secret.
+RATE_LIMIT_HMAC_SECRET=replace-with-at-least-32-random-characters

@@ -2,6 +2,12 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import {
+  isCodonDimmed as deriveCodonDimmed,
+  isCodonHighlighted as deriveCodonHighlighted,
+  normalizeCodonInput,
+  resolveCodonGroup,
+} from './CodonTable/lib/codonDomain';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CODON DATA — authoritative JSON mapping (RNA codons)
@@ -143,7 +149,7 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
 
-  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-left transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
+  let cls = 'font-mono text-[0.68rem] sm:text-[0.86rem] font-semibold leading-none py-0 px-1 sm:px-1.5 rounded-md border border-transparent bg-transparent text-text-main cursor-pointer tracking-wide text-center transition-all duration-150 relative overflow-hidden w-full hover:bg-accent-light hover:border-accent hover:text-accent hover:scale-105 hover:z-[2] hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-97';
 
   if (data?.type === 'start') {
     cls += ' text-emerald-600 font-bold hover:bg-emerald-500/15 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-[0_0_0_3px_rgba(22,163,74,0.15)]';
@@ -712,6 +718,8 @@ function InfoPanel({
 }) {
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const groupDropdownRef = useRef(null);
 
   const synonyms = data ? Object.keys(CODON_MAP).filter(
     c => CODON_MAP[c].aa === data.aa && c !== codon
@@ -735,7 +743,29 @@ function InfoPanel({
     ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
     : AA_GROUPS[selectedGroup];
 
-  const activeGroupColor = activeGroup ? activeGroup.color || 'var(--accent)' : '';
+  const selectedGroupLabel = selectedGroup === 'all'
+    ? 'All Groups'
+    : activeGroup?.name || 'All Groups';
+
+  const selectGroup = (value) => {
+    setSelectedGroup(value);
+    setHighlightedAA(null);
+    setSelectedCodon(null);
+    setIsGroupDropdownOpen(false);
+  };
+
+  useEffect(() => {
+    if (!isGroupDropdownOpen) return undefined;
+
+    const closeDropdown = (event) => {
+      if (!groupDropdownRef.current?.contains(event.target)) {
+        setIsGroupDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeDropdown);
+    return () => document.removeEventListener('mousedown', closeDropdown);
+  }, [isGroupDropdownOpen]);
 
   return (
     <div className="contents">
@@ -745,37 +775,74 @@ function InfoPanel({
         <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
         <div className="flex flex-col gap-2.5">
           
-          <div className="flex gap-2 items-center w-full">
-            <select
-              value={selectedGroup}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedGroup(val);
-                setHighlightedAA(null);
-                setSelectedCodon(null);
-              }}
-              className="min-w-0 flex-1 cursor-pointer rounded-lg border border-border bg-black/20 px-2.5 py-1.5 text-[0.8rem] text-text-main outline-none focus:border-accent"
-              style={{
-                borderLeft: activeGroupColor ? `4px solid ${activeGroupColor}` : '1px solid var(--border-color)',
-                paddingLeft: activeGroupColor ? '0.5rem' : '0.75rem'
-              }}
-            >
-              <option value="all">All Groups</option>
-              <optgroup label="Standard Groups">
-                {Object.entries(AA_GROUPS).map(([key, grp]) => (
-                  <option key={key} value={key}>{grp.name}</option>
-                ))}
-              </optgroup>
-              {customGroups.length > 0 && (
-                <optgroup label="Custom Groups">
-                  {customGroups.map((grp, idx) => (
-                    <option key={`custom-${idx}`} value={`custom-${idx}`}>
+          <div className="flex w-full items-center gap-2">
+            <div className="relative min-w-0 flex-1" ref={groupDropdownRef}>
+              <button
+                id="ct-group-selector"
+                type="button"
+                className={`flex h-8 w-full items-center justify-between gap-2 rounded-lg border bg-app px-2.5 text-left text-[0.8rem] font-medium text-text-main transition-all duration-150 hover:border-border-hover ${
+                  isGroupDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)]' : 'border-border'
+                }`}
+                onClick={() => setIsGroupDropdownOpen(prev => !prev)}
+                aria-expanded={isGroupDropdownOpen}
+                aria-haspopup="listbox"
+                aria-controls="ct-group-options"
+              >
+                <span className="min-w-0 truncate">{selectedGroupLabel}</span>
+                <svg className={`h-3 w-3 shrink-0 text-text-muted transition-transform duration-150 ${isGroupDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {isGroupDropdownOpen && (
+                <div id="ct-group-options" role="listbox" aria-label="Amino acid groups" className="absolute left-0 z-50 mt-2 flex max-h-64 w-full min-w-[190px] flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-[var(--bg-card-solid,var(--bg-card))] p-1 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.18)]">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selectedGroup === 'all'}
+                    className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === 'all' ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                    onClick={() => selectGroup('all')}
+                  >
+                    All Groups
+                  </button>
+
+                  <div className="px-2.5 pt-1 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Standard Groups</div>
+                  {Object.entries(AA_GROUPS).map(([key, grp]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedGroup === key}
+                      className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === key ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                      onClick={() => selectGroup(key)}
+                    >
                       {grp.name}
-                    </option>
+                    </button>
                   ))}
-                </optgroup>
+
+                  {customGroups.length > 0 && (
+                    <>
+                      <div className="mt-1 border-t border-border px-2.5 pt-2 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Custom Groups</div>
+                      {customGroups.map((grp, idx) => {
+                        const value = `custom-${idx}`;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            role="option"
+                            aria-selected={selectedGroup === value}
+                            className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === value ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
+                            onClick={() => selectGroup(value)}
+                          >
+                            {grp.name}
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
               )}
-            </select>
+            </div>
 
             <div className="flex gap-1.5 shrink-0">
               {selectedGroup.startsWith('custom-') && (
@@ -1046,7 +1113,6 @@ function InfoPanel({
 export default function CodonTable() {
   const [selectedCodon,    setSelectedCodon]    = useState(null);
   const [highlightedAA,    setHighlightedAA]    = useState(null);
-  const [filterMode,       setFilterMode]       = useState('all'); // 'all' | 'start' | 'stop'
   const [typedCodon,       setTypedCodon]       = useState('');
   const [selectedGroup,    setSelectedGroup]    = useState('all'); // 'all' | 'hydrophobic' | 'polar' | 'basic' | 'acidic' ...
   const [customGroups,     setCustomGroups]     = useState(() => {
@@ -1119,7 +1185,7 @@ export default function CodonTable() {
   }, []);
 
   const handleTypeCodon = (val) => {
-    const sanitized = val.toUpperCase().replace(/T/g, 'U').replace(/[^UCAG]/g, '').slice(0, 3);
+    const sanitized = normalizeCodonInput(val);
     setTypedCodon(sanitized);
 
     if (sanitized.length === 3) {
@@ -1178,115 +1244,47 @@ export default function CodonTable() {
     }
   };
 
-  const isCodonVisible = useCallback((codon) => {
-    const data = CODON_MAP[codon];
-    if (filterMode === 'all')   return true;
-    if (filterMode === 'start') return data?.type === 'start';
-    if (filterMode === 'stop')  return data?.type === 'stop';
-    return true;
-  }, [filterMode]);
-
   const isCodonHighlighted = useCallback((codon) => {
-    if (selectedCodon === null && typedCodon.length > 0) {
-      return codon.startsWith(typedCodon);
-    }
     const data = CODON_MAP[codon];
-    if (!data) return false;
-
-    // 1. If a specific AA is highlighted, highlight only that one
-    if (highlightedAA !== null) {
-      return data.aa === highlightedAA;
-    }
-
-    // 2. If a group is selected, highlight all AAs in that group
-    if (selectedGroup !== 'all') {
-      const activeGroup = selectedGroup.startsWith('custom-') 
-        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
-        : AA_GROUPS[selectedGroup];
-      
-      return activeGroup && activeGroup.aas.includes(data.aa);
-    }
-
-    return false;
+    return deriveCodonHighlighted({
+      codon,
+      data,
+      selectedCodon,
+      typedCodon,
+      highlightedAA,
+      activeGroup: resolveCodonGroup(selectedGroup, customGroups, AA_GROUPS),
+    });
   }, [highlightedAA, selectedCodon, typedCodon, selectedGroup, customGroups]);
 
   const isCodonDimmed = useCallback((codon) => {
     const data = CODON_MAP[codon];
-    if (!data) return false;
-
-    // 1. If filterMode is active (All / Start / Stop), use its visibility
-    if (filterMode === 'start' && data.type !== 'start') return true;
-    if (filterMode === 'stop' && data.type !== 'stop') return true;
-
-    // 2. If typing search is active (partial or full), dim non-matching codons
-    if (selectedCodon === null && typedCodon.length > 0) {
-      return !codon.startsWith(typedCodon);
-    }
-
-    // 3. If a specific AA is highlighted, dim all other AAs
-    if (highlightedAA !== null) {
-      return data.aa !== highlightedAA;
-    }
-
-    // 4. If group filter is active, dim codons not in that group
-    if (selectedGroup !== 'all') {
-      const activeGroup = selectedGroup.startsWith('custom-') 
-        ? customGroups[parseInt(selectedGroup.split('-')[1], 10)]
-        : AA_GROUPS[selectedGroup];
-
-      if (!activeGroup || !activeGroup.aas.includes(data.aa)) {
-        return true;
-      }
-    }
-
-    return false;
-  }, [filterMode, selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
+    return deriveCodonDimmed({
+      codon,
+      data,
+      selectedCodon,
+      typedCodon,
+      highlightedAA,
+      activeGroup: resolveCodonGroup(selectedGroup, customGroups, AA_GROUPS),
+    });
+  }, [selectedCodon, highlightedAA, selectedGroup, typedCodon, customGroups]);
 
   return (
-    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full !gap-2.5 !p-3 font-sans">
+    <Card variant="tool" size="wide" id="tool-codon" className="active mx-auto w-full max-w-full font-sans">
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
-        
-        {/* Title & Filter Bar on same line */}
-        <div className="flex w-full flex-wrap items-center justify-between gap-3">
-          <h2 className="mb-0 flex items-center gap-2 text-[1.3rem] font-bold text-text-main">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4.5 10.5C7.5 4.5 16.5 4.5 19.5 10.5C16.5 16.5 7.5 16.5 4.5 10.5Z"/>
-              <path d="M4.5 10.5C7.5 16.5 16.5 16.5 19.5 10.5C16.5 4.5 7.5 4.5 4.5 10.5Z"/>
-              <line x1="8" y1="7" x2="8" y2="14"/><line x1="12" y1="5.5" x2="12" y2="15.5"/><line x1="16" y1="7" x2="16" y2="14"/>
-            </svg>
-            RNA Codon Table
-          </h2>
-
-          {/* Filter Buttons */}
-          <div className="flex gap-2 flex-wrap" role="group" aria-label="Filter codons">
-            {[
-              { key: 'all',   label: 'All Codons', activeClass: 'bg-accent border-accent text-white shadow-[0_2px_8px_rgba(99,102,241,0.35)]' },
-              { key: 'start', label: '★ Start', activeClass: 'bg-emerald-600 border-emerald-600 text-white shadow-[0_2px_8px_rgba(22,163,74,0.35)]' },
-              { key: 'stop',  label: '■ Stop', activeClass: 'bg-red-600 border-red-600 text-white shadow-[0_2px_8px_rgba(220,38,38,0.35)]' },
-            ].map(({ key, label, activeClass }) => (
-              <button
-                key={key}
-                id={`ct-filter-${key}`}
-                className={`px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold border cursor-pointer transition-all duration-200 tracking-wide hover:border-accent hover:text-accent hover:-translate-y-px ${
-                  filterMode === key 
-                    ? activeClass 
-                    : 'border-border bg-card text-text-muted'
-                }`}
-                onClick={() => setFilterMode(prev => prev === key ? 'all' : key)}
-                aria-pressed={filterMode === key}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        <ToolHeader title="RNA Codon Table" />
+        <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs text-text-muted bg-app/50 border border-border px-3 py-2 rounded-lg">
+          <p className="leading-relaxed">
+            <strong className="text-text-main">Standard Genetic Code (NCBI Translation Table 1)</strong>: Maps 64 RNA codons to 20 amino acids and 3 stop codons (UAA Ochre, UAG Amber, UGA Opal).
+            <span className="ml-1 opacity-90">AUG encodes Methionine (Met) and functions as canonical start codon in initiation context. <em>Note: Mitochondrial genomes and certain organisms use non-standard genetic codes.</em></span>
+          </p>
         </div>
 
       </div>
 
       {/* ── Workspace: Table + Details Side-by-Side ────────────────── */}
-      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(220px,0.7fr)_minmax(560px,1.7fr)_minmax(320px,1fr)]">
+      <div className="grid w-full grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:grid-cols-[minmax(180px,0.62fr)_minmax(640px,1.85fr)_minmax(280px,0.9fr)]">
         <div className="w-full min-w-0 max-w-full lg:row-span-2 xl:col-start-2 xl:row-span-1 xl:row-start-1">
           {/* ── Axis Labels + Grid ────────────────────────────────────── */}
           <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
@@ -1356,13 +1354,12 @@ export default function CodonTable() {
                           });
 
                           return (
-                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-12 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
+                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-14 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
                               {cellCodons.map((codon) => {
-                                const isHidden = !isCodonVisible(codon);
                                 return (
                                   <div
                                     key={codon}
-                                    className={`flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px] ${isHidden ? 'opacity-20 pointer-events-none' : ''}`}
+                                    className="flex min-h-[24px] items-center border-b border-border/50 px-0.5 transition-all duration-150 last:border-b-0 sm:min-h-[27px] [@media(max-height:760px)]:!min-h-[22px]"
                                     role="row"
                                   >
                                     <CodonButton
@@ -1377,7 +1374,7 @@ export default function CodonTable() {
                               })}
 
                               {/* AA labels — one per consecutive group, vertically centered */}
-                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-12" aria-label={`Amino acids for ${b1}${b2}x`}>
+                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-14" aria-label={`Amino acids for ${b1}${b2}x`}>
                                 {aaGroups.map((group, gi) => (
                                   <div
                                     key={gi}

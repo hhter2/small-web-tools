@@ -1,11 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import MediaSeparatorFormatSelect from './MediaSeparatorFormatSelect';
 import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import { AUDIO_FORMATS, VIDEO_FORMATS } from './mediaSeparatorEngine';
 
 export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onVideoFormatChange, onRemove, onRetry }) {
   // For raw video preview playback (native browser decoding, unrelated to ffmpeg processing)
-  const sourcePreviewURL = useMemo(() => URL.createObjectURL(item.file), [item.file]);
+  const [sourcePreviewURL, setSourcePreviewURL] = useState('');
+
+  useEffect(() => {
+    if (!item.file) return undefined;
+    const url = URL.createObjectURL(item.file);
+    setSourcePreviewURL(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [item.file]);
 
   const isBusy = item.status === 'processing';
   const canEdit = item.status === 'ready' || item.status === 'error';
@@ -91,6 +100,12 @@ export default function MediaSeparatorQueueItem({ item, onAudioFormatChange, onV
       {item.status === 'error' && (
         <div className="flex items-center gap-3 text-red-500 bg-red-50/50 px-3 py-2 rounded-md border border-red-100">
           <span>Error: {item.error}</span>
+          {import.meta.env.DEV && item.developmentDetail && (
+            <details className="text-xs">
+              <summary>Development details</summary>
+              <pre className="whitespace-pre-wrap">{item.developmentDetail}</pre>
+            </details>
+          )}
           <button
             type="button"
             onClick={() => onRetry(item.id)}

@@ -3,6 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { RESOURCE_LIMITS, validateFileSize } from '../lib/resourceLimits';
 
 // ── Supported format labels for display ──────────────────────────────────────
 const FORMAT_LABELS = {
@@ -27,7 +28,9 @@ const FORMAT_LABELS = {
 // ── Play a retro beep sound using the Web Audio API ──────────────────────────
 const playBeep = () => {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
     oscillator.connect(gainNode);
@@ -99,7 +102,9 @@ function ResultWidget({ parsed }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_) {}
+    } catch (_) {
+      // Stopping an already-closed scanner is harmless.
+    }
   };
 
   const { type } = parsed;
@@ -333,6 +338,7 @@ export default function QrBarcodeScanner() {
   // Result state
   const [lastResult, setLastResult] = useState(null); // { text, format }
   const [history, setHistory] = useState([]);
+  const parsed = lastResult ? parseQRPayload(lastResult.text) : null;
 
   const html5QrcodeRef = useRef(null);
   const scannerMountedRef = useRef(false);
@@ -448,6 +454,11 @@ export default function QrBarcodeScanner() {
   // ── File scanning ──────────────────────────────────────────────────────────
   const scanFile = async (file) => {
     if (!file) return;
+    const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_QR_IMAGE_BYTES, 'QR image');
+    if (!sizeCheck.valid) {
+      setFileError(sizeCheck.error);
+      return;
+    }
     if (!/^image\//i.test(file.type)) {
       setFileError('Please select an image file (JPEG, PNG, GIF, WebP, BMP, etc.).');
       return;
@@ -518,7 +529,7 @@ export default function QrBarcodeScanner() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
         <ToolHeader 
           title="QR &amp; Barcode Scanner" 
-          description="Scan QR codes and barcodes using your camera or by uploading an image. All parsing is done locally in your browser." 
+          className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
           <Button

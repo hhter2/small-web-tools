@@ -1,5 +1,8 @@
-import { useCallback, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { ensureFFmpegLoaded, terminateFFmpeg, AUDIO_FORMATS, VIDEO_FORMATS, getExt, guessMime } from './mediaSeparatorEngine';
+import { getMediaSeparatorPolicy, validateResourceAddition } from '../lib/resourceLimits';
+import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
+import { toPublicProcessingError } from '../lib/publicErrors';
 
 export const STATUS = {
   PENDING: 'ready', // Renamed internal value to 'ready' to improve UX before starting
@@ -19,12 +22,18 @@ function nextId() {
  * Files are processed sequentially to avoid memory overload and worker conflicts.
  */
 export function useMediaSeparator() {
+  const {
+    createObjectUrl,
+    revokeObjectUrl,
+    revokeAllObjectUrls,
+  } = useObjectUrlRegistry();
   const [items, setItems] = useState([]);
   const itemsRef = useRef(items);
   itemsRef.current = items;
   
   const [engineLoading, setEngineLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastError, setLastError] = useState('');
   const processingRef = useRef(false);
   const stopRef = useRef(false);
 
@@ -33,7 +42,16 @@ export function useMediaSeparator() {
   }, []);
 
   const addFiles = useCallback((fileList) => {
-    const newItems = Array.from(fileList).map((file) => ({
+    const files = Array.from(fileList);
+    const deviceMemory = /** @type {Navigator & { deviceMemory?: number }} */ (globalThis.navigator)?.deviceMemory;
+    const policy = getMediaSeparatorPolicy(deviceMemory);
+    const resourceCheck = validateResourceAddition(itemsRef.current, files, policy);
+    if (!resourceCheck.valid) {
+      setLastError(resourceCheck.error);
+      return [];
+    }
+    setLastError('');
+    const newItems = files.map((file) => ({
       id: nextId(),
       file,
       status: STATUS.PENDING,
@@ -53,8 +71,8 @@ export function useMediaSeparator() {
   const removeItem = useCallback((id) => {
     setItems((prev) => {
       const target = prev.find((it) => it.id === id);
-      if (target?.audioURL) URL.revokeObjectURL(target.audioURL);
-      if (target?.videoURL) URL.revokeObjectURL(target.videoURL);
+      if (target?.audioURL) revokeObjectUrl(target.audioURL);
+      if (target?.videoURL) revokeObjectUrl(target.videoURL);
       return prev.filter((it) => it.id !== id);
     });
   }, []);
@@ -63,8 +81,8 @@ export function useMediaSeparator() {
     setItems((prev) => {
       prev.forEach((it) => {
         if (it.status === STATUS.DONE) {
-          if (it.audioURL) URL.revokeObjectURL(it.audioURL);
-          if (it.videoURL) URL.revokeObjectURL(it.videoURL);
+          if (it.audioURL) revokeObjectUrl(it.audioURL);
+          if (it.videoURL) revokeObjectUrl(it.videoURL);
         }
       });
       return prev.filter((it) => it.status !== STATUS.DONE);
@@ -145,8 +163,8 @@ export function useMediaSeparator() {
           progress: 100,
           audioBlob,
           videoBlob,
-          audioURL: URL.createObjectURL(audioBlob),
-          videoURL: URL.createObjectURL(videoBlob),
+          audioURL: createObjectUrl(audioBlob),
+          videoURL: createObjectUrl(videoBlob),
         });
       } finally {
         ffmpeg.off('progress', onProgress);
@@ -156,8 +174,15 @@ export function useMediaSeparator() {
         await safeDelete(ffmpeg, videoOutName);
       }
     },
-    [updateItem],
+    [createObjectUrl, updateItem],
   );
+
+  useEffect(() => () => {
+    stopRef.current = true;
+    processingRef.current = false;
+    terminateFFmpeg();
+    revokeAllObjectUrls();
+  }, [revokeAllObjectUrls]);
 
   const runQueue = useCallback(async () => {
     if (processingRef.current) {
@@ -179,10 +204,15 @@ export function useMediaSeparator() {
       setItems((prev) => {
         const firstPending = prev.find((it) => it.status === STATUS.PENDING);
         if (firstPending) {
-          const detail = err?.stack || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+          const safeError = toPublicProcessingError(err, import.meta.env.DEV);
           return prev.map((it) =>
             it.id === firstPending.id
-              ? { ...it, status: STATUS.ERROR, error: `Engine load failed: ${detail}` }
+              ? {
+                  ...it,
+                  status: STATUS.ERROR,
+                  error: safeError.message,
+                  developmentDetail: safeError.developmentDetail,
+                }
               : it
           );
         }
@@ -213,7 +243,12 @@ export function useMediaSeparator() {
         if (stopRef.current) {
           updateItem(next.id, { status: STATUS.PENDING, progress: 0 });
         } else {
-          updateItem(next.id, { status: STATUS.ERROR, error: err?.message || 'Processing failed, please retry' });
+          const safeError = toPublicProcessingError(err, import.meta.env.DEV);
+          updateItem(next.id, {
+            status: STATUS.ERROR,
+            error: safeError.message,
+            developmentDetail: safeError.developmentDetail,
+          });
         }
       }
     }
@@ -259,6 +294,7 @@ export function useMediaSeparator() {
     engineLoading,
     isProcessing,
     globalProgress,
+    lastError,
     addFiles,
     removeItem,
     clearDone,

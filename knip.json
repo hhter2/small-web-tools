@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.jsx",
+    "functions/api/*.js"
+  ],
+  "project": ["src/**/*.{js,jsx}", "functions/**/*.js", "*.js"],
+  "ignore": ["public/ffmpeg/**"],
+  "ignoreExportsUsedInFile": true
+}

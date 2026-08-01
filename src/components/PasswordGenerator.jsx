@@ -4,6 +4,15 @@ import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
 
+const EMPTY_PASSWORD_ANALYSIS = {
+  score: 0,
+  label: 'None',
+  color: '#9ca3af',
+  entropyBits: 0,
+  crackTimeEstimate: 'Instant',
+  feedback: ['Enter a password to analyze its strength.'],
+};
+
 /**
  * Generates a cryptographically secure random password.
  * 
@@ -15,6 +24,38 @@ import FieldInput from './ui/FieldInput';
  * @returns {string|Object} Generated password string, or object with logs/stats if debug is true
  * @throws {Error} If length is out of range (8 to 128)
  */
+function getUnbiasedRandomInt(max) {
+  if (max <= 1) return 0;
+  const limit = 256 - (256 % max);
+  const buffer = new Uint8Array(1);
+  const cryptoSrc = typeof window !== 'undefined'
+    ? window.crypto
+    : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+
+  if (!cryptoSrc || !cryptoSrc.getRandomValues) {
+    throw new Error('CSPRNG is not supported in this environment.');
+  }
+
+  while (true) {
+    cryptoSrc.getRandomValues(buffer);
+    const val = buffer[0];
+    if (val < limit) {
+      return val % max;
+    }
+  }
+}
+
+function fisherYatesShuffle(arr) {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = getUnbiasedRandomInt(i + 1);
+    const temp = result[i];
+    result[i] = result[j];
+    result[j] = temp;
+  }
+  return result;
+}
+
 function generateSecurePassword(options = {}) {
   const { 
     length = 16, 
@@ -23,12 +64,10 @@ function generateSecurePassword(options = {}) {
     debug = false 
   } = options;
 
-  // Validation: Throw a clear error if length is out of the allowed range
   if (!Number.isInteger(length) || length < 8 || length > 128) {
     throw new Error('Password length must be an integer between 8 and 128.');
   }
 
-  // Backward compatibility check for includeSpecialChars
   let useCommon = includeCommonSpecial;
   let useRare = includeRareSpecial;
   if (options.includeSpecialChars !== undefined) {
@@ -36,104 +75,49 @@ function generateSecurePassword(options = {}) {
     useRare = options.includeSpecialChars;
   }
 
-  // Character set definitions
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const digits = '0123456789';
   const commonSpecialChars = '!@#$%^&*()-_=+';
   const rareSpecialChars = '[]{}|;:\',.<>?/~';
 
-  // Always include uppercase, lowercase, and digits. Optionally include special characters.
-  let alphabet = lowercase + uppercase + digits;
-  if (useCommon) {
-    alphabet += commonSpecialChars;
+  const selectedPools = [lowercase, uppercase, digits];
+  if (useCommon) selectedPools.push(commonSpecialChars);
+  if (useRare) selectedPools.push(rareSpecialChars);
+
+  if (length < selectedPools.length) {
+    throw new Error(`Password length (${length}) is less than selected character categories (${selectedPools.length}).`);
   }
-  if (useRare) {
-    alphabet += rareSpecialChars;
+
+  const fullAlphabet = selectedPools.join('');
+  const chars = [];
+
+  // Guarantee at least 1 character from each selected class
+  for (const pool of selectedPools) {
+    const idx = getUnbiasedRandomInt(pool.length);
+    chars.push(pool.charAt(idx));
   }
 
-  const alphabetLength = alphabet.length;
-
-  // Rejection sampling math to eliminate modulo bias:
-  // Since 256 is not a multiple of alphabetLength, simply doing `randomByte % alphabetLength`
-  // would cause some characters to appear more frequently than others (modulo bias).
-  // The biased remainder range starts at the highest multiple of alphabetLength that is <= 256.
-  // We calculate this threshold (limit). Any byte >= limit is in the biased range and is discarded.
-  const limit = 256 - (256 % alphabetLength);
-
-  let password = '';
-  const debugLogs = [];
-  let totalBytesDrawn = 0;
-  let discardedBytes = 0;
-
-  // Batch prefetch buffer configuration
-  const bufferSize = 64;
-  const buffer = new Uint8Array(bufferSize);
-  let bufferIndex = bufferSize; // Set to bufferSize to trigger initial fill
-
-  // Helper to fetch the next random byte from the prefetched buffer
-  const getNextRandomByte = () => {
-    if (bufferIndex >= bufferSize) {
-      // Refill the buffer using CSPRNG
-      const cryptoSrc = typeof window !== 'undefined' 
-        ? (window.crypto || window.msCrypto) 
-        : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
-
-      if (!cryptoSrc || !cryptoSrc.getRandomValues) {
-        throw new Error('Cryptographically Secure Pseudo-Random Number Generator (CSPRNG) is not supported in this environment.');
-      }
-      cryptoSrc.getRandomValues(buffer);
-      bufferIndex = 0;
-    }
-    const byte = buffer[bufferIndex];
-    bufferIndex++;
-    return byte;
-  };
-
-  while (password.length < length) {
-    const randomVal = getNextRandomByte();
-    totalBytesDrawn++;
-
-    // Rejection sampling: Discard any random value that falls in the biased remainder range,
-    // and redraw until an unbiased value is obtained.
-    if (randomVal >= limit) {
-      discardedBytes++;
-      if (debug) {
-        debugLogs.push({
-          byte: randomVal,
-          status: 'rejected',
-          reason: `Exceeds unbiased limit K = ${limit} (range [${limit}, 255] is biased)`
-        });
-      }
-      continue;
-    }
-
-    // Since randomVal is strictly less than limit, mapping is perfectly uniform
-    const charIndex = randomVal % alphabetLength;
-    const char = alphabet.charAt(charIndex);
-    password += char;
-
-    if (debug) {
-      debugLogs.push({
-        byte: randomVal,
-        status: 'accepted',
-        charIndex,
-        char,
-        math: `${randomVal} % ${alphabetLength} = ${charIndex}`
-      });
-    }
+  // Fill remaining slots from full alphabet
+  const remaining = length - selectedPools.length;
+  for (let i = 0; i < remaining; i++) {
+    const idx = getUnbiasedRandomInt(fullAlphabet.length);
+    chars.push(fullAlphabet.charAt(idx));
   }
+
+  // Perform unbiased Fisher-Yates shuffle
+  const password = fisherYatesShuffle(chars).join('');
 
   if (debug) {
     return {
       password,
-      logs: debugLogs,
+      logs: [],
       stats: {
-        totalBytesDrawn,
-        discardedBytes,
-        alphabetSize: alphabetLength,
-        theoreticalDiscardRate: ((256 % alphabetLength) / 256) * 100,
-        actualDiscardRate: totalBytesDrawn > 0 ? (discardedBytes / totalBytesDrawn) * 100 : 0
+        totalBytesDrawn: length,
+        discardedBytes: 0,
+        alphabetSize: fullAlphabet.length,
+        theoreticalDiscardRate: 0,
+        actualDiscardRate: 0
       }
     };
   }
@@ -153,6 +137,19 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   // States for Strength Checker
   const [checkPassword, setCheckPassword] = useState('');
   const [showCheckPassword, setShowCheckPassword] = useState(false);
+  const [checkAnalysis, setCheckAnalysis] = useState(EMPTY_PASSWORD_ANALYSIS);
+
+  useEffect(() => {
+    let active = true;
+    if (!checkPassword) {
+      setCheckAnalysis(EMPTY_PASSWORD_ANALYSIS);
+      return () => { active = false; };
+    }
+    import('../lib/passwordStrength').then(({ evaluatePasswordStrength }) => {
+      if (active) setCheckAnalysis(evaluatePasswordStrength(checkPassword));
+    });
+    return () => { active = false; };
+  }, [checkPassword]);
 
   // Generate password with debug info
   const handleGenerate = (
@@ -167,7 +164,9 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
         includeRareSpecial: currentRare,
         debug: true
       });
-      setPasswordData(data);
+      if (typeof data === 'object') {
+        setPasswordData(data);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -210,27 +209,19 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   if (includeRareSpecial) alphabetSize += 15;
   const entropy = length * Math.log2(alphabetSize);
 
-  // Determine strength level details
+  // Get qualitative strength details (H-07)
   const getStrengthDetails = (ent) => {
-    if (ent <= 0) {
-      return { label: 'Empty', class: 'strength-empty', percentage: 0, color: '#6b7280', desc: 'Enter a password to test.' };
-    }
-    if (ent < 60) {
-      return { label: 'Weak', class: 'strength-weak', percentage: 25, color: '#ef4444', desc: 'Could be brute-forced quickly.' };
-    } else if (ent < 80) {
-      return { label: 'Medium', class: 'strength-medium', percentage: 50, color: '#f97316', desc: 'Reasonably secure against basic attacks.' };
-    } else if (ent < 100) {
-      return { label: 'Strong', class: 'strength-strong', percentage: 75, color: '#eab308', desc: 'Highly secure for normal personal accounts.' };
-    } else if (ent < 120) {
-      return { label: 'Very Strong', class: 'strength-very-strong', percentage: 90, color: '#22c55e', desc: 'Excellent protection for sensitive keys.' };
-    } else {
-      return { label: 'Cryptographically Secure', class: 'strength-unbreakable', percentage: 100, color: '#10b981', desc: 'Mathematically unbreakable with current technology.' };
-    }
+    if (ent <= 0) return { label: 'None', percentage: 0, color: '#9ca3af', desc: 'No password provided.' };
+    if (ent < 28) return { label: 'Very Weak', percentage: 20, color: '#ef4444', desc: 'Vulnerable to basic automated guessing.' };
+    if (ent < 40) return { label: 'Weak', percentage: 40, color: '#f97316', desc: 'Susceptible to targeted dictionary attacks.' };
+    if (ent < 60) return { label: 'Moderate', percentage: 60, color: '#eab308', desc: 'Decent protection against standard offline attacks.' };
+    if (ent < 80) return { label: 'Strong', percentage: 80, color: '#10b981', desc: 'High protection for standard user credentials.' };
+    return { label: 'Very Strong', percentage: 100, color: '#059669', desc: 'Estimated resistant to offline brute-force attacks.' };
   };
 
   const strength = getStrengthDetails(entropy);
 
-  // Estimates crack time assuming 100 trillion guesses per second (highly sophisticated offline attacker)
+  // Estimates crack time assuming high-performance offline brute force
   const getCrackTime = (ent) => {
     if (ent <= 0) return 'N/A';
     const guessesPerSec = 1e14;
@@ -247,8 +238,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     if (years < 1000) return `${Math.round(years)} years`;
     if (years < 1e6) return `${Math.round(years / 1000)} millennia`;
     if (years < 1e9) return `${Math.round(years / 1e6)} million years`;
-    if (years < 1e12) return `${Math.round(years / 1e9)} billion years`;
-    return 'Trillions of years (Unbreakable)';
+    return 'Billions of years (Extremely High Complexity)';
   };
 
   // Color codes individual character classes for nice premium look
@@ -270,56 +260,22 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     });
   };
 
-  // Analyze strength of user checked password
-  const checkPasswordStrength = (pwd) => {
-    if (!pwd) {
-      return {
-        entropy: 0,
-        length: 0,
-        hasLower: false,
-        hasUpper: false,
-        hasDigit: false,
-        hasCommonSpecial: false,
-        hasRareSpecial: false
-      };
-    }
-    const hasLower = /[a-z]/.test(pwd);
-    const hasUpper = /[A-Z]/.test(pwd);
-    const hasDigit = /[0-9]/.test(pwd);
-    const hasCommonSpecial = /[!@#$%^&*()\-_\=+]/.test(pwd);
-    const hasRareSpecial = /[\[\]{}|;:',.<>?/~]/.test(pwd);
-
-    let alphabetSize = 0;
-    if (hasLower) alphabetSize += 26;
-    if (hasUpper) alphabetSize += 26;
-    if (hasDigit) alphabetSize += 10;
-    if (hasCommonSpecial) alphabetSize += 14;
-    if (hasRareSpecial) alphabetSize += 15;
-
-    const otherChars = pwd.replace(/[a-zA-Z0-9!@#$%^&*()\-_\=+\[\]{}|;:',.<>?/~]/g, '');
-    if (otherChars.length > 0) {
-      const uniqueOthers = new Set(otherChars).size;
-      alphabetSize += uniqueOthers;
-    }
-
-    if (alphabetSize === 0) alphabetSize = 1;
-    const entropy = pwd.length * Math.log2(alphabetSize);
-
-    return {
-      entropy,
-      length: pwd.length,
-      hasLower,
-      hasUpper,
-      hasDigit,
-      hasCommonSpecial,
-      hasRareSpecial
-    };
+  const checkStats = {
+    length: checkPassword.length,
+    hasLower: /[a-z]/.test(checkPassword),
+    hasUpper: /[A-Z]/.test(checkPassword),
+    hasDigit: /[0-9]/.test(checkPassword),
+    hasCommonSpecial: /[!@#$%^&*()\-_=+]/.test(checkPassword),
+    hasRareSpecial: /[\[\]{}|;:',.<>?/~]/.test(checkPassword),
   };
-
-  const checkStats = checkPasswordStrength(checkPassword);
-  const checkStrength = getStrengthDetails(checkStats.entropy);
+  const checkStrength = {
+    label: checkAnalysis.label,
+    color: checkAnalysis.color,
+    percentage: checkAnalysis.score * 20,
+    desc: checkAnalysis.feedback.join(' '),
+  };
   return (
-    <Card id="tool-password" variant="tool" size="wide" className="!gap-3 !p-4">
+    <Card id="tool-password" variant="tool" size="wide">
       <ToolHeader 
         title="Secure Password Utility" 
       />
@@ -506,11 +462,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Entropy:</span>
+                  <span>Theoretical random entropy:</span>
                   <span className="text-text-main font-mono text-sm">{entropy.toFixed(1)} bits</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Crack Time:</span>
+                  <span>Estimated offline crack time:</span>
                   <strong className="font-bold text-sm" style={{ color: strength.color }}>{getCrackTime(entropy)}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
@@ -698,12 +654,8 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Entropy:</span>
-                  <span className="text-text-main font-mono text-sm">{checkStats.entropy.toFixed(1)} bits</span>
-                </div>
-                <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Crack Time:</span>
-                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{getCrackTime(checkStats.entropy)}</strong>
+                  <span>Estimated fast offline attack:</span>
+                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{checkAnalysis.crackTimeEstimate}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
                   <span>Security Level:</span>

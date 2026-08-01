@@ -3,6 +3,8 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
+import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper utilities
@@ -632,7 +634,9 @@ async function parseAudioFile(file) {
   const arrayBuffer = await file.arrayBuffer();
   const uint8 = new Uint8Array(arrayBuffer);
 
+  /** @type {Record<string, any>} */
   let technical = {};
+  /** @type {Record<string, any>} */
   let tags = {};
   let coverArt = null;
   let format = ext.toUpperCase();
@@ -653,6 +657,7 @@ async function parseAudioFile(file) {
         bitrate: mp3tech.bitrate,
         sampleRate: mp3tech.sampleRate,
         numChannels: 2, // Default; proper VBR/Xing parsing would refine this
+        bitsPerSample: 0,
         audioFormat: 'MP3 (MPEG Layer III)',
       };
     }
@@ -990,6 +995,7 @@ const COMPARE_FIELDS = [
 ];
 
 export default function AudioMeta() {
+  const { createObjectUrl, revokeObjectUrl, revokeAllObjectUrls } = useObjectUrlRegistry();
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -1010,20 +1016,22 @@ export default function AudioMeta() {
     files.forEach(f => {
       if (!f.objectUrl && f.arrayBuffer) {
         const blob = new Blob([f.arrayBuffer]);
-        const url = URL.createObjectURL(blob);
+        const url = createObjectUrl(blob);
         setFiles(prev => prev.map(x => x.id === f.id ? { ...x, objectUrl: url } : x));
       }
     });
   }, [files.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Revoke URLs on unmount
-  useEffect(() => {
-    return () => {
-      files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const processFiles = async (fileList) => {
+    const resourceCheck = validateResourceAddition(
+      files,
+      fileList,
+      FILE_RESOURCE_POLICIES.audioMetadata,
+    );
+    if (!resourceCheck.valid) {
+      setStatus(resourceCheck.error);
+      return;
+    }
     setLoading(true);
     setStatus('Parsing files...');
     const newFiles = [];
@@ -1072,7 +1080,7 @@ export default function AudioMeta() {
   const handleRemove = (id) => {
     setFiles(prev => {
       const removed = prev.find(f => f.id === id);
-      if (removed?.objectUrl) URL.revokeObjectURL(removed.objectUrl);
+      if (removed?.objectUrl) revokeObjectUrl(removed.objectUrl);
       const updated = prev.filter(f => f.id !== id);
       if (selectedId === id) setSelectedId(updated.length > 0 ? updated[0].id : null);
       return updated;
@@ -1081,7 +1089,7 @@ export default function AudioMeta() {
   };
 
   const handleClearAll = () => {
-    files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
+    revokeAllObjectUrls();
     setFiles([]);
     setSelectedId(null);
     setCompareSelectedIds([]);
@@ -1098,14 +1106,14 @@ export default function AudioMeta() {
       tags: activeFile.tags,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const url = createObjectUrl(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = activeFile.name.replace(/\.[^/.]+$/, '') + '_metadata.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    revokeObjectUrl(url);
   };
 
   const handleStripMp3 = () => {
@@ -1113,7 +1121,7 @@ export default function AudioMeta() {
     try {
       const stripped = stripMp3Metadata(activeFile.arrayBuffer, 'all');
       const blob = new Blob([stripped], { type: 'audio/mpeg' });
-      const strippedUrl = URL.createObjectURL(blob);
+      const strippedUrl = createObjectUrl(blob);
       setFiles(prev => prev.map(f => f.id === activeFile.id ? {
         ...f,
         strippedInfo: {
@@ -1229,7 +1237,6 @@ export default function AudioMeta() {
 
       <ToolHeader 
         title="Audio Metadata &amp; Tags Reader" 
-        description="View technical metadata, audio codec info, and ID3 / Vorbis comment tags, compare multiple files, or strip metadata losslessly." 
       />
 
       {/* Full-width drag over overlay when files are already present */}

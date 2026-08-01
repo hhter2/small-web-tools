@@ -60,10 +60,10 @@ export default function SlashesConverter() {
     <AutoDetectConverter
       toolId="tool-slash"
       title="Slashes Converter"
-      description="Normalize file paths automatically. Paste either slash style and copy the converted result."
       inputPlaceholder={'C:\\Users\\name\\Documents\\report.pdf\nor\n/Users/name/Documents/report.pdf'}
       emptyTargetLabel="Converted path"
       analyze={analyzePath}
+      showManualModes={false}
     />
   );
 }

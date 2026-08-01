@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
+import { createGitignoreMatcher, escapeXml } from '../lib/folderAnalyzerUtils';
+import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
 
 
 const TEXT_EXTENSIONS = new Set([
@@ -21,102 +23,18 @@ const BINARY_EXTENSIONS = new Set([
 
 const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
 
-function createGitignoreMatcher(gitignoreText) {
-  if (!gitignoreText) return () => false;
-
-  const rules = [];
-  const lines = gitignoreText.split(/\r?\n/);
-
-  for (let line of lines) {
-    line = line.trim();
-    if (!line || line.startsWith('#')) continue;
-
-    let isNegated = false;
-    if (line.startsWith('!')) {
-      isNegated = true;
-      line = line.slice(1);
-    }
-
-    let isDirOnly = false;
-    if (line.endsWith('/')) {
-      isDirOnly = true;
-      line = line.slice(0, -1);
-    }
-
-    // Convert glob pattern to regular expression
-    let regexStr = line
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
-
-    if (line.startsWith('/')) {
-      regexStr = '^' + regexStr.slice(1);
-    } else {
-      regexStr = '(^|\\/)' + regexStr;
-    }
-
-    regexStr += '(\\/|$)';
-
-    try {
-      rules.push({
-        regex: new RegExp(regexStr),
-        isNegated,
-        isDirOnly
-      });
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  return (filePath, isDir) => {
-    let ignored = false;
-    const parts = filePath.split('/');
-    const relPath = parts.slice(1).join('/');
-
-    if (!relPath) return false;
-
-    const pathParts = relPath.split('/');
-
-    for (const rule of rules) {
-      let matches = false;
-      if (rule.isDirOnly) {
-        if (isDir) {
-          matches = rule.regex.test(relPath);
-        } else {
-          let parentPath = '';
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            parentPath = parentPath ? `${parentPath}/${pathParts[i]}` : pathParts[i];
-            if (rule.regex.test(parentPath)) {
-              matches = true;
-              break;
-            }
-          }
-        }
-      } else {
-        matches = rule.regex.test(relPath);
-      }
-
-      if (matches) {
-        ignored = !rule.isNegated;
-      }
-    }
-    return ignored;
-  };
-}
 
 export default function FolderAnalyzer() {
-  const [customPath, setCustomPath] = useState('');
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
+  const acceptedFilesRef = useRef([]);
   const [scannedProjects, setScannedProjects] = useState([]);
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [viewMode, setViewMode] = useState('figure'); // figure, text
   const [collapsedPaths, setCollapsedPaths] = useState({});
   const [dragOver, setDragOver] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [showAddPathInput, setShowAddPathInput] = useState(false);
-  const [inlinePath, setInlinePath] = useState('');
 
   const activeProject = scannedProjects[activeProjectIndex] || null;
   const treeData = activeProject ? activeProject.treeData : null;
@@ -207,7 +125,7 @@ export default function FolderAnalyzer() {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target.result;
+        const text = String(e.target?.result || '');
         if (!text) {
           resolve(0);
           return;
@@ -221,7 +139,7 @@ export default function FolderAnalyzer() {
   }
 
   const handleClear = () => {
-    setCustomPath('');
+    acceptedFilesRef.current = [];
     setScannedProjects([]);
     setActiveProjectIndex(0);
     setCollapsedPaths({});
@@ -229,76 +147,19 @@ export default function FolderAnalyzer() {
     setProgress({ current: 0, total: 0, phase: '' });
   };
 
-  const scanPaths = async (paths, shouldAppend = false) => {
-    setStatus('scanning');
-    setProgress({ current: 0, total: 100, phase: 'Scanning local directories...' });
-
-    try {
-      const existingPaths = new Set(scannedProjects.map(p => p.path));
-      const newPathsToScan = shouldAppend ? paths.filter(p => !existingPaths.has(p)) : paths;
-      
-      if (newPathsToScan.length === 0) {
-        setStatus('success');
-        return;
-      }
-
-      const scanPromises = newPathsToScan.map(async (p) => {
-        const response = await fetch(`/api/scan-local-dir?path=${encodeURIComponent(p)}`);
-        const data = await response.json();
-        return { path: p, data };
-      });
-
-      const scanResults = await Promise.all(scanPromises);
-      const failed = scanResults.find(r => !r.data.ok);
-      if (failed) {
-        setErrorMsg(failed.data.error || `Failed to scan path: ${failed.path}`);
-        setStatus('error');
-        return;
-      }
-
-      const projects = scanResults.map(res => {
-        const p = res.path;
-        const data = res.data;
-        const name = p.replace(/\\/g, '/').split('/').pop() || 'folder';
-        const rootNode = buildTree(data.files, p);
-        return {
-          name,
-          path: p,
-          treeData: rootNode,
-          gitignoreText: data.gitignoreText || ''
-        };
-      });
-
-      if (shouldAppend) {
-        setScannedProjects(prev => {
-          const next = [...prev, ...projects];
-          setActiveProjectIndex(prev.length);
-          const allPaths = next.map(p => p.path).filter(Boolean);
-          setCustomPath(allPaths.join(', '));
-          return next;
-        });
-      } else {
-        setScannedProjects(projects);
-        setActiveProjectIndex(0);
-      }
-      setCollapsedPaths({});
-      setStatus('success');
-    } catch (err) {
-      console.error(err);
-      setErrorMsg('API scan failed: ' + err.message);
-      setStatus('error');
-    }
-  };
-
-  const handleLocalPathScan = async () => {
-    const paths = customPath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-    if (paths.length === 0) return;
-    scanPaths(paths, scannedProjects.length > 0);
-  };
-
   // Parse items from directory selection or drag-and-drop
   async function processFiles(fileList, rootFolderNames, shouldAppend = false) {
     if ((!fileList || fileList.length === 0) && (!rootFolderNames || rootFolderNames.length === 0)) return;
+    const resourceCheck = validateResourceAddition(
+      shouldAppend ? acceptedFilesRef.current : [],
+      fileList,
+      FILE_RESOURCE_POLICIES.folderAnalysis,
+    );
+    if (!resourceCheck.valid) {
+      setErrorMsg(resourceCheck.error);
+      setStatus('error');
+      return;
+    }
     setStatus('scanning');
     setProgress({ current: 0, total: fileList ? fileList.length : 0, phase: 'Reading folder contents...' });
 
@@ -403,8 +264,6 @@ export default function FolderAnalyzer() {
         setScannedProjects(prev => {
           const next = [...prev, ...projects];
           setActiveProjectIndex(prev.length);
-          const allNames = next.map(p => p.name).filter(Boolean);
-          setCustomPath(allNames.join(', '));
           return next;
         });
       } else {
@@ -412,6 +271,9 @@ export default function FolderAnalyzer() {
         setActiveProjectIndex(0);
       }
       setCollapsedPaths({});
+      acceptedFilesRef.current = shouldAppend
+        ? [...acceptedFilesRef.current, ...Array.from(fileList || [])]
+        : Array.from(fileList || []);
       setStatus('success');
     } catch (err) {
       console.error(err);
@@ -420,33 +282,6 @@ export default function FolderAnalyzer() {
     }
   }
 
-  const resolveAndScanLocalPaths = async (rootFolderNames, fallbackFiles, shouldAppend = false) => {
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalDev) {
-      processFiles(fallbackFiles, rootFolderNames, shouldAppend);
-      return;
-    }
-
-    try {
-      const resolvePromises = rootFolderNames.map(async (name) => {
-        const res = await fetch(`/api/resolve-local-path?name=${encodeURIComponent(name)}`);
-        const data = await res.json();
-        return data.ok ? data.path : null;
-      });
-      const resolved = await Promise.all(resolvePromises);
-      const validPaths = resolved.filter(Boolean);
-
-      if (validPaths.length === rootFolderNames.length) {
-        scanPaths(validPaths, shouldAppend);
-        return;
-      }
-    } catch (e) {
-      console.warn('Local path resolution failed, falling back to browser scan:', e);
-    }
-
-    processFiles(fallbackFiles, rootFolderNames, shouldAppend);
-  };
-
   // Handle standard <input type="file" webkitdirectory /> selection
   const handleFolderSelect = (e) => {
     const files = e.target.files;
@@ -454,8 +289,14 @@ export default function FolderAnalyzer() {
       const filesArray = Array.from(files);
       const firstPath = filesArray[0].webkitRelativePath || '';
       const rootFolderName = firstPath.split('/')[0] || '';
-      resolveAndScanLocalPaths([rootFolderName], filesArray, scannedProjects.length > 0);
+      processFiles(filesArray, [rootFolderName], scannedProjects.length > 0);
     }
+  };
+
+  const openFolderInput = () => {
+    if (!folderInputRef.current) return;
+    folderInputRef.current.value = '';
+    folderInputRef.current.click();
   };
 
   // Drag and Drop handlers
@@ -474,7 +315,11 @@ export default function FolderAnalyzer() {
       return new Promise((resolve) => {
         entry.file((file) => {
           file.customPath = path ? `${path}/${entry.name}` : entry.name;
-          try { file.webkitRelativePath = file.customPath; } catch (e) {}
+          try {
+            file.webkitRelativePath = file.customPath;
+          } catch (e) {
+            // Some browsers expose webkitRelativePath as read-only.
+          }
           resolve([file]);
         }, () => resolve([]));
       });
@@ -543,7 +388,7 @@ export default function FolderAnalyzer() {
       }
 
       if (uniqueRoots.length > 0 || allFiles.length > 0) {
-        resolveAndScanLocalPaths(uniqueRoots, allFiles, scannedProjects.length > 0);
+        processFiles(allFiles, uniqueRoots, scannedProjects.length > 0);
       } else {
         setErrorMsg('No files or folders detected in the dropped selection.');
         setStatus('error');
@@ -560,7 +405,6 @@ export default function FolderAnalyzer() {
       const next = prev.filter((_, i) => i !== idx);
       if (next.length === 0) {
         setStatus('idle');
-        setCustomPath('');
         setActiveProjectIndex(0);
       } else {
         if (activeProjectIndex >= next.length) {
@@ -568,22 +412,10 @@ export default function FolderAnalyzer() {
         } else if (activeProjectIndex === idx && idx > 0) {
           setActiveProjectIndex(idx - 1);
         }
-        const remainingPaths = next.map(p => p.path || p.name).filter(Boolean);
-        setCustomPath(remainingPaths.join(', '));
       }
       return next;
     });
     setCollapsedPaths({});
-  };
-
-  const handleInlineAddPath = (e) => {
-    e.preventDefault();
-    const paths = inlinePath.split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-    if (paths.length > 0) {
-      scanPaths(paths, true);
-    }
-    setInlinePath('');
-    setShowAddPathInput(false);
   };
 
   // Reconstruct tree hierarchy
@@ -819,19 +651,14 @@ export default function FolderAnalyzer() {
 
     let svgRows = '';
     list.forEach((item, index) => {
-      const y = 60 + index * rowHeight;
-      const x = 20 + item.depth * indentWidth;
+      const y = 70 + index * rowHeight;
+      const x = 30 + item.depth * indentWidth;
 
-      // Draw structure lines
       let connectors = '';
       if (item.depth > 0) {
-        // Horizontal line
-        connectors += `<line x1="${x - 12}" y1="${y + 12}" x2="${x + 2}" y2="${y + 12}" stroke="#4b5563" stroke-width="1.5" />`;
-        // Vertical connector
         connectors += `<line x1="${x - 12}" y1="${y - 12}" x2="${x - 12}" y2="${y + 12}" stroke="#4b5563" stroke-width="1.5" />`;
       }
 
-      // Icon colors and representations
       const isDir = item.type === 'directory';
       const iconColor = isDir ? '#f59e0b' : '#3b82f6';
       const iconPath = isDir 
@@ -839,25 +666,28 @@ export default function FolderAnalyzer() {
         : 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
 
       const lineText = isDir ? '' : ` (${item.lineCount} lines)`;
+      const safeName = escapeXml(item.name);
 
       svgRows += `
         <g>
           ${connectors}
           <!-- Icon -->
-          <svg x="${x + 6}" y="${y + 4}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg x="${x}" y="${y - 14}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="${iconPath}" />
           </svg>
           <!-- Name -->
-          <text x="${x + 28}" y="${y + 16}" fill="#f3f4f6" font-family="JetBrains Mono, monospace" font-size="12px" font-weight="${isDir ? 'bold' : 'normal'}">${item.name}${isDir ? '/' : ''}<tspan fill="#9ca3af">${lineText}</tspan></text>
+          <text x="${x + 24}" y="${y}" fill="#f3f4f6" font-family="JetBrains Mono, monospace" font-size="12px" font-weight="${isDir ? 'bold' : 'normal'}">${safeName}${isDir ? '/' : ''}<tspan fill="#9ca3af">${escapeXml(lineText)}</tspan></text>
         </g>
       `;
     });
+
+    const safeRootName = escapeXml(rootNode.name);
 
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
         <rect width="100%" height="100%" fill="#0f172a" rx="12" />
         <!-- Header -->
-        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${rootNode.name} Folder Structure</text>
+        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${safeRootName} Folder Structure</text>
         <line x1="20" y1="45" x2="${width - 20}" y2="45" stroke="#334155" stroke-width="1" />
         
         <!-- Tree content -->
@@ -1091,7 +921,6 @@ export default function FolderAnalyzer() {
         <div className="flex-1 min-w-0">
           <ToolHeader 
             title="Folder Structure Analyzer" 
-            description="Scan folder directories recursively, visualize your code layout, calculate file metrics, and measure total line counts entirely client-side." 
           />
           {status === 'success' && activeProject && scannedProjects.length === 1 && (
             <div className="flex flex-wrap gap-3 items-center mt-2.5">
@@ -1102,31 +931,14 @@ export default function FolderAnalyzer() {
                 <span className="truncate max-w-[200px]" title={activeProject.path || activeProject.name}>{activeProject.path || activeProject.name}</span>
               </div>
               
-              <div className="relative">
-                {showAddPathInput ? (
-                  <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      placeholder="Type path to add..."
-                      value={inlinePath}
-                      onChange={(e) => setInlinePath(e.target.value)}
-                      className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
-                      autoFocus
-                      onBlur={() => {
-                        setTimeout(() => {
-                          if (!inlinePath.trim()) setShowAddPathInput(false);
-                        }, 200);
-                      }}
-                    />
-                    <Button type="submit" size="sm" variant="primary">Add</Button>
-                    <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
-                  </form>
-                ) : (
-                  <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
-                    + Add Path
-                  </button>
-                )}
-              </div>
+              <button
+                type="button"
+                className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
+                onClick={openFolderInput}
+                aria-label="Select another folder path"
+              >
+                + Add Another Folder
+              </button>
             </div>
           )}
         </div>
@@ -1169,31 +981,14 @@ export default function FolderAnalyzer() {
             </div>
           ))}
           
-          <div className="relative">
-            {showAddPathInput ? (
-              <form onSubmit={handleInlineAddPath} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Type path to add..."
-                  value={inlinePath}
-                  onChange={(e) => setInlinePath(e.target.value)}
-                  className="px-2.5 py-1 bg-card border border-border rounded text-xs text-text-main outline-none focus:border-accent"
-                  autoFocus
-                  onBlur={() => {
-                    setTimeout(() => {
-                      if (!inlinePath.trim()) setShowAddPathInput(false);
-                    }, 200);
-                  }}
-                />
-                <Button type="submit" size="sm" variant="primary">Add</Button>
-                <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddPathInput(false)}>Cancel</Button>
-              </form>
-            ) : (
-              <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={() => setShowAddPathInput(true)}>
-                + Add Path
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
+            onClick={openFolderInput}
+            aria-label="Select another folder path"
+          >
+            + Add Another Folder
+          </button>
         </div>
       )}
 
@@ -1201,67 +996,61 @@ export default function FolderAnalyzer() {
       <input
         type="file"
         ref={folderInputRef}
-        webkitdirectory="true"
-        directory="true"
+        {...{ webkitdirectory: '', directory: '' }}
         multiple
         style={{ display: 'none' }}
         onChange={handleFolderSelect}
       />
 
-      {/* Input Options (only visible when not showing results) */}
+      {/* Selection Areas */}
       {status !== 'success' && (
-        <div className="flex gap-4 items-end mt-4">
-          <div className="flex flex-col gap-2 w-full flex-1">
-            <label htmlFor="custom-root-path" className="text-sm font-semibold text-text-main">Folder Path / Custom Root Name</label>
-            <div className="flex gap-3 w-full items-stretch">
-              <input
-                type="text"
-                id="custom-root-path"
-                className="flex-1 min-w-0 px-4 py-2.5 h-12 bg-card border border-border rounded-lg text-text-main placeholder-text-muted/50 outline-none transition-all focus:border-accent text-sm"
-                placeholder="Enter folder path or custom root name..."
-                value={customPath}
-                onChange={(e) => setCustomPath(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && customPath.trim()) {
-                    handleLocalPathScan();
+        <div className="flex flex-col gap-4 mt-4">
+          <button
+            type="button"
+            className="w-full border-2 border-dashed border-border bg-transparent rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5"
+            onClick={() => {
+              const directoryPicker = window.showDirectoryPicker;
+              if (directoryPicker) {
+                directoryPicker().then(async (dirHandle) => {
+                  const files = [];
+                  async function getFiles(handle, path = dirHandle.name) {
+                    for await (const entry of handle.values()) {
+                      if (entry.kind === 'file') {
+                        const file = await entry.getFile();
+                        file.customPath = `${path}/${entry.name}`;
+                        files.push(file);
+                      } else if (entry.kind === 'directory') {
+                        if (entry.name !== '.git') {
+                          await getFiles(entry, `${path}/${entry.name}`);
+                        }
+                      }
+                    }
                   }
-                }}
-              />
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleLocalPathScan}
-                disabled={!customPath.trim()}
-                className="h-12 px-6 flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                  <line x1="12" y1="11" x2="12" y2="17"></line>
-                  <line x1="9" y1="14" x2="15" y2="14"></line>
-                </svg>
-                <span>Analyze Path</span>
-              </Button>
-            </div>
-            <span className="text-xs text-text-muted mt-1.5">
-              * Direct path scanning is supported in local development. For the web deployment version, please Drag &amp; Drop or use the folder select button below.
-            </span>
-          </div>
-        </div>
-      )}
+                  await getFiles(dirHandle);
+                  processFiles(files, [dirHandle.name], scannedProjects.length > 0);
+                }).catch((err) => {
+                  if (err.name !== 'AbortError') {
+                    openFolderInput();
+                  }
+                });
+              } else {
+                openFolderInput();
+              }
+            }}
+            aria-label="Select a folder to analyze"
+          >
+            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3 className="text-lg font-bold text-text-main">Select or Drag &amp; Drop Folder</h3>
+            <p className="text-sm text-text-muted">Click to open native folder picker or drop folder here</p>
+          </button>
 
-      {/* Selection Areas (only visible when not showing results) */}
-      {status !== 'success' && (
-        <div 
-          className="border-2 border-dashed border-border rounded-xl p-8 py-10 cursor-pointer text-center transition-all flex flex-col items-center justify-center gap-3 min-h-[200px] hover:border-accent hover:bg-accent-light/5 mt-4"
-          onClick={() => folderInputRef.current && folderInputRef.current.click()}
-        >
-          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <h3 className="text-lg font-bold text-text-main">Drag &amp; Drop Folder here</h3>
-          <p className="text-sm text-text-muted">or click to select folder from your computer</p>
+          <div className="flex items-center gap-2 p-3 bg-app border border-border rounded-xl text-xs text-text-muted">
+            <span>🔒 <strong>Local Privacy Guarantee:</strong> All file scanning and tree rendering is performed 100% in your browser memory. No folder contents or path details are ever uploaded to any server.</span>
+          </div>
         </div>
       )}
 

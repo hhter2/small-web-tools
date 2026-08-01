@@ -5,6 +5,9 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import FieldInput from './ui/FieldInput';
+import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
+import ExternalMapPreview from './ExternalMapPreview';
+import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
 
 // Jpeg Metadata Stripping Logic
 function stripJpegMetadata(arrayBuffer, mode) {
@@ -99,6 +102,45 @@ function stripJpegMetadata(arrayBuffer, mode) {
   }
   
   return result.buffer;
+}
+
+const REENCODE_MIME_TYPES = new Set(['image/png', 'image/webp']);
+
+export function reencodeImageWithoutMetadata(previewSrc, sourceMimeType) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      if (image.naturalWidth * image.naturalHeight > 40_000_000) {
+        reject(new Error('This image is too large to re-encode safely in the browser.'));
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        reject(new Error('This browser cannot create a metadata-free image.'));
+        return;
+      }
+
+      context.drawImage(image, 0, 0);
+      const requestedMimeType = REENCODE_MIME_TYPES.has(sourceMimeType) ? sourceMimeType : 'image/png';
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          reject(new Error('This image format could not be re-encoded by the browser.'));
+          return;
+        }
+        const mimeType = blob.type === 'image/webp' ? 'image/webp' : 'image/png';
+        resolve({
+          buffer: await blob.arrayBuffer(),
+          mimeType,
+          extension: mimeType === 'image/webp' ? 'webp' : 'png',
+        });
+      }, requestedMimeType, requestedMimeType === 'image/webp' ? 0.95 : undefined);
+    };
+    image.onerror = () => reject(new Error('This browser cannot decode the selected image format.'));
+    image.src = previewSrc;
+  });
 }
 
 function isCR3(arrayBuffer) {
@@ -677,12 +719,12 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 export default function ImgMeta() {
+  const { createObjectUrl, revokeObjectUrl, revokeAllObjectUrls } = useObjectUrlRegistry();
   const [dragOver, setDragOver] = useState(false);
   const [images, setImages] = useState([]); // Array of parsed image objects
   const [selectedImageId, setSelectedImageId] = useState(null); // Active single-view image
   const [compareMode, setCompareMode] = useState(false); // Toggle side-by-side view
   const [compareSelectedIds, setCompareSelectedIds] = useState([]); // Selected image IDs for comparison
-  const [showMap, setShowMap] = useState(false); // GPS Map toggle
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -719,11 +761,18 @@ export default function ImgMeta() {
 
   // Reset map view state when selected image changes
   React.useEffect(() => {
-    setShowMap(false);
   }, [selectedImageId]);
 
   const processFiles = async (files) => {
     setStatus('');
+    if (!files || files.length === 0) return;
+
+    const resourceCheck = validateResourceAddition(images, files, FILE_RESOURCE_POLICIES.imageMetadata);
+    if (!resourceCheck.valid) {
+      setStatus(`Error: ${resourceCheck.error}`);
+      return;
+    }
+
     const newImages = [];
     
     for (const file of files) {
@@ -752,14 +801,14 @@ export default function ImgMeta() {
               }
             } else {
               try {
-                parsedTags = ExifReader.load(arrayBuffer);
+                parsedTags = ExifReader.load(/** @type {ArrayBuffer} */ (arrayBuffer));
               } catch (exifErr) {
                 console.warn("ExifReader failed:", exifErr);
                 parsedTags = { 'Error': { value: exifErr.message, description: 'No EXIF metadata found or format unsupported.' } };
               }
               
               try {
-                expandedTags = ExifReader.load(arrayBuffer, { expanded: true });
+                expandedTags = ExifReader.load(/** @type {ArrayBuffer} */ (arrayBuffer), { expanded: true });
               } catch (e) {
                 expandedTags = {};
               }
@@ -767,7 +816,7 @@ export default function ImgMeta() {
               // Load preview URL
               previewSrc = await new Promise((resPreview) => {
                 const imgReader = new FileReader();
-                imgReader.onload = (ev) => resPreview(ev.target.result);
+                imgReader.onload = (ev) => resPreview(String(ev.target?.result || ''));
                 imgReader.onerror = () => resPreview('');
                 imgReader.readAsDataURL(file);
               });
@@ -852,7 +901,7 @@ export default function ImgMeta() {
   const handleRemoveImage = (id) => {
     const imgToRemove = images.find(img => img.id === id);
     if (imgToRemove?.strippedInfo?.previewSrc?.startsWith('blob:')) {
-      URL.revokeObjectURL(imgToRemove.strippedInfo.previewSrc);
+      revokeObjectUrl(imgToRemove.strippedInfo.previewSrc);
     }
     
     setImages(prev => {
@@ -865,11 +914,7 @@ export default function ImgMeta() {
   };
 
   const handleClear = () => {
-    images.forEach(img => {
-      if (img.strippedInfo?.previewSrc?.startsWith('blob:')) {
-        URL.revokeObjectURL(img.strippedInfo.previewSrc);
-      }
-    });
+    revokeAllObjectUrls();
     setImages([]);
     setSelectedImageId(null);
     setCompareMode(false);
@@ -881,16 +926,35 @@ export default function ImgMeta() {
     }
   };
 
-  const handleStripMetadata = (image, mode) => {
+  const handleStripMetadata = async (image, mode) => {
     try {
       const isJpeg = image.type === 'JPEG' || image.type === 'JPG' || image.name.toLowerCase().endsWith('.jpg') || image.name.toLowerCase().endsWith('.jpeg');
-      
-      if (!isJpeg) {
-        setStatus("Lossless stripping is only supported for JPEG/JPG images.");
-        return;
+      const sourceMimeType = image.file?.type || '';
+      let strippedBuffer;
+      let outputMimeType;
+      let outputExtension;
+      let lossless;
+
+      if (isJpeg) {
+        strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
+        outputMimeType = 'image/jpeg';
+        outputExtension = image.name.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'jpg';
+        lossless = true;
+      } else {
+        if (mode === 'private') {
+          setStatus('Private-only stripping is available for JPEG/JPG. Use Remove All Metadata for other image formats.');
+          return;
+        }
+        if (!image.previewSrc || image.type === 'Canon CR3 RAW') {
+          setStatus('This image format cannot be safely re-encoded by the browser.');
+          return;
+        }
+        const reencoded = await reencodeImageWithoutMetadata(image.previewSrc, sourceMimeType);
+        strippedBuffer = reencoded.buffer;
+        outputMimeType = reencoded.mimeType;
+        outputExtension = reencoded.extension;
+        lossless = outputMimeType === 'image/png';
       }
-      
-      const strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
       
       let strippedTags = {};
       let strippedExpanded = {};
@@ -917,8 +981,8 @@ export default function ImgMeta() {
         }
       }
       
-      const blob = new Blob([strippedBuffer], { type: 'image/jpeg' });
-      const strippedPreviewSrc = URL.createObjectURL(blob);
+      const blob = new Blob([strippedBuffer], { type: outputMimeType });
+      const strippedPreviewSrc = createObjectUrl(blob);
       
       setImages(prev => prev.map(img => {
         if (img.id === image.id) {
@@ -933,13 +997,19 @@ export default function ImgMeta() {
               retainedTags: retainedTags,
               previewSrc: strippedPreviewSrc,
               formattedSize: formatBytes(strippedBuffer.byteLength),
+              mimeType: outputMimeType,
+              extension: outputExtension,
             }
           };
         }
         return img;
       }));
       
-      setStatus(`Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'} losslessly!`);
+      setStatus(
+        `Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'}${
+          lossless ? ' losslessly' : ` by re-encoding as ${outputExtension.toUpperCase()}`
+        }!`,
+      );
     } catch (err) {
       console.error(err);
       setStatus("Error stripping metadata: " + err.message);
@@ -950,7 +1020,7 @@ export default function ImgMeta() {
     setImages(prev => prev.map(img => {
       if (img.id === imageId) {
         if (img.strippedInfo && img.strippedInfo.previewSrc && img.strippedInfo.previewSrc.startsWith('blob:')) {
-          URL.revokeObjectURL(img.strippedInfo.previewSrc);
+          revokeObjectUrl(img.strippedInfo.previewSrc);
         }
         return {
           ...img,
@@ -964,19 +1034,18 @@ export default function ImgMeta() {
 
   const downloadStrippedFile = (image) => {
     if (!image.strippedInfo) return;
-    const blob = new Blob([image.strippedInfo.buffer], { type: 'image/jpeg' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([image.strippedInfo.buffer], { type: image.strippedInfo.mimeType });
+    const url = createObjectUrl(blob);
     const a = document.createElement('a');
     a.href = url;
     
-    const ext = image.name.split('.').pop();
     const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
-    a.download = `${nameWithoutExt}_stripped.${ext}`;
+    a.download = `${nameWithoutExt}_stripped.${image.strippedInfo.extension}`;
     
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    revokeObjectUrl(url);
   };
 
   const handleExportZip = async () => {
@@ -990,23 +1059,22 @@ export default function ImgMeta() {
         
         let filename = image.name;
         if (image.strippedInfo) {
-          const ext = image.name.split('.').pop();
           const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
-          filename = `${nameWithoutExt}_stripped.${ext}`;
+          filename = `${nameWithoutExt}_stripped.${image.strippedInfo.extension}`;
         }
         
         zip.file(filename, buffer);
       }
       
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(zipBlob);
+      const url = createObjectUrl(zipBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `imgmeta_exported_images_${Date.now()}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      revokeObjectUrl(url);
       
       setStatus('ZIP file exported successfully!');
     } catch (err) {
@@ -1024,6 +1092,14 @@ export default function ImgMeta() {
 
   const gpsCoords = displayedTags ? getDecimalCoords(displayedTags, displayedExpanded) : null;
   const gpsCoord = displayedTags ? fmtGPS(displayedTags) : null;
+  const gpsMapPreview = gpsCoords ? (
+    <ExternalMapPreview
+      latitude={gpsCoords.lat}
+      longitude={gpsCoords.lon}
+      title="GPS Location"
+      collapsible
+    />
+  ) : null;
 
   const query = searchQuery.toLowerCase().trim();
 
@@ -1315,6 +1391,7 @@ export default function ImgMeta() {
     if (images.length === 0) return null;
     
     const isJpeg = activeImage && (activeImage.type === 'JPEG' || activeImage.type === 'JPG' || activeImage.name.toLowerCase().endsWith('.jpg') || activeImage.name.toLowerCase().endsWith('.jpeg'));
+    const canStripMetadata = activeImage && activeImage.type !== 'Canon CR3 RAW' && Boolean(activeImage.previewSrc);
     
     return (
       <div className="flex flex-col gap-4 border-b border-border pb-5 mb-6">
@@ -1381,26 +1458,28 @@ export default function ImgMeta() {
         
         <div className="flex flex-wrap items-center justify-between gap-4 mt-1 bg-app/40 border border-border rounded-xl p-3">
           {/* Metadata Stripping inline */}
-          {activeImage && isJpeg ? (
-            <div className="flex items-center gap-2.5">
+          {canStripMetadata ? (
+            <div className="flex flex-wrap items-center gap-2.5">
               {!activeImage.strippedInfo ? (
                 <>
                   <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0">Strip Meta:</span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="flex items-center gap-1 hover:text-accent font-bold"
-                    onClick={() => handleStripMetadata(activeImage, 'private')}
-                  >
-                    🔒 Private
-                  </Button>
+                  {isJpeg && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-1 hover:text-accent font-bold"
+                      onClick={() => handleStripMetadata(activeImage, 'private')}
+                    >
+                      🔒 Private
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     size="sm"
                     className="flex items-center gap-1 hover:text-red-500 font-bold"
                     onClick={() => handleStripMetadata(activeImage, 'all')}
                   >
-                    🗑️ All
+                    🗑️ Remove All Metadata
                   </Button>
                 </>
               ) : (
@@ -1426,7 +1505,9 @@ export default function ImgMeta() {
               )}
             </div>
           ) : (
-            <div className="text-xs text-text-muted/60 italic">Metadata stripping is only supported for JPEG/JPG format.</div>
+            <div className="text-xs text-text-muted/60 italic">
+              This RAW image cannot be safely re-encoded by the browser.
+            </div>
           )}
 
           <div className="flex items-center gap-2">
@@ -1461,7 +1542,6 @@ export default function ImgMeta() {
     <Card id="tool-imgmeta" variant="tool" size="wide">
       <ToolHeader 
         title="Image Metadata Viewer &amp; Stripper" 
-        description="Extract camera exposure tags (EXIF), colors, GPS data, IPTC, and XMP metadata from your files, or strip sensitive geolocation and camera details cleanly." 
       />
       
       <div 
@@ -1523,6 +1603,9 @@ export default function ImgMeta() {
                 Browse Files
               </Button>
               <p className="text-[10px] text-text-muted/60 leading-relaxed">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
+              <p role="note" className="rounded-md border border-accent/30 bg-accent-light px-2.5 py-1.5 text-xs font-semibold text-accent">
+                Metadata stripping supports JPEG/JPG, PNG, WebP, and other browser-decodable images. Non-JPEG formats are privacy-safe re-encodes.
+              </p>
             </div>
           </div>
         )}
@@ -1646,49 +1729,7 @@ export default function ImgMeta() {
                 <div id="imgmeta-cam-view" className="flex flex-col gap-4 w-full">
                   {renderCamView()}
                   
-                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
-                  {gpsCoords && (
-                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
-                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
-                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
-                          <div className="flex items-center gap-2 ml-auto">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setShowMap(!showMap)}
-                            >
-                              {showMap ? 'Hide Map' : 'Show Map'}
-                            </Button>
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
-                            >
-                              Google Maps ↗
-                            </a>
-                          </div>
-                        </div>
-                        {showMap && (
-                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
-                            <iframe
-                              title="GPS Location Map"
-                              width="100%"
-                              height="320"
-                              frameBorder="0"
-                              scrolling="no"
-                              marginHeight="0"
-                              marginWidth="0"
-                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              className="w-full border-none"
-                            ></iframe>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {gpsMapPreview}
                 </div>
               )}
 
@@ -1697,49 +1738,7 @@ export default function ImgMeta() {
                 <div className="flex flex-col gap-4 w-full">
                   {renderAdvancedGroups()}
                   
-                  {/* GPS Coordinates & Interactive Map (embedded OpenStreetMap) */}
-                  {gpsCoords && (
-                    <div className="border border-border bg-card rounded-xl p-4 flex flex-col gap-3 shadow-sm w-full">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border pb-2">
-                          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">📍 GPS Location</h4>
-                          <span className="text-xs font-mono text-text-main font-semibold">{gpsCoord}</span>
-                          <div className="flex items-center gap-2 ml-auto">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setShowMap(!showMap)}
-                            >
-                              {showMap ? 'Hide Map' : 'Show Map'}
-                            </Button>
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${gpsCoords.lat},${gpsCoords.lon}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg text-text-main text-[11px] font-bold shadow-sm select-none transition-colors"
-                            >
-                              Google Maps ↗
-                            </a>
-                          </div>
-                        </div>
-                        {showMap && (
-                          <div className="w-full mt-2 overflow-hidden rounded-lg border border-border">
-                            <iframe
-                              title="GPS Location Map"
-                              width="100%"
-                              height="320"
-                              frameBorder="0"
-                              scrolling="no"
-                              marginHeight="0"
-                              marginWidth="0"
-                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsCoords.lon-0.01}%2C${gpsCoords.lat-0.01}%2C${gpsCoords.lon+0.01}%2C${gpsCoords.lat+0.01}&layer=mapnik&marker=${gpsCoords.lat}%2C${gpsCoords.lon}`}
-                              className="w-full border-none"
-                            ></iframe>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {gpsMapPreview}
                 </div>
               )}
             </div>

@@ -1,5 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Button from './ui/Button';
+import Card from './ui/Card';
+import ToolHeader from './ui/ToolHeader';
 import { useMediaSeparator } from './useMediaSeparator';
 import MediaSeparatorQueueItem from './MediaSeparatorQueueItem';
 
@@ -13,6 +15,7 @@ export default function MediaSeparator() {
     engineLoading,
     isProcessing,
     globalProgress,
+    lastError,
     addFiles,
     removeItem,
     clearDone,
@@ -47,8 +50,11 @@ export default function MediaSeparator() {
   const hasDone = items.some((it) => it.status === 'done');
 
   return (
-    <div
-      className="flex flex-col gap-6 relative w-full"
+    <Card
+      id="tool-mediasplit"
+      variant="tool"
+      size="wide"
+      className="relative"
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -67,6 +73,20 @@ export default function MediaSeparator() {
           e.target.value = '';
         }}
       />
+
+      <ToolHeader title="Media Splitter" />
+
+      <aside className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs leading-relaxed text-text-main">
+        On the first processing action, this tool downloads the pinned FFmpeg 0.12.6 JavaScript and
+        WebAssembly engine from unpkg and verifies both files before execution. unpkg receives standard
+        request metadata. Your selected media and generated output stay in this browser.
+      </aside>
+
+      {lastError && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
+          {lastError}
+        </p>
+      )}
 
       {dragOver && items.length > 0 && (
         <div className="absolute inset-0 bg-accent/15 backdrop-blur-[4px] border-[2.5px] border-dashed border-accent rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-accent text-[1.2rem]">
@@ -180,6 +200,6 @@ export default function MediaSeparator() {
           </ul>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

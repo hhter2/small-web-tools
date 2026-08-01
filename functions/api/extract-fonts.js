@@ -1,215 +1,335 @@
-// Font Extractor API — POST /api/extract-fonts
-export async function onRequestOptions(context) {
-  return new Response(null, {
-    status: 204,
+import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFetch';
+import { enforceRateLimit } from '../_shared/rateLimit';
+import { errorResponse } from '../_shared/errorResponse';
+import {
+  FONT_EXTRACTION_LIMITS,
+  readLimitedJson,
+  validateSameSiteJsonRequest,
+} from '../_shared/requestPolicy';
+
+function jsonResponse(body, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...extraHeaders,
+    },
   });
 }
 
-export async function onRequestPost(context) {
-  const { request } = context;
+function sameOriginCorsHeaders(request) {
+  const origin = request.headers.get('Origin');
+  return origin && origin === new URL(request.url).origin
+    ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' }
+    : {};
+}
 
-  // Set up common CORS headers helper
-  const corsHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+export async function onRequestOptions(context) {
+  const corsHeaders = sameOriginCorsHeaders(context.request);
+  if (!corsHeaders['Access-Control-Allow-Origin']) return new Response(null, { status: 403 });
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...corsHeaders,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
+function resolveUrl(base, relative) {
+  try {
+    return new URL(relative, base).href;
+  } catch {
+    return null;
+  }
+}
+
+function getFormat(url, declaredFormat) {
+  if (declaredFormat) return declaredFormat.replace(/['"]/g, '').trim().toUpperCase();
+  const extension = url.split(/[?#]/, 1)[0].split('.').pop()?.toLowerCase();
+  return {
+    woff2: 'WOFF2',
+    woff: 'WOFF',
+    ttf: 'TRUETYPE',
+    otf: 'OPENTYPE',
+    eot: 'EOT',
+    svg: 'SVG',
+  }[extension] || 'UNKNOWN';
+}
+
+function parseCss(css, baseUrl) {
+  const imports = [];
+  const fonts = [];
+  const importPattern = /@import\s+(?:url\(\s*)?['"]?([^'")\s]+)['"]?\s*\)?[^;]*;/giu;
+  const fontFacePattern = /@font-face\s*\{([\s\S]*?)\}/giu;
+  const sourcePattern = /url\(\s*['"]?([^'")\s]+)['"]?\s*\)(?:\s*format\(\s*['"]?([^'")]+)['"]?\s*\))?/giu;
+
+  for (const match of css.matchAll(importPattern)) {
+    const resolved = resolveUrl(baseUrl, match[1]);
+    if (resolved) imports.push(resolved);
+  }
+
+  for (const faceMatch of css.matchAll(fontFacePattern)) {
+    const block = faceMatch[1];
+    const family = block.match(/font-family\s*:\s*['"]?([^'";]+)['"]?/iu)?.[1]?.trim();
+    const sourceList = block.match(/src\s*:\s*([^;]+)/iu)?.[1];
+    if (!family || !sourceList) continue;
+    const source = sourcePattern.exec(sourceList);
+    sourcePattern.lastIndex = 0;
+    if (!source) continue;
+    const resolved = resolveUrl(baseUrl, source[1]);
+    if (!resolved) continue;
+    const parsedSource = new URL(resolved);
+    const weight = block.match(/font-weight\s*:\s*([^;]+)/iu)?.[1]?.trim() || 'unknown';
+    const style = block.match(/font-style\s*:\s*([^;]+)/iu)?.[1]?.trim() || 'unknown';
+    const stretch = block.match(/font-stretch\s*:\s*([^;]+)/iu)?.[1]?.trim() || 'unknown';
+    const unicodeRange = block.match(/unicode-range\s*:\s*([^;]+)/iu)?.[1]?.trim() || 'unknown';
+    const variationSettings = block.match(/font-variation-settings\s*:\s*([^;]+)/iu)?.[1]?.trim() || 'unknown';
+
+    fonts.push({
+      name: parsedSource.pathname.split('/').pop()?.slice(0, 160) || `${family}-font`,
+      family,
+      format: getFormat(resolved, source[2]),
+      weight,
+      style,
+      stretch,
+      unicodeRange,
+      variationSettings,
+      isVariable: /\s/u.test(weight) || variationSettings !== 'unknown',
+      sourceHost: parsedSource.hostname.slice(0, 253),
+      _sourceKey: resolved,
+    });
+  }
+  return { fonts, imports };
+}
+
+function stylesheetUrlsFromHtml(html, baseUrl) {
+  const urls = [];
+  const linkPattern = /<link\b[^>]*>/giu;
+  for (const match of html.matchAll(linkPattern)) {
+    const tag = match[0];
+    const rel = tag.match(/\brel\s*=\s*["']?([^"'\s>]+)/iu)?.[1]?.toLowerCase();
+    const href = tag.match(/\bhref\s*=\s*["']?([^"'\s>]+)/iu)?.[1];
+    const as = tag.match(/\bas\s*=\s*["']?([^"'\s>]+)/iu)?.[1]?.toLowerCase();
+    if (!href || (rel !== 'stylesheet' && !(rel === 'preload' && as === 'style'))) continue;
+    const resolved = resolveUrl(baseUrl, href);
+    if (resolved) urls.push(resolved);
+  }
+  return urls;
+}
+
+function createBudget(limits) {
+  const reasons = new Set();
+  const consumed = { upstreamBytes: 0, stylesheets: 0, fontFaces: 0 };
+  let reservedBytes = 0;
+  const deadline = Date.now() + limits.deadlineMs;
+
+  return {
+    reasons,
+    consumed,
+    remainingMs() {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) reasons.add('deadline');
+      return Math.max(0, remaining);
+    },
+    reserveBytes(maximum) {
+      const remaining = limits.totalUpstreamBytes - consumed.upstreamBytes - reservedBytes;
+      if (remaining <= 0) {
+        reasons.add('total-upstream-bytes');
+        return 0;
+      }
+      const reservation = Math.min(maximum, remaining);
+      reservedBytes += reservation;
+      return reservation;
+    },
+    finishBytes(reservation, actual) {
+      reservedBytes -= reservation;
+      consumed.upstreamBytes += actual;
+      if (actual >= reservation && consumed.upstreamBytes >= limits.totalUpstreamBytes) {
+        reasons.add('total-upstream-bytes');
+      }
+    },
+    addFonts(fonts, target) {
+      const available = limits.fontFaces - target.length;
+      if (available <= 0) {
+        reasons.add('font-faces');
+        return;
+      }
+      target.push(...fonts.slice(0, available));
+      consumed.fontFaces = target.length;
+      if (fonts.length > available) reasons.add('font-faces');
+    },
+    metadata() {
+      return {
+        truncated: reasons.size > 0,
+        reasons: [...reasons],
+        limits,
+        consumed,
+      };
+    },
   };
+}
+
+async function fetchBudgeted(url, type, budget, limits) {
+  const perResourceLimit = type === 'html' ? limits.htmlBytes : limits.cssBytes;
+  const reservation = budget.reserveBytes(perResourceLimit);
+  const remainingMs = budget.remainingMs();
+  if (!reservation || !remainingMs) return null;
+  try {
+    const result = await safeExternalFetch(url, {
+      maxBytes: reservation,
+      timeoutMs: remainingMs,
+      allowedContentTypes: type === 'html'
+        ? ['text/html', 'application/xhtml+xml']
+        : ['text/css'],
+    });
+    budget.finishBytes(reservation, result.buffer.byteLength);
+    return result;
+  } catch (error) {
+    budget.finishBytes(reservation, 0);
+    throw error;
+  }
+}
+
+async function extractFontMetadata(targetUrl, limits) {
+  const budget = createBudget(limits);
+  const htmlResult = await fetchBudgeted(targetUrl.href, 'html', budget, limits);
+  if (!htmlResult) return { fonts: [], truncation: budget.metadata() };
+  const html = new TextDecoder().decode(htmlResult.buffer);
+  const allFonts = [];
+
+  for (const match of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/giu)) {
+    const parsed = parseCss(match[1], targetUrl.href);
+    budget.addFonts(parsed.fonts, allFonts);
+  }
+
+  const queue = stylesheetUrlsFromHtml(html, targetUrl.href).map((url) => ({ url, depth: 0 }));
+  const seen = new Set();
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < queue.length && budget.remainingMs() > 0) {
+      if (budget.consumed.stylesheets >= limits.stylesheets) {
+        budget.reasons.add('stylesheets');
+        return;
+      }
+      const job = queue[cursor];
+      cursor += 1;
+      if (!job || seen.has(job.url)) continue;
+      seen.add(job.url);
+      budget.consumed.stylesheets += 1;
+
+      let result;
+      try {
+        result = await fetchBudgeted(job.url, 'css', budget, limits);
+      } catch {
+        continue;
+      }
+      if (!result) return;
+      const parsed = parseCss(new TextDecoder().decode(result.buffer), job.url);
+      budget.addFonts(parsed.fonts, allFonts);
+      for (const importedUrl of parsed.imports) {
+        if (job.depth >= limits.importDepth) {
+          budget.reasons.add('import-depth');
+        } else if (!seen.has(importedUrl)) {
+          queue.push({ url: importedUrl, depth: job.depth + 1 });
+        }
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: limits.concurrency }, () => worker()));
+  if (cursor < queue.length) budget.reasons.add('stylesheets');
+
+  const deduplicated = new Map();
+  for (const font of allFonts) {
+    const key = [
+      font._sourceKey,
+      font.family.toLowerCase(),
+      font.weight,
+      font.style,
+      font.stretch,
+      font.unicodeRange,
+    ].join('|');
+    if (!deduplicated.has(key)) {
+      const { _sourceKey, ...publicFont } = font;
+      deduplicated.set(key, publicFont);
+    }
+  }
+  return {
+    fonts: [...deduplicated.values()].sort((a, b) => (
+      a.family.localeCompare(b.family)
+      || a.weight.localeCompare(b.weight, undefined, { numeric: true })
+    )),
+    truncation: budget.metadata(),
+  };
+}
+
+export async function onRequestPost(context) {
+  const { request, env = {} } = context;
+  const corsHeaders = sameOriginCorsHeaders(request);
+
+  const policyError = validateSameSiteJsonRequest(request, env);
+  if (policyError) {
+    return errorResponse('VALIDATION_FAILED', policyError.status, {
+      headers: corsHeaders,
+      diagnostic: 'same-site-policy',
+    });
+  }
+
+  const limited = await enforceRateLimit(context, { name: 'extract-fonts', limit: 20 });
+  if (limited) return limited;
+
+  let parsed;
+  try {
+    parsed = await readLimitedJson(request);
+  } catch (error) {
+    const status = error instanceof RangeError ? 413 : 400;
+    return errorResponse('VALIDATION_FAILED', status, {
+      headers: corsHeaders,
+      error,
+      diagnostic: 'request-body',
+    });
+  }
+
+  const rawUrl = typeof parsed.url === 'string' ? parsed.url.trim() : '';
+  if (!rawUrl) {
+    return errorResponse('VALIDATION_FAILED', 400, {
+      headers: corsHeaders,
+      diagnostic: 'missing-url',
+    });
+  }
+
+  let targetUrl;
+  try {
+    targetUrl = validateTargetUrl(rawUrl);
+  } catch (error) {
+    return errorResponse('BLOCKED_TARGET', 400, {
+      headers: corsHeaders,
+      error,
+      diagnostic: error.code || 'blocked-target',
+    });
+  }
 
   try {
-    let parsed;
-    try {
-      parsed = await request.json();
-    } catch {
-      parsed = {};
-    }
-
-    const rawUrl = (parsed.url || '').trim();
-    if (!rawUrl) {
-      return new Response(JSON.stringify({ ok: false, error: 'URL is required' }), {
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-
-    let targetUrl;
-    try {
-      targetUrl = new URL(rawUrl);
-    } catch {
-      return new Response(JSON.stringify({ ok: false, error: 'Invalid URL format' }), {
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-
-    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-
-    // ── Helpers ────────────────────────────────────────────────
-    function resolveUrl(base, relative) {
-      try {
-        if (relative.startsWith('data:')) return relative;
-        return new URL(relative, base).href;
-      } catch { return relative; }
-    }
-
-    function getFormatFromUrl(u) {
-      const ext = u.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase();
-      return { woff2:'WOFF2', woff:'WOFF', ttf:'TrueType', otf:'OpenType', eot:'EOT', svg:'SVG' }[ext] || 'Unknown';
-    }
-
-    const FORMAT_PREF = ['WOFF2','WOFF','OPENTYPE','TRUETYPE','OTF','TTF','EOT','SVG'];
-    const fontSourceRe = /url\s*\(\s*['"]?([^'")\s]+)['"]?\s*\)\s*(?:format\s*\(\s*['"]?([^'")\s]+)['"]?\s*\))?/gi;
-
-    function pickBestSource(src, base) {
-      const candidates = [];
-      const re = new RegExp(fontSourceRe.source, 'gi');
-      let m;
-      while ((m = re.exec(src)) !== null) {
-        const rawU = m[1]?.trim();
-        if (!rawU || rawU.startsWith('local(')) continue;
-        const resolved = resolveUrl(base, rawU);
-        const fmt = (m[2]?.replace(/['"]/g,'').trim().toUpperCase()) || getFormatFromUrl(rawU);
-        candidates.push({ url: resolved, format: fmt });
-      }
-      if (!candidates.length) return null;
-      candidates.sort((a, b) => {
-        const ai = FORMAT_PREF.indexOf(a.format.toUpperCase());
-        const bi = FORMAT_PREF.indexOf(b.format.toUpperCase());
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
-      return candidates[0];
-    }
-
-    function normFamily(f) { return f.replace(/['"]/g,'').trim(); }
-
-    function extractFontsFromCSS(css, base) {
-      const fonts = [];
-      const imports = [];
-      const importRe = /@import\s+(?:url\(['"]?|['"])([^'")\s]+\.css[^'")]*?)(?:['"]?\)['"]?|['"])\s*[^;]*;/gi;
-      let im;
-      while ((im = importRe.exec(css)) !== null) imports.push(resolveUrl(base, im[1]));
-
-      const faceRe = /@font-face\s*\{([\s\S]*?)\}/gi;
-      let bm;
-      while ((bm = faceRe.exec(css)) !== null) {
-        const blk = bm[1];
-        const fam = blk.match(/font-family\s*:\s*['"]?([^'";]+)['"]?/i);
-        const src = blk.match(/src\s*:\s*([^;]+)/i);
-        const wgt = blk.match(/font-weight\s*:\s*([^;]+)/i);
-        const sty = blk.match(/font-style\s*:\s*([^;]+)/i);
-        if (!fam || !src) continue;
-        const family = normFamily(fam[1]);
-        const best = pickBestSource(src[1], base);
-        if (!best) continue;
-        const fileName = best.url.startsWith('data:') ? 'embedded-font'
-          : best.url.split('/').pop()?.split('?')[0] || '';
-        fonts.push({
-          name: fileName || `${family}-${best.format}`,
-          family,
-          format: best.format,
-          url: best.url,
-          weight: wgt ? wgt[1].trim() : '400',
-          style: sty ? sty[1].trim() : 'normal',
-          referer: base
-        });
-      }
-      return { fonts, imports };
-    }
-
-    const fetchedCss = new Set();
-
-    async function fetchAndParseCss(url, depth = 0) {
-      if (depth > 3 || fetchedCss.has(url)) return [];
-      fetchedCss.add(url);
-      try {
-        const r = await fetch(url, { headers: { 'User-Agent': UA } });
-        if (!r.ok) return [];
-        const css = await r.text();
-        const { fonts, imports } = extractFontsFromCSS(css, url);
-        const nested = await Promise.all(imports.map(i => fetchAndParseCss(i, depth + 1)));
-        return [...fonts, ...nested.flat()];
-      } catch { return []; }
-    }
-
-    // ── Fetch HTML ─────────────────────────────────────────────
-    const htmlRes = await fetch(targetUrl.href, {
-      headers: {
-        'User-Agent': UA,
-        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8'
-      }
-    });
-    if (!htmlRes.ok) {
-      return new Response(JSON.stringify({ ok: false, error: `Website returned HTTP ${htmlRes.status}` }), {
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-    const html = await htmlRes.text();
-    const allFonts = [];
-
-    // 1. Inline <style> blocks
-    const styleRe = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-    let sm;
-    while ((sm = styleRe.exec(html)) !== null) {
-      const { fonts, imports } = extractFontsFromCSS(sm[1], targetUrl.href);
-      allFonts.push(...fonts.map(f => ({ ...f, referer: targetUrl.href })));
-      const imp = await Promise.all(imports.map(i => fetchAndParseCss(i)));
-      allFonts.push(...imp.flat().map(f => ({ ...f, referer: targetUrl.href })));
-    }
-
-    // 2. <link> stylesheet / preload tags
-    const linkRe = /<link[^>]+>/gi;
-    const cssUrls = [];
-    let lm;
-    while ((lm = linkRe.exec(html)) !== null) {
-      const tag = lm[0];
-      const rel = (tag.match(/rel=["']?([^"'\s>]+)["']?/i)?.[1] || '').toLowerCase();
-      const href = tag.match(/href=["']?([^"'\s>]+)["']?/i)?.[1] || '';
-      const as = (tag.match(/as=["']?([^"'\s>]+)["']?/i)?.[1] || '').toLowerCase();
-      if (!href) continue;
-      const resolved = resolveUrl(targetUrl.href, href);
-      if (rel === 'stylesheet' || (rel === 'preload' && as === 'style')) {
-        cssUrls.push(resolved);
-      } else if ((rel === 'preload' || rel === 'prefetch') && as === 'font') {
-        const fmt = getFormatFromUrl(resolved);
-        const nm = resolved.split('/').pop()?.split('?')[0] || 'preloaded-font';
-        allFonts.push({ name: nm, family: nm.split('.')[0] || 'Unknown', format: fmt, url: resolved, weight: '400', style: 'normal', referer: targetUrl.href });
-      }
-    }
-    const linked = await Promise.all(cssUrls.map(u => fetchAndParseCss(u)));
-    allFonts.push(...linked.flat().map(f => ({ ...f, referer: targetUrl.href })));
-
-    // ── Deduplicate by URL ────────────────────────────────────
-    const byUrl = new Map();
-    for (const f of allFonts) if (!byUrl.has(f.url)) byUrl.set(f.url, f);
-    const unique = Array.from(byUrl.values());
-
-    // ── Sort & deduplicate by family (normal/400 first) ───────
-    unique.sort((a, b) => {
-      const ai = a.style?.toLowerCase().includes('italic') ? 1 : 0;
-      const bi = b.style?.toLowerCase().includes('italic') ? 1 : 0;
-      if (ai !== bi) return ai - bi;
-      return Math.abs(parseInt(a.weight||'400')-400) - Math.abs(parseInt(b.weight||'400')-400);
-    });
-    const byFamily = new Map();
-    for (const f of unique) {
-      const key = f.family.toLowerCase().trim();
-      if (!byFamily.has(key)) byFamily.set(key, f);
-    }
-    const result = Array.from(byFamily.values()).sort((a,b) => a.family.localeCompare(b.family));
-
-    return new Response(JSON.stringify({ ok: true, fonts: result, total: result.length, sourceUrl: targetUrl.href }), {
-      status: 200,
-      headers: corsHeaders
-    });
-  } catch (e) {
-    console.error('[font-extractor]', e.message);
-    return new Response(JSON.stringify({ ok: false, error: 'Extraction failed: ' + e.message }), {
-      status: 500,
-      headers: corsHeaders
+    const limits = { ...FONT_EXTRACTION_LIMITS, ...(env.FONT_EXTRACTION_LIMITS || {}) };
+    const result = await extractFontMetadata(targetUrl, limits);
+    return jsonResponse({
+      ok: true,
+      fonts: result.fonts,
+      total: result.fonts.length,
+      sourceUrl: targetUrl.href,
+      truncation: result.truncation,
+    }, 200, corsHeaders);
+  } catch (error) {
+    const timedOut = error?.code === 'UPSTREAM_TIMEOUT' || error?.name === 'AbortError';
+    return errorResponse(timedOut ? 'UPSTREAM_TIMEOUT' : 'PROVIDER_UNAVAILABLE', timedOut ? 504 : 502, {
+      headers: corsHeaders,
+      error,
+      diagnostic: error?.code || 'font-analysis',
     });
   }
 }

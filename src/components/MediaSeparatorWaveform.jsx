@@ -26,6 +26,7 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
         const res = await fetch(audioURL);
         const arrayBuffer = await res.arrayBuffer();
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
         const ctx = new AudioCtx();
         try {
           const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));

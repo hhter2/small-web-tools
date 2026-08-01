@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 import ResultDisplay from './ui/ResultDisplay';
+import {
+  convertCurrencyAmount,
+  getConversionRate,
+  parsePositiveRate,
+  swapCurrencies,
+} from '../lib/currency';
+import { parseAmountLines as parseStrictAmountLines } from '../lib/numberParsing';
+import { grantConsent, hasConsent } from '../lib/thirdPartyServices';
 
 const currencyDetails = {
   USD: { name: "US Dollar", locale: "en-US", symbol: "$", flag: "🇺🇸" },
@@ -27,51 +35,15 @@ const currencyDetails = {
   MXN: { name: "Mexican Peso", locale: "es-MX", symbol: "$", flag: "🇲🇽" },
 };
 
-// Fallback rates as of mid-2026 (relative to USD = 1.0)
-const fallbackRates = {
-  USD: 1.0,
-  EUR: 0.93,
-  GBP: 0.79,
-  JPY: 157.5,
-  CNY: 7.25,
-  TWD: 32.4,
-  HKD: 7.8,
-  SGD: 1.35,
-  CAD: 1.37,
-  AUD: 1.51,
-  KRW: 1380.0,
-  INR: 83.5,
-  PHP: 58.7,
-  MYR: 4.71,
-  THB: 36.8,
-  VND: 25400.0,
-  NZD: 1.63,
-  CHF: 0.89,
-  ZAR: 18.2,
-  BRL: 5.4,
-  MXN: 18.5,
-};
-
-function parseAmountLines(text) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return null;
-      // Strip currency symbols and commas, extract first valid number
-      const cleaned = trimmed.replace(/[$,€,£,¥,N,T,R,P,S,A,C,W,d,₫,₹,₩,฿,\s]/g, "");
-      const match = cleaned.match(/-?\d+(\.\d+)?/);
-      return match ? Number(match[0]) : null;
-    })
-    .filter((val) => val !== null);
-}
-
 export default function CurrencyCounter() {
   const [activeTab, setActiveTab] = useState('single'); // 'single' or 'bulk'
-  const [rates, setRates] = useState(fallbackRates);
-  const [lastUpdated, setLastUpdated] = useState("Fallback (Offline)");
+  const [rates, setRates] = useState({});
+  const [lastUpdated, setLastUpdated] = useState("Offline");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [rateProvider, setRateProvider] = useState('');
+  const [ratesStale, setRatesStale] = useState(false);
+  const [currencyConsent, setCurrencyConsent] = useState(() => hasConsent('currency'));
 
   // Quick Convert state
   const [singleAmount, setSingleAmount] = useState('100');
@@ -80,86 +52,124 @@ export default function CurrencyCounter() {
 
   // Bulk Convert state
   const [bulkInput, setBulkInput] = useState('');
+  const [numberFormat, setNumberFormat] = useState('auto');
   const [bulkFromCurrency, setBulkFromCurrency] = useState('TWD');
   const [bulkToCurrency, setBulkToCurrency] = useState('USD');
 
   // Manual Rate state
   const [isManualRate, setIsManualRate] = useState(false);
-  const [manualRate, setManualRate] = useState('0.03086'); // Example TWD to USD initial custom rate
+  const [manualRate, setManualRate] = useState('0.03086');
+  const [manualRateError, setManualRateError] = useState('');
 
-  // Fetch latest rates on mount
   useEffect(() => {
-    let active = true;
+    const handleConsentUpdate = () => setCurrencyConsent(hasConsent('currency'));
+    window.addEventListener('consent_updated', handleConsentUpdate);
+    return () => window.removeEventListener('consent_updated', handleConsentUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (!currencyConsent || isManualRate) {
+      setIsLoading(false);
+      if (!currencyConsent) {
+        setRates({});
+        setRatesStale(false);
+        setLastUpdated('Consent required');
+      }
+      return undefined;
+    }
+
+    const controller = new AbortController();
     setIsLoading(true);
-    fetch("https://open.er-api.com/v6/latest/USD")
+    fetch('/api/exchange-rates', { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
       })
       .then((data) => {
-        if (active && data && data.rates) {
+        if (data?.ok && data.rates) {
           setRates(data.rates);
-          setLastUpdated(new Date(data.time_last_update_unix * 1000).toLocaleString());
+          setRatesStale(false);
+          setRateProvider(data.provider || 'Exchange rate provider');
+          setLastUpdated(data.dataDate
+            ? new Date(data.dataDate).toLocaleString()
+            : new Date(data.fetchedAt).toLocaleString());
           setApiError(null);
+        } else {
+          throw new Error(data?.error || 'Invalid exchange-rate response');
         }
       })
-      .catch((err) => {
-        console.error("Failed to fetch current currency rates:", err);
-        if (active) {
-          setApiError("Could not retrieve live exchange rates. Using local fallback database.");
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setApiError("Unable to retrieve live exchange rates. Enable 'Manual Rate Override' below for local calculations.");
+          setRates((previousRates) => {
+            if (Object.keys(previousRates).length > 0) {
+              setRatesStale(true);
+            } else {
+              setLastUpdated("Rates Unavailable (Offline)");
+            }
+            return previousRates;
+          });
         }
       })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
 
-    return () => {
-      active = false;
-    };
-  }, []);
+    return () => controller.abort();
+  }, [currencyConsent, isManualRate]);
 
   // Determine active rate based on options
-  const getRate = (from, to) => {
-    if (isManualRate) {
-      const parsed = Number(manualRate);
-      return isNaN(parsed) || parsed <= 0 ? 1 : parsed;
-    }
-    const fromRate = rates[from] || 1;
-    const toRate = rates[to] || 1;
-    return toRate / fromRate;
-  };
+  const getRate = (from, to) => getConversionRate({
+    isManualRate,
+    manualRate,
+    rates,
+    from,
+    to,
+  });
 
   // Quick Convert calculations
   const currentRate = getRate(fromCurrency, toCurrency);
-  const numericAmount = Number(singleAmount) || 0;
-  const convertedAmount = numericAmount * currentRate;
+  const convertedAmount = convertCurrencyAmount(singleAmount, currentRate);
 
   // Bulk Convert calculations
   const bulkRate = getRate(bulkFromCurrency, bulkToCurrency);
-  const parsedAmounts = parseAmountLines(bulkInput);
-  const lineCount = parsedAmounts.length;
-  const sourceTotal = parsedAmounts.reduce((sum, val) => sum + val, 0);
-  const convertedTotal = sourceTotal * bulkRate;
+  const parsedLineItems = parseStrictAmountLines(bulkInput, numberFormat);
+  const validItems = parsedLineItems.filter((item) => item.value !== null);
+  const lineCount = validItems.length;
+  const sourceTotal = validItems.reduce((sum, item) => sum + item.value, 0);
+  const convertedTotal = convertCurrencyAmount(sourceTotal, bulkRate);
+  const effectiveManualRateError = isManualRate && parsePositiveRate(manualRate) === null
+    ? 'Manual rate must be a finite number greater than zero.'
+    : manualRateError;
 
-  // Swap function
-  const handleSwap = () => {
-    const tempFrom = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(tempFrom);
-
-    if (isManualRate) {
-      const val = Number(manualRate);
-      if (val > 0) {
-        setManualRate((1 / val).toFixed(6));
-      }
-    }
+  const applySwap = (from, setFrom, to, setTo, amount) => {
+    const swapped = swapCurrencies({
+      from,
+      to,
+      amount,
+      manualRate,
+      isManualRate,
+    });
+    setManualRateError(swapped.error || '');
+    if (swapped.error) return;
+    setFrom(swapped.from);
+    setTo(swapped.to);
+    setManualRate(swapped.manualRate);
   };
 
-  const handleBulkSwap = () => {
-    const tempFrom = bulkFromCurrency;
-    setBulkFromCurrency(bulkToCurrency);
-    setBulkToCurrency(tempFrom);
-  };
+  const handleSwap = () => applySwap(
+    fromCurrency,
+    setFromCurrency,
+    toCurrency,
+    setToCurrency,
+    singleAmount,
+  );
+
+  const handleBulkSwap = () => applySwap(
+    bulkFromCurrency,
+    setBulkFromCurrency,
+    bulkToCurrency,
+    setBulkToCurrency,
+    bulkInput,
+  );
 
   // Formatting helpers
   const formatCurrency = (value, code) => {
@@ -171,8 +181,11 @@ export default function CurrencyCounter() {
   };
 
   return (
-    <Card id="tool-currency" variant="tool" className="!gap-2.5 !p-4">
+    <Card id="tool-currency" variant="tool">
       <ToolHeader title="Currency Converter & Counter" />
+      <p className="text-xs text-text-muted">
+        Live mode contacts an exchange-rate provider through this site. Manual Rate Override remains fully local.
+      </p>
 
       {/* Tabs */}
       <div className="tool-tabs flex gap-2">
@@ -194,22 +207,49 @@ export default function CurrencyCounter() {
           }`}
           onClick={() => setActiveTab('bulk')}
         >
-          Bulk Convert &amp; Count
+          Bulk Convert & Count
         </button>
       </div>
 
       {/* API Banner / Status Info */}
       <div className="text-xs min-h-[18px] text-text-muted font-medium px-3 py-1.5 rounded bg-app border border-border flex justify-between flex-wrap gap-2">
         <span>
-          <strong>Rate Source:</strong> {isManualRate ? "Custom Manual Rate" : (apiError ? "Offline Fallback" : "Live API")}
+          <strong>Rate Source:</strong>{' '}
+          {isManualRate
+            ? 'Local manual rate'
+            : !currencyConsent
+              ? 'Consent required'
+              : isLoading
+                ? 'Loading'
+                : ratesStale
+                  ? `${rateProvider || 'Live API'} (stale)`
+                  : apiError
+                    ? 'Offline'
+                    : rateProvider || 'Live API'}
         </span>
         <span>
           <strong>Last Updated:</strong> {isManualRate ? "N/A" : lastUpdated}
         </span>
       </div>
 
+      {!currencyConsent && !isManualRate && (
+        <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
+          <span>
+            Live rates contact the configured exchange-rate provider through this site’s server.
+            You can decline and use Manual Rate Override without any request.
+          </span>
+          <button
+            type="button"
+            onClick={() => grantConsent('currency')}
+            className="px-3 py-1.5 rounded border border-accent text-accent font-semibold shrink-0"
+          >
+            Allow live rates
+          </button>
+        </div>
+      )}
+
       {apiError && !isManualRate && (
-        <p className="text-xs text-text-muted m-0 p-1 px-2 rounded bg-red-500/5 border border-red-500/15">
+        <p className="text-xs text-red-500 m-0 p-2 rounded bg-red-500/10 border border-red-500/20">
           ⚠️ {apiError}
         </p>
       )}
@@ -223,13 +263,12 @@ export default function CurrencyCounter() {
           checked={isManualRate}
           onChange={(e) => {
             setIsManualRate(e.target.checked);
-            // Pre-fill manual rate with current rate when enabling
             if (e.target.checked) {
               const currentNormalRate = getRate(
                 activeTab === 'single' ? fromCurrency : bulkFromCurrency,
                 activeTab === 'single' ? toCurrency : bulkToCurrency
               );
-              setManualRate(currentNormalRate.toFixed(6));
+              if (currentNormalRate !== null) setManualRate(currentNormalRate.toFixed(6));
             }
           }}
         />
@@ -245,7 +284,12 @@ export default function CurrencyCounter() {
               step="any"
               className="max-w-[120px] px-2.5 py-1.5 text-sm rounded border border-border bg-card text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
               value={manualRate}
-              onChange={(e) => setManualRate(e.target.value)}
+              onChange={(e) => {
+                setManualRate(e.target.value);
+                setManualRateError(parsePositiveRate(e.target.value) === null
+                  ? 'Manual rate must be a finite number greater than zero.'
+                  : '');
+              }}
               placeholder="Rate"
             />
             <span className="text-xs text-text-muted">
@@ -254,6 +298,9 @@ export default function CurrencyCounter() {
           </div>
         )}
       </div>
+      {effectiveManualRateError && (
+        <p role="alert" className="text-xs text-red-500 m-0">{effectiveManualRateError}</p>
+      )}
 
       {/* Tab Content: Quick Convert */}
       {activeTab === 'single' && (
@@ -317,14 +364,20 @@ export default function CurrencyCounter() {
 
           <div className="rounded-lg border border-border bg-app p-3 text-center">
             <div className="text-[1.3rem] min-[480px]:text-2xl md:text-[2rem] font-bold text-accent mb-2 break-all font-display">
-              {formatCurrency(convertedAmount, toCurrency)}
+              {convertedAmount === null ? 'Rate unavailable' : formatCurrency(convertedAmount, toCurrency)}
             </div>
             <div className="text-sm text-text-muted">
-              {formatCurrency(1, fromCurrency)} = {formatCurrency(currentRate, toCurrency)}
-              <br />
-              <span className="text-xs opacity-85">
-                {formatCurrency(1, toCurrency)} = {formatCurrency(1 / currentRate, fromCurrency)}
-              </span>
+              {currentRate === null ? (
+                <span>Provide a valid manual rate or load valid live rates.</span>
+              ) : (
+                <>
+                  {formatCurrency(1, fromCurrency)} = {formatCurrency(currentRate, toCurrency)}
+                  <br />
+                  <span className="text-xs opacity-85">
+                    {formatCurrency(1, toCurrency)} = {formatCurrency(1 / currentRate, fromCurrency)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -377,12 +430,26 @@ export default function CurrencyCounter() {
           </div>
 
           <div className="flex flex-col gap-2 w-full">
-            <label className="text-sm font-semibold text-text-main" htmlFor="currency-bulk-input">Amounts (one per line, e.g. $100, 250.50, 3,000)</label>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-semibold text-text-main" htmlFor="currency-bulk-input">
+                Amounts (one per line)
+              </label>
+              <select
+                aria-label="Number format"
+                value={numberFormat}
+                onChange={(event) => setNumberFormat(event.target.value)}
+                className="px-2.5 py-1.5 text-xs rounded border border-border bg-card text-text-main"
+              >
+                <option value="auto">Auto (strict)</option>
+                <option value="dot">1,234.56</option>
+                <option value="comma">1.234,56</option>
+              </select>
+            </div>
             <textarea
               id="currency-bulk-input"
               className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
-              rows="3"
-              placeholder={"100\n250.50\n3000"}
+              rows={3}
+              placeholder={"100\n250.50\n1,234.56"}
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
             />
@@ -397,7 +464,7 @@ export default function CurrencyCounter() {
             />
             <ResultDisplay
               label={`Total (${bulkToCurrency})`}
-              value={formatCurrency(convertedTotal, bulkToCurrency)}
+              value={convertedTotal === null ? 'Rate unavailable' : formatCurrency(convertedTotal, bulkToCurrency)}
               className="flex-1"
               id="currency-target-total"
             />
@@ -409,14 +476,22 @@ export default function CurrencyCounter() {
             />
           </div>
 
-          {parsedAmounts.length > 0 && (
+          {parsedLineItems.length > 0 && (
             <div className="mt-2">
               <label className="text-xs font-semibold text-text-main mb-1 block">Line Breakdown</label>
-              <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto mt-3 p-3 bg-app border border-border rounded-md font-mono text-sm">
-                {parsedAmounts.map((amt, idx) => (
-                  <div key={idx} className="flex justify-between border-b border-black/5 dark:border-white/5 pb-1">
-                    <span>Line {idx + 1}: {formatCurrency(amt, bulkFromCurrency)}</span>
-                    <span className="text-accent">⇄ {formatCurrency(amt * bulkRate, bulkToCurrency)}</span>
+              <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto mt-2 p-3 bg-app border border-border rounded-md font-mono text-sm">
+                {parsedLineItems.map((item) => (
+                  <div key={item.lineNumber} className="flex justify-between border-b border-black/5 dark:border-white/5 pb-1">
+                    {item.error ? (
+                      <span className="text-red-500">{item.error}</span>
+                    ) : (
+                      <>
+                        <span>Line {item.lineNumber}: {formatCurrency(item.value, bulkFromCurrency)}</span>
+                        <span className="text-accent">
+                          ⇄ {bulkRate === null ? 'Rate unavailable' : formatCurrency(item.value * bulkRate, bulkToCurrency)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

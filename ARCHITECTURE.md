@@ -13,7 +13,7 @@
 ## Quick facts
 
 | Package | `small-web-tools` |
-| Version | `0.6.1-beta` package metadata; displayed build version follows the latest Git tag |
+| Version | Latest version-formatted Git tag; `VITE_APP_VERSION` fallback for archives without Git metadata |
 | UI framework | React 18 |
 | Build tool | Vite 6 |
 | Testing | Vitest 4 + React Testing Library + jsdom |
@@ -22,7 +22,7 @@
 | Routing | In-app state synchronized to `/home` and `/simple` URL paths with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
-At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`, then `package.json`; CI checks out full tag history so the displayed version follows the latest tag automatically. `npm run version:check`, included in `verify`, prevents release tag and npm package metadata from silently drifting apart.
+At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`. The private npm manifest uses the fixed non-release placeholder `0.0.0-private`, which is never used as the application version or updated for releases. CI checks out full tag history, and `npm run version:check`, included in `verify`, confirms that a Git tag or explicit archive fallback supplied the displayed version.
 
 ## Repository map
 
@@ -357,8 +357,9 @@ npm run preview
 ```
 
 Node.js 22 and Node.js 24 are supported. Use the `npm@10.9.2` release pinned by
-`package.json`; CI installs and verifies that exact version. `npm run verify` is
-the baseline gate: version consistency, a non-increasing ESLint warning budget,
+the `packageManager` field in `package.json`; CI installs and verifies that exact
+version. `npm run verify` is the baseline gate: Git-tag version resolution, a
+non-increasing ESLint warning budget,
 normal and strict checkJs, coverage thresholds, production build, bundle budgets,
 static header policy, the external-host inventory, Cloudflare topology, and
 documentation consistency. CI additionally runs dependency checks, Playwright

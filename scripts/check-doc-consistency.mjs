@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveRepositoryVersionDetails } from './resolve-version.mjs';
 
 const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const pkg = JSON.parse(read('package.json'));
+const appVersion = resolveRepositoryVersionDetails();
 const docs = {
   README: read('README.md'),
   ARCHITECTURE: read('ARCHITECTURE.md'),
@@ -20,7 +22,11 @@ const requireText = (documentName, text, description = text) => {
   }
 };
 
-requireText('ARCHITECTURE', `Version | \`${pkg.version}\``, `package version ${pkg.version}`);
+if (pkg.version !== '0.0.0-private') {
+  failures.push('package.json must retain the non-release version placeholder 0.0.0-private');
+}
+requireText('ARCHITECTURE', 'Latest version-formatted Git tag', 'Git-tag version source');
+requireText('ARCHITECTURE', '`0.0.0-private`', 'non-release npm version placeholder');
 const npmVersion = pkg.packageManager.replace(/^npm@/, '');
 for (const documentName of ['README', 'ARCHITECTURE', 'CONTRIBUTING']) {
   requireText(documentName, npmVersion, `pinned npm version ${npmVersion}`);
@@ -86,4 +92,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Documentation consistency check passed (${pkg.version}, Node ${pkg.engines.node}).`);
+console.log(
+  `Documentation consistency check passed (${appVersion.version} from ${appVersion.source}, Node ${pkg.engines.node}).`,
+);

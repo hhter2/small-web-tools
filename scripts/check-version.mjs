@@ -1,15 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { normalizeVersion, resolveRepositoryVersion } from './resolve-version.mjs';
+import { resolveRepositoryVersionDetails } from './resolve-version.mjs';
 
-const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-const packageVersion = normalizeVersion(packageJson.version);
-const repositoryVersion = resolveRepositoryVersion();
+const { version, source } = resolveRepositoryVersionDetails();
 
-if (packageVersion !== repositoryVersion) {
+if (source === 'fallback') {
   throw new Error(
-    `Version mismatch: package.json is ${packageVersion}, latest Git tag is ${repositoryVersion}. `
-    + 'Update package.json and package-lock.json when creating a release tag.',
+    'Version unavailable: add a version-formatted Git tag or set VITE_APP_VERSION '
+    + 'for an archive that does not contain Git metadata.',
   );
 }
 
-console.log(`Version metadata matches latest Git tag: ${repositoryVersion}`);
+const sourceLabel = source === 'git-tag' ? 'Git tag' : 'VITE_APP_VERSION';
+console.log(`Version resolved from ${sourceLabel}: ${version}`);

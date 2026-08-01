@@ -15,9 +15,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hhter2/small-web-tools/releases/tag/v0.7.0-beta"><img src="https://img.shields.io/badge/current%20tag-v0.7.0--beta-2563eb" alt="目前標籤：v0.7.0-beta"></a>
-  <a href="https://github.com/hhter2/small-web-tools/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/hhter2/small-web-tools/ci.yml?label=CI" alt="CI 狀態"></a>
-  <a href="https://github.com/hhter2/small-web-tools/blob/develop/LICENSE"><img src="https://img.shields.io/github/license/hhter2/small-web-tools?label=license" alt="MIT 授權條款"></a>
+  <a href="https://github.com/hhter2/small-web-tools/tags"><img src="https://img.shields.io/badge/version-Git%20tag-2563eb" alt="版本：最新 Git 標籤"></a>
+  <a href="https://github.com/hhter2/small-web-tools/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-workflow-2563eb" alt="CI 工作流程"></a>
+  <a href="https://github.com/hhter2/small-web-tools/blob/develop/LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a" alt="MIT 授權條款"></a>
 </p>
 
 Small Web Tools 是一套以瀏覽器為基礎的日常工具集合，涵蓋文字、開發工作、檔案、媒體、網路、生物資訊與快速計算。它是一個單頁 React 應用程式：選取工具時只會切換目前畫面，不需要重新載入整個頁面。

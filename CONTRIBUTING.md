@@ -68,9 +68,10 @@ only when Cloudflare-runtime CR-009 evidence is required and the operator accept
 Cloudflare's current Terms and Privacy Policy. The command redacts bearer and claim
 credentials; never paste the global Wrangler configuration or claim URL into logs.
 
-`npm run verify` runs version, lint-warning budget, normal and strict checkJs,
-coverage, build/bundle, headers, network inventory, Cloudflare configuration, and
-documentation-consistency gates. CI runs it on Node 22 and Node 24.
+`npm run verify` runs Git-tag version resolution, lint-warning budget, normal and
+strict checkJs, coverage, build/bundle, headers, network inventory, Cloudflare
+configuration, and documentation-consistency gates. CI runs it on Node 22 and
+Node 24.
 
 ## Engineering standards
 

@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 
-const VERSION_TAG_PATTERN = /^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u;
+const VERSION_PATTERN = /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
+const FALLBACK_VERSION = 'v0.0.0';
 
 export function normalizeVersion(value) {
   const trimmed = String(value || '').trim();
-  if (!trimmed) return '';
+  if (!VERSION_PATTERN.test(trimmed)) return '';
   return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
 }
 
@@ -13,20 +13,31 @@ export function selectLatestVersionTag(tagOutput) {
   const tags = String(tagOutput || '')
     .split(/\r?\n/u)
     .map((tag) => tag.trim())
-    .filter((tag) => VERSION_TAG_PATTERN.test(tag));
+    .filter((tag) => VERSION_PATTERN.test(tag));
   return normalizeVersion(tags[0]);
 }
 
-export function resolveVersion({ tagOutput, environmentVersion, packageVersion }) {
-  return selectLatestVersionTag(tagOutput)
-    || normalizeVersion(environmentVersion)
-    || normalizeVersion(packageVersion)
-    || 'v0.0.0';
+export function resolveVersionDetails({ tagOutput, environmentVersion }) {
+  const tagVersion = selectLatestVersionTag(tagOutput);
+  if (tagVersion) return { version: tagVersion, source: 'git-tag' };
+
+  const environmentFallback = normalizeVersion(environmentVersion);
+  if (environmentFallback) {
+    return { version: environmentFallback, source: 'environment' };
+  }
+
+  return { version: FALLBACK_VERSION, source: 'fallback' };
 }
 
-export function resolveRepositoryVersion({ cwd = process.cwd() } = {}) {
+export function resolveVersion(options) {
+  return resolveVersionDetails(options).version;
+}
+
+export function resolveRepositoryVersionDetails({
+  cwd = process.cwd(),
+  environmentVersion = process.env.VITE_APP_VERSION,
+} = {}) {
   let tagOutput = '';
-  let packageVersion = '';
 
   try {
     tagOutput = execFileSync(
@@ -38,15 +49,12 @@ export function resolveRepositoryVersion({ cwd = process.cwd() } = {}) {
     // Deployment archives may not include Git metadata.
   }
 
-  try {
-    packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-  } catch {
-    // The final fallback remains available for incomplete build archives.
-  }
-
-  return resolveVersion({
+  return resolveVersionDetails({
     tagOutput,
-    environmentVersion: process.env.VITE_APP_VERSION,
-    packageVersion,
+    environmentVersion,
   });
+}
+
+export function resolveRepositoryVersion(options) {
+  return resolveRepositoryVersionDetails(options).version;
 }

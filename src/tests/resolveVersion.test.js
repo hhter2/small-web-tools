@@ -11,6 +11,12 @@ describe('build version resolution', () => {
     expect(selectLatestVersionTag('v0.6.0-beta\nv0.5.4-beta\n')).toBe('v0.6.0-beta');
   });
 
+  it('sorts tags returned as remote Git references', () => {
+    expect(selectLatestVersionTag(
+      'abc123\trefs/tags/v0.5.4-beta\ndef456\trefs/tags/v0.7.1-beta\n',
+    )).toBe('v0.7.1-beta');
+  });
+
   it('ignores non-version tags', () => {
     expect(selectLatestVersionTag('release-candidate\n0.6.0\n')).toBe('v0.6.0');
   });

@@ -13,6 +13,7 @@
 ## Quick facts
 
 | Package | `small-web-tools` |
+| --- | --- |
 | Version | Latest version-formatted Git tag; `VITE_APP_VERSION` fallback for archives without Git metadata |
 | UI framework | React 18 |
 | Build tool | Vite 6 |

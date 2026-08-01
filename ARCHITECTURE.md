@@ -22,7 +22,7 @@
 | Routing | In-app state synchronized to `/home` and `/simple` URL paths with `React.lazy()` code splitting; no React Router |
 | Server functions | Cloudflare Pages-compatible handlers in `functions/api/` and shared helpers in `functions/_shared/` |
 
-At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. Build archives without Git metadata fall back to `VITE_APP_VERSION`. The npm manifest uses the fixed non-release placeholder `0.0.0-private`, which is never used as the application version or updated for releases. CI checks out full tag history, and `npm run version:check`, included in `verify`, confirms that a Git tag or explicit archive fallback supplied the displayed version.
+At build time, `scripts/resolve-version.mjs` selects the newest version-sorted Git tag. It first checks local tags, then queries the repository's remote tags when a deployment build has no local tag refs. Build archives without Git metadata can still use `VITE_VERSION_REPOSITORY` or the repository URL in `package.json`; `VITE_APP_VERSION` remains the final explicit fallback. The npm manifest uses the fixed non-release placeholder `0.0.0-private`, which is never used as the application version or updated for releases. CI checks out full tag history, and `npm run version:check`, included in `verify`, confirms that a Git tag or explicit archive fallback supplied the displayed version.
 
 ## Repository map
 

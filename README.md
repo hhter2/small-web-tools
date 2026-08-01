@@ -70,8 +70,8 @@ essentials. Tools opened there remain in the reduced shell at addresses such as
 - **URL Encoder & Decoder** — encode or decode complete URLs, components, and non-ASCII text.
 - **Markdown Previewer** — edit, upload, preview, and download Markdown locally.
 - **Base Converter** — convert values among binary, octal, decimal, hexadecimal, and sexagesimal.
-- **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads.
-- **Website Font Extractor** — inspect the fonts used by a public website.
+- **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads; code-file uploads are limited to 2 MiB.
+- **Website Font Extractor** — inspect bounded font declarations from a public website without downloading font files.
 - **Folder Analyzer** — inspect a selected folder's structure and metrics.
 
 ### Network

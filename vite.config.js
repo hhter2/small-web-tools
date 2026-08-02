@@ -96,6 +96,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('/src/i18n/locales/') || id.includes('\\src\\i18n\\locales\\')) {
+            return 'locales';
+          }
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';

@@ -101,6 +101,9 @@ CI 會在 Node 22 與 Node 24 上執行。
   實際內容，不可假設內容語言等同介面語言。
 - 執行 `npm run i18n:check`；它會拒絕無效／重複 JSON、鍵差異、空白翻譯、
   插值變數不相容，以及明確指向不存在鍵的參照。
+- 執行 `npm run i18n:audit` 以拒絕寫死的使用者可見 JSX 文字。
+  `scripts/check-hardcoded-ui.mjs` 中的審核允許清單僅供語言中立的格式、單位、
+  公式、字型名稱、條碼名稱與鍵盤標記使用，請維持最小範圍。
 
 範例：在兩個語言檔加入 `feature.resetNotice`，以
 `t('common:feature.resetNotice', { count })` 顯示並測試兩種語言。確認可見文字、

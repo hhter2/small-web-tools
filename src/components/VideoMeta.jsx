@@ -835,12 +835,12 @@ export default function VideoMeta() {
             <ul className="list-none m-0 p-1.5 overflow-y-auto flex-1 flex flex-row flex-wrap md:flex-col gap-1.5 md:max-h-none max-h-[200px]">
               {files.map(f => (
                 <li key={f.id} className={`flex flex-col md:flex-row items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors duration-180 relative group hover:bg-nav-hover-bg ${f.id === selectedId ? 'bg-indigo-500/10 outline outline-1 outline-indigo-500' : ''}`} onClick={() => setSelectedId(f.id)}>
-                  <div className="w-11 h-7.5 rounded overflow-hidden flex-shrink-0 flex items-center justify-center bg-app">{f.thumbnailUrl ? <img src={f.thumbnailUrl} alt="thumb" className="w-full h-full object-cover" /> : <DefaultThumbnail format={f.format} width={44} height={30} />}</div>
+                  <div className="w-11 h-7.5 rounded overflow-hidden flex-shrink-0 flex items-center justify-center bg-app">{f.thumbnailUrl ? <img src={f.thumbnailUrl} alt={t('videometa-extra.thumbnail')} className="w-full h-full object-cover" /> : <DefaultThumbnail format={f.format} width={44} height={30} />}</div>
                   <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                     <span className="text-[0.82rem] font-medium text-text-main truncate max-w-[72px] md:max-w-[130px] text-center md:text-left" title={f.name}>{f.name}</span>
                     <span className="flex items-center gap-1 text-[0.75rem] text-text-muted justify-center md:justify-start"><FormatBadge format={f.format} />{f.formattedSize}</span>
                   </div>
-                  <button className="hidden group-hover:flex items-center justify-center bg-none border-none text-text-muted cursor-pointer p-1 rounded shrink-0 transition-colors hover:text-red-500 hover:bg-red-500/10 absolute top-1 right-1 md:relative md:top-auto md:right-auto" onClick={(e) => { e.stopPropagation(); handleRemove(f.id); }} aria-label="Remove file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  <button className="hidden group-hover:flex items-center justify-center bg-none border-none text-text-muted cursor-pointer p-1 rounded shrink-0 transition-colors hover:text-red-500 hover:bg-red-500/10 absolute top-1 right-1 md:relative md:top-auto md:right-auto" onClick={(e) => { e.stopPropagation(); handleRemove(f.id); }} aria-label={t('metadata-common.removeFile')}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </li>
               ))}
             </ul>
@@ -848,10 +848,10 @@ export default function VideoMeta() {
 
           <main className="flex flex-col gap-4 min-w-0">
             <div className="flex items-center gap-1 bg-app border border-border rounded-xl p-1 flex-wrap">
-              {[{ id: 'overview', label: '\ud83d\udccb Overview' }, { id: 'all', label: '\ud83d\uddc2 All Parameters' }, { id: 'compare', label: `\u2696\ufe0f Compare (${compareFiles.length})` }].map(tab => (
+              {[{ id: 'overview', label: `\ud83d\udccb ${t('videometa-extra.overview')}` }, { id: 'all', label: `\ud83d\uddc2 ${t('videometa-extra.allParameters')}` }, { id: 'compare', label: `\u2696\ufe0f ${t('videometa-extra.compare', { count: compareFiles.length })}` }].map(tab => (
                 <button key={tab.id} className={`px-3.5 py-[7px] border-none rounded-lg bg-transparent text-[0.85rem] font-medium text-text-muted cursor-pointer transition-all duration-200 hover:bg-nav-hover-bg hover:text-text-main ${activeTab === tab.id ? 'bg-card text-text-main font-semibold shadow-sm' : ''}`} onClick={() => setActiveTab(tab.id)} id={`videometa-tab-${tab.id}`}>{tab.label}</button>
               ))}
-              <div className="ml-auto flex items-center gap-1.5 flex-wrap">{activeFile && <Button variant="secondary" size="sm" onClick={handleExportJson} title="Export metadata as JSON">{'\u2b07'} JSON</Button>}</div>
+              <div className="ml-auto flex items-center gap-1.5 flex-wrap">{activeFile && <Button variant="secondary" size="sm" onClick={handleExportJson} title={t('videometa-extra.exportTitle')}>{'\u2b07'} JSON</Button>}</div>
             </div>
 
             {/* Overview Tab */}
@@ -859,7 +859,7 @@ export default function VideoMeta() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-5 bg-card border border-border rounded-2xl p-5">
                   <div className="w-full max-w-[300px] md:w-[200px] rounded-lg overflow-hidden shrink-0 shadow-md bg-black relative">
-                    {activeFile.type === 'video' && activeFile.objectUrl ? <video src={activeFile.objectUrl} controls preload="metadata" style={{ width: '100%' }} /> : activeFile.thumbnailUrl ? <img src={activeFile.thumbnailUrl} alt="Thumbnail" /> : <DefaultThumbnail format={activeFile.format} width={200} height={130} />}
+                    {activeFile.type === 'video' && activeFile.objectUrl ? <video src={activeFile.objectUrl} controls preload="metadata" style={{ width: '100%' }} /> : activeFile.thumbnailUrl ? <img src={activeFile.thumbnailUrl} alt={t('videometa-extra.thumbnail')} /> : <DefaultThumbnail format={activeFile.format} width={200} height={130} />}
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col gap-1 text-center md:text-left">
                     <h2 className="text-lg font-bold text-text-main m-0 truncate">{activeFile.metadata?.Title || activeFile.name}</h2>
@@ -871,7 +871,7 @@ export default function VideoMeta() {
                         {activeFile.videoTracks[0].codec && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">Codec:</span>{activeFile.videoTracks[0].codec}</span>}
                         {activeFile.videoTracks[0].width && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">Res:</span>{activeFile.videoTracks[0].width}{'\u00d7'}{activeFile.videoTracks[0].height}</span>}
                         {(() => { const v = activeFile.videoTracks[0]; return (v.sampleCount && v.duration) ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">FPS:</span>{(v.sampleCount / v.duration).toFixed(2)}</span> : null; })()}
-                        {activeFile.audioTracks.length > 0 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">Audio:</span>{activeFile.audioTracks.length} track{activeFile.audioTracks.length !== 1 ? 's' : ''}</span>}
+                        {activeFile.audioTracks.length > 0 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">Audio:</span>{t('video-units.trackCount', { count: activeFile.audioTracks.length })}</span>}
                         {activeFile.subtitleTracks.length > 0 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-app text-text-muted border border-border"><span className="text-text-muted font-normal mr-0.5">Subs:</span>{activeFile.subtitleTracks.length}</span>}
                       </div>
                     )}
@@ -882,7 +882,7 @@ export default function VideoMeta() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {activeFile.videoTracks.length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83c\udfac'}</span> Video</h3>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83c\udfac'}</span> {t('videometa-extra.video')}</h3>
                         {activeFile.videoTracks.map((t, i) => { const fps = t.sampleCount && t.duration ? (t.sampleCount / t.duration).toFixed(3) : null; return (
                           <dl className="flex flex-col m-0" key={i}>{[['Codec', t.codec], ['Resolution', t.width ? `${t.width} \u00d7 ${t.height}` : null], ['Frame Rate', fps ? `${fps} fps` : null], ['Bit Depth', t.bitDepth ? `${t.bitDepth}-bit` : null], ['Language', t.language && t.language !== 'und' ? t.language : null], ['Color Primaries', t.colorPrimaries != null ? (COLOR_PRIMARIES[t.colorPrimaries] || `Code ${t.colorPrimaries}`) : null], ['Transfer', t.transferCharacteristics != null ? (TRANSFER_CHARACTERISTICS[t.transferCharacteristics] || `Code ${t.transferCharacteristics}`) : null], ['Matrix', t.matrixCoefficients != null ? (MATRIX_COEFFICIENTS[t.matrixCoefficients] || `Code ${t.matrixCoefficients}`) : null], ['Full Range', t.fullRange != null ? (t.fullRange ? 'Yes (Full)' : 'No (Limited)') : null]].filter(([, v]) => v != null).map(([k, v]) => <div className="flex gap-2 py-1.5 border-b border-border last:border-b-0 text-[0.84rem]" key={k}><dt className="w-[100px] sm:w-[130px] shrink-0 text-text-muted font-medium">{k}</dt><dd className="text-text-main m-0 break-all flex-1">{v}</dd></div>)}</dl>
                         ); })}
@@ -891,7 +891,7 @@ export default function VideoMeta() {
 
                     {activeFile.audioTracks.length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udd0a'}</span> Audio</h3>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udd0a'}</span> {t('video-units.audioSection')}</h3>
                         <div className="flex flex-col gap-2">
                           {activeFile.audioTracks.map((t, i) => {
                             const cl = t.channels === 1 ? 'Mono' : t.channels === 2 ? 'Stereo' : t.channels === 6 ? '5.1' : t.channels === 8 ? '7.1' : `${t.channels}ch`;
@@ -949,14 +949,14 @@ export default function VideoMeta() {
 
                     {activeFile.subtitleTracks.length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcac'}</span> Subtitles</h3>
-                        <div className="flex flex-col gap-2">{activeFile.subtitleTracks.map((t, i) => <div className="flex items-center gap-2.5 p-2 px-3 bg-app rounded-lg text-[0.84rem]" key={i}><span className="text-base shrink-0">{'\ud83d\udcdd'}</span><span className="font-semibold text-text-main min-w-[50px]">Track {i + 1}</span><span className="text-text-muted flex-1">{[t.codec, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' ')}</span></div>)}</div>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcac'}</span> {t('videometa-extra.subtitles')}</h3>
+                        <div className="flex flex-col gap-2">{activeFile.subtitleTracks.map((track, i) => <div className="flex items-center gap-2.5 p-2 px-3 bg-app rounded-lg text-[0.84rem]" key={i}><span className="text-base shrink-0">{'\ud83d\udcdd'}</span><span className="font-semibold text-text-main min-w-[50px]">{t('video-units.track', { number: i + 1 })}</span><span className="text-text-muted flex-1">{[track.codec, track.language && track.language !== 'und' ? `(${track.language})` : null].filter(Boolean).join(' ')}</span></div>)}</div>
                       </div>
                     )}
 
                     {activeFile.timecodeTracks.length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\u23f1\ufe0f'}</span> Timecode</h3>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\u23f1\ufe0f'}</span> {t('videometa-extra.timecode')}</h3>
                         {activeFile.timecodeTracks.map((t, i) => { const fps = t.timecodeTimescale && t.timecodeFrameDuration ? t.timecodeTimescale / t.timecodeFrameDuration : t.timecodeNumFrames || 30; const isDF = (t.timecodeFlags & 0x01) !== 0; const tc = t.timecodeStartFrame != null ? frameCountToTimecode(t.timecodeStartFrame, fps, isDF) : null; return (
                           <dl className="flex flex-col m-0" key={i}>{[['Start Timecode', tc], ['Frame Rate', fps ? `${fps} fps` : null], ['Type', isDF ? 'Drop Frame' : 'Non-Drop Frame']].filter(([, v]) => v != null).map(([k, v]) => <div className="flex gap-2 py-1.5 border-b border-border last:border-b-0 text-[0.84rem]" key={k}><dt className="w-[100px] sm:w-[130px] shrink-0 text-text-muted font-medium">{k}</dt><dd className="text-text-main m-0 break-all flex-1">{v}</dd></div>)}</dl>
                         ); })}
@@ -965,13 +965,13 @@ export default function VideoMeta() {
 
                     {Object.keys(activeFile.metadata).length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83c\udff7\ufe0f'}</span> Metadata</h3>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83c\udff7\ufe0f'}</span> {t('videometa-extra.metadata')}</h3>
                         <dl className="flex flex-col m-0">{Object.entries(activeFile.metadata).map(([k, v]) => <div className="flex gap-2 py-1.5 border-b border-border last:border-b-0 text-[0.84rem]" key={k}><dt className="w-[100px] sm:w-[130px] shrink-0 text-text-muted font-medium">{k}</dt><dd className="text-text-main m-0 break-all flex-1">{String(v)}</dd></div>)}</dl>
                       </div>
                     )}
 
                     <div className="bg-card border border-border rounded-xl p-4">
-                      <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udce6'}</span> Container</h3>
+                      <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udce6'}</span> {t('videometa-extra.container')}</h3>
                       <dl className="flex flex-col m-0">{[['Format', activeFile.format], ['Brand', activeFile.brand], ['Compatible Brands', activeFile.compatibleBrands.length > 0 ? activeFile.compatibleBrands.join(', ') : null], ['Duration', formatDuration(activeFile.containerDuration)], ['File Size', activeFile.formattedSize], ['Total Tracks', (activeFile.videoTracks.length + activeFile.audioTracks.length + activeFile.subtitleTracks.length + activeFile.timecodeTracks.length).toString()]].filter(([, v]) => v != null && v !== '\u2014').map(([k, v]) => <div className="flex gap-2 py-1.5 border-b border-border last:border-b-0 text-[0.84rem]" key={k}><dt className="w-[100px] sm:w-[130px] shrink-0 text-text-muted font-medium">{k}</dt><dd className="text-text-main m-0 break-all flex-1">{v}</dd></div>)}</dl>
                     </div>
                   </div>
@@ -981,12 +981,12 @@ export default function VideoMeta() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {activeFile.logParams && Object.keys(activeFile.logParams).length > 0 && (
                       <div className="bg-card border border-border rounded-xl p-4">
-                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcc4'}</span> Parsed Parameters</h3>
+                        <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcc4'}</span> {t('videometa-extra.parsedParameters')}</h3>
                         <dl className="flex flex-col m-0">{Object.entries(activeFile.logParams).map(([k, v]) => <div className="flex gap-2 py-1.5 border-b border-border last:border-b-0 text-[0.84rem]" key={k}><dt className="w-[100px] sm:w-[130px] shrink-0 text-text-muted font-medium">{k}</dt><dd className="text-text-main m-0 break-all flex-1">{v}</dd></div>)}</dl>
                       </div>
                     )}
                     <div className="bg-card border border-border rounded-xl p-4">
-                      <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcdd'}</span> Raw Content</h3>
+                      <h3 className="text-[0.88rem] font-bold text-text-main m-0 mb-3 flex items-center gap-1.5 uppercase tracking-wider"><span className="text-base">{'\ud83d\udcdd'}</span> {t('videometa-extra.rawContent')}</h3>
                       <div className="bg-app border border-border rounded-lg p-3.5 max-h-[400px] overflow-y-auto font-mono text-[0.8rem] leading-relaxed text-text-main whitespace-pre-wrap break-all">{activeFile.logRawText}</div>
                     </div>
                   </div>
@@ -1025,7 +1025,7 @@ export default function VideoMeta() {
                 {compareFiles.length >= 1 ? (
                   <div className="overflow-x-auto rounded-xl border border-border">
                     <table className="w-full border-collapse min-w-[400px]">
-                      <thead><tr><th className="p-2.5 px-3.5 bg-app text-[0.8rem] font-semibold text-text-muted text-left border-b border-border whitespace-nowrap">Parameter</th>{compareFiles.map(f => <th key={f.id} className="p-2.5 px-3.5 bg-app text-[0.8rem] font-semibold text-text-muted text-left border-b border-border whitespace-nowrap"><div className="flex items-center gap-2 max-w-[180px] overflow-hidden">{f.thumbnailUrl ? <img src={f.thumbnailUrl} className="w-10 h-6.5 rounded object-cover shrink-0" alt="" /> : <DefaultThumbnail format={f.format} width={40} height={26} />}<span className="truncate" title={f.name}>{f.name}</span></div></th>)}</tr></thead>
+                      <thead><tr><th className="p-2.5 px-3.5 bg-app text-[0.8rem] font-semibold text-text-muted text-left border-b border-border whitespace-nowrap">{t('video-units.parameter')}</th>{compareFiles.map(f => <th key={f.id} className="p-2.5 px-3.5 bg-app text-[0.8rem] font-semibold text-text-muted text-left border-b border-border whitespace-nowrap"><div className="flex items-center gap-2 max-w-[180px] overflow-hidden">{f.thumbnailUrl ? <img src={f.thumbnailUrl} className="w-10 h-6.5 rounded object-cover shrink-0" alt="" /> : <DefaultThumbnail format={f.format} width={40} height={26} />}<span className="truncate" title={f.name}>{f.name}</span></div></th>)}</tr></thead>
                       <tbody>{COMPARE_FIELDS.map(field => <tr key={field.label} className="hover:bg-nav-hover-bg/30"><td className="p-2 px-3.5 text-[0.83rem] text-text-muted font-medium border-b border-border align-top whitespace-nowrap w-[130px]">{field.label}</td>{compareFiles.map(f => <td key={f.id} className="p-2 px-3.5 text-[0.83rem] text-text-main border-b border-border align-top min-w-[140px]">{field.fn(f)}</td>)}</tr>)}</tbody>
                     </table>
                   </div>

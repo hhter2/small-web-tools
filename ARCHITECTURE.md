@@ -341,6 +341,29 @@ the browser cannot safely reconstruct its RAW image data.
 
 Color Converter exposes Color Sync as a high-contrast pressed toggle.
 
+## Locale-sensitive behavior
+
+The selected UI locale controls labels and reader-facing formatting, but it does
+not determine the language of user content. Word Counter inspects each input:
+CJK characters use a character-based reading pace (500 characters per minute),
+while non-CJK text uses a word-based pace (200 words per minute); mixed content
+combines both estimates. `Intl.Segmenter` supplies grapheme and sentence
+boundaries when available, and `Intl.NumberFormat` formats the displayed result.
+
+Typing Speed Test fixtures remain language-neutral test content. Its correctness
+and WPM metrics operate on the supplied graphemes/keystrokes rather than silently
+assuming that the active UI locale is the content language. Locale changes only
+translate the surrounding controls, metrics, status, and history presentation.
+
+Password analysis continues to use the bundled English `zxcvbn` dictionary for
+pattern detection in this beta. The UI deliberately maps the numeric score to
+localized labels, generic feedback, and crack-time bands, so interface translation
+is independent of the analysis dictionary. A future language-specific dictionary
+can improve recognition without changing the UI contract. Technical algorithms
+such as encoders, checksums, codon lookup, media parsing, and cryptographic random
+selection remain language-neutral; reader-facing numbers, dates, units, and
+pluralized messages use platform `Intl` APIs or i18next interpolation.
+
 ## Network-service policy
 
 `config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the canonical `/home/privacy` route consume this inventory. Legacy hash addresses are accepted only for backward-compatible redirects. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.

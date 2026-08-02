@@ -1307,7 +1307,7 @@ export default function AudioMeta() {
                 >
                   <div className="w-9 h-9 rounded-md overflow-hidden flex-shrink-0">
                     {f.coverArt
-                      ? <img src={f.coverArt} className="w-full h-full object-cover" alt="cover" />
+                      ? <img src={f.coverArt} className="w-full h-full object-cover" alt={t('metadata-common.coverArt')} />
                       : <DefaultCoverArt format={f.format} size={36} />
                     }
                   </div>
@@ -1386,7 +1386,7 @@ export default function AudioMeta() {
                 <div className="bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                   <div className="w-[120px] h-[120px] rounded-xl overflow-hidden flex-shrink-0 shadow-md">
                     {activeFile.coverArt
-                      ? <img src={activeFile.coverArt} className="w-full h-full object-cover" alt="Album art" />
+                      ? <img src={activeFile.coverArt} className="w-full h-full object-cover" alt={t('metadata-common.albumArt')} />
                       : <DefaultCoverArt format={activeFile.format} size={120} />
                     }
                   </div>

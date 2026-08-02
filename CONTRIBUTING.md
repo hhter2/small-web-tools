@@ -105,6 +105,9 @@ Node 24.
   sorting. Content algorithms must inspect content rather than assume the UI locale.
 - Run `npm run i18n:check`; it rejects invalid/duplicate JSON, key drift, empty
   translations, interpolation mismatches, and explicit references to missing keys.
+- Run `npm run i18n:audit` to reject user-facing JSX literals. The reviewed allowlist
+  in `scripts/check-hardcoded-ui.mjs` is only for language-neutral formats, units,
+  formulas, font names, barcode names, and keyboard notation; keep it narrow.
 
 Example: add `feature.resetNotice` to both locale files, render it with
 `t('common:feature.resetNotice', { count })`, and test both locales. Verify visible

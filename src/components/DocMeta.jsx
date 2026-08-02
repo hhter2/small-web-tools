@@ -1156,7 +1156,7 @@ export default function DocMeta() {
                             e.stopPropagation();
                             handleToggleCompareSelection(f.id);
                           }}
-                          title="Exclude from comparison"
+                          title={t('metadata-common.excludeComparison')}
                         >
                           &times;
                         </button>
@@ -1481,7 +1481,7 @@ export default function DocMeta() {
                           handleToggleCompareSelection(file.id);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        title="Include in comparison"
+                        title={t('metadata-common.includeComparison')}
                       />
                     )}
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-app relative border border-border/50">
@@ -1494,7 +1494,7 @@ export default function DocMeta() {
                           e.stopPropagation();
                           handleRemoveFile(file.id);
                         }}
-                        title="Remove file"
+                        title={t('metadata-common.removeFile')}
                       >
                         &times;
                       </button>
@@ -1528,7 +1528,7 @@ export default function DocMeta() {
                         onClick={() => handleStripMetadata(activeFile, 'private')}
                         title={t('tool-docmeta.ui.privateTitle')}
                       >
-                        🔒 Private
+                        🔒 {t('metadata-common.private')}
                       </Button>
                       <Button
                         variant="secondary"
@@ -1536,13 +1536,17 @@ export default function DocMeta() {
                         onClick={() => handleStripMetadata(activeFile, 'all')}
                         title={t('tool-docmeta.ui.allTitle')}
                       >
-                        🗑️ All
+                        🗑️ {t('metadata-common.all')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 mr-2">
-                        ✓ {activeFile.strippedInfo.mode === 'private' ? 'Private' : 'All'} Tags Stripped
+                        ✓ {t('metadata-common.tagsStripped', {
+                          mode: activeFile.strippedInfo.mode === 'private'
+                            ? t('metadata-common.private')
+                            : t('metadata-common.all'),
+                        })}
                       </span>
                       <Button
                         variant="primary"
@@ -1550,7 +1554,7 @@ export default function DocMeta() {
                         onClick={() => downloadStrippedFile(activeFile)}
                         title={t('tool-docmeta.ui.downloadTitle')}
                       >
-                        💾 Download
+                        💾 {t('metadata-common.download')}
                       </Button>
                       <Button
                         variant="secondary"
@@ -1558,7 +1562,7 @@ export default function DocMeta() {
                         onClick={() => handleRestoreOriginal(activeFile.id)}
                         title={t('tool-docmeta.ui.restoreTitle')}
                       >
-                        🔄 Restore
+                        🔄 {t('metadata-common.restore')}
                       </Button>
                     </>
                   )}
@@ -1570,7 +1574,7 @@ export default function DocMeta() {
                   variant={compareMode ? 'primary' : 'secondary'}
                   size="sm"
                   onClick={() => setCompareMode(!compareMode)}
-                  title="Toggle side-by-side comparison"
+                  title={t('metadata-common.toggleComparison')}
                   className="flex items-center gap-1.5"
                 >
                   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -1629,7 +1633,7 @@ export default function DocMeta() {
                   <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border border-border flex items-center justify-center bg-app shrink-0 shadow-inner">
                       {activeFile.thumbnail ? (
-                        <img id="docmeta-preview-img" alt="Preview" src={activeFile.thumbnail} className="w-full h-full object-contain" />
+                        <img id="docmeta-preview-img" alt={t('metadata-common.documentPreview')} src={activeFile.thumbnail} className="w-full h-full object-contain" />
                       ) : (
                         <div className="flex flex-col items-center gap-2.5">
                           {getFileIcon(activeFile.type, 48)}
@@ -1640,8 +1644,8 @@ export default function DocMeta() {
                     <div className="flex flex-col gap-2 min-w-0">
                       <h3 id="docmeta-file-name" className="text-base font-bold text-text-main break-words" title={activeFile.name}>{activeFile.name}</h3>
                       <div className="flex flex-col gap-1 text-xs">
-                        <p className="flex justify-between border-b border-border/50 py-1"><span className="text-text-muted font-medium">Format:</span> <span className="font-semibold text-text-main">{activeFile.type.toUpperCase()}</span></p>
-                        <p className="flex justify-between py-1"><span className="text-text-muted font-medium">Size:</span> <span className="font-semibold text-text-main">{displayFile.formattedSize}</span></p>
+                        <p className="flex justify-between border-b border-border/50 py-1"><span className="text-text-muted font-medium">{t('metadata-common.format')}</span> <span className="font-semibold text-text-main">{activeFile.type.toUpperCase()}</span></p>
+                        <p className="flex justify-between py-1"><span className="text-text-muted font-medium">{t('metadata-common.size')}</span> <span className="font-semibold text-text-main">{displayFile.formattedSize}</span></p>
                       </div>
                     </div>
                   </div>

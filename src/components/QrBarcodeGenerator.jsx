@@ -1035,7 +1035,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   }, [
     activeTab, barcodeValue, barcodeFormat, barcodeLineColor,
     barcodeBgColor, barcodeWidth, barcodeHeight,
-    barcodeDisplayValue, barcodeFontSize, barcodeMargin
+    barcodeDisplayValue, barcodeFontSize, barcodeMargin, t
   ]);
 
   // Handle Logo Image Upload

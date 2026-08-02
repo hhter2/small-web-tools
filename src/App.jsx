@@ -130,7 +130,7 @@ export default function App() {
         return saved;
       }
       return "tool-home";
-    } catch (e) {
+    } catch {
       return "tool-home";
     }
   });
@@ -146,7 +146,7 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem("sidebarCollapsed") === "true";
-    } catch (e) {
+    } catch {
       return false;
     }
   });
@@ -155,7 +155,7 @@ export default function App() {
     try {
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme) return savedTheme;
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; keep the in-memory default.
     }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -213,7 +213,7 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     try {
       localStorage.setItem("theme", theme);
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; keep the current state.
     }
   }, [theme]);
@@ -243,7 +243,7 @@ export default function App() {
         : t('navigation:titles.tool', {
           tool: localizedRoute?.id === 'tool-home' ? modeProfile.label : localizedRoute?.title,
         });
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; navigation still works.
     }
   }, [activeTool, modeProfile.id, modeProfile.label, i18n.resolvedLanguage, t]);
@@ -277,7 +277,7 @@ export default function App() {
         }
         setActiveTool(validId);
         setToolMode(nextModeId);
-      } catch (e) {
+      } catch {
         setActiveTool('tool-home');
         setToolMode('all');
       }
@@ -316,7 +316,7 @@ export default function App() {
       if (nextAddress !== window.location.href) {
         window.history.replaceState(null, '', nextAddress);
       }
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; the UI remains usable.
     }
   }, [activeTool, toolMode]);
@@ -325,7 +325,7 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem("sidebarCollapsed", isSidebarCollapsed ? "true" : "false");
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; the UI remains usable.
     }
   }, [isSidebarCollapsed]);

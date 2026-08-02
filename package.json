@@ -39,7 +39,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
     "@eslint/js": "9.39.5",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^24.13.3",
     "@types/react": "^18.3.31",
@@ -52,13 +52,13 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
     "jsdom": "^26.1.0",
-    "knip": "5.64",
-    "postcss": "^8.5.16",
+    "knip": "5.88",
+    "postcss": "^8.5.25",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.8.3",
     "vite": "^6.0.0",
     "vitest": "^4.1.10",
-    "wrangler": "4.114.0"
+    "wrangler": "4.115.0"
   },
   "overrides": {
     "brace-expansion": "5.0.8",

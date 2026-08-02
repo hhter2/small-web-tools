@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 import FullscreenPreview, { FullscreenPreviewButton } from './ui/FullscreenPreview.jsx';
@@ -55,6 +56,7 @@ function triggerDownload(href, filename) {
 }
 
 function ColorControl({ label, value, onChange }) {
+  const { t } = useTranslation('tools');
   return (
     <label className="flex items-center justify-between gap-4 border-b border-border/70 py-3 text-sm font-semibold text-text-main last:border-b-0">
       <span>{label}</span>
@@ -64,7 +66,7 @@ function ColorControl({ label, value, onChange }) {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
-          aria-label={`${label} color`}
+          aria-label={t('tool-code-preview.ui.colorAria', { label })}
         />
         <span className="font-mono text-xs font-normal uppercase text-text-main">{value}</span>
       </span>
@@ -73,6 +75,7 @@ function ColorControl({ label, value, onChange }) {
 }
 
 export default function CodePreviewer() {
+  const { t, i18n } = useTranslation('tools');
   const initialPalette = THEME_PRESETS.dark;
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
@@ -133,19 +136,19 @@ export default function CodePreviewer() {
     try {
       const clipboardText = await navigator.clipboard.readText();
       setCode(clipboardText);
-      setStatus('Pasted code from the clipboard.');
+      setStatus(t('tool-code-preview.ui.status.pasted'));
       textareaRef.current?.focus();
     } catch {
-      setStatus('Clipboard access was denied. Paste into the editor manually.');
+      setStatus(t('tool-code-preview.ui.status.pasteDenied'));
     }
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);
-      setStatus('Copied code to the clipboard.');
+      setStatus(t('tool-code-preview.ui.status.copied'));
     } catch {
-      setStatus('Clipboard access was denied. Select and copy the code manually.');
+      setStatus(t('tool-code-preview.ui.status.copyDenied'));
     }
   };
 
@@ -154,7 +157,7 @@ export default function CodePreviewer() {
     event.target.value = '';
     if (!file) return;
     if (file.size > CODE_FILE_LIMIT_BYTES) {
-      setStatus('The code file must be 2 MiB or smaller.');
+      setStatus(t('tool-code-preview.ui.status.fileTooLarge'));
       return;
     }
 
@@ -163,9 +166,9 @@ export default function CodePreviewer() {
       setCode(await file.text());
       setLanguage(nextLanguage);
       setFilename(file.name);
-      setStatus(`Loaded ${file.name}.`);
+      setStatus(t('tool-code-preview.ui.status.loaded', { filename: file.name }));
     } catch {
-      setStatus('The selected file could not be read.');
+      setStatus(t('tool-code-preview.ui.status.readFailed'));
     }
   };
 
@@ -176,13 +179,13 @@ export default function CodePreviewer() {
     triggerDownload(url, downloadName);
     URL.revokeObjectURL(url);
     setFilename(downloadName);
-    setStatus(`Downloaded ${downloadName}.`);
+    setStatus(t('tool-code-preview.ui.status.downloaded', { filename: downloadName }));
   };
 
   const handlePngDownload = async () => {
     if (!editorRef.current || !code) return;
     setExporting(true);
-    setStatus('Preparing PNG…');
+    setStatus(t('tool-code-preview.ui.status.preparingPng'));
     try {
       const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(editorRef.current, {
@@ -196,9 +199,9 @@ export default function CodePreviewer() {
       const sourceName = normalizeCodeFilename(filename, language);
       const imageName = `${sourceName.replace(/\.[^.]+$/, '') || 'code'}-vscode.png`;
       triggerDownload(dataUrl, imageName);
-      setStatus(`Downloaded ${imageName}.`);
+      setStatus(t('tool-code-preview.ui.status.downloaded', { filename: imageName }));
     } catch {
-      setStatus('PNG export failed. Try a shorter code sample or another browser.');
+      setStatus(t('tool-code-preview.ui.status.pngFailed'));
     } finally {
       setExporting(false);
     }
@@ -208,22 +211,22 @@ export default function CodePreviewer() {
     setPreviewOpen(false);
     setCode('');
     setScrollPosition({ top: 0, left: 0 });
-    setStatus('Editor cleared.');
+    setStatus(t('tool-code-preview.ui.status.cleared'));
     textareaRef.current?.focus();
   };
 
   return (
     <Card id="tool-code-preview" variant="tool" size="wide" className="max-w-[1040px]">
-      <ToolHeader title="VS Code Preview" />
+      <ToolHeader title={t('tool-code-preview.title')} />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-app/60 p-3">
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>Paste</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>{t('tool-code-preview.ui.paste')}</Button>
           <Button type="button" variant="secondary" size="sm" onClick={handleCopy} disabled={!code}>
-            Copy Code
+            {t('tool-code-preview.ui.copy')}
           </Button>
           <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-            Upload Code
+            {t('tool-code-preview.ui.upload')}
           </Button>
           <input
             ref={fileInputRef}
@@ -231,29 +234,29 @@ export default function CodePreviewer() {
             accept="text/*,.js,.jsx,.ts,.tsx,.html,.css,.json,.md,.py,.java,.c,.h,.cpp,.cs,.go,.rs,.php,.rb,.swift,.kt,.r,.sql,.yml,.yaml,.sh,.diff,.patch,.graphql,.gql,.lua,.pl"
             onChange={handleFile}
             className="hidden"
-            aria-label="Upload code file"
+            aria-label={t('tool-code-preview.ui.uploadAria')}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="code-filename" className="sr-only">Download filename</label>
+          <label htmlFor="code-filename" className="sr-only">{t('tool-code-preview.ui.downloadFilename')}</label>
           <input
             id="code-filename"
             value={filename}
             onChange={(event) => setFilename(event.target.value)}
             className="w-40 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-            aria-label="Download filename"
+            aria-label={t('tool-code-preview.ui.downloadFilename')}
           />
           <Button type="button" variant="primary" size="sm" onClick={handleSourceDownload} disabled={!code}>
-            Download Source
+            {t('tool-code-preview.ui.downloadSource')}
           </Button>
           <Button type="button" variant="secondary" size="sm" onClick={handlePngDownload} disabled={!code || exporting}>
-            {exporting ? 'Exporting…' : 'Download PNG'}
+            {t(exporting ? 'tool-code-preview.ui.exporting' : 'tool-code-preview.ui.downloadPng')}
           </Button>
           <Button type="button" variant="secondary" size="sm" onClick={() => setSettingsOpen(true)}>
-            Appearance
+            {t('tool-code-preview.ui.appearance')}
           </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={handleClear} disabled={!code}>Clear</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={handleClear} disabled={!code}>{t('tool-code-preview.ui.clear')}</Button>
         </div>
       </div>
 
@@ -265,7 +268,7 @@ export default function CodePreviewer() {
             </h3>
           </div>
           <div className="flex items-center gap-3">
-            <label htmlFor="code-language" className="sr-only">Language</label>
+            <label htmlFor="code-language" className="sr-only">{t('tool-code-preview.ui.language')}</label>
             <select
               id="code-language"
               value={language}
@@ -275,7 +278,7 @@ export default function CodePreviewer() {
               {CODE_LANGUAGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
             <span className="whitespace-nowrap text-xs tabular-nums text-text-muted">
-              {lineCount.toLocaleString()} {lineCount === 1 ? 'line' : 'lines'}
+              {t('tool-code-preview.ui.lineCount', { count: lineCount, formattedCount: lineCount.toLocaleString(i18n.language) })}
             </span>
           </div>
         </div>
@@ -285,11 +288,11 @@ export default function CodePreviewer() {
           data-code-theme={syntaxTheme}
           className="code-preview-syntax code-editor-surface relative h-[520px] overflow-hidden"
           style={editorStyle}
-          aria-label="VS Code editor"
+          aria-label={t('tool-code-preview.ui.editorAria')}
         >
           <FullscreenPreviewButton
             disabled={!code}
-            label="Open fullscreen code preview"
+            label={t('tool-code-preview.ui.openFullscreen')}
             onClick={() => setPreviewOpen(true)}
           />
           <div className="code-editor-line-numbers absolute inset-y-0 left-0 w-14 overflow-hidden border-r border-current/10 bg-black/5">
@@ -303,7 +306,7 @@ export default function CodePreviewer() {
             style={translatedContentStyle}
             aria-hidden="true"
           >
-            <code dangerouslySetInnerHTML={{ __html: highlightedCode || '<span class="code-editor-placeholder">Type or paste code here…</span>' }} />
+            <code dangerouslySetInnerHTML={{ __html: highlightedCode || `<span class="code-editor-placeholder">${t('tool-code-preview.ui.placeholder')}</span>` }} />
           </pre>
 
           <textarea
@@ -319,7 +322,7 @@ export default function CodePreviewer() {
             })}
             spellCheck={false}
             wrap="off"
-            aria-label="Code editor"
+            aria-label={t('tool-code-preview.ui.codeEditorAria')}
             className="code-editor-input absolute inset-y-0 left-14 right-0 h-full w-auto resize-none overflow-auto border-0 bg-transparent p-5 text-sm leading-6 outline-none focus:ring-0"
             style={{ caretColor: accentColor, fontFamily }}
           />
@@ -327,7 +330,7 @@ export default function CodePreviewer() {
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
-        <p>Edit directly in the highlighted window. Code stays in your browser and is never executed.</p>
+        <p>{t('tool-code-preview.ui.privacyNote')}</p>
         <p role="status" aria-live="polite">{status}</p>
       </div>
 
@@ -346,17 +349,16 @@ export default function CodePreviewer() {
           >
             <div className="flex items-center justify-between gap-4 border-b border-border pb-3">
               <div>
-                <h3 id="appearance-dialog-title" className="text-lg font-bold text-text-main">Editor appearance</h3>
-                <p className="mt-1 text-xs text-text-muted">Choose a preset or adjust individual colors.</p>
+                <h3 id="appearance-dialog-title" className="text-lg font-bold text-text-main">{t('tool-code-preview.ui.appearanceTitle')}</h3>
+                <p className="mt-1 text-xs text-text-muted">{t('tool-code-preview.ui.appearanceDescription')}</p>
               </div>
               <Button type="button" variant="secondary" size="sm" onClick={() => setSettingsOpen(false)}>
-                Close
+                {t('tool-code-preview.ui.close')}
               </Button>
             </div>
 
-            <div className="my-3 grid grid-cols-3 gap-2" role="group" aria-label="Editor theme">
+            <div className="my-3 grid grid-cols-3 gap-2" role="group" aria-label={t('tool-code-preview.ui.editorTheme')}>
               {['system', 'light', 'dark'].map((themeId) => {
-                const palette = themeId === 'system' ? getSystemPalette() : THEME_PRESETS[themeId];
                 return (
                   <button
                     key={themeId}
@@ -370,27 +372,27 @@ export default function CodePreviewer() {
                         : 'border-border bg-app text-text-main hover:border-border-hover',
                     ].join(' ')}
                   >
-                    {palette.label}
+                    {t(`tool-code-preview.ui.theme.${themeId}`)}
                   </button>
                 );
               })}
             </div>
 
             <div className="rounded-lg border border-border bg-card px-3">
-              <ColorControl label="Accent" value={accentColor} onChange={(value) => {
+              <ColorControl label={t('tool-code-preview.ui.accent')} value={accentColor} onChange={(value) => {
                 setAccentColor(value);
                 setSelectedTheme('custom');
               }} />
-              <ColorControl label="Background" value={backgroundColor} onChange={(value) => {
+              <ColorControl label={t('tool-code-preview.ui.background')} value={backgroundColor} onChange={(value) => {
                 setBackgroundColor(value);
                 setSelectedTheme('custom');
               }} />
-              <ColorControl label="Foreground" value={foregroundColor} onChange={(value) => {
+              <ColorControl label={t('tool-code-preview.ui.foreground')} value={foregroundColor} onChange={(value) => {
                 setForegroundColor(value);
                 setSelectedTheme('custom');
               }} />
               <label className="flex items-center justify-between gap-4 py-3 text-sm font-semibold text-text-main">
-                <span>Code font</span>
+                <span>{t('tool-code-preview.ui.codeFont')}</span>
                 <select
                   value={fontFamily}
                   onChange={(event) => setFontFamily(event.target.value)}
@@ -407,7 +409,7 @@ export default function CodePreviewer() {
       <FullscreenPreview
         open={previewOpen && Boolean(code)}
         onClose={() => setPreviewOpen(false)}
-        title="Code fullscreen preview"
+        title={t('tool-code-preview.ui.fullscreenTitle')}
         surfaceClassName="bg-transparent !p-0"
       >
         <div
@@ -422,7 +424,7 @@ export default function CodePreviewer() {
           </div>
           <pre
             className="m-0 min-h-[420px] min-w-max pl-[4.5rem] pr-5 pt-5 text-sm leading-6"
-            aria-label="Fullscreen highlighted code"
+            aria-label={t('tool-code-preview.ui.fullscreenCodeAria')}
           >
             <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
           </pre>

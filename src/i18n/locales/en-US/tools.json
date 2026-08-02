@@ -8,10 +8,62 @@
   "tool-ascii": { "title": "ASCII Converter", "tooltip": "ASCII Converter", "description": "Convert text to ASCII codes and ASCII codes to text.", "search": ["character code", "decimal code"], "ui": { "reference": "ASCII reference", "referenceHint": "Select any character to use its decimal code as the input.", "legend": "DEC · Character", "gridLabel": "ASCII codes 0 through 127", "cellLabel": "ASCII {{code}}: {{name}}", "outsideAscii": "The character “{{character}}” is outside the ASCII range. Use Unicode Converter for non-ASCII text.", "notDecimal": "“{{value}}” is not a decimal ASCII code.", "outsideRange": "ASCII code {{value}} is outside the allowed range of 0 to 127.", "plainText": "Plain text", "codes": "ASCII codes", "textOrCodes": "Text or ASCII codes", "converted": "Converted result", "placeholder": "Hello\nor\n72 101 108 108 111" } },
   "tool-unicode": { "title": "Unicode Converter", "tooltip": "Unicode Converter", "description": "Convert text to Unicode escapes and Unicode escapes to text.", "search": ["code point", "escape sequence"], "ui": { "notHex": "“{{value}}” is not a hexadecimal Unicode code point.", "invalidScalar": "“{{value}}” is not a valid Unicode scalar value.", "plainText": "Plain text", "codePoints": "Unicode code points", "textOrCodePoints": "Text or code points", "convertedPlaceholder": "The converted result appears here.", "pointsPlaceholder": "Unicode code points appear here.", "decodedPlaceholder": "Decoded text appears here.", "converted": "Converted result", "placeholder": "Hello 🌍\nor\nU+0048 U+0065 U+006C U+006C U+006F" } },
   "tool-url": { "title": "URL Encoder & Decoder", "tooltip": "URL Encoder & Decoder", "description": "Encode or decode URLs and non-ASCII addresses with UTF-8 percent-encoding.", "search": ["percent encoding", "URI", "UTF-8 URL"], "ui": { "scope": "Encoding scope", "scopeHint": "UTF-8 percent-encoding is used; conversion stays in this browser.", "scopeLabel": "URL encoding scope", "fullUrl": "Full URL", "component": "URL component", "fullHint": "Preserves URL structure such as : / ? & = and # while encoding non-ASCII characters and spaces.", "componentHint": "Encodes every reserved separator, suitable for an address or other value placed inside a query parameter.", "placeholder": "Paste a URL, non-ASCII address, or percent-encoded value", "converted": "Converted URL", "urlOrEncoded": "URL or encoded URL", "decoded": "Decoded URL", "encoded": "Percent-encoded URL", "convertedPlaceholder": "The converted URL appears here.", "decodedPlaceholder": "Decoded URL appears here.", "encodedPlaceholder": "Encoded URL appears here.", "invalidUnicode": "The source contains an invalid Unicode sequence that cannot be URL-encoded.", "malformedEncoding": "The source contains malformed or incomplete percent-encoding." } },
-  "tool-markdown": { "title": "Markdown Previewer", "tooltip": "Markdown Previewer", "description": "Edit, upload, preview, and download Markdown files locally.", "search": ["Markdown editor", "MD preview"] },
-  "tool-code-preview": { "title": "VS Code Preview", "tooltip": "VS Code Preview & Highlighter", "description": "Edit highlighted code with line numbers, then copy or download the result.", "search": ["syntax highlighter", "code image", "source download", "shell"] },
+  "tool-markdown": {
+    "title": "Markdown Previewer",
+    "tooltip": "Markdown Previewer",
+    "description": "Edit, upload, preview, and download Markdown files locally.",
+    "search": ["Markdown editor", "MD preview"],
+    "ui": {
+      "imagePlaceholder": "Image: {{alt}}",
+      "previewAria": "Markdown preview",
+      "emptyPreview": "The rendered preview will appear here.",
+      "completedTask": "Completed task",
+      "incompleteTask": "Incomplete task",
+      "paste": "Paste",
+      "upload": "Upload Markdown",
+      "uploadAria": "Upload Markdown file",
+      "downloadFilename": "Download filename",
+      "download": "Download .md",
+      "clear": "Clear",
+      "formattingAria": "Markdown formatting",
+      "formatAs": "Format as {{format}}",
+      "format": {
+        "heading": { "label": "Heading", "placeholder": "Heading" },
+        "bold": { "label": "Bold", "placeholder": "bold text" },
+        "italic": { "label": "Italic", "placeholder": "italic text" },
+        "link": { "label": "Link", "placeholder": "link text" },
+        "code": { "label": "Code", "placeholder": "code" }
+      },
+      "editorTitle": "Markdown",
+      "characterCount": "{{count}} characters",
+      "editorAria": "Markdown editor",
+      "editorPlaceholder": "Type or paste Markdown here...",
+      "previewTitle": "Preview",
+      "privacyNote": "Preview stays in your browser. Raw HTML and external images are not rendered.",
+      "status": {
+        "formatApplied": "Formatting applied.",
+        "pasted": "Pasted Markdown from the clipboard.",
+        "clipboardDenied": "Clipboard access was denied. Paste directly into the editor instead.",
+        "invalidFile": "Choose a .md or .markdown file.",
+        "fileTooLarge": "The Markdown file must be 2 MiB or smaller.",
+        "loaded": "Loaded {{filename}}.",
+        "readFailed": "The Markdown file could not be read.",
+        "downloaded": "Downloaded {{filename}}.",
+        "cleared": "Editor cleared."
+      }
+    }
+  },
+  "tool-code-preview": {
+    "title": "VS Code Preview", "tooltip": "VS Code Preview & Highlighter", "description": "Edit highlighted code with line numbers, then copy or download the result.", "search": ["syntax highlighter", "code image", "source download", "shell"],
+    "ui": {
+      "paste": "Paste", "copy": "Copy Code", "upload": "Upload Code", "uploadAria": "Upload code file", "downloadFilename": "Download filename", "downloadSource": "Download Source", "exporting": "Exporting…", "downloadPng": "Download PNG", "appearance": "Appearance", "clear": "Clear", "language": "Language",
+      "lineCount_one": "{{formattedCount}} line", "lineCount_other": "{{formattedCount}} lines", "editorAria": "VS Code editor", "openFullscreen": "Open fullscreen code preview", "placeholder": "Type or paste code here…", "codeEditorAria": "Code editor", "privacyNote": "Edit directly in the highlighted window. Code stays in your browser and is never executed.",
+      "appearanceTitle": "Editor appearance", "appearanceDescription": "Choose a preset or adjust individual colors.", "close": "Close", "editorTheme": "Editor theme", "theme": { "system": "System", "light": "Light", "dark": "Dark" }, "accent": "Accent", "background": "Background", "foreground": "Foreground", "codeFont": "Code font", "colorAria": "{{label}} color", "fullscreenTitle": "Code fullscreen preview", "fullscreenCodeAria": "Fullscreen highlighted code",
+      "status": { "pasted": "Pasted code from the clipboard.", "pasteDenied": "Clipboard access was denied. Paste into the editor manually.", "copied": "Copied code to the clipboard.", "copyDenied": "Clipboard access was denied. Select and copy the code manually.", "fileTooLarge": "The code file must be 2 MiB or smaller.", "loaded": "Loaded {{filename}}.", "readFailed": "The selected file could not be read.", "downloaded": "Downloaded {{filename}}.", "preparingPng": "Preparing PNG…", "pngFailed": "PNG export failed. Try a shorter code sample or another browser.", "cleared": "Editor cleared." }
+    }
+  },
   "tool-fontextractor": { "title": "Font Extractor", "tooltip": "Website Font Extractor", "description": "Inspect bounded font declarations from a public website without downloading font files.", "search": ["web font", "font family", "CSS font"], "ui": { "heading": "Website Font Extractor", "weight": "Weight", "style": "Style", "stretch": "Stretch", "variable": "Variable", "sourceHost": "Source host", "unicodeRange": "Unicode range", "unknown": "unknown", "yes": "Yes", "no": "No", "embedded": "Embedded declaration", "similar": "Similar fonts", "similarHint": "Heuristic alternatives. Links open Google Fonts only after you select them.", "blocked": "Website analysis is blocked until you allow the disclosed external service.", "required": "Please enter a website URL.", "error": "Error: {{message}}", "failed": "Extraction failed.", "noneDetailed": "No web font declarations were found. The site may use system fonts or dynamic loading.", "unavailable": "Website analysis is currently unavailable.", "unknownFamily": "Unknown family", "consentDisclosure": "Analysis sends the target URL to this site's server, which fetches bounded public HTML and CSS. Font files are not fetched.", "allow": "Allow website analysis", "websiteUrl": "Website URL", "placeholder": "Enter a website URL (e.g., stripe.com)", "scanning": "Scanning…", "scan": "Scan declarations", "try": "Try:", "fetching": "Fetching bounded HTML and CSS…", "summary": "{{families}} families, {{faces}} faces found", "truncated": "Results may be incomplete because the scan reached its safe {{reasons}} limit.", "faceCount_one": "({{count}} face)", "faceCount_other": "({{count}} faces)", "none": "No web font declarations were found.", "disclaimer": "This scan reports declarations found in bounded public HTML and CSS; it does not prove a font was rendered. Dynamically loaded or authenticated styles may not be detected. Recommendations are local heuristics." } },
-  "tool-base": { "title": "Base Converter", "tooltip": "Base Converter", "description": "Convert values among binary, octal, decimal, hexadecimal, and sexagesimal.", "search": ["binary", "octal", "decimal", "hexadecimal", "sexagesimal"] },
+  "tool-base": { "title": "Base Converter", "tooltip": "Base Converter", "description": "Convert values among binary, octal, decimal, hexadecimal, and sexagesimal.", "search": ["binary", "octal", "decimal", "hexadecimal", "sexagesimal"], "ui": { "heading": "Base Converter", "binary": "Binary", "octal": "Octal", "decimal": "Decimal", "hexadecimal": "Hexadecimal", "sexagesimal": "Sexagesimal", "conversionTitle": "Input base & converted values", "conversionHint": "Choose an input base to edit the current value in that notation.", "base": "Base {{base}}", "inputBase": "Input base", "number": "Number", "example": "Example: {{example}}", "retryPaste": "Retry pasting from clipboard", "paste": "Paste from clipboard", "pasting": "Pasting", "pasted": "Pasted", "retry": "Retry", "pasteShort": "Paste", "clear": "Clear", "invalid": "“{{input}}” is not valid {{base}} input.", "interpreting": "Interpreting the value as {{baseName}} (base {{base}}).", "empty": "Enter a number to generate all base representations automatically.", "convertedValues": "Converted values", "retryCopy": "Retry copying {{base}} value", "copyValue": "Copy {{base}} value", "copied": "Copied", "copy": "Copy", "reference": "0–15 quick reference", "referenceHint": "Select any value to use that representation as the input.", "legend": "BIN · OCT · DEC · HEX", "gridLabel": "Common base conversions for decimal 0 through 15", "baseHeading": "Base", "rowTitle": "{{name}} (base {{base}})", "cellLabel": "{{name}} {{display}}, decimal {{decimal}}", "cellTitle": "{{display}} (base {{base}}) = {{decimal}} (decimal)" } },
   "tool-folder-analyzer": { "title": "Folder Analyzer", "tooltip": "Folder Structure Analyzer", "description": "Inspect a selected folder's structure and metrics locally.", "search": ["directory tree", "file count", "project structure"] },
   "tool-dna": { "title": "DNA/RNA Converter", "tooltip": "DNA/RNA Converter", "description": "Transform sequence direction, complements, and display modes.", "search": ["DNA", "RNA", "reverse complement", "antisense"] },
   "tool-codon": { "title": "Codon Table", "tooltip": "RNA Codon Table", "description": "Explore RNA codons, amino acids, and filters.", "search": ["RNA", "amino acid", "genetic code"] },

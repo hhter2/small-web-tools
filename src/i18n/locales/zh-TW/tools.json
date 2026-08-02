@@ -8,10 +8,62 @@
   "tool-ascii": { "title": "ASCII 轉換器", "tooltip": "ASCII 轉換器", "description": "在文字與 ASCII 代碼之間轉換。", "search": ["字元碼", "十進位代碼"], "ui": { "reference": "ASCII 參照表", "referenceHint": "選擇任一字元，將其十進位代碼設為輸入。", "legend": "十進位 · 字元", "gridLabel": "ASCII 代碼 0 至 127", "cellLabel": "ASCII {{code}}：{{name}}", "outsideAscii": "字元「{{character}}」超出 ASCII 範圍。非 ASCII 文字請使用 Unicode 轉換器。", "notDecimal": "「{{value}}」不是十進位 ASCII 代碼。", "outsideRange": "ASCII 代碼 {{value}} 超出允許的 0 至 127 範圍。", "plainText": "純文字", "codes": "ASCII 代碼", "textOrCodes": "文字或 ASCII 代碼", "converted": "轉換結果", "placeholder": "Hello\n或\n72 101 108 108 111" } },
   "tool-unicode": { "title": "Unicode 轉換器", "tooltip": "Unicode 轉換器", "description": "在文字與 Unicode 跳脫序列之間轉換。", "search": ["碼位", "跳脫序列"], "ui": { "notHex": "「{{value}}」不是十六進位 Unicode 碼位。", "invalidScalar": "「{{value}}」不是有效的 Unicode 純量值。", "plainText": "純文字", "codePoints": "Unicode 碼位", "textOrCodePoints": "文字或碼位", "convertedPlaceholder": "轉換結果會顯示在這裡。", "pointsPlaceholder": "Unicode 碼位會顯示在這裡。", "decodedPlaceholder": "解碼文字會顯示在這裡。", "converted": "轉換結果", "placeholder": "Hello 🌍\n或\nU+0048 U+0065 U+006C U+006C U+006F" } },
   "tool-url": { "title": "URL 編碼與解碼", "tooltip": "URL 編碼與解碼", "description": "使用 UTF-8 百分比編碼來編碼或解碼 URL 與非 ASCII 網址。", "search": ["百分比編碼", "URI", "UTF-8 網址"], "ui": { "scope": "編碼範圍", "scopeHint": "使用 UTF-8 百分比編碼；轉換全程留在此瀏覽器。", "scopeLabel": "URL 編碼範圍", "fullUrl": "完整 URL", "component": "URL 元件", "fullHint": "保留 : / ? & = 與 # 等 URL 結構，同時編碼非 ASCII 字元與空格。", "componentHint": "編碼所有保留分隔符號，適合放入查詢參數中的地址或其他值。", "placeholder": "貼上 URL、非 ASCII 地址或百分比編碼值", "converted": "轉換後的 URL", "urlOrEncoded": "URL 或已編碼的 URL", "decoded": "解碼後的 URL", "encoded": "百分比編碼 URL", "convertedPlaceholder": "轉換後的 URL 會顯示在這裡。", "decodedPlaceholder": "解碼後的 URL 會顯示在這裡。", "encodedPlaceholder": "編碼後的 URL 會顯示在這裡。", "invalidUnicode": "來源包含無法進行 URL 編碼的無效 Unicode 序列。", "malformedEncoding": "來源包含格式錯誤或不完整的百分比編碼。" } },
-  "tool-markdown": { "title": "Markdown 預覽器", "tooltip": "Markdown 預覽器", "description": "在本機編輯、上傳、預覽與下載 Markdown 檔案。", "search": ["Markdown 編輯器", "MD 預覽"] },
-  "tool-code-preview": { "title": "VS Code 預覽", "tooltip": "VS Code 預覽與語法醒目提示", "description": "以行號與語法醒目提示編輯程式碼，再複製或下載結果。", "search": ["語法醒目提示", "程式碼圖片", "原始碼下載", "命令列"] },
+  "tool-markdown": {
+    "title": "Markdown 預覽器",
+    "tooltip": "Markdown 預覽器",
+    "description": "在本機編輯、上傳、預覽與下載 Markdown 檔案。",
+    "search": ["Markdown 編輯器", "MD 預覽"],
+    "ui": {
+      "imagePlaceholder": "圖片：{{alt}}",
+      "previewAria": "Markdown 預覽",
+      "emptyPreview": "算繪後的預覽會顯示在這裡。",
+      "completedTask": "已完成的工作",
+      "incompleteTask": "未完成的工作",
+      "paste": "貼上",
+      "upload": "上傳 Markdown",
+      "uploadAria": "上傳 Markdown 檔案",
+      "downloadFilename": "下載檔名",
+      "download": "下載 .md",
+      "clear": "清除",
+      "formattingAria": "Markdown 格式工具",
+      "formatAs": "套用{{format}}格式",
+      "format": {
+        "heading": { "label": "標題", "placeholder": "標題" },
+        "bold": { "label": "粗體", "placeholder": "粗體文字" },
+        "italic": { "label": "斜體", "placeholder": "斜體文字" },
+        "link": { "label": "連結", "placeholder": "連結文字" },
+        "code": { "label": "程式碼", "placeholder": "程式碼" }
+      },
+      "editorTitle": "Markdown",
+      "characterCount": "{{count}} 個字元",
+      "editorAria": "Markdown 編輯器",
+      "editorPlaceholder": "在此輸入或貼上 Markdown…",
+      "previewTitle": "預覽",
+      "privacyNote": "預覽只會在瀏覽器中處理，不會算繪原始 HTML 或外部圖片。",
+      "status": {
+        "formatApplied": "已套用格式。",
+        "pasted": "已從剪貼簿貼上 Markdown。",
+        "clipboardDenied": "無法讀取剪貼簿，請直接貼到編輯器中。",
+        "invalidFile": "請選擇 .md 或 .markdown 檔案。",
+        "fileTooLarge": "Markdown 檔案不可超過 2 MiB。",
+        "loaded": "已載入 {{filename}}。",
+        "readFailed": "無法讀取 Markdown 檔案。",
+        "downloaded": "已下載 {{filename}}。",
+        "cleared": "已清除編輯器。"
+      }
+    }
+  },
+  "tool-code-preview": {
+    "title": "VS Code 預覽", "tooltip": "VS Code 預覽與語法醒目提示", "description": "以行號與語法醒目提示編輯程式碼，再複製或下載結果。", "search": ["語法醒目提示", "程式碼圖片", "原始碼下載", "命令列"],
+    "ui": {
+      "paste": "貼上", "copy": "複製程式碼", "upload": "上傳程式碼", "uploadAria": "上傳程式碼檔案", "downloadFilename": "下載檔名", "downloadSource": "下載原始碼", "exporting": "匯出中…", "downloadPng": "下載 PNG", "appearance": "外觀", "clear": "清除", "language": "語言",
+      "lineCount_one": "{{formattedCount}} 行", "lineCount_other": "{{formattedCount}} 行", "editorAria": "VS Code 編輯器", "openFullscreen": "開啟全螢幕程式碼預覽", "placeholder": "在此輸入或貼上程式碼…", "codeEditorAria": "程式碼編輯器", "privacyNote": "可直接在醒目提示視窗中編輯。程式碼只留在瀏覽器內，且不會被執行。",
+      "appearanceTitle": "編輯器外觀", "appearanceDescription": "選擇預設主題，或分別調整各個顏色。", "close": "關閉", "editorTheme": "編輯器主題", "theme": { "system": "系統", "light": "淺色", "dark": "深色" }, "accent": "強調色", "background": "背景", "foreground": "前景", "codeFont": "程式碼字型", "colorAria": "{{label}}顏色", "fullscreenTitle": "程式碼全螢幕預覽", "fullscreenCodeAria": "全螢幕醒目提示程式碼",
+      "status": { "pasted": "已從剪貼簿貼上程式碼。", "pasteDenied": "無法讀取剪貼簿，請手動貼到編輯器中。", "copied": "已將程式碼複製到剪貼簿。", "copyDenied": "無法寫入剪貼簿，請手動選取並複製程式碼。", "fileTooLarge": "程式碼檔案不可超過 2 MiB。", "loaded": "已載入 {{filename}}。", "readFailed": "無法讀取所選檔案。", "downloaded": "已下載 {{filename}}。", "preparingPng": "正在準備 PNG…", "pngFailed": "PNG 匯出失敗，請縮短程式碼內容或改用其他瀏覽器。", "cleared": "已清除編輯器。" }
+    }
+  },
   "tool-fontextractor": { "title": "字型擷取器", "tooltip": "網站字型擷取器", "description": "檢查公開網站中受限範圍的字型宣告，不下載字型檔案。", "search": ["網頁字型", "字型家族", "CSS 字型"], "ui": { "heading": "網站字型擷取器", "weight": "字重", "style": "樣式", "stretch": "寬度", "variable": "可變字型", "sourceHost": "來源主機", "unicodeRange": "Unicode 範圍", "unknown": "未知", "yes": "是", "no": "否", "embedded": "內嵌宣告", "similar": "相似字型", "similarHint": "依規則推測的替代選項；只有在您選取連結後才會開啟 Google Fonts。", "blocked": "在您允許已揭露的外部服務前，網站分析會維持封鎖。", "required": "請輸入網站 URL。", "error": "錯誤：{{message}}", "failed": "擷取失敗。", "noneDetailed": "找不到網頁字型宣告；該網站可能使用系統字型或動態載入。", "unavailable": "目前無法使用網站分析。", "unknownFamily": "未知字型家族", "consentDisclosure": "分析會將目標 URL 傳送至本站伺服器，由伺服器擷取有限範圍的公開 HTML 與 CSS；不會擷取字型檔案。", "allow": "允許網站分析", "websiteUrl": "網站 URL", "placeholder": "輸入網站 URL（例如 stripe.com）", "scanning": "掃描中…", "scan": "掃描宣告", "try": "試試：", "fetching": "正在擷取有限範圍的 HTML 與 CSS…", "summary": "找到 {{families}} 個家族、{{faces}} 個字型面", "truncated": "掃描已達安全的{{reasons}}限制，結果可能不完整。", "faceCount_one": "（{{count}} 個字型面）", "faceCount_other": "（{{count}} 個字型面）", "none": "找不到網頁字型宣告。", "disclaimer": "此掃描只回報有限範圍的公開 HTML 與 CSS 中找到的宣告，不代表字型確實已呈現。動態載入或需要驗證的樣式可能無法偵測；建議項目是本機規則推測結果。" } },
-  "tool-base": { "title": "進位轉換器", "tooltip": "進位轉換器", "description": "在二、八、十、十六與六十進位之間轉換數值。", "search": ["二進位", "八進位", "十進位", "十六進位", "六十進位"] },
+  "tool-base": { "title": "進位轉換器", "tooltip": "進位轉換器", "description": "在二、八、十、十六與六十進位之間轉換數值。", "search": ["二進位", "八進位", "十進位", "十六進位", "六十進位"], "ui": { "heading": "進位轉換器", "binary": "二進位", "octal": "八進位", "decimal": "十進位", "hexadecimal": "十六進位", "sexagesimal": "六十進位", "conversionTitle": "輸入進位與轉換值", "conversionHint": "選擇輸入進位，即可用該表示法編輯目前的數值。", "base": "{{base}} 進位", "inputBase": "輸入進位", "number": "數字", "example": "範例：{{example}}", "retryPaste": "重試從剪貼簿貼上", "paste": "從剪貼簿貼上", "pasting": "貼上中", "pasted": "已貼上", "retry": "重試", "pasteShort": "貼上", "clear": "清除", "invalid": "「{{input}}」不是有效的{{base}}輸入。", "interpreting": "將此數值解讀為{{baseName}}（{{base}} 進位）。", "empty": "輸入數字後，會自動產生所有進位表示法。", "convertedValues": "轉換值", "retryCopy": "重試複製{{base}}值", "copyValue": "複製{{base}}值", "copied": "已複製", "copy": "複製", "reference": "0–15 快速參照", "referenceHint": "選擇任一數值，將該表示法設為輸入。", "legend": "BIN · OCT · DEC · HEX", "gridLabel": "十進位 0 至 15 的常用進位轉換", "baseHeading": "進位", "rowTitle": "{{name}}（{{base}} 進位）", "cellLabel": "{{name}} {{display}}，十進位 {{decimal}}", "cellTitle": "{{display}}（{{base}} 進位）= {{decimal}}（十進位）" } },
   "tool-folder-analyzer": { "title": "資料夾分析器", "tooltip": "資料夾結構分析器", "description": "在本機檢查所選資料夾的結構與統計資料。", "search": ["目錄樹", "檔案數", "專案結構"] },
   "tool-dna": { "title": "DNA/RNA 轉換器", "tooltip": "DNA/RNA 轉換器", "description": "轉換序列方向、互補序列與顯示模式。", "search": ["DNA", "RNA", "反向互補", "反義股"] },
   "tool-codon": { "title": "密碼子表", "tooltip": "RNA 密碼子表", "description": "探索 RNA 密碼子、胺基酸與篩選條件。", "search": ["RNA", "胺基酸", "遺傳密碼"] },

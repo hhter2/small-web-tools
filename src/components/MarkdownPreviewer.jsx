@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from './ui/Button';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
@@ -9,6 +10,7 @@ import {
 } from './MarkdownPreviewer/lib/markdownDomain';
 
 function InlinePreview({ tokens }) {
+  const { t } = useTranslation('tools');
   return tokens.map((token, index) => {
     const key = `${token.type}-${index}`;
     if (token.type === 'code') {
@@ -33,7 +35,7 @@ function InlinePreview({ tokens }) {
     if (token.type === 'image') {
       return (
         <span key={key} className="inline-flex rounded border border-border bg-app px-2 py-1 text-xs text-text-muted">
-          Image: {token.alt}
+          {t('tool-markdown.ui.imagePlaceholder', { alt: token.alt })}
         </span>
       );
     }
@@ -42,15 +44,16 @@ function InlinePreview({ tokens }) {
 }
 
 function MarkdownPreview({ blocks, previewRef, onScroll }) {
+  const { t } = useTranslation('tools');
   if (blocks.length === 0) {
     return (
       <div
         ref={previewRef}
         onScroll={onScroll}
-        aria-label="Markdown preview"
+        aria-label={t('tool-markdown.ui.previewAria')}
         className="flex h-full min-h-0 items-center justify-center overflow-auto p-8 text-center text-sm text-text-muted"
       >
-        The rendered preview will appear here.
+        {t('tool-markdown.ui.emptyPreview')}
       </div>
     );
   }
@@ -59,7 +62,7 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
     <div
       ref={previewRef}
       onScroll={onScroll}
-      aria-label="Markdown preview"
+      aria-label={t('tool-markdown.ui.previewAria')}
       className="relative h-full min-h-0 space-y-4 overflow-auto p-5 text-[0.95rem] leading-7 text-text-main"
     >
       {blocks.map((block, index) => {
@@ -121,7 +124,9 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
                       type="checkbox"
                       checked={item.checked}
                       readOnly
-                      aria-label={item.checked ? 'Completed task' : 'Incomplete task'}
+                      aria-label={t(item.checked
+                        ? 'tool-markdown.ui.completedTask'
+                        : 'tool-markdown.ui.incompleteTask')}
                       className="mr-2 accent-accent"
                     />
                   )}
@@ -174,14 +179,15 @@ function MarkdownPreview({ blocks, previewRef, onScroll }) {
 }
 
 const FORMAT_ACTIONS = [
-  { label: 'Heading', prefix: '## ', suffix: '', placeholder: 'Heading' },
-  { label: 'Bold', prefix: '**', suffix: '**', placeholder: 'bold text' },
-  { label: 'Italic', prefix: '*', suffix: '*', placeholder: 'italic text' },
-  { label: 'Link', prefix: '[', suffix: '](url)', placeholder: 'link text' },
-  { label: 'Code', prefix: '`', suffix: '`', placeholder: 'code' },
+  { key: 'heading', prefix: '## ', suffix: '' },
+  { key: 'bold', prefix: '**', suffix: '**' },
+  { key: 'italic', prefix: '*', suffix: '*' },
+  { key: 'link', prefix: '[', suffix: '](url)' },
+  { key: 'code', prefix: '`', suffix: '`' },
 ];
 
 export default function MarkdownPreviewer() {
+  const { t, i18n } = useTranslation('tools');
   const [markdown, setMarkdown] = useState('');
   const [filename, setFilename] = useState('document.md');
   const [status, setStatus] = useState('');
@@ -242,15 +248,15 @@ export default function MarkdownPreviewer() {
     });
   };
 
-  const insertFormat = ({ prefix, suffix, placeholder }) => {
+  const insertFormat = ({ key, prefix, suffix }) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selected = markdown.slice(start, end) || placeholder;
+    const selected = markdown.slice(start, end) || t(`tool-markdown.ui.format.${key}.placeholder`);
     const replacement = `${prefix}${selected}${suffix}`;
     setMarkdown(`${markdown.slice(0, start)}${replacement}${markdown.slice(end)}`);
-    setStatus('Formatting applied.');
+    setStatus(t('tool-markdown.ui.status.formatApplied'));
     requestAnimationFrame(() => {
       textarea.focus();
       textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
@@ -261,9 +267,9 @@ export default function MarkdownPreviewer() {
     try {
       const text = await navigator.clipboard.readText();
       setMarkdown(text);
-      setStatus('Pasted Markdown from the clipboard.');
+      setStatus(t('tool-markdown.ui.status.pasted'));
     } catch {
-      setStatus('Clipboard access was denied. Paste directly into the editor instead.');
+      setStatus(t('tool-markdown.ui.status.clipboardDenied'));
     }
   };
 
@@ -272,20 +278,20 @@ export default function MarkdownPreviewer() {
     event.target.value = '';
     if (!file) return;
     if (!/\.(?:md|markdown)$/i.test(file.name)) {
-      setStatus('Choose a .md or .markdown file.');
+      setStatus(t('tool-markdown.ui.status.invalidFile'));
       return;
     }
     if (file.size > MARKDOWN_FILE_LIMIT_BYTES) {
-      setStatus('The Markdown file must be 2 MiB or smaller.');
+      setStatus(t('tool-markdown.ui.status.fileTooLarge'));
       return;
     }
 
     try {
       setMarkdown(await file.text());
       setFilename(normalizeMarkdownFilename(file.name));
-      setStatus(`Loaded ${file.name}.`);
+      setStatus(t('tool-markdown.ui.status.loaded', { filename: file.name }));
     } catch {
-      setStatus('The Markdown file could not be read.');
+      setStatus(t('tool-markdown.ui.status.readFailed'));
     }
   };
 
@@ -299,27 +305,27 @@ export default function MarkdownPreviewer() {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    setStatus(`Downloaded ${anchor.download}.`);
+    setStatus(t('tool-markdown.ui.status.downloaded', { filename: anchor.download }));
   };
 
   const handleClear = () => {
     setMarkdown('');
     setFilename('document.md');
-    setStatus('Editor cleared.');
+    setStatus(t('tool-markdown.ui.status.cleared'));
     textareaRef.current?.focus();
   };
 
   return (
     <Card id="tool-markdown" variant="tool" size="wide" className="max-w-[1180px]">
-      <ToolHeader title="Markdown Previewer" />
+      <ToolHeader title={t('tool-markdown.title')} />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-app/60 p-3">
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>
-            Paste
+            {t('tool-markdown.ui.paste')}
           </Button>
           <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-            Upload Markdown
+            {t('tool-markdown.ui.upload')}
           </Button>
           <input
             ref={fileInputRef}
@@ -327,39 +333,41 @@ export default function MarkdownPreviewer() {
             accept=".md,.markdown,text/markdown,text/plain"
             onChange={handleFile}
             className="hidden"
-            aria-label="Upload Markdown file"
+            aria-label={t('tool-markdown.ui.uploadAria')}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="markdown-filename" className="sr-only">Download filename</label>
+          <label htmlFor="markdown-filename" className="sr-only">{t('tool-markdown.ui.downloadFilename')}</label>
           <input
             id="markdown-filename"
             value={filename}
             onChange={(event) => setFilename(event.target.value)}
             className="w-40 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus"
-            aria-label="Download filename"
+            aria-label={t('tool-markdown.ui.downloadFilename')}
           />
           <Button type="button" variant="primary" size="sm" onClick={handleDownload} disabled={!markdown}>
-            Download .md
+            {t('tool-markdown.ui.download')}
           </Button>
           <Button type="button" variant="secondary" size="sm" onClick={handleClear} disabled={!markdown}>
-            Clear
+            {t('tool-markdown.ui.clear')}
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Markdown formatting">
+      <div className="flex flex-wrap gap-2" role="toolbar" aria-label={t('tool-markdown.ui.formattingAria')}>
         {FORMAT_ACTIONS.map((action) => (
           <Button
-            key={action.label}
+            key={action.key}
             type="button"
             variant="secondary"
             size="sm"
             onClick={() => insertFormat(action)}
-            aria-label={`Format as ${action.label}`}
+            aria-label={t('tool-markdown.ui.formatAs', {
+              format: t(`tool-markdown.ui.format.${action.key}.label`),
+            })}
           >
-            {action.label}
+            {t(`tool-markdown.ui.format.${action.key}.label`)}
           </Button>
         ))}
       </div>
@@ -367,8 +375,10 @@ export default function MarkdownPreviewer() {
       <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card lg:h-[560px] lg:grid-cols-2">
         <section className="flex min-h-[420px] min-w-0 flex-col border-b border-border lg:min-h-0 lg:border-b-0 lg:border-r" aria-labelledby="markdown-editor-title">
           <div className="flex min-h-12 items-center justify-between border-b border-border bg-app/70 px-4 py-2">
-            <h3 id="markdown-editor-title" className="text-sm font-bold text-text-main">Markdown</h3>
-            <span className="text-xs tabular-nums text-text-muted">{markdown.length.toLocaleString()} characters</span>
+            <h3 id="markdown-editor-title" className="text-sm font-bold text-text-main">{t('tool-markdown.ui.editorTitle')}</h3>
+            <span className="text-xs tabular-nums text-text-muted">{t('tool-markdown.ui.characterCount', {
+              count: markdown.length.toLocaleString(i18n.language),
+            })}</span>
           </div>
           <textarea
             ref={textareaRef}
@@ -380,15 +390,15 @@ export default function MarkdownPreviewer() {
             onScroll={(event) => syncEditorToPreview(event.currentTarget, previewRef.current)}
             spellCheck={false}
             wrap="off"
-            aria-label="Markdown editor"
-            placeholder="Type or paste Markdown here..."
+            aria-label={t('tool-markdown.ui.editorAria')}
+            placeholder={t('tool-markdown.ui.editorPlaceholder')}
             className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-transparent p-4 font-mono text-sm leading-6 text-text-main outline-none placeholder:text-text-muted/50 focus:ring-0"
           />
         </section>
 
         <section className="flex min-h-[420px] min-w-0 flex-col bg-accent-light/10 lg:min-h-0" aria-labelledby="markdown-preview-title">
           <div className="flex min-h-12 items-center border-b border-border bg-app/45 px-4 py-2">
-            <h3 id="markdown-preview-title" className="text-sm font-bold text-text-main">Preview</h3>
+            <h3 id="markdown-preview-title" className="text-sm font-bold text-text-main">{t('tool-markdown.ui.previewTitle')}</h3>
           </div>
           <div className="min-h-0 flex-1">
             <MarkdownPreview
@@ -401,7 +411,7 @@ export default function MarkdownPreviewer() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
-        <p>Preview stays in your browser. Raw HTML and external images are not rendered.</p>
+        <p>{t('tool-markdown.ui.privacyNote')}</p>
         <p role="status" aria-live="polite">{status}</p>
       </div>
     </Card>

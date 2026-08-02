@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -6,14 +7,14 @@ import { hasConsent, grantConsent } from '../lib/thirdPartyServices';
 import { parseIpInput } from '../lib/ipValidation';
 import ExternalMapPreview from './ExternalMapPreview';
 
-async function ipLookup(ip) {
+async function ipLookup(ip, t) {
   const parsed = parseIpInput(ip);
-  if (parsed.error) throw new Error(parsed.error);
+  if (parsed.error) throw new Error(t(`tool-iplookup.ui.${parsed.errorCode}`));
   const query = parsed.value ? '?ip=' + encodeURIComponent(parsed.value) : '';
   const response = await fetch('/api/iplookup' + query);
   const result = await response.json();
   if (!response.ok || !result.ok) {
-    throw new Error(result.error || 'Server-side IP lookup failed');
+    throw new Error(result.error || t('tool-iplookup.ui.serverError'));
   }
   return result.data;
 }
@@ -27,6 +28,7 @@ function getFlagEmoji(countryCode) {
 }
 
 function CopyBtn({ value, copiedKey, thisKey, onCopy }) {
+  const { t } = useTranslation('tools');
   const isCopied = copiedKey === thisKey;
   return (
     <button
@@ -38,12 +40,13 @@ function CopyBtn({ value, copiedKey, thisKey, onCopy }) {
           : 'bg-accent-light text-accent border-accent/15 hover:bg-accent hover:text-white hover:border-accent'
         }`}
     >
-      {isCopied ? 'Copied!' : 'Copy'}
+      {t(isCopied ? 'tool-iplookup.ui.copied' : 'tool-iplookup.ui.copy')}
     </button>
   );
 }
 
 export default function IpLookup() {
+  const { t } = useTranslation('tools');
   const [ipInput, setIpInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -69,12 +72,12 @@ export default function IpLookup() {
 
   const doLookup = async () => {
     if (!lookupAllowed) {
-      setStatus('IP lookup is blocked until you allow the disclosed third-party service.');
+      setStatus(t('tool-iplookup.ui.blocked'));
       return;
     }
     const parsed = parseIpInput(ipInput);
     if (parsed.error) {
-      setStatus('Error: ' + parsed.error);
+      setStatus(t('tool-iplookup.ui.error', { message: t(`tool-iplookup.ui.${parsed.errorCode}`) }));
       setResult(null);
       return;
     }
@@ -84,10 +87,10 @@ export default function IpLookup() {
     setStatus('');
 
     try {
-      const data = await ipLookup(parsed.value);
+      const data = await ipLookup(parsed.value, t);
       setResult(data);
     } catch (err) {
-      setStatus(`Error: ${err.message}`);
+      setStatus(t('tool-iplookup.ui.error', { message: err.message }));
     } finally {
       setLoading(false);
     }
@@ -103,46 +106,46 @@ export default function IpLookup() {
   if (result) {
     const city = result.city || '';
     const postal = result.postal || '';
-    locationVal = city && postal ? `${city} (${postal})` : (city || postal || "Unknown");
+    locationVal = city && postal ? `${city} (${postal})` : (city || postal || t('tool-iplookup.ui.unknown'));
 
     const countryCode = result.country_code || '';
     const flag = getFlagEmoji(countryCode);
     const region = result.region || '';
     const country = result.country_name || '';
-    regionCountryVal = `${region}${region && country ? ", " : ""}${country} ${flag}`.trim() || "Unknown";
+    regionCountryVal = `${region}${region && country ? ", " : ""}${country} ${flag}`.trim() || t('tool-iplookup.ui.unknown');
 
-    timezoneVal = result.timezone ? `${result.timezone} (UTC ${result.utc_offset || ""})` : "Unknown";
+    timezoneVal = result.timezone ? `${result.timezone} (UTC ${result.utc_offset || ""})` : t('tool-iplookup.ui.unknown');
 
     if (result.latitude !== undefined && result.latitude !== null && result.longitude !== undefined && result.longitude !== null) {
       coordsVal = `${result.latitude}, ${result.longitude}`;
     } else {
-      coordsVal = "Unknown";
+      coordsVal = t('tool-iplookup.ui.unknown');
     }
   }
 
   return (
     <Card id="tool-iplookup" variant="tool" size="wide">
-      <ToolHeader title="IP Address Lookup" />
+      <ToolHeader title={t('tool-iplookup.ui.heading')} />
       <p className="text-xs text-text-muted">
-        Lookup sends the requested IP through this site to a geolocation provider; the map separately contacts OpenStreetMap only after permission.
+        {t('tool-iplookup.ui.disclosure')}
       </p>
       {!lookupAllowed && (
         <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
           <span>
-            Lookup sends the requested IP to this site’s server, which contacts a geolocation provider.
+            {t('tool-iplookup.ui.consentDisclosure')}
           </span>
           <Button variant="secondary" onClick={() => grantConsent('iplookup')}>
-            Allow IP lookup
+            {t('tool-iplookup.ui.allow')}
           </Button>
         </div>
       )}
       <div className="flex flex-col gap-2 w-full">
-        <label htmlFor="iplookup-input" className="text-sm font-semibold text-text-main">IP Address</label>
+        <label htmlFor="iplookup-input" className="text-sm font-semibold text-text-main">{t('tool-iplookup.ui.ipAddress')}</label>
         <div className="flex gap-3 w-full">
           <input
             id="iplookup-input"
             type="text"
-            placeholder="Enter IP address (leave blank for your current IP)..."
+            placeholder={t('tool-iplookup.ui.placeholder')}
             value={ipInput}
             onChange={(e) => setIpInput(e.target.value)}
             onKeyDown={(e) => {
@@ -159,7 +162,7 @@ export default function IpLookup() {
             onClick={doLookup}
             disabled={loading}
           >
-            Lookup
+            {t('tool-iplookup.ui.lookup')}
           </Button>
         </div>
       </div>
@@ -167,7 +170,7 @@ export default function IpLookup() {
       {loading && (
         <div id="iplookup-loader" className="flex flex-col items-center justify-center gap-3 py-6">
           <div className="w-10 h-10 border-4 border-border border-t-accent rounded-full animate-spin" />
-          <span>Fetching IP details...</span>
+          <span>{t('tool-iplookup.ui.fetching')}</span>
         </div>
       )}
 
@@ -176,12 +179,12 @@ export default function IpLookup() {
           <div className="grid grid-cols-[1.2fr_1fr] gap-6 w-full max-[900px]:grid-cols-1 max-[900px]:gap-5">
             <div className="grid grid-cols-2 gap-4">
               {[
-                { id: 'iplookup-res-ip', label: 'IP Address', val: result.ip || "Unknown", copyKey: 'ip' },
-                { id: 'iplookup-res-location', label: 'Location (City / Zip)', val: locationVal, copyKey: 'location' },
-                { id: 'iplookup-res-region-country', label: 'Region & Country', val: regionCountryVal, copyKey: 'regionCountry' },
-                { id: 'iplookup-res-org', label: 'Organization (ISP)', val: result.org || "Unknown", copyKey: 'org' },
-                { id: 'iplookup-res-timezone', label: 'Timezone', val: timezoneVal, copyKey: 'timezone' },
-                { id: 'iplookup-res-coords', label: 'Coordinates', val: coordsVal, copyKey: 'coords' },
+                { id: 'iplookup-res-ip', label: t('tool-iplookup.ui.ipAddress'), val: result.ip || t('tool-iplookup.ui.unknown'), copyKey: 'ip' },
+                { id: 'iplookup-res-location', label: t('tool-iplookup.ui.location'), val: locationVal, copyKey: 'location' },
+                { id: 'iplookup-res-region-country', label: t('tool-iplookup.ui.regionCountry'), val: regionCountryVal, copyKey: 'regionCountry' },
+                { id: 'iplookup-res-org', label: t('tool-iplookup.ui.organization'), val: result.org || t('tool-iplookup.ui.unknown'), copyKey: 'org' },
+                { id: 'iplookup-res-timezone', label: t('tool-iplookup.ui.timezone'), val: timezoneVal, copyKey: 'timezone' },
+                { id: 'iplookup-res-coords', label: t('tool-iplookup.ui.coordinates'), val: coordsVal, copyKey: 'coords' },
               ].map(({ id, label, val, copyKey }) => (
                 <div key={copyKey} className="flex flex-col gap-2 w-full">
                   <div className="flex justify-between items-center mb-0.5">
@@ -204,7 +207,7 @@ export default function IpLookup() {
               <ExternalMapPreview
                 latitude={Number(result.latitude)}
                 longitude={Number(result.longitude)}
-                title="IP Location"
+                title={t('tool-iplookup.ui.mapTitle')}
                 delta={0.02}
               />
             )}

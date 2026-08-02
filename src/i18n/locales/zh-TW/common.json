@@ -5,6 +5,7 @@
   "states": { "loading": "載入中…", "loadingTool": "正在載入工具…", "empty": "沒有結果", "ready": "就緒", "processing": "處理中…", "pasting": "貼上中", "pasted": "已貼上" },
   "converter": { "source": "來源", "result": "結果", "mode": "轉換模式", "auto": "自動", "encode": "編碼", "decode": "解碼", "paste": "貼上", "pasteLabel": "從剪貼簿貼上", "retryPaste": "重試從剪貼簿貼上", "sourceInput": "來源輸入", "copyLabel": "複製轉換結果", "retryCopy": "重試複製轉換結果", "fixInput": "請修正來源輸入以查看結果。", "convertedResult": "轉換結果" },
   "fullscreen": { "open": "開啟全螢幕預覽", "title": "全螢幕預覽", "close": "關閉全螢幕預覽" },
+  "map": { "title": "地圖預覽", "hide": "隱藏地圖", "show": "顯示地圖", "google": "Google Maps ↗（座標會離開本站）", "frameTitle": "OpenStreetMap 上的{{title}}", "disclosure": "座標仍會顯示在上方。載入此地圖會將座標與標準要求中繼資料傳送至 OpenStreetMap。", "enable": "啟用 OpenStreetMap 預覽" },
   "consent": { "title": "第三方服務同意管理員", "close": "關閉同意管理員", "description": "Small Web Tools 以本機處理為優先。除非您明確允許，以下服務會維持封鎖。執行階段下載與使用者選擇的外部連結會另外在使用當下說明。", "readPolicy": "閱讀完整的隱私權與網路服務政策", "allow": "允許{{service}}", "revoke": "撤銷{{service}}", "allowed": "已允許（點擊可撤銷）", "blocked": "已封鎖（點擊可允許）", "allowedAnnouncement": "現在已允許{{service}}。", "blockedAnnouncement": "現在已封鎖{{service}}。", "fallback": "替代方式：{{fallback}}", "privacyPolicy": "隱私權政策 ↗", "reset": "重設所有偏好設定", "resetAnnouncement": "已重設所有第三方服務偏好設定。", "done": "完成", "services": {
     "currency": { "name": "即時匯率", "purpose": "透過同源匯率函式取得目前以 USD 為基準的匯率。", "fallback": "手動匯率設定會保留在瀏覽器中。" },
     "iplookup": { "name": "IP 地理位置", "purpose": "透過同源函式查詢位置與網路資訊。", "fallback": "在本機驗證 IP 語法。" },

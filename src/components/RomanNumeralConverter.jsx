@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from './ui/Button';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
@@ -20,7 +21,20 @@ const REFERENCE_VALUES = [
   [1000, 'M'],
 ];
 
+const LABEL_KEYS = {
+  'Decimal or Roman numeral': 'decimalOrRoman',
+  'Converted value': 'convertedValue',
+  'Decimal number': 'decimalNumber',
+  'Roman numeral': 'romanNumeral',
+};
+
+const ERROR_KEYS = {
+  'Enter a whole number from 1 to 3999.': 'decimalRange',
+  'Enter a canonical Roman numeral using I, V, X, L, C, D, and M.': 'invalidRoman',
+};
+
 export default function RomanNumeralConverter() {
+  const { t, i18n } = useTranslation('tools');
   const [input, setInput] = useState('');
   const [copyState, setCopyState] = useState('idle');
   const result = useMemo(() => convertRomanInput(input), [input]);
@@ -42,19 +56,19 @@ export default function RomanNumeralConverter() {
 
   return (
     <Card id="tool-roman" variant="tool" size="wide" className="max-w-[920px]">
-      <ToolHeader title="Roman Numeral Converter" />
+      <ToolHeader title={t('tool-roman.title')} />
 
       <section className="grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm md:grid-cols-2">
         <div className="flex min-w-0 flex-col border-b border-border md:border-b-0 md:border-r">
           <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/70 px-4 py-2.5">
-            <span className="text-sm font-bold text-text-main">{result.inputLabel}</span>
+            <span className="text-sm font-bold text-text-main">{t(`tool-roman.ui.label.${LABEL_KEYS[result.inputLabel]}`)}</span>
             <button
               type="button"
               disabled={!input}
               onClick={() => updateInput('')}
               className="rounded-md px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-text-main disabled:opacity-30"
             >
-              Clear
+              {t('tool-roman.ui.clear')}
             </button>
           </div>
           <input
@@ -71,24 +85,28 @@ export default function RomanNumeralConverter() {
           />
           {result.error && (
             <div id="roman-error" role="alert" className="border-t border-border bg-red-500/10 px-4 py-2 text-xs text-red-500">
-              {result.error}
+              {t(`tool-roman.ui.error.${ERROR_KEYS[result.error]}`)}
             </div>
           )}
         </div>
 
         <div className="flex min-w-0 flex-col bg-accent-light/20">
           <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/45 px-4 py-2.5">
-            <span className="text-sm font-bold text-text-main">{result.outputLabel}</span>
+            <span className="text-sm font-bold text-text-main">{t(`tool-roman.ui.label.${LABEL_KEYS[result.outputLabel]}`)}</span>
             <Button
               type="button"
               size="sm"
               variant="secondary"
               disabled={!result.output}
               onClick={copyResult}
-              aria-label={copyState === 'error' ? 'Retry copying converted value' : 'Copy converted value'}
+              aria-label={t(copyState === 'error' ? 'tool-roman.ui.retryCopyAria' : 'tool-roman.ui.copyAria')}
               className="min-w-[70px]"
             >
-              {copyState === 'copied' ? 'Copied' : copyState === 'error' ? 'Retry' : 'Copy'}
+              {t(copyState === 'copied'
+                ? 'tool-roman.ui.copied'
+                : copyState === 'error'
+                  ? 'tool-roman.ui.retry'
+                  : 'tool-roman.ui.copy')}
             </Button>
           </div>
           <output
@@ -103,8 +121,8 @@ export default function RomanNumeralConverter() {
 
       <section className="flex flex-col gap-3" aria-labelledby="roman-reference-title">
         <div>
-          <h3 id="roman-reference-title" className="text-sm font-bold text-text-main">Roman numeral reference</h3>
-          <p className="text-xs text-text-muted">Select a value to load it into the converter.</p>
+          <h3 id="roman-reference-title" className="text-sm font-bold text-text-main">{t('tool-roman.ui.referenceTitle')}</h3>
+          <p className="text-xs text-text-muted">{t('tool-roman.ui.referenceDescription')}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {REFERENCE_VALUES.map(([decimal, roman]) => (
@@ -113,7 +131,9 @@ export default function RomanNumeralConverter() {
               type="button"
               onClick={() => updateInput(String(decimal))}
               className="flex items-center justify-between gap-2 rounded-lg border border-border bg-app px-3 py-2 text-left transition-colors hover:border-accent hover:bg-accent-light"
-              aria-label={`Convert ${decimal} to ${roman}`}
+              aria-label={t('tool-roman.ui.convertAria', {
+                decimal: decimal.toLocaleString(i18n.language), roman,
+              })}
             >
               <span className="text-xs font-semibold text-text-muted">{decimal}</span>
               <span className="font-mono text-sm font-extrabold text-accent">{roman}</span>
@@ -121,7 +141,7 @@ export default function RomanNumeralConverter() {
           ))}
         </div>
         <p className="text-xs text-text-muted">
-          Standard Roman numerals support whole numbers from 1 to 3999. Subtractive pairs are IV, IX, XL, XC, CD, and CM.
+          {t('tool-roman.ui.note')}
         </p>
       </section>
     </Card>

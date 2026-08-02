@@ -1,0 +1,8 @@
+{
+  "boundary": { "title": "Something went wrong", "message": "This tool could not be displayed.", "retry": "Try again" },
+  "generic": "Something went wrong. Please try again.",
+  "clipboard": "Could not copy to the clipboard.",
+  "fileRead": "Could not read the selected file.",
+  "unsupportedFile": "This file type is not supported.",
+  "network": "The request could not be completed. Check your connection and try again."
+}

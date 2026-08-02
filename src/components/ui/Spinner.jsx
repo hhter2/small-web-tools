@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Spinner — Phase 6 Tailwind migration.
@@ -27,6 +28,7 @@ export default function Spinner({
   className = '',
   ...props
 }) {
+  const { t } = useTranslation('common');
   const ring = size === 'small'
     ? 'w-[13px] h-[13px] border-2'
     : 'w-10 h-10 border-4';
@@ -35,7 +37,7 @@ export default function Spinner({
     <div
       className={`rounded-full border-border border-t-accent animate-spin ${ring} ${!container ? className : ''}`}
       role="status"
-      aria-label="Loading"
+      aria-label={t('states.loading')}
       {...(!container ? props : {})}
     />
   );

@@ -4,9 +4,11 @@ import {
   PUBLIC_ROUTE_IDS,
   STATIC_LAYOUT_IDS,
   TOOL_ROUTES,
+  localizeToolRoute,
   getToolRoute,
 } from '../toolRegistry.js';
 import { TOOL_ICONS } from '../toolIcons.jsx';
+import i18n from '../i18n/index.js';
 
 describe('tool route registry', () => {
   it('owns unique public route and alias identifiers', () => {
@@ -23,12 +25,15 @@ describe('tool route registry', () => {
       expect(route).toMatchObject({
         id: expect.any(String),
         aliases: expect.any(Array),
-        title: expect.any(String),
         category: expect.any(String),
-        searchMetadata: expect.any(Array),
         loader: expect.any(Function),
         staticLayout: expect.any(Boolean),
         navigationVisible: expect.any(Boolean),
+      });
+      expect(localizeToolRoute(route, i18n.t.bind(i18n))).toMatchObject({
+        title: expect.any(String),
+        description: expect.any(String),
+        searchMetadata: expect.any(Array),
       });
     }
   });

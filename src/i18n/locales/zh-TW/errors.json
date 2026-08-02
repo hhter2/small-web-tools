@@ -1,0 +1,8 @@
+{
+  "boundary": { "title": "發生錯誤", "message": "無法顯示此工具。", "retry": "再試一次" },
+  "generic": "發生錯誤，請再試一次。",
+  "clipboard": "無法複製到剪貼簿。",
+  "fileRead": "無法讀取所選檔案。",
+  "unsupportedFile": "不支援此檔案類型。",
+  "network": "無法完成要求，請檢查網路連線後再試一次。"
+}

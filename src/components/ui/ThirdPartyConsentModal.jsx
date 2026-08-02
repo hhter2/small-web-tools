@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './Card';
 import Button from './Button';
 import {
@@ -10,6 +11,7 @@ import {
 } from '../../lib/thirdPartyServices';
 
 export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy }) {
+  const { t } = useTranslation('common');
   const [consents, setConsents] = useState({});
   const [announcement, setAnnouncement] = useState('');
   const dialogRef = useRef(null);
@@ -79,13 +81,13 @@ export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy 
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h2 id="consent-dialog-title" className="text-lg font-bold text-text-main flex items-center gap-2">
-            🛡️ Third-Party Service Consent Manager
+            🛡️ {t('consent.title')}
           </h2>
           <button
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            aria-label="Close consent manager"
+            aria-label={t('consent.close')}
             className="text-text-muted hover:text-text-main text-lg font-bold p-1"
           >
             ✕
@@ -93,16 +95,18 @@ export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy 
         </div>
 
         <p id="consent-dialog-description" className="text-xs text-text-muted">
-          Small Web Tools is local-first. The services below remain blocked until you explicitly allow them.
-          Runtime downloads and user-selected external links use separate point-of-use disclosures.
+          {t('consent.description')}
         </p>
         <button type="button" onClick={onOpenPrivacy} className="self-start text-xs font-semibold text-accent hover:underline">
-          Read the full Privacy &amp; Network Services policy
+          {t('consent.readPolicy')}
         </button>
 
         <div className="flex flex-col gap-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
           {Object.values(THIRD_PARTY_SERVICES).map((service) => {
             const isGranted = Boolean(consents[service.id]);
+            const serviceName = t(`consent.services.${service.id}.name`);
+            const servicePurpose = t(`consent.services.${service.id}.purpose`);
+            const serviceFallback = t(`consent.services.${service.id}.fallback`);
             return (
               <div
                 key={service.id}
@@ -110,40 +114,40 @@ export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy 
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-sm text-text-main">
-                    {service.name}
+                    {serviceName}
                   </span>
                   <button
                     type="button"
                     onClick={() => {
                       if (isGranted) {
                         revokeConsent(service.id);
-                        setAnnouncement(`${service.name} is now blocked.`);
+                        setAnnouncement(t('consent.blockedAnnouncement', { service: serviceName }));
                       } else {
                         grantConsent(service.id);
-                        setAnnouncement(`${service.name} is now allowed.`);
+                        setAnnouncement(t('consent.allowedAnnouncement', { service: serviceName }));
                       }
                     }}
                     aria-pressed={isGranted}
-                    aria-label={`${isGranted ? 'Revoke' : 'Allow'} ${service.name}`}
+                    aria-label={t(isGranted ? 'consent.revoke' : 'consent.allow', { service: serviceName })}
                     className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${
                       isGranted
                         ? 'bg-accent/15 text-accent border border-accent/30 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30'
                         : 'bg-card border border-border text-text-muted hover:border-accent hover:text-accent'
                     }`}
                   >
-                    {isGranted ? 'Allowed (Click to Revoke)' : 'Blocked (Click to Allow)'}
+                    {t(isGranted ? 'consent.allowed' : 'consent.blocked')}
                   </button>
                 </div>
-                <p className="text-xs text-text-muted m-0">{service.purpose}</p>
+                <p className="text-xs text-text-muted m-0">{servicePurpose}</p>
                 <div className="flex justify-between text-[0.72rem] text-text-muted/80">
-                  <span>Fallback: {service.fallback}</span>
+                  <span>{t('consent.fallback', { fallback: serviceFallback })}</span>
                   <a
                     href={service.privacyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-accent hover:underline"
                   >
-                    Privacy Policy ↗
+                    {t('consent.privacyPolicy')}
                   </a>
                 </div>
               </div>
@@ -157,13 +161,13 @@ export default function ThirdPartyConsentModal({ isOpen, onClose, onOpenPrivacy 
             className="text-xs text-red-500 hover:border-red-500/50"
             onClick={() => {
               resetAllConsent();
-              setAnnouncement('All third-party service preferences were reset.');
+              setAnnouncement(t('consent.resetAnnouncement'));
             }}
           >
-            Reset All Preferences
+            {t('consent.reset')}
           </Button>
           <Button variant="primary" onClick={onClose}>
-            Done
+            {t('consent.done')}
           </Button>
         </div>
         <p className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</p>

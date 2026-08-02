@@ -89,6 +89,25 @@ CI 會在 Node 22 與 Node 24 上執行。
 - 為純函式／領域邏輯加入聚焦的單元測試，為關鍵流程加入 Playwright 覆蓋率。
   避免只依賴路由冒煙測試。
 
+## 國際化
+
+- 將使用者可見文字放在 `src/i18n/locales/<locale>/` 下有界線的 `common`、
+  `navigation`、`tools` 或 `errors` 命名空間；不可使用翻譯後的標籤作為識別碼。
+- 每項 UI 變更都必須加入相符且非空白的 `en-US` 與 `zh-TW` 鍵。語意鍵使用
+  lower camel case，動態值使用 `{{value}}` 插值，數量使用 i18next 複數後綴。
+- 兩種語言的插值變數必須一致。DNA、MIME、QR、RGB、通訊協定與副檔名等穩定
+  技術詞彙，在保留原文更清楚時可以不翻譯。
+- 面向讀者的數字、日期、時間與排序應使用目前語言的 `Intl`。內容演算法必須檢查
+  實際內容，不可假設內容語言等同介面語言。
+- 執行 `npm run i18n:check`；它會拒絕無效／重複 JSON、鍵差異、空白翻譯、
+  插值變數不相容，以及明確指向不存在鍵的參照。
+
+範例：在兩個語言檔加入 `feature.resetNotice`，以
+`t('common:feature.resetNotice', { count })` 顯示並測試兩種語言。確認可見文字、
+placeholder、通知、輔助文字與頁面標題都會更新，且路由不變。
+
+Pull request 必須說明翻譯影響，並確認已檢查桌面版與行動版的雙語版面。
+
 ## 文件與提交
 
 - 發生結構、路由、API、相依套件或執行環境變更時，更新 ARCHITECTURE.md 與

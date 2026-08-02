@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -126,6 +127,7 @@ function generateSecurePassword(options = {}) {
 }
 
 export default function PasswordGenerator({ initialTab = 'generate' }) {
+  const { t } = useTranslation('tools');
   const [activeTab, setActiveTab] = useState(initialTab); // 'generate' | 'check'
   const [length, setLength] = useState(16);
   const [includeCommonSpecial, setIncludeCommonSpecial] = useState(true);
@@ -211,34 +213,34 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
 
   // Get qualitative strength details (H-07)
   const getStrengthDetails = (ent) => {
-    if (ent <= 0) return { label: 'None', percentage: 0, color: '#9ca3af', desc: 'No password provided.' };
-    if (ent < 28) return { label: 'Very Weak', percentage: 20, color: '#ef4444', desc: 'Vulnerable to basic automated guessing.' };
-    if (ent < 40) return { label: 'Weak', percentage: 40, color: '#f97316', desc: 'Susceptible to targeted dictionary attacks.' };
-    if (ent < 60) return { label: 'Moderate', percentage: 60, color: '#eab308', desc: 'Decent protection against standard offline attacks.' };
-    if (ent < 80) return { label: 'Strong', percentage: 80, color: '#10b981', desc: 'High protection for standard user credentials.' };
-    return { label: 'Very Strong', percentage: 100, color: '#059669', desc: 'Estimated resistant to offline brute-force attacks.' };
+    if (ent <= 0) return { key: 'none', percentage: 0, color: '#9ca3af' };
+    if (ent < 28) return { key: 'veryWeak', percentage: 20, color: '#ef4444' };
+    if (ent < 40) return { key: 'weak', percentage: 40, color: '#f97316' };
+    if (ent < 60) return { key: 'moderate', percentage: 60, color: '#eab308' };
+    if (ent < 80) return { key: 'strong', percentage: 80, color: '#10b981' };
+    return { key: 'veryStrong', percentage: 100, color: '#059669' };
   };
 
   const strength = getStrengthDetails(entropy);
 
   // Estimates crack time assuming high-performance offline brute force
   const getCrackTime = (ent) => {
-    if (ent <= 0) return 'N/A';
+    if (ent <= 0) return t('tool-password.ui.notAvailable');
     const guessesPerSec = 1e14;
     const totalGuesses = Math.pow(2, ent);
     const seconds = totalGuesses / guessesPerSec;
 
-    if (seconds < 1) return 'Instantly';
-    if (seconds < 60) return `${Math.round(seconds)} seconds`;
-    if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
-    if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
-    if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+    if (seconds < 1) return t('tool-password.ui.instantly');
+    if (seconds < 60) return t('tool-password.ui.time.seconds', { count: Math.round(seconds) });
+    if (seconds < 3600) return t('tool-password.ui.time.minutes', { count: Math.round(seconds / 60) });
+    if (seconds < 86400) return t('tool-password.ui.time.hours', { count: Math.round(seconds / 3600) });
+    if (seconds < 31536000) return t('tool-password.ui.time.days', { count: Math.round(seconds / 86400) });
     
     const years = seconds / 31536000;
-    if (years < 1000) return `${Math.round(years)} years`;
-    if (years < 1e6) return `${Math.round(years / 1000)} millennia`;
-    if (years < 1e9) return `${Math.round(years / 1e6)} million years`;
-    return 'Billions of years (Extremely High Complexity)';
+    if (years < 1000) return t('tool-password.ui.time.years', { count: Math.round(years) });
+    if (years < 1e6) return t('tool-password.ui.time.millennia', { count: Math.round(years / 1000) });
+    if (years < 1e9) return t('tool-password.ui.time.millionYears', { count: Math.round(years / 1e6) });
+    return t('tool-password.ui.billionsOfYears');
   };
 
   // Color codes individual character classes for nice premium look
@@ -268,16 +270,17 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     hasCommonSpecial: /[!@#$%^&*()\-_=+]/.test(checkPassword),
     hasRareSpecial: /[\[\]{}|;:',.<>?/~]/.test(checkPassword),
   };
+  const checkStrengthKey = ['none', 'veryWeak', 'weak', 'moderate', 'strong', 'veryStrong'][checkAnalysis.score] || 'none';
   const checkStrength = {
-    label: checkAnalysis.label,
+    label: t(`tool-password.ui.strength.${checkStrengthKey}.label`),
     color: checkAnalysis.color,
     percentage: checkAnalysis.score * 20,
-    desc: checkAnalysis.feedback.join(' '),
+    desc: t(`tool-password.ui.strength.${checkStrengthKey}.description`),
   };
   return (
     <Card id="tool-password" variant="tool" size="wide">
       <ToolHeader 
-        title="Secure Password Utility" 
+        title={t('tool-password.ui.title')}
       />
       
       {/* Primary Tabs */}
@@ -292,7 +295,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
-          <span>Password Generator</span>
+          <span>{t('tool-password.ui.generatorTab')}</span>
         </Button>
         <Button
           variant={activeTab === 'check' ? 'primary' : 'secondary'}
@@ -304,7 +307,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
-          <span>Strength Checker</span>
+          <span>{t('tool-password.ui.checkerTab')}</span>
         </Button>
       </div>
 
@@ -323,7 +326,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? t('tool-password.ui.hidePassword') : t('tool-password.ui.showPassword')}
                 className="flex items-center gap-1.5"
               >
                 {showPassword ? (
@@ -332,7 +335,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
-                    <span>Hide</span>
+                    <span>{t('tool-password.ui.hide')}</span>
                   </>
                 ) : (
                   <>
@@ -340,7 +343,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    <span>Show</span>
+                    <span>{t('tool-password.ui.show')}</span>
                   </>
                 )}
               </Button>
@@ -349,7 +352,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 variant="secondary"
                 size="sm"
                 onClick={handleCopy}
-                title="Copy to clipboard"
+                title={t('tool-password.ui.copyTitle')}
                 className="flex items-center gap-1.5"
               >
                 {copied ? (
@@ -357,7 +360,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span className="text-green-500 font-bold">Copied</span>
+                    <span className="text-green-500 font-bold">{t('tool-password.ui.copied')}</span>
                   </>
                 ) : (
                   <>
@@ -365,7 +368,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                     </svg>
-                    <span>Copy</span>
+                    <span>{t('tool-password.ui.copy')}</span>
                   </>
                 )}
               </Button>
@@ -374,13 +377,13 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 variant="secondary"
                 size="sm"
                 onClick={() => handleGenerate()}
-                title="Generate new password"
+                title={t('tool-password.ui.generateTitle')}
                 className="flex items-center gap-1.5"
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
                 </svg>
-                <span>Refresh</span>
+                <span>{t('tool-password.ui.refresh')}</span>
               </Button>
             </div>
           </div>
@@ -389,11 +392,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {/* Left Column: Configuration */}
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
-              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Configuration</h3>
+              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">{t('tool-password.ui.configuration')}</h3>
               
               <div className="flex flex-col gap-2 w-full">
                 <label htmlFor="password-length-slider" className="flex justify-between items-center text-sm font-semibold text-text-main">
-                  <span>Password Length</span>
+                  <span>{t('tool-password.ui.passwordLength')}</span>
                   <span className="text-accent font-mono font-bold text-base">{length}</span>
                 </label>
                 <div className="flex items-center gap-4">
@@ -419,10 +422,10 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       checked={includeCommonSpecial}
                       onChange={(e) => setIncludeCommonSpecial(e.target.checked)}
                     />
-                    Common Special Characters
+                    {t('tool-password.ui.commonSpecial')}
                   </label>
                   <div className="text-xs text-text-muted pl-6">
-                    Allows: <code className="bg-app border border-border/50 rounded px-1 text-text-main font-mono text-[10px] font-bold">!@#$%^&*()-_=+</code>
+                    {t('tool-password.ui.allows')} <code className="bg-app border border-border/50 rounded px-1 text-text-main font-mono text-[10px] font-bold">!@#$%^&*()-_=+</code>
                   </div>
                 </div>
 
@@ -435,10 +438,10 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       checked={includeRareSpecial}
                       onChange={(e) => setIncludeRareSpecial(e.target.checked)}
                     />
-                    Rare Special Characters
+                    {t('tool-password.ui.rareSpecial')}
                   </label>
                   <div className="text-xs text-text-muted pl-6">
-                    Allows: <code className="bg-app border border-border/50 rounded px-1 text-text-main font-mono text-[10px] font-bold">[]&#123;&#125;|;:',.&lt;&gt;?/~</code>
+                    {t('tool-password.ui.allows')} <code className="bg-app border border-border/50 rounded px-1 text-text-main font-mono text-[10px] font-bold">[]&#123;&#125;|;:',.&lt;&gt;?/~</code>
                   </div>
                 </div>
               </div>
@@ -446,11 +449,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
 
             {/* Right Column: Strength Analytics */}
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
-              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Security & Strength</h3>
+              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">{t('tool-password.ui.securityStrength')}</h3>
               
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-semibold text-text-main">
-                  Strength: <strong style={{ color: strength.color }} className="font-bold text-base">{strength.label}</strong>
+                  {t('tool-password.ui.strengthLabel')} <strong style={{ color: strength.color }} className="font-bold text-base">{t(`tool-password.ui.strength.${strength.key}.label`)}</strong>
                 </span>
                 <div className="w-full bg-border rounded-full h-2 overflow-hidden shadow-inner">
                   <div
@@ -462,16 +465,16 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Theoretical random entropy:</span>
-                  <span className="text-text-main font-mono text-sm">{entropy.toFixed(1)} bits</span>
+                  <span>{t('tool-password.ui.entropy')}</span>
+                  <span className="text-text-main font-mono text-sm">{t('tool-password.ui.bits', { value: entropy.toFixed(1) })}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Estimated offline crack time:</span>
+                  <span>{t('tool-password.ui.estimatedCrackTime')}</span>
                   <strong className="font-bold text-sm" style={{ color: strength.color }}>{getCrackTime(entropy)}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
-                  <span>Security Level:</span>
-                  <span className="text-text-main font-medium text-right max-w-[200px] leading-relaxed">{strength.desc}</span>
+                  <span>{t('tool-password.ui.securityLevel')}</span>
+                  <span className="text-text-main font-medium text-right max-w-[200px] leading-relaxed">{t(`tool-password.ui.strength.${strength.key}.description`)}</span>
                 </div>
               </div>
             </div>
@@ -484,7 +487,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
             <div className="flex-1 flex items-center min-w-0">
               <input
                 type={showCheckPassword ? "text" : "password"}
-                placeholder="Type a password to test its strength..."
+                placeholder={t('tool-password.ui.checkPlaceholder')}
                 value={checkPassword}
                 onChange={(e) => setCheckPassword(e.target.value)}
                 className="w-full bg-transparent border-none text-lg text-text-main outline-none placeholder-text-muted/50 font-mono tracking-wider"
@@ -499,7 +502,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowCheckPassword(!showCheckPassword)}
-                title={showCheckPassword ? "Hide password" : "Show password"}
+                title={showCheckPassword ? t('tool-password.ui.hidePassword') : t('tool-password.ui.showPassword')}
                 className="flex items-center gap-1.5"
               >
                 {showCheckPassword ? (
@@ -508,7 +511,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
-                    <span>Hide</span>
+                    <span>{t('tool-password.ui.hide')}</span>
                   </>
                 ) : (
                   <>
@@ -516,7 +519,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    <span>Show</span>
+                    <span>{t('tool-password.ui.show')}</span>
                   </>
                 )}
               </Button>
@@ -527,7 +530,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {/* Left Column: Requirements Checklist */}
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
-              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Password Analysis</h3>
+              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">{t('tool-password.ui.analysis')}</h3>
               
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-app/50 p-2 transition-colors">
@@ -544,8 +547,8 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Minimum Length (8+ chars)</span>
-                    <span className="text-[10px] text-text-muted">Current length: {checkStats.length} characters</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.minimumLength')}</span>
+                    <span className="text-[10px] text-text-muted">{t('tool-password.ui.currentLength', { count: checkStats.length })}</span>
                   </div>
                 </div>
 
@@ -562,7 +565,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Lowercase Letters (a-z)</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.lowercase')}</span>
                   </div>
                 </div>
 
@@ -579,7 +582,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Uppercase Letters (A-Z)</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.uppercase')}</span>
                   </div>
                 </div>
 
@@ -596,7 +599,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Numbers (0-9)</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.numbers')}</span>
                   </div>
                 </div>
 
@@ -613,7 +616,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Common Symbols (!@#$%^&*()-_=+)</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.commonSymbols')}</span>
                   </div>
                 </div>
 
@@ -630,7 +633,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
                     )}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-text-main">Rare Symbols ([]&#123;&#125;|;:',.&lt;&gt;?/~)</span>
+                    <span className="text-xs font-bold text-text-main">{t('tool-password.ui.rareSymbols')}</span>
                   </div>
                 </div>
               </div>
@@ -638,11 +641,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
 
             {/* Right Column: Strength Analytics */}
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
-              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">Security & Strength</h3>
+              <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider border-b border-border pb-2.5">{t('tool-password.ui.securityStrength')}</h3>
               
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-semibold text-text-main">
-                  Strength: <strong style={{ color: checkStrength.color }} className="font-bold text-base">{checkStrength.label}</strong>
+                  {t('tool-password.ui.strengthLabel')} <strong style={{ color: checkStrength.color }} className="font-bold text-base">{checkStrength.label}</strong>
                 </span>
                 <div className="w-full bg-border rounded-full h-2 overflow-hidden shadow-inner">
                   <div
@@ -654,11 +657,11 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
               
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs font-semibold text-text-muted border-b border-dashed border-border pb-2">
-                  <span>Estimated fast offline attack:</span>
-                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{checkAnalysis.crackTimeEstimate}</strong>
+                  <span>{t('tool-password.ui.estimatedFastAttack')}</span>
+                  <strong className="font-bold text-sm" style={{ color: checkStrength.color }}>{t(`tool-password.ui.crackTime.${checkStrengthKey}`)}</strong>
                 </div>
                 <div className="flex justify-between items-start text-xs font-semibold text-text-muted pb-1">
-                  <span>Security Level:</span>
+                  <span>{t('tool-password.ui.securityLevel')}</span>
                   <span className="text-text-main font-medium text-right max-w-[200px] leading-relaxed">{checkStrength.desc}</span>
                 </div>
               </div>

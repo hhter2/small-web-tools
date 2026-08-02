@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -20,6 +21,7 @@ const colors = [
 ];
 
 export default function RandomWheel() {
+  const { t, i18n } = useTranslation('tools');
   const [items, setItems] = useState([
     { text: '1', id: 0, disabled: false },
     { text: '2', id: 1, disabled: false },
@@ -30,7 +32,7 @@ export default function RandomWheel() {
   
   const [textareaVal, setTextareaVal] = useState("1\n2\n3\n4\n5");
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState("Random Wheel");
+  const [title, setTitle] = useState('');
   const [showTitleInput, setShowTitleInput] = useState(false);
   
   const [isSpinning, setIsSpinning] = useState(false);
@@ -104,7 +106,7 @@ export default function RandomWheel() {
       ctx.font = '500 16px "Inter", sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("No active options", centerX, centerY);
+      ctx.fillText(t('tool-wheel.ui.noActiveOptions'), centerX, centerY);
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, 38, 0, 2 * Math.PI);
@@ -192,7 +194,7 @@ export default function RandomWheel() {
   // Redraw when items, rotationAngle or theme changes
   useEffect(() => {
     drawWheel(rotationAngle);
-  }, [items, rotationAngle]);
+  }, [i18n.language, items, rotationAngle]);
 
   // Cleanup animation frame only on unmount
   useEffect(() => {
@@ -257,7 +259,7 @@ export default function RandomWheel() {
 
     const activeItems = items.filter(item => !item.disabled);
     if (activeItems.length === 0) {
-      alert("Please add at least one active option to spin the wheel!");
+      alert(t('tool-wheel.ui.addActiveOption'));
       return;
     }
 
@@ -265,7 +267,7 @@ export default function RandomWheel() {
     try {
       record = await createDrawRecord(activeItems.map((item) => item.text));
     } catch (error) {
-      alert(error.message);
+      alert(t('tool-wheel.ui.drawFailed'));
       return;
     }
 
@@ -349,10 +351,10 @@ export default function RandomWheel() {
       const record = JSON.parse(verificationInput);
       const result = await verifyDrawRecord(record);
       setVerificationStatus(result.valid
-        ? 'Verified winner: ' + result.winnerName
-        : 'Invalid record: ' + result.error);
+        ? t('tool-wheel.ui.verifiedWinner', { winner: result.winnerName })
+        : t('tool-wheel.ui.invalidRecord'));
     } catch {
-      setVerificationStatus('Invalid record: JSON could not be parsed');
+      setVerificationStatus(t('tool-wheel.ui.invalidJson'));
     }
   };
 
@@ -367,7 +369,7 @@ export default function RandomWheel() {
   return (
     <Card id="tool-wheel" variant="tool" size="wide">
       <ToolHeader 
-        title="Random Decision Wheel" 
+        title={t('tool-wheel.ui.title')}
       />
 
       <div className="grid w-full grid-cols-1 items-start gap-4 lg:grid-cols-[1.1fr_1fr]">
@@ -375,7 +377,7 @@ export default function RandomWheel() {
         {/* Left side: Wheel Canvas & Win Banner */}
         <div className="relative flex min-h-[390px] w-full flex-col items-center justify-center rounded-2xl border border-border bg-app p-4 max-[768px]:min-h-0 max-[768px]:p-[20px_12px]">
           <div className="z-[5] mb-3 select-none rounded-full border border-white/10 bg-slate-900/75 px-6 py-2 text-center font-display text-base font-bold tracking-wide text-white shadow-lg backdrop-blur-md dark:bg-black/75 max-[768px]:mb-4 max-[768px]:px-6 max-[768px]:py-2 max-[768px]:text-[1.1rem]" id="wheel-display-title">
-            {title}
+            {title || t('tool-wheel.ui.defaultTitle')}
           </div>
           <div className="relative aspect-square w-full max-w-[300px] cursor-pointer overflow-visible rounded-full bg-card shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:scale-[1.01]" id="wheel-canvas-wrapper">
             <canvas ref={canvasRef} id="wheel-canvas" className="w-full h-full block" width="450" height="450" onClick={spin}></canvas>
@@ -385,19 +387,19 @@ export default function RandomWheel() {
               </svg>
             </div>
             <div className="absolute left-1/2 top-1/2 z-[8] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center rounded-full border-4 border-accent bg-gradient-to-br from-card to-app font-display text-[0.85rem] font-extrabold tracking-wider text-accent shadow-[0_4px_12px_rgba(0,0,0,0.15),_inset_0_2px_4px_rgba(255,255,255,0.2)] transition-all duration-200 hover:scale-108 hover:border-white hover:bg-accent hover:text-white hover:shadow-[0_6px_18px_rgba(79,70,229,0.4)] active:scale-96 max-[768px]:h-[50px] max-[768px]:w-[50px] max-[768px]:text-[0.7rem]" id="wheel-spin-btn-center" onClick={spin}>
-              <span>SPIN</span>
+              <span>{t('tool-wheel.ui.spin')}</span>
             </div>
           </div>
 
           {/* Result overlay banner */}
           {showWinnerBanner && winner && (
             <div id="wheel-result-banner" className="mt-6 w-full max-w-[420px] bg-accent-light border-2 border-accent rounded-xl p-[16px_20px] flex items-center justify-between gap-4 animate-[bannerPopIn_0.35s_cubic-bezier(0.34,1.56,0.64,1)]" style={{ display: 'flex' }}>
-              <span className="text-[0.75rem] uppercase font-bold text-text-muted tracking-wider">Winning Selection</span>
+              <span className="text-[0.75rem] uppercase font-bold text-text-muted tracking-wider">{t('tool-wheel.ui.winningSelection')}</span>
               <strong className="text-xl md:text-2xl font-bold text-accent font-display flex-grow text-center word-break break-all" id="wheel-result-text">{winner.text}</strong>
               <button
                 id="wheel-result-close"
                 className="background-transparent border-none text-text-muted text-2xl cursor-pointer transition-colors duration-200 px-1 line-height-none hover:text-text-main"
-                aria-label="Close banner"
+                aria-label={t('tool-wheel.ui.closeBanner')}
                 onClick={() => setShowWinnerBanner(false)}
               >
                 &times;
@@ -409,8 +411,8 @@ export default function RandomWheel() {
         {/* Right side: Controls & Options */}
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-sidebar p-4 max-[768px]:p-4">
           <div className="flex gap-3 w-full">
-            <Button id="wheel-spin-btn" className="flex-1" variant="primary" onClick={spin} disabled={isSpinning}>Spin</Button>
-            <Button id="wheel-reset-btn" className="flex-1" variant="secondary" onClick={resetItems} disabled={isSpinning}>Reset</Button>
+            <Button id="wheel-spin-btn" className="flex-1" variant="primary" onClick={spin} disabled={isSpinning}>{t('tool-wheel.ui.spin')}</Button>
+            <Button id="wheel-reset-btn" className="flex-1" variant="secondary" onClick={resetItems} disabled={isSpinning}>{t('tool-wheel.ui.reset')}</Button>
           </div>
 
           {/* Options Box with View Mode and Edit Mode */}
@@ -421,7 +423,7 @@ export default function RandomWheel() {
                 <div id="wheel-list-view" className="flex h-[190px] flex-col gap-2 overflow-y-auto p-3">
                   {items.length === 0 ? (
                     <div className="text-text-muted italic p-3 text-sm text-center">
-                      No options typed. Press Edit to add options.
+                      {t('tool-wheel.ui.noOptions')}
                     </div>
                   ) : (
                     items.map(item => (
@@ -437,7 +439,7 @@ export default function RandomWheel() {
                 <textarea
                   id="wheel-text-input"
                   className="h-[190px] w-full resize-none border-none bg-transparent p-3 font-sans text-[0.95rem] leading-relaxed text-text-main outline-none"
-                  placeholder="Type options here, one per line..."
+                  placeholder={t('tool-wheel.ui.optionsPlaceholder')}
                   value={textareaVal}
                   onChange={(e) => handleTextareaChange(e.target.value)}
                   disabled={isSpinning}
@@ -455,7 +457,7 @@ export default function RandomWheel() {
                   onChange={(e) => setAllowDuplicate(e.target.checked)}
                   disabled={isSpinning}
                 />
-                <span className="text-xs text-text-muted font-medium">Allow repeat winners</span>
+                <span className="text-xs text-text-muted font-medium">{t('tool-wheel.ui.allowRepeat')}</span>
               </label>
 
               <Button
@@ -465,7 +467,7 @@ export default function RandomWheel() {
                 onClick={() => setShowTitleInput(prev => !prev)}
                 disabled={isSpinning}
               >
-                Title
+                {t('tool-wheel.ui.titleButton')}
               </Button>
               <Button
                 id="wheel-edit-btn"
@@ -474,7 +476,7 @@ export default function RandomWheel() {
                 onClick={() => setIsEditing(prev => !prev)}
                 disabled={isSpinning}
               >
-                {isEditing ? 'Done' : 'Edit'}
+                {isEditing ? t('tool-wheel.ui.done') : t('tool-wheel.ui.edit')}
               </Button>
               <Button
                 id="wheel-clear-btn"
@@ -483,7 +485,7 @@ export default function RandomWheel() {
                 onClick={() => !isSpinning && setShowClearModal(true)}
                 disabled={isSpinning}
               >
-                Clear
+                {t('tool-wheel.ui.clear')}
               </Button>
             </div>
           </div>
@@ -491,10 +493,10 @@ export default function RandomWheel() {
           {drawRecord && (
             <div className="flex flex-wrap gap-2 rounded-xl border border-border bg-app p-3">
               <span className="w-full text-xs text-text-muted">
-                Recorded locally with {drawRecord.algorithm}; winner index {drawRecord.winnerIndex}.
+                {t('tool-wheel.ui.recorded', { algorithm: drawRecord.algorithm, index: drawRecord.winnerIndex })}
               </span>
-              <Button size="sm" variant="secondary" onClick={copyDrawRecord}>Copy record</Button>
-              <Button size="sm" variant="secondary" onClick={downloadDrawRecord}>Download JSON</Button>
+              <Button size="sm" variant="secondary" onClick={copyDrawRecord}>{t('tool-wheel.ui.copyRecord')}</Button>
+              <Button size="sm" variant="secondary" onClick={downloadDrawRecord}>{t('tool-wheel.ui.downloadJson')}</Button>
             </div>
           )}
 
@@ -504,18 +506,18 @@ export default function RandomWheel() {
               className="text-xs font-semibold text-accent"
               onClick={() => setShowVerification((value) => !value)}
             >
-              {showVerification ? 'Hide record verification' : 'Verify a draw record'}
+              {showVerification ? t('tool-wheel.ui.hideVerification') : t('tool-wheel.ui.verifyDraw')}
             </button>
             {showVerification && (
               <div className="mt-2 flex flex-col gap-2">
                 <textarea
-                  aria-label="Draw record JSON"
+                  aria-label={t('tool-wheel.ui.recordJsonAria')}
                   value={verificationInput}
                   onChange={(event) => setVerificationInput(event.target.value)}
-                  placeholder="Paste draw record JSON"
+                  placeholder={t('tool-wheel.ui.recordJsonPlaceholder')}
                   className="h-28 resize-y rounded border border-border bg-card p-2 font-mono text-xs text-text-main"
                 />
-                <Button size="sm" variant="secondary" onClick={verifyImportedRecord}>Verify record</Button>
+                <Button size="sm" variant="secondary" onClick={verifyImportedRecord}>{t('tool-wheel.ui.verifyRecord')}</Button>
                 {verificationStatus && <p className="text-xs text-text-muted">{verificationStatus}</p>}
               </div>
             )}
@@ -525,20 +527,20 @@ export default function RandomWheel() {
             <div id="wheel-title-input-group" className="flex flex-col gap-2 w-full">
               <FieldInput
                 id="wheel-title-input"
-                label="Edit Wheel Title"
+                label={t('tool-wheel.ui.editTitle')}
                 type="text"
-                placeholder="Random Wheel"
+                placeholder={t('tool-wheel.ui.defaultTitle')}
                 value={title}
-                onChange={(e) => setTitle(e.target.value || 'Random Wheel')}
+                onChange={(e) => setTitle(e.target.value)}
               />
             </div>
           )}
 
           <p className="text-center text-[0.72rem] text-text-muted">
-            Shortcuts: Space spin · E edit · R reset · C clear
+            {t('tool-wheel.ui.shortcuts')}
           </p>
           <p className="text-center text-[0.72rem] text-text-muted">
-            Recorded draws are reproducible locally. This does not prevent an organizer from discarding a draw and spinning again before publication.
+            {t('tool-wheel.ui.disclaimer')}
           </p>
         </div>
 
@@ -549,11 +551,11 @@ export default function RandomWheel() {
         <div id="wheel-clear-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-5" style={{ display: 'flex' }}>
           <div id="wheel-clear-modal-backdrop" className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowClearModal(false)}></div>
           <div className="relative bg-card border border-border rounded-2xl p-7 max-w-[420px] w-full shadow-2xl z-[1001] flex flex-col gap-4 animate-[modalSlideIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
-            <h3 className="font-display text-lg font-bold text-text-main">Clear All Options?</h3>
-            <p className="text-sm text-text-muted leading-relaxed">Are you sure you want to clear all the typed options? This action cannot be undone.</p>
+            <h3 className="font-display text-lg font-bold text-text-main">{t('tool-wheel.ui.clearAllTitle')}</h3>
+            <p className="text-sm text-text-muted leading-relaxed">{t('tool-wheel.ui.clearAllBody')}</p>
             <div className="flex gap-3 justify-end mt-2">
-              <Button id="wheel-confirm-clear-btn" variant="dangerConfirm" onClick={confirmClear}>Yes, Clear All</Button>
-              <Button id="wheel-cancel-clear-btn" variant="secondary" onClick={() => setShowClearModal(false)}>Cancel</Button>
+              <Button id="wheel-confirm-clear-btn" variant="dangerConfirm" onClick={confirmClear}>{t('tool-wheel.ui.confirmClear')}</Button>
+              <Button id="wheel-cancel-clear-btn" variant="secondary" onClick={() => setShowClearModal(false)}>{t('tool-wheel.ui.cancel')}</Button>
             </div>
           </div>
         </div>

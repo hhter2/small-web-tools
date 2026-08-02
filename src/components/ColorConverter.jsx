@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -458,6 +459,7 @@ const DEFAULT_PRESETS = [
 ];
 
 export default function ColorConverter() {
+  const { t } = useTranslation('tools');
   const [input, setInput] = useState('#4F46E5');
   const [hslState, setHslState] = useState({ h: 244, s: 76, l: 59 }); // HSL Spectrum Selector coordinates
   const [swatchSelectedHex, setSwatchSelectedHex] = useState('#4F46E5'); // HSL Swatches Grid highlight state
@@ -502,7 +504,7 @@ export default function ColorConverter() {
   let hsbVal = "";
   let cmykVal = "";
   let labVal = "";
-  let statusText = "Enter a HEX, RGB, HSL, HSB, CMYK, or LAB color.";
+    let statusText = t('tool-color.ui.enterColor');
   let swatchBg = "transparent";
 
   // Parse current text input to update the outputs
@@ -537,7 +539,7 @@ export default function ColorConverter() {
       statusText = "";
       swatchBg = hex;
     } else {
-      statusText = "Invalid color format.";
+      statusText = t('tool-color.ui.invalidFormat');
     }
   }
 
@@ -846,7 +848,7 @@ export default function ColorConverter() {
     if (swatchBg && swatchBg !== 'transparent') {
       const formatted = swatchBg.toUpperCase();
       if (presets.includes(formatted)) {
-        alert("This color is already in the standard palette!");
+        alert(t('tool-color.ui.duplicateColor'));
         return;
       }
       const next = [...presets, formatted];
@@ -910,10 +912,10 @@ export default function ColorConverter() {
           }
           saveCookie("customPresets", parsed);
         } else {
-          alert("Invalid file format. The JSON file must contain an array of hex color strings (e.g. ['#FF0000', '#00FF00']).");
+          alert(t('tool-color.ui.invalidPalette'));
         }
       } catch (err) {
-        alert("Failed to parse JSON file.");
+        alert(t('tool-color.ui.parseFailed'));
       }
     };
     fileReader.readAsText(file);
@@ -954,7 +956,7 @@ export default function ColorConverter() {
   const renderInteractiveSliders = () => {
     let sliders = [];
     if (sliderModel === 'HSB') {
-      sliders.push(renderSlider('Hue', activeHsb.h, 0, 360,
+      sliders.push(renderSlider(t('tool-color.ui.hue'), activeHsb.h, 0, 360,
         `linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)`,
         (e) => {
           const h = Number(e.target.value);
@@ -963,7 +965,7 @@ export default function ColorConverter() {
         }));
       const s0Rgb = hsbToRgb({ h: activeHsb.h, s: 0, b: activeHsb.b });
       const s100Rgb = hsbToRgb({ h: activeHsb.h, s: 100, b: activeHsb.b });
-      sliders.push(renderSlider('Saturation', activeHsb.s, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.saturation'), activeHsb.s, 0, 100,
         `linear-gradient(to right, rgb(${s0Rgb.r}, ${s0Rgb.g}, ${s0Rgb.b}), rgb(${s100Rgb.r}, ${s100Rgb.g}, ${s100Rgb.b}))`,
         (e) => {
           const s = Number(e.target.value);
@@ -971,7 +973,7 @@ export default function ColorConverter() {
           handleSliderValueChange(hsbToRgb(newHsb), formatHsb(newHsb));
         }));
       const b100Rgb = hsbToRgb({ h: activeHsb.h, s: activeHsb.s, b: 100 });
-      sliders.push(renderSlider('Brightness', activeHsb.b, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.brightness'), activeHsb.b, 0, 100,
         `linear-gradient(to right, #000000, rgb(${b100Rgb.r}, ${b100Rgb.g}, ${b100Rgb.b}))`,
         (e) => {
           const b = Number(e.target.value);
@@ -979,7 +981,7 @@ export default function ColorConverter() {
           handleSliderValueChange(hsbToRgb(newHsb), formatHsb(newHsb));
         }));
     } else if (sliderModel === 'HSL') {
-      sliders.push(renderSlider('Hue', hslState.h, 0, 360,
+      sliders.push(renderSlider(t('tool-color.ui.hue'), hslState.h, 0, 360,
         `linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)`,
         (e) => {
           const h = Number(e.target.value);
@@ -988,7 +990,7 @@ export default function ColorConverter() {
         }));
       const s0Rgb = hslToRgb({ h: hslState.h, s: 0, l: hslState.l });
       const s100Rgb = hslToRgb({ h: hslState.h, s: 100, l: hslState.l });
-      sliders.push(renderSlider('Saturation', hslState.s, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.saturation'), hslState.s, 0, 100,
         `linear-gradient(to right, rgb(${s0Rgb.r}, ${s0Rgb.g}, ${s0Rgb.b}), rgb(${s100Rgb.r}, ${s100Rgb.g}, ${s100Rgb.b}))`,
         (e) => {
           const s = Number(e.target.value);
@@ -996,7 +998,7 @@ export default function ColorConverter() {
           handleSliderValueChange(hslToRgb(newHsl), formatHsl(newHsl));
         }));
       const l50Rgb = hslToRgb({ h: hslState.h, s: hslState.s, l: 50 });
-      sliders.push(renderSlider('Luminance', hslState.l, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.luminance'), hslState.l, 0, 100,
         `linear-gradient(to right, #000000, rgb(${l50Rgb.r}, ${l50Rgb.g}, ${l50Rgb.b}) 50%, #ffffff)`,
         (e) => {
           const l = Number(e.target.value);
@@ -1004,21 +1006,21 @@ export default function ColorConverter() {
           handleSliderValueChange(hslToRgb(newHsl), formatHsl(newHsl));
         }));
     } else if (sliderModel === 'RGB') {
-      sliders.push(renderSlider('Red', activeRgb.r, 0, 255,
+      sliders.push(renderSlider(t('tool-color.ui.red'), activeRgb.r, 0, 255,
         `linear-gradient(to right, rgb(0, ${activeRgb.g}, ${activeRgb.b}), rgb(255, ${activeRgb.g}, ${activeRgb.b}))`,
         (e) => {
           const r = Number(e.target.value);
           const newRgb = { ...activeRgb, r };
           handleSliderValueChange(newRgb, formatRgb(newRgb));
         }));
-      sliders.push(renderSlider('Green', activeRgb.g, 0, 255,
+      sliders.push(renderSlider(t('tool-color.ui.green'), activeRgb.g, 0, 255,
         `linear-gradient(to right, rgb(${activeRgb.r}, 0, ${activeRgb.b}), rgb(${activeRgb.r}, 255, ${activeRgb.b}))`,
         (e) => {
           const g = Number(e.target.value);
           const newRgb = { ...activeRgb, g };
           handleSliderValueChange(newRgb, formatRgb(newRgb));
         }));
-      sliders.push(renderSlider('Blue', activeRgb.b, 0, 255,
+      sliders.push(renderSlider(t('tool-color.ui.blue'), activeRgb.b, 0, 255,
         `linear-gradient(to right, rgb(${activeRgb.r}, ${activeRgb.g}, 0), rgb(${activeRgb.r}, ${activeRgb.g}, 255))`,
         (e) => {
           const b = Number(e.target.value);
@@ -1026,28 +1028,28 @@ export default function ColorConverter() {
           handleSliderValueChange(newRgb, formatRgb(newRgb));
         }));
     } else if (sliderModel === 'CMYK') {
-      sliders.push(renderSlider('Cyan', activeCmyk.c, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.cyan'), activeCmyk.c, 0, 100,
         `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, c: 0 }).r}, ${cmykToRgb({ ...activeCmyk, c: 0 }).g}, ${cmykToRgb({ ...activeCmyk, c: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, c: 100 }).r}, ${cmykToRgb({ ...activeCmyk, c: 100 }).g}, ${cmykToRgb({ ...activeCmyk, c: 100 }).b}))`,
         (e) => {
           const c = Number(e.target.value);
           const newCmyk = { ...activeCmyk, c };
           handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
         }));
-      sliders.push(renderSlider('Magenta', activeCmyk.m, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.magenta'), activeCmyk.m, 0, 100,
         `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, m: 0 }).r}, ${cmykToRgb({ ...activeCmyk, m: 0 }).g}, ${cmykToRgb({ ...activeCmyk, m: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, m: 100 }).r}, ${cmykToRgb({ ...activeCmyk, m: 100 }).g}, ${cmykToRgb({ ...activeCmyk, m: 100 }).b}))`,
         (e) => {
           const m = Number(e.target.value);
           const newCmyk = { ...activeCmyk, m };
           handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
         }));
-      sliders.push(renderSlider('Yellow', activeCmyk.y, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.yellow'), activeCmyk.y, 0, 100,
         `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, y: 0 }).r}, ${cmykToRgb({ ...activeCmyk, y: 0 }).g}, ${cmykToRgb({ ...activeCmyk, y: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, y: 100 }).r}, ${cmykToRgb({ ...activeCmyk, y: 100 }).g}, ${cmykToRgb({ ...activeCmyk, y: 100 }).b}))`,
         (e) => {
           const y = Number(e.target.value);
           const newCmyk = { ...activeCmyk, y };
           handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
         }));
-      sliders.push(renderSlider('Key', activeCmyk.k, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.key'), activeCmyk.k, 0, 100,
         `linear-gradient(to right, rgb(${cmykToRgb({ ...activeCmyk, k: 0 }).r}, ${cmykToRgb({ ...activeCmyk, k: 0 }).g}, ${cmykToRgb({ ...activeCmyk, k: 0 }).b}), rgb(${cmykToRgb({ ...activeCmyk, k: 100 }).r}, ${cmykToRgb({ ...activeCmyk, k: 100 }).g}, ${cmykToRgb({ ...activeCmyk, k: 100 }).b}))`,
         (e) => {
           const k = Number(e.target.value);
@@ -1055,21 +1057,21 @@ export default function ColorConverter() {
           handleSliderValueChange(cmykToRgb(newCmyk), formatCmyk(newCmyk));
         }));
     } else if (sliderModel === 'LAB') {
-      sliders.push(renderSlider('Luminance', activeLab.l, 0, 100,
+      sliders.push(renderSlider(t('tool-color.ui.luminance'), activeLab.l, 0, 100,
         `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, l: 0 }).r}, ${labToRgb({ ...activeLab, l: 0 }).g}, ${labToRgb({ ...activeLab, l: 0 }).b}), rgb(${labToRgb({ ...activeLab, l: 100 }).r}, ${labToRgb({ ...activeLab, l: 100 }).g}, ${labToRgb({ ...activeLab, l: 100 }).b}))`,
         (e) => {
           const l = Number(e.target.value);
           const newLab = { ...activeLab, l };
           handleSliderValueChange(labToRgb(newLab), formatLab(newLab));
         }));
-      sliders.push(renderSlider('Green-Red', activeLab.a, -128, 127,
+      sliders.push(renderSlider(t('tool-color.ui.greenRed'), activeLab.a, -128, 127,
         `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, a: -128 }).r}, ${labToRgb({ ...activeLab, a: -128 }).g}, ${labToRgb({ ...activeLab, a: -128 }).b}), rgb(${labToRgb({ ...activeLab, a: 127 }).r}, ${labToRgb({ ...activeLab, a: 127 }).g}, ${labToRgb({ ...activeLab, a: 127 }).b}))`,
         (e) => {
           const a = Number(e.target.value);
           const newLab = { ...activeLab, a };
           handleSliderValueChange(labToRgb(newLab), formatLab(newLab));
         }));
-      sliders.push(renderSlider('Blue-Yellow', activeLab.b, -128, 127,
+      sliders.push(renderSlider(t('tool-color.ui.blueYellow'), activeLab.b, -128, 127,
         `linear-gradient(to right, rgb(${labToRgb({ ...activeLab, b: -128 }).r}, ${labToRgb({ ...activeLab, b: -128 }).g}, ${labToRgb({ ...activeLab, b: -128 }).b}), rgb(${labToRgb({ ...activeLab, b: 127 }).r}, ${labToRgb({ ...activeLab, b: 127 }).g}, ${labToRgb({ ...activeLab, b: 127 }).b}))`,
         (e) => {
           const b = Number(e.target.value);
@@ -1086,7 +1088,7 @@ export default function ColorConverter() {
         <div className="flex items-center justify-between border-t border-border pt-2">
           <div className="relative">
             <select
-              aria-label="Color slider model"
+              aria-label={t('tool-color.ui.sliderModelAria')}
               value={sliderModel}
               onChange={(e) => setSliderModel(e.target.value)}
               className="px-3 py-1.5 rounded-md bg-app border border-border text-text-main font-sans text-sm cursor-pointer outline-none hover:bg-border-hover"
@@ -1105,7 +1107,7 @@ export default function ColorConverter() {
                 size="sm"
                 variant="secondary"
                 onClick={handleEyeDropper}
-                title="Pick color from screen"
+                title={t('tool-color.ui.pickScreen')}
                 className="p-1.5"
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -1126,7 +1128,7 @@ export default function ColorConverter() {
                 else if (sliderModel === 'LAB') copyStr = formatLab(activeLab);
                 navigator.clipboard.writeText(copyStr);
               }}
-              title="Copy color code"
+              title={t('tool-color.ui.copyCode')}
               className="p-1.5"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -1143,16 +1145,16 @@ export default function ColorConverter() {
   return (
     <Card id="tool-color" variant="tool" size="wide">
       <ToolHeader 
-        title="Color Code Converter & HSL Selector" 
+        title={t('tool-color.ui.title')}
       />
       
       <div className="grid w-full grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
         
         {/* Panel 1: Code Converter Inputs/Outputs */}
         <div className="flex w-full flex-col gap-2.5">
-          <h3 className="border-b border-border pb-2 text-[0.95rem] uppercase tracking-wider text-text-muted">Code Converter</h3>
+          <h3 className="border-b border-border pb-2 text-[0.95rem] uppercase tracking-wider text-text-muted">{t('tool-color.ui.converter')}</h3>
           <div className="flex w-full flex-col gap-1.5">
-            <label htmlFor="color-input" className="text-xs font-semibold text-text-main">HEX, RGB, or HSL Code</label>
+            <label htmlFor="color-input" className="text-xs font-semibold text-text-main">{t('tool-color.ui.codeLabel')}</label>
             <div className="flex gap-2 w-full">
               <input
                 id="color-input"
@@ -1168,7 +1170,7 @@ export default function ColorConverter() {
                 <Button
                   type="button"
                   variant="secondary"
-                  title="Pick color from screen"
+                  title={t('tool-color.ui.pickScreen')}
                   onClick={handleEyeDropper}
                   className="h-10 w-10 p-0"
                 >
@@ -1217,7 +1219,7 @@ export default function ColorConverter() {
         {/* Panel 2: Visual Swatches Grid Selector */}
         <div className="flex flex-col gap-3 w-full">
           <div className="flex justify-between items-center w-full pb-2 border-b border-border">
-            <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider">HSL Swatches</h3>
+            <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider">{t('tool-color.ui.hslSwatches')}</h3>
             <button
               type="button"
               className={`inline-flex min-h-9 items-center gap-2 rounded-full border-2 px-3 py-1.5 text-xs font-extrabold tracking-wide shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
@@ -1226,7 +1228,7 @@ export default function ColorConverter() {
                   : 'border-amber-500 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
               }`}
               onClick={handleSyncToggle}
-              title={isSynced ? "Disconnect sync with Spectrum picker" : "Synchronize with Spectrum picker"}
+              title={isSynced ? t('tool-color.ui.disconnectSync') : t('tool-color.ui.connectSync')}
               aria-pressed={isSynced}
             >
               <span
@@ -1235,7 +1237,7 @@ export default function ColorConverter() {
                   isSynced ? 'border-white bg-white' : 'border-amber-500 bg-transparent'
                 }`}
               />
-              {isSynced ? "COLOR SYNC: ON" : "COLOR SYNC: OFF"}
+              {isSynced ? t('tool-color.ui.syncOn') : t('tool-color.ui.syncOff')}
             </button>
           </div>
           
@@ -1260,7 +1262,7 @@ export default function ColorConverter() {
           {/* Standard Palette section */}
           <div className="flex flex-col gap-2 mt-1">
             <div className="flex justify-between items-center w-full mb-0.5">
-              <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Standard Palettes</span>
+              <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-color.ui.standardPalettes')}</span>
               <div className="flex gap-1.5 items-center">
                 {!isEditingPresets ? (
                   <button
@@ -1268,7 +1270,7 @@ export default function ColorConverter() {
                     className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                     onClick={() => setIsEditingPresets(true)}
                   >
-                    Customize
+                    {t('tool-color.ui.customize')}
                   </button>
                 ) : (
                   <>
@@ -1277,31 +1279,31 @@ export default function ColorConverter() {
                       className="bg-accent border border-accent text-white rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-accent-hover hover:border-accent-hover"
                       onClick={() => setIsEditingPresets(false)}
                     >
-                      Done
+                      {t('tool-color.ui.done')}
                     </button>
                     <button
                       type="button"
                       className="bg-card border border-border text-[#ef4444] border-red-500/20 rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-red-500/5 hover:border-red-500"
                       onClick={handleResetPresets}
-                      title="Reset to default 12 colors"
+                      title={t('tool-color.ui.resetTitle')}
                     >
-                      Reset
+                      {t('tool-color.ui.reset')}
                     </button>
                     <button
                       type="button"
                       className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                       onClick={handleExportPresets}
-                      title="Export palette as JSON"
+                      title={t('tool-color.ui.exportTitle')}
                     >
-                      Export
+                      {t('tool-color.ui.export')}
                     </button>
                     <button
                       type="button"
                       className="bg-card border border-border color-text-muted rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-border-hover hover:text-text-main"
                       onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                      title="Import palette from JSON"
+                      title={t('tool-color.ui.importTitle')}
                     >
-                      Import
+                      {t('tool-color.ui.import')}
                     </button>
                     <input
                       ref={fileInputRef}
@@ -1329,7 +1331,7 @@ export default function ColorConverter() {
                     <button
                       type="button"
                       className="absolute -top-1 -right-1 w-[15px] h-[15px] rounded-full bg-[#ef4444] text-white border-none text-[10px] font-bold flex items-center justify-center cursor-pointer shadow-md transition-transform duration-150 hover:scale-120 hover:bg-[#dc2626]"
-                      title="Delete color"
+                      title={t('tool-color.ui.deleteColor')}
                       onClick={() => handleDeletePreset(idx)}
                     >
                       &times;
@@ -1341,7 +1343,7 @@ export default function ColorConverter() {
                 <button
                   type="button"
                   className="w-6 h-6 rounded-md border-2 border-dashed border-border bg-transparent color-text-muted text-[0.95rem] font-semibold flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-accent hover:color-accent hover:bg-accent-light hover:scale-108"
-                  title={`Add current color (${swatchBg})`}
+                  title={t('tool-color.ui.addCurrent', { color: swatchBg })}
                   onClick={handleAddPreset}
                 >
                   +
@@ -1353,7 +1355,7 @@ export default function ColorConverter() {
 
         {/* Panel 3: Visual HSL Spectrum Selector */}
         <div className="flex flex-col gap-3 w-full">
-          <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider mb-1 pb-2 border-b border-border">HSL Spectrum</h3>
+          <h3 className="text-[0.95rem] text-text-muted uppercase tracking-wider mb-1 pb-2 border-b border-border">{t('tool-color.ui.hslSpectrum')}</h3>
           
           <div className="flex gap-4 w-full items-stretch">
             {/* 2D Hue-Saturation board */}
@@ -1380,7 +1382,7 @@ export default function ColorConverter() {
 
             {/* Vertical Lightness slider */}
             <div className="flex flex-col items-center gap-1.5 self-stretch">
-              <span className="text-[0.7rem] font-bold uppercase tracking-wider text-text-muted">Lightness</span>
+              <span className="text-[0.7rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-color.ui.lightness')}</span>
               <div
                 ref={lRef}
                 className="relative w-7 flex-1 rounded-full border border-border cursor-ns-resize shadow-inner"
@@ -1405,13 +1407,13 @@ export default function ColorConverter() {
           {recentColors.length > 0 && (
             <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-dashed border-border">
               <div className="flex justify-between items-center w-full">
-                <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Recent Colors</span>
+                <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-color.ui.recentColors')}</span>
                 <button
                   type="button"
                   className="bg-card border border-border text-[#ef4444] border-red-500/20 rounded-md text-[0.65rem] font-bold uppercase p-[4px_8px] cursor-pointer transition-colors duration-200 hover:bg-red-500/5 hover:border-red-500"
                   onClick={handleClearRecents}
                 >
-                  Clear
+                  {t('tool-color.ui.clear')}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">

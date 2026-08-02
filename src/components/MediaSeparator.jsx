@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from './ui/Button';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
@@ -10,6 +11,7 @@ import MediaSeparatorQueueItem from './MediaSeparatorQueueItem';
  * Runs client-side using ffmpeg.wasm to separate audio & silent video tracks.
  */
 export default function MediaSeparator() {
+  const { t, i18n } = useTranslation('tools');
   const {
     items,
     engineLoading,
@@ -74,17 +76,15 @@ export default function MediaSeparator() {
         }}
       />
 
-      <ToolHeader title="Media Splitter" />
+      <ToolHeader title={t('tool-mediasplit.title')} />
 
       <aside className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs leading-relaxed text-text-main">
-        On the first processing action, this tool downloads the pinned FFmpeg 0.12.6 JavaScript and
-        WebAssembly engine from unpkg and verifies both files before execution. unpkg receives standard
-        request metadata. Your selected media and generated output stay in this browser.
+        {t('tool-mediasplit.ui.runtimeDisclosure')}
       </aside>
 
       {lastError && (
         <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
-          {lastError}
+          {t(`tool-mediasplit.ui.resourceError.${lastError}`)}
         </p>
       )}
 
@@ -95,7 +95,7 @@ export default function MediaSeparator() {
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
-            <p>Drop video files to add to queue</p>
+            <p>{t('tool-mediasplit.ui.dropToQueue')}</p>
           </div>
         </div>
       )}
@@ -107,7 +107,7 @@ export default function MediaSeparator() {
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-          aria-label="Upload video files"
+          aria-label={t('tool-mediasplit.ui.uploadAria')}
         >
           <div className="flex flex-col items-center">
             <svg
@@ -124,10 +124,10 @@ export default function MediaSeparator() {
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
-            <p className="text-[1.1rem] font-semibold text-text-main m-0 mb-2">Drag &amp; drop video files here</p>
-            <p className="text-[0.88rem] text-text-muted m-0 mb-3 uppercase tracking-[0.05em]">or</p>
-            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>Browse Files</Button>
-            <p className="text-[0.8rem] text-text-muted mt-3 m-0">Supports MP4, MOV, WebM, MKV, AVI, and other common video formats</p>
+            <p className="text-[1.1rem] font-semibold text-text-main m-0 mb-2">{t('tool-mediasplit.ui.dropHere')}</p>
+            <p className="text-[0.88rem] text-text-muted m-0 mb-3 uppercase tracking-[0.05em]">{t('tool-mediasplit.ui.or')}</p>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>{t('tool-mediasplit.ui.browse')}</Button>
+            <p className="text-[0.8rem] text-text-muted mt-3 m-0">{t('tool-mediasplit.ui.supportedFormats')}</p>
           </div>
         </div>
       )}
@@ -141,7 +141,7 @@ export default function MediaSeparator() {
                 onClick={stopQueue}
                 className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-red-400 cursor-pointer bg-card text-red-500 transition-all duration-150 hover:bg-red-50 hover:border-red-500"
               >
-                Stop Processing
+                {t('tool-mediasplit.ui.stop')}
               </button>
             ) : (
               <button
@@ -150,7 +150,7 @@ export default function MediaSeparator() {
                 disabled={!hasPending && !engineLoading}
                 className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-transparent cursor-pointer bg-accent text-white transition-colors duration-150 hover:enabled:bg-accent-hover disabled:bg-border disabled:text-text-muted disabled:cursor-not-allowed"
               >
-                {engineLoading ? 'Loading Engine...' : 'Start Processing Queue'}
+                {t(engineLoading ? 'tool-mediasplit.ui.loadingEngine' : 'tool-mediasplit.ui.startQueue')}
               </button>
             )}
             {hasDone && !isProcessing && (
@@ -159,7 +159,7 @@ export default function MediaSeparator() {
                 onClick={clearDone}
                 className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-border cursor-pointer bg-card text-text-main transition-all duration-150 hover:bg-app hover:border-border-hover"
               >
-                Clear Completed
+                {t('tool-mediasplit.ui.clearCompleted')}
               </button>
             )}
             <button
@@ -168,10 +168,13 @@ export default function MediaSeparator() {
               disabled={isProcessing}
               className="inline-flex items-center justify-center px-4 py-2 text-[0.875rem] font-semibold rounded-lg border border-border cursor-pointer bg-card text-text-main transition-all duration-150 hover:bg-app hover:border-border-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add Files
+              {t('tool-mediasplit.ui.addFiles')}
             </button>
             <span className="ml-auto text-[0.85rem] font-medium text-text-muted">
-              {items.length} file{items.length !== 1 ? 's' : ''}
+              {t('tool-mediasplit.ui.fileCount', {
+                count: items.length,
+                formattedCount: items.length.toLocaleString(i18n.language),
+              })}
             </span>
           </div>
 
@@ -182,7 +185,7 @@ export default function MediaSeparator() {
                 max={100}
                 className="flex-1 h-2.5 rounded overflow-hidden border-none [&::-webkit-progress-bar]:bg-border [&::-webkit-progress-value]:bg-accent [&::-moz-progress-bar]:bg-accent"
               />
-              <span>Overall Queue Progress: {globalProgress}%</span>
+              <span>{t('tool-mediasplit.ui.overallProgress', { progress: globalProgress })}</span>
             </div>
           )}
 

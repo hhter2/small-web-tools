@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function MediaSeparatorFormatSelect({ label, value, options, onChange, disabled }) {
+  const { t } = useTranslation('tools');
   return (
     <div className="flex flex-col gap-1.5 text-[0.85rem] flex-1 min-w-[150px]">
       <span className="font-semibold text-text-muted">{label}</span>
@@ -12,7 +14,7 @@ export default function MediaSeparatorFormatSelect({ label, value, options, onCh
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {opt.label}
+            {t(`tool-mediasplit.ui.format.${opt.value}`)}
           </option>
         ))}
       </select>

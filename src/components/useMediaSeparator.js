@@ -47,7 +47,7 @@ export function useMediaSeparator() {
     const policy = getMediaSeparatorPolicy(deviceMemory);
     const resourceCheck = validateResourceAddition(itemsRef.current, files, policy);
     if (!resourceCheck.valid) {
-      setLastError(resourceCheck.error);
+      setLastError(resourceCheck.reason);
       return [];
     }
     setLastError('');
@@ -211,6 +211,7 @@ export function useMediaSeparator() {
                   ...it,
                   status: STATUS.ERROR,
                   error: safeError.message,
+                  errorCode: safeError.code,
                   developmentDetail: safeError.developmentDetail,
                 }
               : it
@@ -247,6 +248,7 @@ export function useMediaSeparator() {
           updateItem(next.id, {
             status: STATUS.ERROR,
             error: safeError.message,
+            errorCode: safeError.code,
             developmentDetail: safeError.developmentDetail,
           });
         }
@@ -275,7 +277,7 @@ export function useMediaSeparator() {
 
   const retryItem = useCallback(
     (id) => {
-      updateItem(id, { status: STATUS.PENDING, error: null, progress: 0 });
+      updateItem(id, { status: STATUS.PENDING, error: null, errorCode: null, progress: 0 });
       runQueue();
     },
     [updateItem, runQueue],

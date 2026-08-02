@@ -4,5 +4,6 @@
   "clipboard": "Could not copy to the clipboard.",
   "fileRead": "Could not read the selected file.",
   "unsupportedFile": "This file type is not supported.",
-  "network": "The request could not be completed. Check your connection and try again."
+  "network": "The request could not be completed. Check your connection and try again.",
+  "processingFailed": "Processing failed. Check the input and try again."
 }

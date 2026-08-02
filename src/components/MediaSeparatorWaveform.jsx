@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const BAR_COUNT = 240;
 
@@ -7,6 +8,7 @@ const BAR_COUNT = 240;
  * Uses currentColor/rgba(128, 128, 128, 0.5) to inherit colors from the design system.
  */
 export default function MediaSeparatorWaveform({ audioURL, className }) {
+  const { t } = useTranslation('tools');
   const canvasRef = useRef(null);
   const audioRef = useRef(null);
   const rafRef = useRef(null);
@@ -105,7 +107,7 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
           type="button"
           onClick={togglePlay}
           disabled={!peaks || !peaks.length}
-          title={isPlaying ? 'Pause' : 'Play'}
+          title={t(isPlaying ? 'tool-mediasplit.ui.pause' : 'tool-mediasplit.ui.play')}
           className="bg-accent text-white border-none rounded-full w-8 h-8 inline-flex items-center justify-center cursor-pointer transition-colors duration-200 flex-shrink-0 hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPlaying ? (
@@ -131,9 +133,9 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
           {formatTime(duration * progress)} / {formatTime(duration)}
         </span>
       </div>
-      {peaks === null && <p className="mt-1.5 text-xs text-text-muted italic">Analyzing audio waveform...</p>}
+      {peaks === null && <p className="mt-1.5 text-xs text-text-muted italic">{t('tool-mediasplit.ui.analyzingWaveform')}</p>}
       {peaks && peaks.length === 0 && (
-        <p className="mt-1.5 text-xs text-text-muted italic">This browser cannot decode this format to display the waveform, but downloads are unaffected.</p>
+        <p className="mt-1.5 text-xs text-text-muted italic">{t('tool-mediasplit.ui.waveformUnavailable')}</p>
       )}
     </div>
   );

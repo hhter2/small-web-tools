@@ -100,12 +100,12 @@ describe('downloadable image previews', () => {
     await act(async () => root.render(<QrBarcodeGenerator />));
     await act(async () => setNativeValue(container.querySelector('#qr-text'), 'fullscreen QR'));
 
-    const expandButton = container.querySelector('[aria-label="Open fullscreen QR code preview"]');
+    const expandButton = container.querySelector('[aria-label="Open full-screen QR Code preview"]');
     expect(expandButton).toBeEnabled();
     await act(async () => expandButton.click());
 
-    expect(document.querySelector('[role="dialog"]')).toHaveAccessibleName('QR code fullscreen preview');
-    expect(document.querySelector('img[alt="QR code fullscreen preview"]'))
+    expect(document.querySelector('[role="dialog"]')).toHaveAccessibleName('QR Code full-screen preview');
+    expect(document.querySelector('img[alt="QR Code full-screen preview"]'))
       .toHaveAttribute('src', 'data:image/png;base64,preview');
   });
 
@@ -116,12 +116,12 @@ describe('downloadable image previews', () => {
     await act(async () => root.render(<QrBarcodeGenerator initialTab="barcode" />));
     await act(async () => setNativeValue(container.querySelector('#barcode-val'), 'ABC-123'));
 
-    const expandButton = container.querySelector('[aria-label="Open fullscreen barcode preview"]');
+    const expandButton = container.querySelector('[aria-label="Open full-screen barcode preview"]');
     expect(expandButton).toBeEnabled();
     await act(async () => expandButton.click());
 
-    expect(document.querySelector('[role="dialog"]')).toHaveAccessibleName('Barcode fullscreen preview');
-    expect(document.querySelector('img[alt="Barcode fullscreen preview"]'))
+    expect(document.querySelector('[role="dialog"]')).toHaveAccessibleName('Barcode full-screen preview');
+    expect(document.querySelector('img[alt="Barcode full-screen preview"]'))
       .toHaveAttribute('src', 'data:image/png;base64,barcode');
   });
 });

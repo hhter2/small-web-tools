@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -546,6 +547,7 @@ const COMPARE_FIELDS = [
 ];
 
 export default function DocMeta() {
+  const { t } = useTranslation('tools');
   const {
     createObjectUrl,
     trackObjectUrl,
@@ -608,11 +610,11 @@ export default function DocMeta() {
       FILE_RESOURCE_POLICIES.documentMetadata,
     );
     if (!resourceCheck.valid) {
-      setStatus(resourceCheck.error);
+      setStatus(t('tool-docmeta.ui.resourceRejected'));
       return;
     }
     setLoading(true);
-    setStatus('Parsing document files...');
+    setStatus(t('tool-docmeta.ui.parsing'));
     const acceptedExtensions = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp', 'odg', 'pdf'];
     const newFiles = [];
 
@@ -621,12 +623,12 @@ export default function DocMeta() {
       const ext = file.name.split('.').pop().toLowerCase();
       
       if (!acceptedExtensions.includes(ext)) {
-        setStatus(`Skipped unsupported file type: ${file.name}`);
+        setStatus(t('tool-docmeta.ui.unsupportedFile', { name: file.name }));
         continue;
       }
 
       if (files.some(f => f.name === file.name && f.size === file.size)) {
-        setStatus(`File already added: ${file.name}`);
+        setStatus(t('tool-docmeta.ui.alreadyAdded', { name: file.name }));
         continue;
       }
 
@@ -741,7 +743,7 @@ export default function DocMeta() {
         });
       } catch (err) {
         console.error("Error parsing document file", err);
-        setStatus(`Failed to parse file: ${file.name}. Invalid format or corrupted.`);
+        setStatus(t('tool-docmeta.ui.parseFailed', { name: file.name }));
       }
     }
 
@@ -752,7 +754,7 @@ export default function DocMeta() {
         setCompareSelectedIds(curr => [...curr, ...newFiles.map(f => f.id)]);
         return updated;
       });
-      setStatus(`Successfully parsed ${newFiles.length} file(s).`);
+      setStatus(t('tool-docmeta.ui.parsedCount', { count: newFiles.length }));
     }
     setLoading(false);
   };
@@ -778,7 +780,7 @@ export default function DocMeta() {
     setSelectedFileId(null);
     setCompareSelectedIds([]);
     setCompareMode(false);
-    setStatus('Cleared all files.');
+    setStatus(t('tool-docmeta.ui.cleared'));
   };
 
   const handleExportJson = () => {
@@ -888,7 +890,7 @@ export default function DocMeta() {
 
   const handleStripMetadata = async (fileObj, mode) => {
     setLoading(true);
-    setStatus(`Stripping ${mode === 'private' ? 'private' : 'all'} metadata from ${fileObj.name}...`);
+    setStatus(t('tool-docmeta.ui.stripping', { name: fileObj.name }));
     try {
       const strippedBlob = await stripDocumentMetadata(fileObj.originalFile, mode, fileObj.type);
       
@@ -912,10 +914,10 @@ export default function DocMeta() {
         return f;
       }));
       
-      setStatus(`Successfully stripped ${mode === 'private' ? 'private' : 'all'} metadata!`);
+      setStatus(t('tool-docmeta.ui.stripSuccess'));
     } catch (err) {
       console.error("Error stripping metadata", err);
-      setStatus(`Failed to strip metadata: ${err.message}`);
+      setStatus(t('tool-docmeta.ui.stripFailed'));
     }
     setLoading(false);
   };
@@ -941,7 +943,7 @@ export default function DocMeta() {
       }
       return f;
     }));
-    setStatus("Restored original metadata.");
+    setStatus(t('tool-docmeta.ui.restored'));
   };
 
   const handleToggleCompareSelection = (id) => {
@@ -1132,10 +1134,10 @@ export default function DocMeta() {
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
             </svg>
-            Side-by-Side Documents Metadata Comparison
+            {t('tool-docmeta.ui.comparisonTitle')}
           </h3>
           <Button variant="secondary" size="sm" onClick={() => setCompareMode(false)}>
-            Back to Detail View
+            {t('tool-docmeta.ui.backDetail')}
           </Button>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border">
@@ -1143,7 +1145,7 @@ export default function DocMeta() {
             <table className="w-full border-collapse text-left text-sm min-w-[600px]">
               <thead>
                 <tr className="bg-app border-b border-border">
-                  <th className="p-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Field / Parameter</th>
+                  <th className="p-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-docmeta.ui.fieldParameter')}</th>
                   {comparedFiles.map(f => (
                     <th key={f.id} className={`p-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider max-w-[200px] truncate ${f.id === selectedFileId ? 'bg-accent-light/10 text-accent font-extrabold' : ''}`}>
                       <div className="flex items-center justify-between gap-2 truncate">
@@ -1184,9 +1186,9 @@ export default function DocMeta() {
             </table>
           ) : (
             <div className="p-8 text-center text-text-muted italic">
-              <p>No documents selected for comparison.</p>
+              <p>{t('tool-docmeta.ui.noDocumentsCompared')}</p>
               <p className="text-xs text-text-muted/75 mt-1">
-                Use the checkboxes on the thumbnails bar above to select files to compare.
+                {t('tool-docmeta.ui.selectComparisonHint')}
               </p>
             </div>
           )}
@@ -1239,8 +1241,8 @@ export default function DocMeta() {
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="bg-app border-b border-border">
-                  <th className="p-2.5 px-4 font-semibold text-text-muted w-[40%]">Description</th>
-                  <th className="p-2.5 px-4 font-semibold text-text-muted">Value</th>
+                  <th className="p-2.5 px-4 font-semibold text-text-muted w-[40%]">{t('tool-docmeta.ui.description')}</th>
+                  <th className="p-2.5 px-4 font-semibold text-text-muted">{t('tool-docmeta.ui.value')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1349,14 +1351,14 @@ export default function DocMeta() {
 
     if (matchCount === 0) {
       return (
-        <div className="p-4 text-center text-text-muted italic">No matching parameters found.</div>
+        <div className="p-4 text-center text-text-muted italic">{t('tool-docmeta.ui.noMatchingParameters')}</div>
       );
     }
 
     return (
       <div className="flex flex-col gap-3.5">
         <div className="flex justify-between items-center bg-card border border-border rounded-xl p-3 px-4">
-          <span className="text-xs font-semibold text-text-muted">Found {matchCount} metadata parameters</span>
+          <span className="text-xs font-semibold text-text-muted">{t('tool-docmeta.ui.foundParameters', { count: matchCount })}</span>
           <Button variant="secondary" size="sm" onClick={toggleExpandAll}>
             {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
           </Button>
@@ -1395,9 +1397,9 @@ export default function DocMeta() {
                     <table className="w-full border-collapse text-left text-xs">
                       <thead>
                         <tr className="bg-app border-b border-border">
-                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[30%]">Parameter Name</th>
-                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[35%]">Value</th>
-                          <th className="p-2.5 px-4 font-semibold text-text-muted">Description</th>
+                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[30%]">{t('tool-docmeta.ui.parameterName')}</th>
+                          <th className="p-2.5 px-4 font-semibold text-text-muted w-[35%]">{t('tool-docmeta.ui.value')}</th>
+                          <th className="p-2.5 px-4 font-semibold text-text-muted">{t('tool-docmeta.ui.description')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1425,7 +1427,7 @@ export default function DocMeta() {
   return (
     <Card id="tool-docmeta" variant="tool" size="wide">
       <ToolHeader 
-        title="Documents Metadata Reader" 
+        title={t('tool-docmeta.ui.title')}
       />
 
       <div 
@@ -1450,7 +1452,7 @@ export default function DocMeta() {
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            <p className="text-lg font-bold text-text-main">Drop documents here to analyze</p>
+            <p className="text-lg font-bold text-text-main">{t('tool-docmeta.ui.dropAnalyze')}</p>
           </div>
         )}
 
@@ -1510,7 +1512,7 @@ export default function DocMeta() {
                 onClick={handleDropzoneClick}
               >
                 <div className="text-lg leading-none">+</div>
-                <span>Add More</span>
+                <span>{t('tool-docmeta.ui.addMore')}</span>
               </div>
             </div>
 
@@ -1519,12 +1521,12 @@ export default function DocMeta() {
                 <div className="flex flex-wrap gap-2 items-center">
                   {!activeFile.strippedInfo ? (
                     <>
-                      <span className="text-xs font-bold text-text-muted uppercase tracking-wider mr-2">Strip Tags:</span>
+                      <span className="text-xs font-bold text-text-muted uppercase tracking-wider mr-2">{t('tool-docmeta.ui.stripTags')}</span>
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => handleStripMetadata(activeFile, 'private')}
-                        title="Remove personal/private authoring metadata"
+                        title={t('tool-docmeta.ui.privateTitle')}
                       >
                         🔒 Private
                       </Button>
@@ -1532,7 +1534,7 @@ export default function DocMeta() {
                         variant="secondary"
                         size="sm"
                         onClick={() => handleStripMetadata(activeFile, 'all')}
-                        title="Remove all metadata including application details"
+                        title={t('tool-docmeta.ui.allTitle')}
                       >
                         🗑️ All
                       </Button>
@@ -1546,7 +1548,7 @@ export default function DocMeta() {
                         variant="primary"
                         size="sm"
                         onClick={() => downloadStrippedFile(activeFile)}
-                        title="Download the stripped document"
+                        title={t('tool-docmeta.ui.downloadTitle')}
                       >
                         💾 Download
                       </Button>
@@ -1554,7 +1556,7 @@ export default function DocMeta() {
                         variant="secondary"
                         size="sm"
                         onClick={() => handleRestoreOriginal(activeFile.id)}
-                        title="Restore original metadata details"
+                        title={t('tool-docmeta.ui.restoreTitle')}
                       >
                         🔄 Restore
                       </Button>
@@ -1574,10 +1576,10 @@ export default function DocMeta() {
                   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M4 4l5 5"></path>
                   </svg>
-                  <span>Compare {files.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
+                  <span>{t('tool-docmeta.ui.compare')} {files.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
                 </Button>
                 <Button variant="secondary" size="sm" onClick={handleClearAll}>
-                  Clear All
+                  {t('tool-docmeta.ui.clearAll')}
                 </Button>
               </div>
             </div>
@@ -1596,16 +1598,16 @@ export default function DocMeta() {
                 <line x1="12" y1="18" x2="12" y2="12"></line>
                 <polyline points="9 15 12 12 15 15"></polyline>
               </svg>
-              <p className="text-lg font-bold text-text-main">Drag &amp; drop document files here</p>
-              <p className="text-sm text-text-muted">or</p>
+              <p className="text-lg font-bold text-text-main">{t('tool-docmeta.ui.dragDrop')}</p>
+              <p className="text-sm text-text-muted">{t('tool-docmeta.ui.or')}</p>
               <Button 
                 type="button" 
                 variant="secondary" 
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
               >
-                Browse Files
+                {t('tool-docmeta.ui.browse')}
               </Button>
-              <p className="text-xs text-text-muted mt-2">Supports Office (.docx, .xlsx, .pptx), OpenOffice (.odt, .ods, .odp, .odg), and PDF (.pdf)</p>
+              <p className="text-xs text-text-muted mt-2">{t('tool-docmeta.ui.supports')}</p>
             </div>
           </div>
         )}
@@ -1656,9 +1658,9 @@ export default function DocMeta() {
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                       </svg>
-                      <span>Export JSON</span>
+                      <span>{t('tool-docmeta.ui.exportJson')}</span>
                     </Button>
-                    <Button variant="secondary" onClick={() => handleRemoveFile(activeFile.id)}>Remove</Button>
+                    <Button variant="secondary" onClick={() => handleRemoveFile(activeFile.id)}>{t('tool-docmeta.ui.remove')}</Button>
                   </div>
                 </div>
 
@@ -1670,20 +1672,20 @@ export default function DocMeta() {
                         size="sm"
                         onClick={() => setActiveTab('overview')}
                       >
-                        Overview
+                        {t('tool-docmeta.ui.overview')}
                       </Button>
                       <Button 
                         variant={activeTab === 'all-parameters' ? 'primary' : 'secondary'}
                         size="sm"
                         onClick={() => setActiveTab('all-parameters')}
                       >
-                        All Parameters
+                        {t('tool-docmeta.ui.allParameters')}
                       </Button>
                     </div>
                     <div className="relative w-full max-w-[240px]">
                       <input
                         type="text"
-                        placeholder="Search tags..."
+                        placeholder={t('tool-docmeta.ui.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full bg-card border border-border rounded-lg p-2 px-3 text-xs text-text-main outline-none focus:border-accent placeholder-text-muted/50"
@@ -1694,7 +1696,7 @@ export default function DocMeta() {
                   {loading ? (
                     <div className="flex flex-col items-center justify-center p-8 gap-3 bg-card border border-border rounded-xl">
                       <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin"></div>
-                      <p className="text-sm text-text-muted font-medium">Analyzing document...</p>
+                      <p className="text-sm text-text-muted font-medium">{t('tool-docmeta.ui.analyzing')}</p>
                     </div>
                   ) : (
                     activeTab === 'overview' ? renderOverviewTab() : renderAllParametersTab()

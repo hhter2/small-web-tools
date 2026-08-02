@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -995,6 +996,7 @@ const COMPARE_FIELDS = [
 ];
 
 export default function AudioMeta() {
+  const { t } = useTranslation('tools');
   const { createObjectUrl, revokeObjectUrl, revokeAllObjectUrls } = useObjectUrlRegistry();
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -1029,21 +1031,21 @@ export default function AudioMeta() {
       FILE_RESOURCE_POLICIES.audioMetadata,
     );
     if (!resourceCheck.valid) {
-      setStatus(resourceCheck.error);
+      setStatus(t('tool-audiometa.ui.resourceRejected'));
       return;
     }
     setLoading(true);
-    setStatus('Parsing files...');
+    setStatus(t('tool-audiometa.ui.parsing'));
     const newFiles = [];
     for (const file of fileList) {
       const ext = file.name.split('.').pop().toLowerCase();
       const supportedExts = ['mp3', 'wav', 'wave', 'flac', 'm4a', 'aac', 'm4b', 'm4p', 'mp4', 'ogg', 'oga', 'opus', 'aiff', 'aif', 'wma', 'asf'];
       if (!supportedExts.includes(ext)) {
-        setStatus(`Skipped unsupported file: ${file.name}`);
+        setStatus(t('tool-audiometa.ui.unsupportedFile', { name: file.name }));
         continue;
       }
       if (files.some(f => f.name === file.name && f.size === file.size)) {
-        setStatus(`Already loaded: ${file.name}`);
+        setStatus(t('tool-audiometa.ui.alreadyLoaded', { name: file.name }));
         continue;
       }
       try {
@@ -1051,7 +1053,7 @@ export default function AudioMeta() {
         newFiles.push(parsed);
       } catch (err) {
         console.error('Error parsing', file.name, err);
-        setStatus(`Failed to parse ${file.name}: ${err.message}`);
+        setStatus(t('tool-audiometa.ui.parseFailed', { name: file.name }));
       }
     }
     if (newFiles.length > 0) {
@@ -1061,7 +1063,7 @@ export default function AudioMeta() {
         setCompareSelectedIds(curr => [...curr, ...newFiles.map(f => f.id)]);
         return updated;
       });
-      setStatus(`Loaded ${newFiles.length} file(s).`);
+      setStatus(t('tool-audiometa.ui.loadedCount', { count: newFiles.length }));
     }
     setLoading(false);
   };
@@ -1093,7 +1095,7 @@ export default function AudioMeta() {
     setFiles([]);
     setSelectedId(null);
     setCompareSelectedIds([]);
-    setStatus('Cleared all files.');
+    setStatus(t('tool-audiometa.ui.cleared'));
   };
 
   const handleExportJson = () => {
@@ -1131,9 +1133,9 @@ export default function AudioMeta() {
           formattedSize: formatBytes(blob.size),
         }
       } : f));
-      setStatus('Metadata stripped from MP3. Download the stripped file below.');
+      setStatus(t('tool-audiometa.ui.stripSuccess'));
     } catch (err) {
-      setStatus(`Stripping failed: ${err.message}`);
+      setStatus(t('tool-audiometa.ui.stripFailed'));
     }
   };
 
@@ -1151,7 +1153,7 @@ export default function AudioMeta() {
   const handleRestoreOriginal = () => {
     if (!activeFile) return;
     setFiles(prev => prev.map(f => f.id === activeFile.id ? { ...f, strippedInfo: null } : f));
-    setStatus('Restored original file info.');
+    setStatus(t('tool-audiometa.ui.restored'));
   };
 
   const toggleGroup = (groupKey) => {
@@ -1236,7 +1238,7 @@ export default function AudioMeta() {
       />
 
       <ToolHeader 
-        title="Audio Metadata &amp; Tags Reader" 
+        title={t('tool-audiometa.ui.title')}
       />
 
       {/* Full-width drag over overlay when files are already present */}
@@ -1247,7 +1249,7 @@ export default function AudioMeta() {
             <circle cx="6" cy="18" r="3"/>
             <circle cx="18" cy="16" r="3"/>
           </svg>
-          <p className="text-lg font-bold text-text-main">Drop audio files to add to list</p>
+          <p className="text-lg font-bold text-text-main">{t('tool-audiometa.ui.dropAdd')}</p>
         </div>
       )}
 
@@ -1259,7 +1261,7 @@ export default function AudioMeta() {
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-          aria-label="Upload audio files"
+          aria-label={t('tool-audiometa.ui.uploadAria')}
         >
           <div className="flex flex-col items-center gap-3">
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
@@ -1267,10 +1269,10 @@ export default function AudioMeta() {
               <circle cx="6" cy="18" r="3"/>
               <circle cx="18" cy="16" r="3"/>
             </svg>
-            <p className="text-lg font-bold text-text-main">Drop audio files here</p>
-            <p className="text-sm text-text-muted">or</p>
-            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</Button>
-            <p className="text-xs text-text-muted mt-2">Supports MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF, WMA and more</p>
+            <p className="text-lg font-bold text-text-main">{t('tool-audiometa.ui.dropHere')}</p>
+            <p className="text-sm text-text-muted">{t('tool-audiometa.ui.or')}</p>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>{t('tool-audiometa.ui.browse')}</Button>
+            <p className="text-xs text-text-muted mt-2">{t('tool-audiometa.ui.supports')}</p>
           </div>
         </div>
       )}
@@ -1286,13 +1288,13 @@ export default function AudioMeta() {
           {/* Sidebar: file list */}
           <aside className="flex flex-col bg-card border border-border rounded-xl max-h-[600px] overflow-hidden">
             <div className="flex justify-between items-center p-3 border-b border-border bg-app/50">
-              <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-audiometa.ui.fileCount', { count: files.length })}</span>
               <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title="Add audio files" className="p-1 px-2 text-[0.75rem]">
-                  Add
+                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title={t('tool-audiometa.ui.addTitle')} className="p-1 px-2 text-[0.75rem]">
+                  {t('tool-audiometa.ui.add')}
                 </Button>
-                <Button variant="secondary" size="sm" onClick={handleClearAll} title="Clear all" className="p-1 px-2 text-[0.75rem]">
-                  Clear All
+                <Button variant="secondary" size="sm" onClick={handleClearAll} title={t('tool-audiometa.ui.clearTitle')} className="p-1 px-2 text-[0.75rem]">
+                  {t('tool-audiometa.ui.clearAll')}
                 </Button>
               </div>
             </div>
@@ -1319,7 +1321,7 @@ export default function AudioMeta() {
                   <button
                     className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-500 rounded transition-opacity"
                     onClick={(e) => { e.stopPropagation(); handleRemove(f.id); }}
-                    aria-label="Remove file"
+                    aria-label={t('tool-audiometa.ui.removeAria')}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -1336,9 +1338,9 @@ export default function AudioMeta() {
             <div className="flex flex-wrap gap-2 items-center justify-between pb-3 border-b border-border">
               <div className="flex gap-2">
                 {[
-                  { id: 'overview', label: '📋 Overview' },
-                  { id: 'all', label: '🗂 All Parameters' },
-                  { id: 'compare', label: `⚖️ Compare (${compareFiles.length})` },
+                  { id: 'overview', label: `📋 ${t('tool-audiometa.ui.overview')}` },
+                  { id: 'all', label: `🗂 ${t('tool-audiometa.ui.allParameters')}` },
+                  { id: 'compare', label: `⚖️ ${t('tool-audiometa.ui.compare', { count: compareFiles.length })}` },
                 ].map(tab => (
                   <Button
                     key={tab.id}
@@ -1354,21 +1356,21 @@ export default function AudioMeta() {
               <div className="flex flex-wrap gap-2 items-center">
                 {activeFile && (
                   <>
-                    <Button variant="secondary" size="sm" onClick={handleExportJson} title="Export metadata as JSON">
+                    <Button variant="secondary" size="sm" onClick={handleExportJson} title={t('tool-audiometa.ui.exportTitle')}>
                       ⬇ JSON
                     </Button>
                     {activeFile.ext === 'mp3' && !activeFile.strippedInfo && (
-                      <Button variant="secondary" size="sm" onClick={handleStripMp3} title="Strip all ID3 metadata from MP3">
-                        ✂ Strip Tags
+                      <Button variant="secondary" size="sm" onClick={handleStripMp3} title={t('tool-audiometa.ui.stripTitle')}>
+                        ✂ {t('tool-audiometa.ui.stripTags')}
                       </Button>
                     )}
                     {activeFile.strippedInfo && (
                       <>
                         <Button variant="secondary" size="sm" onClick={handleDownloadStripped}>
-                          ⬇ Download Stripped
+                          ⬇ {t('tool-audiometa.ui.downloadStripped')}
                         </Button>
                         <Button variant="secondary" size="sm" onClick={handleRestoreOriginal}>
-                          ↩ Restore
+                          ↩ {t('tool-audiometa.ui.restore')}
                         </Button>
                       </>
                     )}
@@ -1404,7 +1406,7 @@ export default function AudioMeta() {
                     <div className="flex items-center gap-2 mt-2">
                       <FormatBadge format={activeFile.format} />
                       {activeFile.strippedInfo && (
-                        <span className="bg-red-500/10 text-red-600 dark:text-red-400 text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider">Tags Stripped</span>
+                        <span className="bg-red-500/10 text-red-600 dark:text-red-400 text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider">{t('tool-audiometa.ui.tagsStripped')}</span>
                       )}
                     </div>
                     {/* Mini Player */}
@@ -1417,7 +1419,7 @@ export default function AudioMeta() {
                   {/* Tags card */}
                   <div className="bg-card border border-border rounded-xl p-5">
                     <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <span>🏷️</span> Metadata
+                      <span>🏷️</span> {t('tool-audiometa.ui.metadata')}
                     </h3>
                     <dl className="flex flex-col gap-2">
                       {[
@@ -1446,7 +1448,7 @@ export default function AudioMeta() {
                         </div>
                       ))}
                       {Object.keys(activeFile.tags).length === 0 && (
-                        <p className="text-sm text-text-muted italic">No metadata tags found in this file.</p>
+                        <p className="text-sm text-text-muted italic">{t('tool-audiometa.ui.noMetadata')}</p>
                       )}
                     </dl>
                   </div>
@@ -1454,7 +1456,7 @@ export default function AudioMeta() {
                   {/* Technical card */}
                   <div className="bg-card border border-border rounded-xl p-5">
                     <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <span>🔧</span> Technical
+                      <span>🔧</span> {t('tool-audiometa.ui.technical')}
                     </h3>
                     <dl className="flex flex-col gap-2">
                       {[
@@ -1482,8 +1484,8 @@ export default function AudioMeta() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 shrink-0">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
-                    <span>Metadata stripped. Original: {activeFile.formattedSize} → Stripped: {activeFile.strippedInfo.formattedSize}</span>
-                    <Button size="sm" variant="primary" onClick={handleDownloadStripped} className="ml-auto">Download</Button>
+                    <span>{t('tool-audiometa.ui.strippedSummary', { original: activeFile.formattedSize, stripped: activeFile.strippedInfo.formattedSize })}</span>
+                    <Button size="sm" variant="primary" onClick={handleDownloadStripped} className="ml-auto">{t('tool-audiometa.ui.download')}</Button>
                   </div>
                 )}
               </div>
@@ -1498,7 +1500,7 @@ export default function AudioMeta() {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Search parameters..."
+                    placeholder={t('tool-audiometa.ui.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 border-none bg-transparent text-sm text-text-main outline-none placeholder-text-muted/50"
@@ -1509,7 +1511,7 @@ export default function AudioMeta() {
                   )}
                 </div>
                 {filteredParamGroups.length === 0 ? (
-                  <p className="text-sm text-text-muted italic text-center p-4">No parameters match your search.</p>
+                  <p className="text-sm text-text-muted italic text-center p-4">{t('tool-audiometa.ui.noMatch')}</p>
                 ) : (
                   filteredParamGroups.map(group => (
                     <div key={group.key} className="bg-card border border-border rounded-xl overflow-hidden">
@@ -1552,7 +1554,7 @@ export default function AudioMeta() {
             {activeTab === 'compare' && (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <p className="text-sm text-text-muted">Select files to compare:</p>
+                  <p className="text-sm text-text-muted">{t('tool-audiometa.ui.selectCompare')}</p>
                   <div className="flex flex-wrap gap-2">
                     {files.map(f => (
                       <button
@@ -1571,7 +1573,7 @@ export default function AudioMeta() {
                     <table className="w-full border-collapse min-w-[400px]">
                       <thead>
                         <tr>
-                          <th className="p-3 px-4 bg-app text-xs font-semibold text-text-muted text-left border-b border-border">Parameter</th>
+                          <th className="p-3 px-4 bg-app text-xs font-semibold text-text-muted text-left border-b border-border">{t('tool-audiometa.ui.parameter')}</th>
                           {compareFiles.map(f => (
                             <th key={f.id} className="p-3 px-4 bg-app text-xs font-semibold text-text-muted text-left border-b border-border max-w-[180px] truncate">
                               <div className="flex items-center gap-2 truncate">
@@ -1600,7 +1602,7 @@ export default function AudioMeta() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-sm text-text-muted italic text-center p-4">Select at least one file above to compare.</p>
+                  <p className="text-sm text-text-muted italic text-center p-4">{t('tool-audiometa.ui.selectAtLeastOne')}</p>
                 )}
               </div>
             )}

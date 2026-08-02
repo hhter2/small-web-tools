@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ensureFFmpegLoaded, guessMime, terminateFFmpeg } from './mediaSeparatorEngine';
 import MediaSeparatorWaveform from './MediaSeparatorWaveform';
 import Card from './ui/Card';
@@ -503,6 +504,7 @@ const COMPARE_FIELDS = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VideoMeta() {
+  const { t } = useTranslation('tools');
   const {
     createObjectUrl,
     revokeObjectUrl,
@@ -602,7 +604,7 @@ export default function VideoMeta() {
     if (extractingTrack) return;
     setExtractingTrack({ fileId: file.id, trackIndex });
     setExtractProgress(0);
-    setStatus('Loading engine...');
+    setStatus(t('tool-videometa.ui.loadingEngine'));
 
     let ffmpeg = null;
     const sourceExt = file.ext || 'mp4';
@@ -612,7 +614,7 @@ export default function VideoMeta() {
 
     try {
       ffmpeg = await ensureFFmpegLoaded();
-      setStatus('Extracting audio track...');
+      setStatus(t('tool-videometa.ui.extractingAudio'));
 
       const fileBuffer = new Uint8Array(await file.file.arrayBuffer());
       await ffmpeg.writeFile(inputName, fileBuffer);
@@ -649,7 +651,7 @@ export default function VideoMeta() {
         a.click();
         document.body.removeChild(a);
         revokeObjectUrl(downloadUrl);
-        setStatus(`Successfully downloaded audio track ${trackIndex + 1}.`);
+        setStatus(t('tool-videometa.ui.audioDownloaded', { number: trackIndex + 1 }));
       } finally {
         ffmpeg.off('progress', onProgress);
         try { await ffmpeg.deleteFile(inputName); } catch {
@@ -661,7 +663,7 @@ export default function VideoMeta() {
       }
     } catch (err) {
       console.error(err);
-      setStatus(`Failed to extract audio track: ${err.message}`);
+      setStatus(t('tool-videometa.ui.audioFailed'));
     } finally {
       setExtractingTrack(null);
       setExtractProgress(0);
@@ -680,24 +682,24 @@ export default function VideoMeta() {
 
   const processFiles = async (fileList) => {
     const resourceCheck = validateResourceAddition(files, fileList, FILE_RESOURCE_POLICIES.videoMetadata);
-    if (!resourceCheck.valid) { setStatus(resourceCheck.error); return; }
-    setLoading(true); setStatus('Parsing files...');
+    if (!resourceCheck.valid) { setStatus(t('tool-videometa.ui.resourceRejected')); return; }
+    setLoading(true); setStatus(t('tool-videometa.ui.parsing'));
     const newFiles = [];
     const supportedExts = ['mp4', 'mov', 'm4v', 'f4v', '3gp', '3g2', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'ts', 'mts', 'm2ts', 'mxf', 'log', 'txt'];
     for (const file of fileList) {
       const ext = file.name.split('.').pop().toLowerCase();
-      if (!supportedExts.includes(ext)) { setStatus(`Skipped unsupported file: ${file.name}`); continue; }
-      if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(`Already loaded: ${file.name}`); continue; }
+      if (!supportedExts.includes(ext)) { setStatus(t('tool-videometa.ui.unsupportedFile', { name: file.name })); continue; }
+      if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(t('tool-videometa.ui.alreadyLoaded', { name: file.name })); continue; }
       try {
         const parsed = await parseMediaFile(file);
         parsed.file = file;
         if (parsed.type === 'video') parsed.objectUrl = createObjectUrl(file);
         newFiles.push(parsed);
-      } catch (err) { console.error('Error parsing', file.name, err); setStatus(`Failed to parse ${file.name}: ${err.message}`); }
+      } catch (err) { console.error('Error parsing', file.name, err); setStatus(t('tool-videometa.ui.parseFailed', { name: file.name })); }
     }
     if (newFiles.length > 0) {
       setFiles(prev => { const updated = [...prev, ...newFiles]; setSelectedId(newFiles[0].id); setCompareSelectedIds(curr => [...curr, ...newFiles.map(f => f.id)]); return updated; });
-      setStatus(`Loaded ${newFiles.length} file(s).`);
+      setStatus(t('tool-videometa.ui.loadedCount', { count: newFiles.length }));
     }
     setLoading(false);
   };
@@ -726,7 +728,7 @@ export default function VideoMeta() {
     setFiles([]);
     setSelectedId(null);
     setCompareSelectedIds([]);
-    setStatus('Cleared all files.');
+    setStatus(t('tool-videometa.ui.cleared'));
   };
 
   const handleExportJson = () => {
@@ -791,25 +793,25 @@ export default function VideoMeta() {
     <Card id="tool-videometa" variant="tool" size="wide" className="relative" onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}>
       <input ref={fileInputRef} type="file" multiple accept={ACCEPTED} style={{ display: 'none' }} onChange={handleFileChange} id="videometa-file-input" />
 
-      <ToolHeader title="Video Metadata Reader" />
+      <ToolHeader title={t('tool-videometa.ui.title')} />
 
       {dragOver && files.length > 0 && (
         <div className="absolute inset-0 bg-indigo-500/15 backdrop-blur-sm border-2 border-dashed border-indigo-500 rounded-2xl flex items-center justify-center z-[100] pointer-events-none font-semibold text-indigo-500 text-2xl">
           <div className="flex flex-col items-center gap-2.5">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-            <p>Drop video or log files to add to list</p>
+            <p>{t('tool-videometa.ui.dropAdd')}</p>
           </div>
         </div>
       )}
 
       {files.length === 0 && (
-        <div className="border-2 border-dashed border-border rounded-xl p-10 text-center cursor-pointer transition-all duration-250 flex items-center justify-center bg-indigo-500/[0.02] hover:border-indigo-500 hover:bg-indigo-500/[0.06] select-none" onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()} aria-label="Upload video files">
+        <div className="border-2 border-dashed border-border rounded-xl p-10 text-center cursor-pointer transition-all duration-250 flex items-center justify-center bg-indigo-500/[0.02] hover:border-indigo-500 hover:bg-indigo-500/[0.06] select-none" onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()} aria-label={t('tool-videometa.ui.uploadAria')}>
           <div className="flex flex-col items-center">
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-            <p className="text-lg font-semibold text-text-main mt-0">Drop video or log files here</p>
-            <p className="text-[0.85rem] text-text-muted my-2">or</p>
-            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Browse Files</Button>
-            <p className="text-[0.8rem] text-text-muted mt-4 max-w-[320px]">Supports MP4, MOV, M4V, AVI, MKV, WebM, WMV, FLV, TS, LOG, TXT and more</p>
+            <p className="text-lg font-semibold text-text-main mt-0">{t('tool-videometa.ui.dropHere')}</p>
+            <p className="text-[0.85rem] text-text-muted my-2">{t('tool-videometa.ui.or')}</p>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>{t('tool-videometa.ui.browse')}</Button>
+            <p className="text-[0.8rem] text-text-muted mt-4 max-w-[320px]">{t('tool-videometa.ui.supports')}</p>
           </div>
         </div>
       )}
@@ -820,13 +822,13 @@ export default function VideoMeta() {
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-5 min-h-[520px]">
           <aside className="flex flex-col bg-card border border-border rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-app">
-              <span className="text-[0.8rem] font-semibold text-text-muted uppercase tracking-wider">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+              <span className="text-[0.8rem] font-semibold text-text-muted uppercase tracking-wider">{t('tool-videometa.ui.fileCount', { count: files.length })}</span>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title="Add files">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add
+                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title={t('tool-videometa.ui.addTitle')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>{t('tool-videometa.ui.add')}
                 </Button>
-                <Button variant="secondary" size="sm" onClick={handleClearAll} title="Clear all">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Clear All
+                <Button variant="secondary" size="sm" onClick={handleClearAll} title={t('tool-videometa.ui.clearTitle')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>{t('tool-videometa.ui.clearAll')}
                 </Button>
               </div>
             </div>
@@ -862,7 +864,7 @@ export default function VideoMeta() {
                   <div className="flex-1 min-w-0 flex flex-col gap-1 text-center md:text-left">
                     <h2 className="text-lg font-bold text-text-main m-0 truncate">{activeFile.metadata?.Title || activeFile.name}</h2>
                     {activeFile.metadata?.Artist && <p className="text-[0.95rem] text-indigo-500 font-medium m-0">{activeFile.metadata.Artist}</p>}
-                    {activeFile.containerDuration && <p className="text-[0.85rem] text-text-muted m-0">Duration: {formatDuration(activeFile.containerDuration)}</p>}
+                    {activeFile.containerDuration && <p className="text-[0.85rem] text-text-muted m-0">{t('tool-videometa.ui.duration')} {formatDuration(activeFile.containerDuration)}</p>}
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap justify-center md:justify-start"><FormatBadge format={activeFile.format} />{activeFile.brand && <span className="inline-block px-1.5 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:bg-slate-500/12 dark:text-slate-400">{activeFile.brand}</span>}</div>
                     {activeFile.type === 'video' && activeFile.videoTracks.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2 justify-center md:justify-start">
@@ -899,7 +901,7 @@ export default function VideoMeta() {
                               <div className="flex flex-col gap-1.5" key={i}>
                                 <div className="flex items-center gap-2.5 p-2 px-3 bg-app rounded-lg text-[0.84rem]">
                                   <span className="text-base shrink-0">{'\ud83c\udfb5'}</span>
-                                  <span className="font-semibold text-text-main min-w-[50px]">Track {i + 1}</span>
+                                  <span className="font-semibold text-text-main min-w-[50px]">{t('tool-videometa.ui.track', { number: i + 1 })}</span>
                                   <span className="text-text-muted flex-1">
                                     {[t.codec, t.channels ? cl : null, t.sampleRate ? `${t.sampleRate.toLocaleString()} Hz` : null, t.language && t.language !== 'und' ? `(${t.language})` : null].filter(Boolean).join(' \u00b7 ')}
                                   </span>
@@ -909,7 +911,7 @@ export default function VideoMeta() {
                                     className="py-1 px-2.5 shrink-0"
                                     disabled={!!extractingTrack || loadingURLs[key]}
                                     onClick={() => downloadAudioTrack(activeFile, i, t)}
-                                    title="Download audio track"
+                                    title={t('tool-videometa.ui.downloadAudioTitle')}
                                   >
                                     {isExtracting ? (
                                       <>
@@ -923,7 +925,7 @@ export default function VideoMeta() {
                                           <polyline points="7 10 12 15 17 10" />
                                           <line x1="12" y1="15" x2="12" y2="3" />
                                         </svg>
-                                        <span>Download</span>
+                                        <span>{t('tool-videometa.ui.download')}</span>
                                       </>
                                     )}
                                   </Button>
@@ -934,7 +936,7 @@ export default function VideoMeta() {
                                   ) : (
                                     <div className="flex justify-center items-center h-12">
                                       <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-r-transparent rounded-full mr-2" />
-                                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Generating waveform...</span>
+                                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{t('tool-videometa.ui.generatingWaveform')}</span>
                                     </div>
                                   )}
                                 </div>
@@ -997,10 +999,10 @@ export default function VideoMeta() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3.5 py-2">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input type="text" placeholder="Search parameters..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 border-none bg-transparent text-[0.9rem] text-text-main outline-none placeholder:text-text-muted" id="videometa-search-input" />
+                  <input type="text" placeholder={t('tool-videometa.ui.searchPlaceholder')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 border-none bg-transparent text-[0.9rem] text-text-main outline-none placeholder:text-text-muted" id="videometa-search-input" />
                   {searchQuery && <button className="bg-none border-none text-text-muted cursor-pointer text-base px-0.5 leading-none hover:text-text-main" onClick={() => setSearchQuery('')}>{'\u00d7'}</button>}
                 </div>
-                {filteredParamGroups.length === 0 ? <p className="text-text-muted text-[0.85rem] italic mt-2">No parameters match your search.</p> : filteredParamGroups.map(group => (
+                {filteredParamGroups.length === 0 ? <p className="text-text-muted text-[0.85rem] italic mt-2">{t('tool-videometa.ui.noMatch')}</p> : filteredParamGroups.map(group => (
                   <div key={group.key} className="bg-card border border-border rounded-xl overflow-hidden">
                     <button className="flex items-center gap-2 w-full px-4 py-3 bg-transparent border-none border-b border-border cursor-pointer text-[0.88rem] font-semibold text-text-main text-left transition-colors hover:bg-nav-hover-bg" onClick={() => toggleGroup(group.key)} id={`videometa-group-${group.key}`}>
                       <span>{group.icon} {group.label}</span>
@@ -1017,7 +1019,7 @@ export default function VideoMeta() {
             {activeTab === 'compare' && (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <p className="text-[0.85rem] text-text-muted m-0">Select files to compare:</p>
+                  <p className="text-[0.85rem] text-text-muted m-0">{t('tool-videometa.ui.selectCompare')}</p>
                   <div className="flex flex-wrap gap-2">{files.map(f => <button key={f.id} className={`flex items-center gap-1.5 p-1.5 px-2.5 rounded-lg border border-border bg-card text-[0.82rem] text-text-muted cursor-pointer transition-colors max-w-[200px] truncate hover:border-indigo-500 hover:text-text-main ${compareSelectedIds.includes(f.id) ? 'border-indigo-500 bg-indigo-500/10 text-text-main font-medium' : ''}`} onClick={() => toggleCompare(f.id)}><FormatBadge format={f.format} />{f.name}</button>)}</div>
                 </div>
                 {compareFiles.length >= 1 ? (
@@ -1027,7 +1029,7 @@ export default function VideoMeta() {
                       <tbody>{COMPARE_FIELDS.map(field => <tr key={field.label} className="hover:bg-nav-hover-bg/30"><td className="p-2 px-3.5 text-[0.83rem] text-text-muted font-medium border-b border-border align-top whitespace-nowrap w-[130px]">{field.label}</td>{compareFiles.map(f => <td key={f.id} className="p-2 px-3.5 text-[0.83rem] text-text-main border-b border-border align-top min-w-[140px]">{field.fn(f)}</td>)}</tr>)}</tbody>
                     </table>
                   </div>
-                ) : <p className="text-text-muted text-[0.85rem] italic mt-2">Select at least one file above to compare.</p>}
+                ) : <p className="text-text-muted text-[0.85rem] italic mt-2">{t('tool-videometa.ui.selectAtLeastOne')}</p>}
               </div>
             )}
           </main>

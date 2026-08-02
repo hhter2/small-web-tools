@@ -100,6 +100,11 @@ Node 24.
   `PRIVACY.zh-TW.md`, when user-visible behavior or data flow changes.
 - Keep the English and Traditional Chinese companion documents synchronized when
   a maintained explanatory document changes. TODO.md is intentionally English-only.
-- Do not edit owner-maintained `TODO.md` unless explicitly requested.
+- The project owner controls `TODO.md` backlog priorities and status. AI agents may
+  append a completed GitHub Issue to its `Completed` section only after the issue
+  is closed and its implementation, validation, and commit are complete. Preserve
+  the existing date, checklist, label, and English-only format; do not alter the
+  active backlog, existing entries, labels, or update process unless explicitly
+  requested.
 - Commit coherent phases separately. Do not include generated output, secrets, or
   unrelated working-tree changes.

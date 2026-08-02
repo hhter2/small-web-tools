@@ -129,7 +129,7 @@ Unless the task explicitly involves them, **do not read or modify**:
 - `public/` — read or change it only when the task involves static assets,
   fonts, or response headers
 - `README.md` — maintained manually by the user; **do not update it as part of any task** unless explicitly instructed
-- `TODO.md` — maintained manually by the user. **Never modify this file by yourself**. All operations on it are done by the human. There may be issues or features written in it with a `#` prefix (e.g., `#fix`). Do **not** read this file unless explicitly instructed (e.g. when the user says "detail for #fix" or similar). Otherwise, there is no need to read it.
+- `TODO.md` — maintained by the project owner for backlog priorities and status. AI agents may read it when needed to preserve its format and may append a completed GitHub Issue to `Completed` only after the issue is closed and its implementation, validation, and commit are complete. Use the existing date, checklist, label, and English-only format. Do not change `Active backlog`, existing entries, label definitions, this update process, or any other TODO.md content unless explicitly instructed. Do not read or modify TODO.md for unrelated tasks.
 
 ---
 

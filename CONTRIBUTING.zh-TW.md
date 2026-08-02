@@ -95,6 +95,8 @@ CI 會在 Node 22 與 Node 24 上執行。
   ARCHITECTURE.zh-TW.md。
 - 發生使用者可見行為或資料流變更時，更新 README.md／README.zh-TW.md 與
   PRIVACY.md／PRIVACY.zh-TW.md。
-- 除非使用者明確要求，否則不要編輯由專案擁有者維護的 TODO.md；它刻意只提供
-  英文版本。
+- `TODO.md` 的待辦優先順序與狀態由專案擁有者控制；它刻意只提供英文版本。
+  AI agent 僅可在 GitHub Issue 已關閉，且實作、驗證與提交均完成後，依既有日期、
+  核取方塊與標籤格式，將完成的 Issue 補登至 `Completed`。除非另有明確要求，
+  不得變更 active backlog、既有紀錄、標籤或更新流程。
 - 各階段提交一致的變更。不要包含產生檔、秘密或無關的工作樹變更。

@@ -23,10 +23,10 @@ describe('URL encoder and decoder domain', () => {
   it('auto-detects percent encoding and reports malformed sequences', () => {
     expect(looksPercentEncoded('%E5%8F%B0')).toBe(true);
     expect(analyzeUrl('%E5%8F%B0%E5%8C%97', 'auto', 'full').output).toBe('台北');
-    expect(analyzeUrl('%E0%A4%A', 'auto', 'full').error).toMatch(/malformed/);
+    expect(analyzeUrl('%E0%A4%A', 'auto', 'full').errorKey).toBe('malformedEncoding');
   });
 
   it('reports unpaired surrogate input without throwing', () => {
-    expect(analyzeUrl('\uD800', 'encode', 'component').error).toMatch(/invalid Unicode/);
+    expect(analyzeUrl('\uD800', 'encode', 'component').errorKey).toBe('invalidUnicode');
   });
 });

@@ -7,7 +7,8 @@ function encodeUrl(input, scope) {
   } catch {
     return {
       output: '',
-      error: 'The source contains an invalid Unicode sequence that cannot be URL-encoded.',
+      errorKey: 'invalidUnicode',
+      error: null,
     };
   }
 }
@@ -21,7 +22,8 @@ function decodeUrl(input, scope) {
   } catch {
     return {
       output: '',
-      error: 'The source contains malformed or incomplete percent-encoding.',
+      errorKey: 'malformedEncoding',
+      error: null,
     };
   }
 }
@@ -34,10 +36,10 @@ export function analyzeUrl(input, mode = 'auto', scope = 'full') {
   if (!input) {
     const encoding = mode !== 'decode';
     return {
-      sourceLabel: mode === 'auto' ? 'URL or encoded URL' : encoding ? 'Decoded URL' : 'Percent-encoded URL',
-      targetLabel: mode === 'auto' ? '' : encoding ? 'Percent-encoded URL' : 'Decoded URL',
+      sourceKey: mode === 'auto' ? 'urlOrEncoded' : encoding ? 'decoded' : 'encoded',
+      targetKey: mode === 'auto' ? null : encoding ? 'encoded' : 'decoded',
       output: '',
-      outputPlaceholder: 'The converted URL appears here.',
+      outputPlaceholderKey: 'convertedPlaceholder',
       error: null,
     };
   }
@@ -46,10 +48,11 @@ export function analyzeUrl(input, mode = 'auto', scope = 'full') {
   const converted = shouldDecode ? decodeUrl(input, scope) : encodeUrl(input, scope);
 
   return {
-    sourceLabel: shouldDecode ? 'Percent-encoded URL' : scope === 'full' ? 'Full URL' : 'URL component',
-    targetLabel: shouldDecode ? 'Decoded URL' : 'Percent-encoded URL',
+    sourceKey: shouldDecode ? 'encoded' : scope === 'full' ? 'fullUrl' : 'component',
+    targetKey: shouldDecode ? 'decoded' : 'encoded',
     output: converted.output,
-    outputPlaceholder: shouldDecode ? 'Decoded URL appears here.' : 'Encoded URL appears here.',
+    outputPlaceholderKey: shouldDecode ? 'decodedPlaceholder' : 'encodedPlaceholder',
     error: converted.error,
+    errorKey: converted.errorKey ?? null,
   };
 }

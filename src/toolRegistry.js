@@ -1,5 +1,4 @@
 import React from 'react';
-import i18n from './i18n/index.js';
 
 function route(id, category, loader, options = {}) {
   return {
@@ -66,10 +65,12 @@ export function getToolRoute(id) {
   return routesById.get(id) || null;
 }
 
-export function localizeToolRoute(item, t, englishT = i18n.getFixedT('en-US')) {
+export function localizeToolRoute(item, t, englishT) {
   const prefix = `tools:${item.id}`;
+  const translateEnglish = englishT
+    || ((key, options) => t(key, { ...options, lng: 'en-US' }));
   const currentSearch = t(`${prefix}.search`, { returnObjects: true });
-  const englishSearch = englishT(`${prefix}.search`, { returnObjects: true });
+  const englishSearch = translateEnglish(`${prefix}.search`, { returnObjects: true });
   return {
     ...item,
     title: t(`${prefix}.title`),
@@ -78,7 +79,7 @@ export function localizeToolRoute(item, t, englishT = i18n.getFixedT('en-US')) {
     searchMetadata: [...new Set([
       t(`${prefix}.title`),
       ...(Array.isArray(currentSearch) ? currentSearch : []),
-      englishT(`${prefix}.title`),
+      translateEnglish(`${prefix}.title`),
       ...(Array.isArray(englishSearch) ? englishSearch : []),
     ])],
     subGroup: item.subGroupKey ? t(`navigation:categories.${item.subGroupKey}`) : null,

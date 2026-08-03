@@ -1,5 +1,5 @@
 const PUBLIC_ROUTE_PATTERN = /\broute\(\s*['"](tool-[^'"]+|privacy)['"]/gu;
-const ROUTE_TABLE_PATTERN = /\| `(tool-[^`]+|privacy)` \|/gu;
+const ROUTE_TABLE_PATTERN = /^\|\s*`?(tool-[^`\s|]+|privacy)`?\s*\|/gmu;
 const API_PATH_PATTERN = /`(\/api\/[a-z0-9-]+)`/giu;
 const APP_ROUTE_PATTERN = /`(\/(?:home|simple)(?:\/[a-z0-9-]+)*)`/giu;
 const COMMAND_PATTERN = /`((?:npm|npx)\s+[^`\n]+)`/gu;
@@ -24,9 +24,10 @@ export function collectTechnicalTokens(markdown) {
 }
 
 export function findMissingTokens(sourceMarkdown, companionMarkdown) {
-  const sourceTokens = collectTechnicalTokens(sourceMarkdown);
-  const companionTokens = collectTechnicalTokens(companionMarkdown);
-  return [...sourceTokens].filter((token) => !companionTokens.has(token)).sort();
+  const companion = String(companionMarkdown);
+  return [...collectTechnicalTokens(sourceMarkdown)]
+    .filter((token) => !companion.includes(token))
+    .sort();
 }
 
 export function findMissingRoutes(registrySource, architectureMarkdown) {

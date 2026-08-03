@@ -8,10 +8,10 @@
 
 `small-web-tools` is a React 18 and Vite single-page application containing browser-based utility tools. This document is the technical reference for maintaining the current application. Keep it updated when routes, shared components, APIs, or dependencies change.
 
-The project is transitioning to bilingual documentation. The maintained
-explanatory guides have Traditional Chinese companions using the .zh-TW.md
-suffix; TODO.md remains the English-only backlog. Keep the English and Chinese
-versions synchronized when the documented behavior or structure changes.
+The project maintains paired English and Traditional Chinese explanatory guides.
+Companion files use the `.zh-TW.md` suffix; `TODO.md` remains the English-only
+backlog. Keep the two language versions synchronized when documented behavior or
+structure changes.
 
 ## Documentation roles
 
@@ -23,6 +23,8 @@ versions synchronized when the documented behavior or structure changes.
 - `ARCHITECTURE.md` is this English architecture and maintenance reference;
   `ARCHITECTURE.zh-TW.md` is its Traditional Chinese companion.
 - `PRIVACY.md` and `PRIVACY.zh-TW.md` are the paired privacy policy and data-flow disclosures.
+- `src/i18n/` is the source of truth for the two supported UI locales and their
+  `common`, `navigation`, `tools`, and `errors` namespaces.
 
 ## Quick facts
 
@@ -52,9 +54,13 @@ English-only AI agent instructions in .agents/.
 small-web-tools/
 ├── README.md                 English user-facing site manual
 ├── README.zh-TW.md           Traditional Chinese user-facing site manual
-├── PRIVACY.md                User-facing privacy policy and disclaimers
+├── CONTRIBUTING.md           English engineering and local-runtime guide
+├── CONTRIBUTING.zh-TW.md     Traditional Chinese engineering guide
+├── PRIVACY.md                English privacy policy and data-flow disclosure
+├── PRIVACY.zh-TW.md          Traditional Chinese privacy policy
 ├── TODO.md                   Backlog, completed work, and update process
 ├── ARCHITECTURE.md           Architecture and maintenance reference
+├── ARCHITECTURE.zh-TW.md     Traditional Chinese architecture reference
 ├── package.json              Scripts, dependencies, and pipeline commands
 ├── jsconfig.json             TypeScript checkJs configuration for JavaScript
 ├── eslint.config.js          ESLint flat config for React, hooks, and Cloudflare functions
@@ -66,6 +72,10 @@ small-web-tools/
 ├── config/
 │   ├── network-services.json Network-service policy source of truth
 │   └── ffmpeg-assets.json    Pinned FFmpeg asset sizes and SHA-256 values
+├── scripts/
+│   ├── check-i18n.mjs         Locale-pair structure and interpolation checks
+│   ├── check-hardcoded-ui.mjs User-facing string audit
+│   └── check-doc-consistency.mjs Documentation/link consistency checks
 ├── .github/
 │   ├── dependabot.yml        Weekly dependency update configuration
 │   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
@@ -80,6 +90,9 @@ small-web-tools/
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
+│   ├── i18n/
+│   │   ├── index.js           Locale resolution, i18next setup, persistence, and document language
+│   │   └── locales/           Paired en-US and zh-TW namespace JSON resources
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
 │   ├── tests/                Vitest unit test suites and setup
 │   └── components/
@@ -117,6 +130,35 @@ small-web-tools/
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
+
+### Internationalization runtime
+
+`src/i18n/index.js` initializes `i18next` with the `react-i18next` adapter and
+the four paired namespaces under `src/i18n/locales/en-US/` and
+`src/i18n/locales/zh-TW/`: `common`, `navigation`, `tools`, and `errors`.
+English (`en-US`) is the default and fallback locale; Traditional Chinese
+(`zh-TW`) is the second supported locale.
+
+Initial locale resolution is deterministic: a valid persisted value at
+`small-web-tools.locale` wins, then the browser's preferred languages, then
+English. The language menu in `App.jsx` calls `changeLocale()`, updates
+`document.documentElement.lang`, and persists only the normalized supported
+locale. Storage failures do not prevent an in-memory language change.
+
+Route IDs, URL paths, tool IDs, file extensions, protocol names, and other
+interoperability-sensitive identifiers remain stable. `toolRegistry.js` keeps
+those identifiers separate from localized titles, descriptions, tooltips, and
+search metadata; English search terms remain available as fallback aliases.
+`sortLocalizedTools()` uses the active locale's `Intl.Collator`, while tools use
+locale-aware `Intl` formatting for reader-facing numbers, dates, and times.
+User content and content algorithms are not translated based on the UI locale.
+
+Every UI string change must update both locale resource trees. `npm run i18n:check`
+checks key parity, duplicate keys, non-empty values, and interpolation parity;
+`npm run i18n:audit` scans JSX for unreviewed user-facing literals. Focused
+runtime and resource tests are in `src/tests/i18n.test.js`,
+`src/tests/i18nValidation.test.js`, `src/tests/i18nHardcodedUi.test.js`, and
+`src/tests/wordCounterLocale.test.js`.
 
 ### Audience and Simple workspaces
 
@@ -374,6 +416,7 @@ pluralized messages use platform `Intl` APIs or i18next interpolation.
 | --- | --- |
 | `react`, `react-dom` | React rendering. |
 | `@vitejs/plugin-react`, `vite` | Development server and production build. |
+| `i18next`, `react-i18next` | Synchronous locale resources, React translation hooks, fallback, and language switching. |
 | `vitest`, `@vitest/coverage-v8` | Unit/integration runner and coverage gates. |
 | `eslint`, React lint plugins | Static-analysis rules and the non-increasing warning budget. |
 | `wrangler` | Pinned Cloudflare Pages/Worker configuration validation and local integration runtime. |
@@ -396,8 +439,11 @@ npm install --global npm@10.9.2
 npm ci
 npm run dev
 npm run build
+npm run i18n:check
+npm run i18n:audit
 npm run verify
 npm run test:e2e
+npm run docs:check
 npm run preview
 ```
 
@@ -417,13 +463,20 @@ journeys, and `npm audit`.
 3. Follow the shared `Card` plus one `ToolHeader` layout contract.
 4. Reuse existing UI primitives and theme tokens.
 5. Add an API handler only when browser-side code is insufficient; mirror it in `vite.config.js` if local development needs the endpoint.
-6. Update the route inventory and any affected sections of this document.
-7. Build the project and verify the changed route at desktop and mobile widths.
+6. Add or update matching `en-US` and `zh-TW` namespace keys, including labels,
+   placeholders, errors, announcements, and accessible names; keep route IDs and
+   technical identifiers stable.
+7. Update the route inventory and any affected sections of this document and its
+   Traditional Chinese companion.
+8. Build the project and verify the changed route at desktop and mobile widths in
+   both supported locales.
 
 ## Documentation maintenance
 
 When user behavior changes, update the relevant entries in `README.md` and
 `README.zh-TW.md`. When implementation structure changes, update this document
 and `ARCHITECTURE.zh-TW.md`. Keep the CONTRIBUTING and PRIVACY pairs
-synchronized when engineering or data-flow policy changes. Record the work and
-follow the validation/commit sequence in `TODO.md`.
+synchronized when engineering or data-flow policy changes. For locale changes,
+also update both resource trees and run `i18n:check`, `i18n:audit`, and
+`docs:check`. Record the work and follow the validation/commit sequence in
+`TODO.md`.

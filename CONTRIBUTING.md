@@ -95,8 +95,15 @@ Node 24.
 
 ## Internationalization
 
+- `src/i18n/index.js` owns locale normalization and initial resolution (persisted
+  preference, then browser languages, then `en-US`), i18next setup,
+  `document.documentElement.lang`, and persistence. The header language menu
+  exposes the supported `en-US` and `zh-TW` locales.
 - Put user-facing text in the bounded `common`, `navigation`, `tools`, or `errors`
   namespace under `src/i18n/locales/<locale>/`; never use translated labels as IDs.
+- Keep route IDs, URL paths, and technical identifiers independent from translations;
+  localize labels, descriptions, tooltips, search aliases, errors, announcements,
+  and accessible names.
 - Every UI change must add matching, non-empty `en-US` and `zh-TW` keys. Use
   semantic lower-camel-case keys, `{{value}}` interpolation, and i18next plural suffixes.
 - Keep interpolation variables identical. Stable technical terms such as DNA,
@@ -122,6 +129,8 @@ Pull requests must state the translation impact and confirm bilingual desktop/mo
   `PRIVACY.zh-TW.md`, when user-visible behavior or data flow changes.
 - Keep the English and Traditional Chinese companion documents synchronized when
   a maintained explanatory document changes. TODO.md is intentionally English-only.
+- Run `npm run docs:check` after changing maintained guides; locale changes also
+  require both resource trees plus `npm run i18n:check` and `npm run i18n:audit`.
 - The project owner controls `TODO.md` backlog priorities and status. AI agents may
   append a completed GitHub Issue to its `Completed` section only after the issue
   is closed and its implementation, validation, and commit are complete. Preserve

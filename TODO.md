@@ -44,6 +44,11 @@ Use this sequence for each meaningful update:
 
 ## Completed
 
+### 2026-08-03
+
+- [x] `feat 31` Complete the bilingual `en-US`/`zh-TW` refactor with persisted locale selection, localized shell and tool behavior, synchronized resources, and bilingual validation; released as `v0.8.0-beta`.
+- [x] `docs` Synchronize the paired README, architecture, and contribution guides with the shipped bilingual runtime and its maintenance checks.
+
 ### 2026-07-30
 
 - [x] `fix` Make the SVG-to-PNG preview surface reflect the selected transparent or white export background.

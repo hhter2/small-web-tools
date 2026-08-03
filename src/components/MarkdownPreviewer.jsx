@@ -27,7 +27,7 @@ function InlinePreview({ tokens }) {
   });
 }
 
-function MarkdownPreview({ blocks, previewRef, onScroll, className = '' }) {
+function MarkdownPreview({ blocks, previewRef, onScroll = undefined, className = '' }) {
   const { t } = useTranslation('tools');
   if (blocks.length === 0) {
     return <div ref={previewRef} onScroll={onScroll} aria-label={t('tool-markdown.ui.previewAria')} className={`flex h-full min-h-0 items-center justify-center overflow-auto p-8 text-center text-sm text-text-muted ${className}`}>{t('tool-markdown.ui.emptyPreview')}</div>;
@@ -48,7 +48,7 @@ function MarkdownPreview({ blocks, previewRef, onScroll, className = '' }) {
         if (block.type === 'codeBlock') {
           const language = normalizeCodeLanguage(block.language);
           return (
-            <div key={key} {...sourceProps} className="code-preview-syntax overflow-hidden rounded-lg border border-border bg-app" data-code-theme="dark" style={{ '--code-accent': '#10b981' }}>
+            <div key={key} {...sourceProps} className="code-preview-syntax overflow-hidden rounded-lg border border-border bg-app" data-code-theme="dark">
               {block.language && <div className="border-b border-border px-3 py-1 text-[0.68rem] font-bold uppercase tracking-wider text-text-muted">{block.language}</div>}
               <pre className="overflow-x-auto p-4 text-sm leading-6"><code data-language={language} dangerouslySetInnerHTML={{ __html: highlightCode(block.value, language) }} /></pre>
             </div>

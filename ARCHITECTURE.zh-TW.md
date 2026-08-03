@@ -17,10 +17,12 @@ small-web-tools 是一個使用 React 18 與 Vite 的單頁應用程式，提供
 - PRIVACY.md 與 PRIVACY.zh-TW.md 是成對的隱私權政策與資料流揭露。
 - TODO.md 是刻意維持英文單一版本的待辦事項、已完成工作紀錄與更新流程。
 - ARCHITECTURE.md 是英文架構與維護參考；本檔案是繁體中文對照檔。
+- `src/i18n/` 是兩個支援 UI 地區設定及 `common`、`navigation`、`tools`、`errors`
+  命名空間的來源。
 
-本專案正在轉為雙語文件，範圍是給使用者與人類開發者閱讀的說明文件。這些文件使用
-英文檔名搭配 .zh-TW.md 結尾的繁中檔案；修改文件描述的行為或結構時，請同步維護
-兩個版本。只供 AI agent 使用的 .agents/AGENTS.md 與 TODO.md 刻意維持英文單一版本。
+本專案維護成對的英文與繁體中文說明文件。英文檔名搭配 `.zh-TW.md` 結尾的繁中檔案；
+修改文件描述的行為或結構時，請同步維護兩個版本。只供 AI agent 使用的
+`.agents/AGENTS.md` 與 `TODO.md` 刻意維持英文單一版本。
 
 ## 快速資訊
 
@@ -69,7 +71,9 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
   FFmpeg 資產大小與 SHA-256。
 - .github/：Dependabot 設定與 GitHub Actions CI pipeline。
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
+- scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
+- src/i18n/：地區設定解析、i18next 設定、持久化，以及成對的 en-US／zh-TW 命名空間資源。
 - functions/：共用無伺服器工具與 Cloudflare Pages API handler。
 - workers/：rate-limiter Worker。
 - test/：SSRF 與其他整合測試 fixture。
@@ -98,6 +102,30 @@ src/App.jsx 負責應用程式 shell：
 
 Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵包屑、footer、搜尋、主題控制項
 與置中的工具工作區。
+
+### 國際化執行階段
+
+`src/i18n/index.js` 以 `react-i18next` 初始化 `i18next`，載入
+`src/i18n/locales/en-US/` 與 `src/i18n/locales/zh-TW/` 下成對的
+`common`、`navigation`、`tools`、`errors` 命名空間。English (`en-US`) 是預設與
+fallback，繁體中文 (`zh-TW`) 是第二個支援地區設定。
+
+初始地區設定按固定順序解析：有效的 `small-web-tools.locale` 儲存值優先，其次是
+瀏覽器偏好的語言，最後使用 `en-US`。`App.jsx` 的語言選單呼叫 `changeLocale()`，更新
+`document.documentElement.lang`，並只儲存正規化後的支援地區設定；儲存失敗不會阻止
+記憶體中的切換。
+
+路由 ID、URL 路徑、工具 ID、檔案副檔名、協定名稱等互通性識別碼保持穩定。
+`toolRegistry.js` 將這些識別碼與標題、描述、tooltip、搜尋中繼資料分離；英文搜尋詞
+仍會作為 fallback。`sortLocalizedTools()` 使用目前地區設定的 `Intl.Collator`，工具則
+使用 `Intl` 以地區設定格式化讀者可見的數字、日期與時間。UI 地區設定不會翻譯使用者
+內容，也不會改變內容演算法。
+
+每次 UI 字串變更都必須同步兩棵地區設定資源樹。`npm run i18n:check` 會檢查 key
+對齊、重複 key、非空翻譯與 interpolation 對齊；`npm run i18n:audit` 會掃描 JSX
+尋找未審查的使用者可見字串。重點測試位於 `src/tests/i18n.test.js`、
+`src/tests/i18nValidation.test.js`、`src/tests/i18nHardcodedUi.test.js` 與
+`src/tests/wordCounterLocale.test.js`。
 
 ### Audience 與 Simple 工作區
 
@@ -339,6 +367,7 @@ verify 中的 scripts/check-external-hosts.mjs 會在正式來源主機名稱未
 | --- | --- |
 | react、react-dom | React 渲染。 |
 | @vitejs/plugin-react、vite | 開發伺服器與正式建置。 |
+| i18next、react-i18next | 同步地區設定資源、React 翻譯 hooks、fallback 與語言切換。 |
 | vitest、@vitest/coverage-v8 | 單元／整合 runner 與覆蓋率門檻。 |
 | eslint、React lint plugins | 靜態分析規則與不增加的警告預算。 |
 | wrangler | 固定的 Cloudflare Pages／Worker 設定驗證與本機整合執行環境。 |
@@ -361,8 +390,11 @@ npm install --global npm@10.9.2
 npm ci
 npm run dev
 npm run build
+npm run i18n:check
+npm run i18n:audit
 npm run verify
 npm run test:e2e
+npm run docs:check
 npm run preview
 ```
 
@@ -380,13 +412,16 @@ Playwright 流程與 npm audit。
 4. 重用既有 UI primitives 與 theme tokens。
 5. 只有瀏覽器端不足時才加入 API handler；若本機開發需要該端點，在 vite.config.js
    中同步加入。
-6. 更新路由清單與本文件受影響的段落。
-7. 建置專案，並在桌面與行動寬度驗證變更後的路由。
+6. 加入或更新相符的 `en-US` 與 `zh-TW` 命名空間鍵，包括標籤、placeholder、錯誤、
+   通知與輔助文字；路由 ID 與技術識別碼保持穩定。
+7. 更新路由清單、本文件受影響的段落，以及英文架構指南的繁中對照檔。
+8. 建置專案，並在兩個支援的地區設定下，以桌面與行動寬度驗證變更後的路由。
 
 ## 文件維護
 
 使用者行為變更時，更新 README.md 與 README.zh-TW.md 中相應的內容。實作結構變更時，
 更新 ARCHITECTURE.md 與本檔案。工程或資料流政策變更時，同步更新 CONTRIBUTING 與
-PRIVACY 的英文／繁中對照檔。TODO.md 維持英文單一版本；依照 TODO.md 中的驗證與提交
-流程記錄工作。若工作由 AI agent 建立 GitHub Issue 或 Pull Request 追蹤，也要以 GitHub
-紀錄作為補充，不要假設所有變更都會出現在 TODO.md。
+PRIVACY 的英文／繁中對照檔。地區設定變更還要同步兩棵資源樹，並執行
+`i18n:check`、`i18n:audit` 與 `docs:check`。TODO.md 維持英文單一版本；依照
+TODO.md 中的驗證與提交流程記錄工作。若工作由 AI agent 建立 GitHub Issue 或 Pull
+Request 追蹤，也要以 GitHub 紀錄作為補充，不要假設所有變更都會出現在 TODO.md。

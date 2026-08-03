@@ -91,8 +91,13 @@ CI 會在 Node 22 與 Node 24 上執行。
 
 ## 國際化
 
+- `src/i18n/index.js` 負責地區設定正規化與初始解析（已儲存偏好、瀏覽器語言，最後
+  才使用 `en-US`）、i18next 設定、`document.documentElement.lang` 與持久化。標頭的
+  語言選單提供支援的 `en-US` 與 `zh-TW` 地區設定。
 - 將使用者可見文字放在 `src/i18n/locales/<locale>/` 下有界線的 `common`、
   `navigation`、`tools` 或 `errors` 命名空間；不可使用翻譯後的標籤作為識別碼。
+- 路由 ID、URL 路徑與技術識別碼必須獨立於翻譯；標籤、描述、tooltip、搜尋別名、錯誤、
+  通知與輔助名稱則應進行在地化。
 - 每項 UI 變更都必須加入相符且非空白的 `en-US` 與 `zh-TW` 鍵。語意鍵使用
   lower camel case，動態值使用 `{{value}}` 插值，數量使用 i18next 複數後綴。
 - 兩種語言的插值變數必須一致。DNA、MIME、QR、RGB、通訊協定與副檔名等穩定
@@ -117,6 +122,8 @@ Pull request 必須說明翻譯影響，並確認已檢查桌面版與行動版�
   ARCHITECTURE.zh-TW.md。
 - 發生使用者可見行為或資料流變更時，更新 README.md／README.zh-TW.md 與
   PRIVACY.md／PRIVACY.zh-TW.md。
+- 修改維護中的指南後執行 `npm run docs:check`；地區設定變更也必須同步兩棵資源樹，
+  並執行 `npm run i18n:check` 與 `npm run i18n:audit`。
 - `TODO.md` 的待辦優先順序與狀態由專案擁有者控制；它刻意只提供英文版本。
   AI agent 僅可在 GitHub Issue 已關閉，且實作、驗證與提交均完成後，依既有日期、
   核取方塊與標籤格式，將完成的 Issue 補登至 `Completed`。除非另有明確要求，

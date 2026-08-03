@@ -31,6 +31,14 @@ Small Web Tools 是一套以瀏覽器為基礎的日常工具集合，涵蓋文�
 
 在手機或窄螢幕上，導覽列會變成可由選單按鈕開啟的抽屜式介面。
 
+### 語言與在地化
+
+使用標頭中的 **Language** 選單，在 English (`en-US`) 與繁體中文 (`zh-TW`) 之間切換。
+English 是預設與 fallback 語言。選定的地區設定會以 `small-web-tools.locale` 儲存在
+本機；只有在沒有已儲存偏好時才會使用瀏覽器語言。路由 ID、URL 路徑與技術識別碼保持
+穩定，導覽、搜尋中繼資料、工具控制項、錯誤、通知與輔助標籤則會在地化。讀者可見的
+數字、日期、排序與單字計數估算會使用目前地區設定；使用者內容與演算法解讀不會翻譯。
+
 ### 使用者群組與 Simple 模式
 
 首頁介紹旁的使用者群組切換器，可以顯示未變更的完整首頁，或為一般使用者、開發人員、生物資訊研究人員、設計師或學生整理的工具集合。頂端標頭會保留分類選單。
@@ -131,6 +139,10 @@ npm run preview
 npm run verify
 npm run test:e2e
 ```
+
+`npm run i18n:check` 會驗證成對的地區設定資源，`npm run i18n:audit` 會掃描 JSX 中
+未審查的使用者可見字串，`npm run docs:check` 會檢查文件一致性。三項檢查都包含在
+`npm run verify` 中。
 
 `npm run dev` 只會模擬 IP 查詢函式（`/api/iplookup`）。若要在本機執行所有 Cloudflare Pages Functions（貨幣匯率與網站字型擷取），請依照 `CONTRIBUTING.zh-TW.md` 中的 Pages／Worker 雙終端機說明。執行 `npm run platform:integration` 以進行自動化的並行限制與故障關閉服務繫結檢查。
 

@@ -31,6 +31,17 @@ Small Web Tools is a browser-based collection of everyday utilities for text, de
 
 On a phone or narrow screen, the navigation becomes a drawer opened by the menu button.
 
+### Language and localization
+
+Use the **Language** menu in the header to switch between English (`en-US`) and
+Traditional Chinese (`zh-TW`). English is the default and fallback. The selected
+locale is saved locally under `small-web-tools.locale`; the browser language is
+used only when no saved preference exists. Route IDs, URL paths, and technical
+identifiers remain stable, while navigation, search metadata, tool controls,
+errors, announcements, and accessible labels are localized. Reader-facing
+numbers, dates, sorting, and word-count estimates use the active locale; user
+content and algorithmic interpretation are not translated.
+
 ### Audience and Simple modes
 
 The audience switcher beside the homepage introduction can show the unchanged
@@ -142,6 +153,10 @@ Run the complete local verification and browser journeys with:
 npm run verify
 npm run test:e2e
 ```
+
+`npm run i18n:check` validates the paired locale resources, `npm run i18n:audit`
+audits JSX for unreviewed user-facing literals, and `npm run docs:check` checks
+documentation consistency. All three checks are included in `npm run verify`.
 
 `npm run dev` mirrors only the IP lookup function (`/api/iplookup`). To exercise all
 Cloudflare Pages Functions locally (currency rates and website font extraction),

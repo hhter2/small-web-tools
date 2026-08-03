@@ -8,6 +8,11 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 let container;
 let root;
 
+function setNativeValue(element, value) {
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(element, value);
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 beforeEach(async () => {
   Object.defineProperty(navigator, 'clipboard', {
     configurable: true,
@@ -45,10 +50,7 @@ describe('Markdown Previewer issue 42', () => {
     const focusedEditor = dialog.querySelector('textarea[aria-label="Markdown editor"]');
     expect(focusedEditor).toBeInTheDocument();
 
-    await act(async () => {
-      focusedEditor.value = '# Focused edit';
-      focusedEditor.dispatchEvent(new Event('input', { bubbles: true }));
-    });
+    await act(async () => setNativeValue(focusedEditor, '# Focused edit'));
 
     const closeButton = dialog.querySelector('button[aria-label="Close fullscreen preview"]');
     await act(async () => closeButton.click());

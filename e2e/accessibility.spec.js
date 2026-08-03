@@ -4,10 +4,10 @@ import AxeBuilder from '@axe-core/playwright';
 test('consent dialog traps focus, announces changes, closes with Escape, and restores focus', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto('/');
-  const opener = page.getByRole('button', { name: /Consent/ });
+  const opener = page.getByRole('button', { name: 'Manage third-party service consent' });
   await opener.click();
 
-  const dialog = page.getByRole('dialog', { name: '🛡️ Third-Party Service Consent Manager' });
+  const dialog = page.getByRole('dialog', { name: /Third-Party Service Consent Manager/ });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole('button', { name: 'Close consent manager' })).toBeFocused();
 

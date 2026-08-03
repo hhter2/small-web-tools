@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import Card from './ui/Card';
@@ -688,6 +689,7 @@ const generateQRSVG = (text, options) => {
 };
 
 export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
+  const { t } = useTranslation('tools');
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // ================= QR State =================
@@ -1005,7 +1007,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   useEffect(() => {
     if (activeTab === 'barcode') {
       const err = validateBarcode(barcodeValue, barcodeFormat);
-      setBarcodeError(err);
+      setBarcodeError(err ? t('tool-qrbarcode.ui.invalidBarcode') : null);
 
       if (!err && barcodeCanvasRef.current && barcodeSvgRef.current) {
         const options = {
@@ -1026,14 +1028,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
           JsBarcode(barcodeSvgRef.current, barcodeValue, options);
         } catch (e) {
           console.error("Barcode drawing error: ", e);
-          setBarcodeError("Barcode render failed. Check code parameters.");
+          setBarcodeError(t('tool-qrbarcode.ui.renderFailed'));
         }
       }
     }
   }, [
     activeTab, barcodeValue, barcodeFormat, barcodeLineColor,
     barcodeBgColor, barcodeWidth, barcodeHeight,
-    barcodeDisplayValue, barcodeFontSize, barcodeMargin
+    barcodeDisplayValue, barcodeFontSize, barcodeMargin, t
   ]);
 
   // Handle Logo Image Upload
@@ -1171,7 +1173,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
     setFullscreenPreview({
       src: canvas.toDataURL('image/png'),
-      title: `${isQrPreview ? 'QR code' : 'Barcode'} fullscreen preview`,
+      title: isQrPreview ? t('tool-qrbarcode.ui.qrFullscreen') : t('tool-qrbarcode.ui.barcodeFullscreen'),
       transparent: isQrPreview && qrBgTransparent,
     });
   };
@@ -1204,7 +1206,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     <Card id="tool-qrbarcode" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
-          title="QR Code &amp; Barcode Generator" 
+          title={t('tool-qrbarcode.ui.title')}
           className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
@@ -1223,7 +1225,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               <rect x="14" y="7" width="3" height="3"></rect>
               <rect x="7" y="14" width="3" height="3"></rect>
             </svg>
-            <span>QR Code</span>
+            <span>{t('tool-qrbarcode.ui.qrCode')}</span>
           </Button>
           <Button
             variant={activeTab === 'barcode' ? 'primary' : 'secondary'}
@@ -1243,7 +1245,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               <line x1="18" y1="5" x2="18" y2="19"></line>
               <line x1="21" y1="5" x2="21" y2="19"></line>
             </svg>
-            <span>Barcode</span>
+            <span>{t('tool-qrbarcode.ui.barcode')}</span>
           </Button>
         </div>
       </div>
@@ -1257,11 +1259,11 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
             <>
               {/* QR TYPE SELECTOR */}
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-text-main">Content Type</span>
+                <span className="text-sm font-semibold text-text-main">{t('tool-qrbarcode.ui.contentType')}</span>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'text', name: 'Plain Text' },
-                    { id: 'wifi', name: 'WiFi Network' }
+                    { id: 'text', name: t('tool-qrbarcode.ui.plainText') },
+                    { id: 'wifi', name: t('tool-qrbarcode.ui.wifiNetwork') }
                   ].map(t => (
                     <button 
                       key={t.id}
@@ -1285,9 +1287,9 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   <FieldInput 
                     as="textarea"
                     id="qr-text"
-                    label="Plain Text Content"
+                    label={t('tool-qrbarcode.ui.plainTextContent')}
                     rows={3}
-                    placeholder="Type your text content here..."
+                    placeholder={t('tool-qrbarcode.ui.textPlaceholder')}
                     value={qrText}
                     onChange={(e) => setQrText(e.target.value)}
                   />
@@ -1298,23 +1300,23 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <FieldInput 
                       id="wifi-ssid"
                       type="text"
-                      label="Network Name (SSID)"
-                      placeholder="SSID Name"
+                      label={t('tool-qrbarcode.ui.networkName')}
+                      placeholder={t('tool-qrbarcode.ui.ssidPlaceholder')}
                       value={qrWifiSsid}
                       onChange={(e) => setQrWifiSsid(e.target.value)}
                     />
                     <FieldInput 
                       id="wifi-password"
                       type="text"
-                      label="Password"
-                      placeholder="Network Password"
+                      label={t('tool-qrbarcode.ui.password')}
+                      placeholder={t('tool-qrbarcode.ui.passwordPlaceholder')}
                       disabled={qrWifiAuth === 'nopass'}
                       value={qrWifiPassword}
                       onChange={(e) => setQrWifiPassword(e.target.value)}
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="wifi-auth" className="text-sm font-semibold text-text-main">Security</label>
+                        <label htmlFor="wifi-auth" className="text-sm font-semibold text-text-main">{t('tool-qrbarcode.ui.security')}</label>
                         <select 
                           id="wifi-auth"
                           className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
@@ -1323,7 +1325,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         >
                           <option value="WPA">WPA/WPA2</option>
                           <option value="WEP">WEP</option>
-                          <option value="nopass">Unsecured (No Password)</option>
+                          <option value="nopass">{t('tool-qrbarcode.ui.unsecured')}</option>
                         </select>
                       </div>
                       <div className="flex items-center mt-6">
@@ -1334,7 +1336,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                             checked={qrWifiHidden}
                             onChange={(e) => setQrWifiHidden(e.target.checked)}
                           />
-                          Hidden Network
+                          {t('tool-qrbarcode.ui.hiddenNetwork')}
                         </label>
                       </div>
                     </div>
@@ -1343,39 +1345,39 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               </div>
 
               {/* ── ACCORDION: STYLE CUSTOMIZATION ── */}
-              <AccordionHeader sectionKey="style" label="Style Customization" />
+              <AccordionHeader sectionKey="style" label={t('tool-qrbarcode.ui.styleCustomization')} />
               {openSection === 'style' && (
                 <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Dots Style</label>
+                      <label htmlFor="qr-dots-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.dotsStyle')}</label>
                       <select 
                         id="qr-dots-style" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                         value={qrDotsStyle} 
                         onChange={(e) => setQrDotsStyle(e.target.value)}
                       >
-                        <option value="square">Classic Square</option>
-                        <option value="circle">Rounded Circles</option>
+                        <option value="square">{t('tool-qrbarcode.ui.classicSquare')}</option>
+                        <option value="circle">{t('tool-qrbarcode.ui.roundedCircles')}</option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Corner Eyes Style</label>
+                      <label htmlFor="qr-eyes-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.eyesStyle')}</label>
                       <select 
                         id="qr-eyes-style" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                         value={qrEyesStyle} 
                         onChange={(e) => setQrEyesStyle(e.target.value)}
                       >
-                        <option value="square">Standard Square</option>
-                        <option value="rounded">Smooth Rounded</option>
-                        <option value="circle">Circular Rings</option>
+                        <option value="square">{t('tool-qrbarcode.ui.standardSquare')}</option>
+                        <option value="rounded">{t('tool-qrbarcode.ui.smoothRounded')}</option>
+                        <option value="circle">{t('tool-qrbarcode.ui.circularRings')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color Type</span>
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.foregroundType')}</span>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                         <input 
@@ -1386,7 +1388,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           checked={qrFgType === 'solid'} 
                           onChange={() => setQrFgType('solid')}
                         />
-                        Solid Color
+                        {t('tool-qrbarcode.ui.solidColor')}
                       </label>
                       <label className="flex items-center gap-2 text-sm font-semibold text-text-main cursor-pointer">
                         <input 
@@ -1397,14 +1399,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           checked={qrFgType === 'gradient'} 
                           onChange={() => setQrFgType('gradient')}
                         />
-                        Gradient Color
+                        {t('tool-qrbarcode.ui.gradientColor')}
                       </label>
                     </div>
                   </div>
 
                   {qrFgType === 'solid' ? (
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Foreground Color</label>
+                      <label htmlFor="qr-fg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.foregroundColor')}</label>
                       <div className="flex items-center gap-2">
                         <ColorPickerSwatch pickerKey="fg" color={qrFgColor} setter={setQrFgColor} defaultColor="#111827" />
                         <input 
@@ -1421,7 +1423,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <div className="flex flex-col gap-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">Start Color</label>
+                          <label htmlFor="qr-grad-1" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.startColor')}</label>
                           <div className="flex items-center gap-2">
                             <ColorPickerSwatch pickerKey="grad1" color={qrGradColor1} setter={setQrGradColor1} defaultColor="#4f46e5" />
                             <input 
@@ -1435,7 +1437,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           </div>
                         </div>
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">End Color</label>
+                          <label htmlFor="qr-grad-2" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.endColor')}</label>
                           <div className="flex items-center gap-2">
                             <ColorPickerSwatch pickerKey="grad2" color={qrGradColor2} setter={setQrGradColor2} defaultColor="#06b6d4" />
                             <input 
@@ -1452,20 +1454,20 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Gradient Shape</label>
+                          <label htmlFor="qr-grad-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.gradientShape')}</label>
                           <select 
                             id="qr-grad-style" 
                             className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                             value={qrGradType} 
                             onChange={(e) => setQrGradType(e.target.value)}
                           >
-                            <option value="linear">Linear</option>
-                            <option value="radial">Radial</option>
+                            <option value="linear">{t('tool-qrbarcode.ui.linear')}</option>
+                            <option value="radial">{t('tool-qrbarcode.ui.radial')}</option>
                           </select>
                         </div>
                         {qrGradType === 'linear' && (
                           <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">Angle ({qrGradAngle}°)</label>
+                            <label htmlFor="qr-grad-angle" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.angle', { value: qrGradAngle })}</label>
                             <input 
                               id="qr-grad-angle"
                               type="range" 
@@ -1484,7 +1486,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <label htmlFor="qr-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.backgroundColor')}</label>
                       <div className="flex items-center gap-2">
                         <ColorPickerSwatch pickerKey="bg" color={qrBgColor} setter={setQrBgColor} defaultColor="#ffffff" />
                         <input 
@@ -1507,14 +1509,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           checked={qrBgTransparent}
                           onChange={(e) => setQrBgTransparent(e.target.checked)}
                         />
-                        Transparent BG
+                        {t('tool-qrbarcode.ui.transparentBg')}
                       </label>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">Error Correction</label>
+                      <label htmlFor="qr-error-correct" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.errorCorrection')}</label>
                       <select 
                         id="qr-error-correct" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
@@ -1522,15 +1524,15 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         value={logoImg ? 'H' : qrErrorCorrection} 
                         onChange={(e) => setQrErrorCorrection(e.target.value)}
                       >
-                        <option value="L">Low (7% recovery)</option>
-                        <option value="M">Medium (15% recovery)</option>
-                        <option value="Q">Quartile (25% recovery)</option>
-                        <option value="H">High (30% recovery)</option>
+                        <option value="L">{t('tool-qrbarcode.ui.recoveryLow')}</option>
+                        <option value="M">{t('tool-qrbarcode.ui.recoveryMedium')}</option>
+                        <option value="Q">{t('tool-qrbarcode.ui.recoveryQuartile')}</option>
+                        <option value="H">{t('tool-qrbarcode.ui.recoveryHigh')}</option>
                       </select>
-                      {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">Locked to HIGH (H) to support center logo.</span>}
+                      {logoImg && <span className="text-[10px] text-amber-500 font-semibold mt-1">{t('tool-qrbarcode.ui.highLocked')}</span>}
                     </div>
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Resolution</label>
+                      <label htmlFor="qr-export-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.resolution')}</label>
                       <select 
                         id="qr-export-size" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
@@ -1548,18 +1550,18 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               )}
 
               {/* ── ACCORDION: EMBED LOGO ── */}
-              <AccordionHeader sectionKey="logo" label="Embed Logo / Image" badge={logoImg ? '1 logo' : null} />
+              <AccordionHeader sectionKey="logo" label={t('tool-qrbarcode.ui.embedLogo')} badge={logoImg ? t('tool-qrbarcode.ui.oneLogo') : null} />
               {openSection === 'logo' && (
                 <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Upload Logo</span>
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.uploadLogo')}</span>
                     <div className="flex flex-wrap items-center gap-3">
                       <label htmlFor="logo-file-picker">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-app hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm select-none">
                           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                           </svg>
-                          {logoFile ? 'Change Logo' : 'Choose Logo'}
+                          {logoFile ? t('tool-qrbarcode.ui.changeLogo') : t('tool-qrbarcode.ui.chooseLogo')}
                         </span>
                       </label>
                       <input 
@@ -1576,7 +1578,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       )}
                       {logoImg && (
                         <Button variant="secondary" size="sm" className="text-red-500 hover:text-red-600 font-bold ml-auto" onClick={removeLogo}>
-                          Remove Logo
+                          {t('tool-qrbarcode.ui.removeLogo')}
                         </Button>
                       )}
                     </div>
@@ -1586,7 +1588,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                     <div className="border-t border-border pt-4 mt-2">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Size ({Math.round(logoScale * 100)}%)</label>
+                          <label htmlFor="logo-scale" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.logoSize', { value: Math.round(logoScale * 100) })}</label>
                           <input 
                             id="logo-scale"
                             type="range" 
@@ -1599,16 +1601,16 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           />
                         </div>
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">Logo Background</label>
+                          <label htmlFor="logo-bg-shape" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.logoBackground')}</label>
                           <select 
                             id="logo-bg-shape" 
                             className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                             value={logoBgShape} 
                             onChange={(e) => setLogoBgShape(e.target.value)}
                           >
-                            <option value="none">None (Overlaid)</option>
-                            <option value="circle">White Circle</option>
-                            <option value="square">White Square</option>
+                            <option value="none">{t('tool-qrbarcode.ui.noneOverlaid')}</option>
+                            <option value="circle">{t('tool-qrbarcode.ui.whiteCircle')}</option>
+                            <option value="square">{t('tool-qrbarcode.ui.whiteSquare')}</option>
                           </select>
                         </div>
                       </div>
@@ -1618,36 +1620,36 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               )}
 
               {/* ── ACCORDION: TEXT OVERLAY ── */}
-              <AccordionHeader sectionKey="text" label="Text Overlay & Labels" badge={qrTextLabelMode !== 'none' ? qrTextLabelMode : null} />
+              <AccordionHeader sectionKey="text" label={t('tool-qrbarcode.ui.textOverlay')} badge={qrTextLabelMode !== 'none' ? t(`tool-qrbarcode.ui.mode.${qrTextLabelMode}`) : null} />
               {openSection === 'text' && (
                 <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4 shadow-sm -mt-2">
                   <FieldInput 
                     id="qr-text-label-input"
                     type="text"
-                    label="Text Content (Words)"
-                    placeholder="e.g., SCAN ME, JOIN NOW"
+                    label={t('tool-qrbarcode.ui.textContent')}
+                    placeholder={t('tool-qrbarcode.ui.overlayPlaceholder')}
                     value={qrTextLabel}
                     onChange={(e) => setQrTextLabel(e.target.value)}
                   />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-text-label-mode" className="text-xs font-bold text-text-muted uppercase tracking-wider">Display Mode</label>
+                      <label htmlFor="qr-text-label-mode" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.displayMode')}</label>
                       <select 
                         id="qr-text-label-mode" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                         value={qrTextLabelMode} 
                         onChange={(e) => setQrTextLabelMode(e.target.value)}
                       >
-                        <option value="none">None (Disabled)</option>
-                        <option value="label">External Label Only</option>
-                        <option value="embedded">Embedded Text Only</option>
-                        <option value="both">Both (Label + Embedded)</option>
+                        <option value="none">{t('tool-qrbarcode.ui.mode.none')}</option>
+                        <option value="label">{t('tool-qrbarcode.ui.mode.label')}</option>
+                        <option value="embedded">{t('tool-qrbarcode.ui.mode.embedded')}</option>
+                        <option value="both">{t('tool-qrbarcode.ui.mode.both')}</option>
                       </select>
                     </div>
 
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="qr-text-font" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Family</label>
+                      <label htmlFor="qr-text-font" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.fontFamily')}</label>
                       <select 
                         id="qr-text-font" 
                         className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
@@ -1655,9 +1657,9 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         value={qrTextFont} 
                         onChange={(e) => setQrTextFont(e.target.value)}
                       >
-                        <option value="sans-serif">Sans-Serif</option>
-                        <option value="serif">Serif</option>
-                        <option value="monospace">Monospace</option>
+                        <option value="sans-serif">{t('tool-qrbarcode.ui.sansSerif')}</option>
+                        <option value="serif">{t('tool-qrbarcode.ui.serif')}</option>
+                        <option value="monospace">{t('tool-qrbarcode.ui.monospace')}</option>
                         <option value="Arial">Arial</option>
                         <option value="Georgia">Georgia</option>
                         <option value="Impact">Impact</option>
@@ -1674,7 +1676,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       {/* Size and Color */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({qrTextSize}px)</label>
+                          <label htmlFor="qr-text-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.fontSize', { value: qrTextSize })}</label>
                           <input 
                             id="qr-text-size"
                             type="range" 
@@ -1687,7 +1689,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                           />
                         </div>
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Text Color</label>
+                          <label htmlFor="qr-text-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.textColor')}</label>
                           <div className="flex items-center gap-2">
                             <ColorPickerSwatch pickerKey="text" color={qrTextColor} setter={setQrTextColor} defaultColor="#111827" />
                             <input 
@@ -1705,28 +1707,28 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       {/* Weight and Style */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-weight" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Weight</label>
+                          <label htmlFor="qr-text-weight" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.fontWeight')}</label>
                           <select 
                             id="qr-text-weight" 
                             className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                             value={qrTextWeight} 
                             onChange={(e) => setQrTextWeight(e.target.value)}
                           >
-                            <option value="normal">Normal</option>
-                            <option value="bold">Bold</option>
-                            <option value="bolder">Extra Bold</option>
+                            <option value="normal">{t('tool-qrbarcode.ui.normal')}</option>
+                            <option value="bold">{t('tool-qrbarcode.ui.bold')}</option>
+                            <option value="bolder">{t('tool-qrbarcode.ui.extraBold')}</option>
                           </select>
                         </div>
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label htmlFor="qr-text-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Style</label>
+                          <label htmlFor="qr-text-style" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.fontStyle')}</label>
                           <select 
                             id="qr-text-style" 
                             className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                             value={qrTextStyle} 
                             onChange={(e) => setQrTextStyle(e.target.value)}
                           >
-                            <option value="normal">Normal</option>
-                            <option value="italic">Italic</option>
+                            <option value="normal">{t('tool-qrbarcode.ui.normal')}</option>
+                            <option value="italic">{t('tool-qrbarcode.ui.italic')}</option>
                           </select>
                         </div>
                       </div>
@@ -1735,31 +1737,31 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4">
                         {(qrTextLabelMode === 'label' || qrTextLabelMode === 'both') && (
                           <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-label-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Label Position</label>
+                            <label htmlFor="qr-label-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.labelPosition')}</label>
                             <select 
                               id="qr-label-pos" 
                               className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                               value={qrLabelPosition} 
                               onChange={(e) => setQrLabelPosition(e.target.value)}
                             >
-                              <option value="bottom">Below QR Code</option>
-                              <option value="top">Above QR Code</option>
+                              <option value="bottom">{t('tool-qrbarcode.ui.belowQr')}</option>
+                              <option value="top">{t('tool-qrbarcode.ui.aboveQr')}</option>
                             </select>
                           </div>
                         )}
                         {(qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
                           <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-embed-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">Embedded Position</label>
+                            <label htmlFor="qr-embed-pos" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.embeddedPosition')}</label>
                             <select 
                               id="qr-embed-pos" 
                               className="bg-app border border-border rounded-lg px-3 py-2 text-sm text-text-main outline-none focus:border-accent"
                               value={qrEmbeddedPosition} 
                               onChange={(e) => setQrEmbeddedPosition(e.target.value)}
                             >
-                              <option value="center">Center</option>
-                              <option value="top">Top Third</option>
-                              <option value="bottom">Bottom Third</option>
-                              <option value="custom">Custom Coordinates</option>
+                              <option value="center">{t('tool-qrbarcode.ui.center')}</option>
+                              <option value="top">{t('tool-qrbarcode.ui.topThird')}</option>
+                              <option value="bottom">{t('tool-qrbarcode.ui.bottomThird')}</option>
+                              <option value="custom">{t('tool-qrbarcode.ui.customCoordinates')}</option>
                             </select>
                           </div>
                         )}
@@ -1769,7 +1771,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       {qrEmbeddedPosition === 'custom' && (qrTextLabelMode === 'embedded' || qrTextLabelMode === 'both') && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
                           <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-x" className="text-xs font-bold text-text-muted uppercase tracking-wider">Horizontal Position ({qrTextXOffset}%)</label>
+                            <label htmlFor="qr-text-x" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.horizontalPosition', { value: qrTextXOffset })}</label>
                             <input 
                               id="qr-text-x"
                               type="range" 
@@ -1782,7 +1784,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                             />
                           </div>
                           <div className="flex flex-col gap-1.5 w-full">
-                            <label htmlFor="qr-text-y" className="text-xs font-bold text-text-muted uppercase tracking-wider">Vertical Position ({qrTextYOffset}%)</label>
+                            <label htmlFor="qr-text-y" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.verticalPosition', { value: qrTextYOffset })}</label>
                             <input 
                               id="qr-text-y"
                               type="range" 
@@ -1807,14 +1809,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               checked={qrTextBgEnabled}
                               onChange={(e) => setQrTextBgEnabled(e.target.checked)}
                             />
-                            Draw Background Behind Text
+                            {t('tool-qrbarcode.ui.drawTextBackground')}
                           </label>
                         </div>
 
                         {qrTextBgEnabled && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
                             <div className="flex flex-col gap-1.5 w-full">
-                              <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                              <label htmlFor="qr-text-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.backgroundColor')}</label>
                               <div className="flex items-center gap-2">
                                 <ColorPickerSwatch pickerKey="textBg" color={qrTextBgColor} setter={setQrTextBgColor} defaultColor="#ffffff" />
                                 <input 
@@ -1828,7 +1830,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               </div>
                             </div>
                             <div className="flex flex-col gap-1.5 w-full">
-                              <label htmlFor="qr-text-bg-pad" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Padding ({qrTextBgPadding}px)</label>
+                              <label htmlFor="qr-text-bg-pad" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.backgroundPadding', { value: qrTextBgPadding })}</label>
                               <input 
                                 id="qr-text-bg-pad"
                                 type="range" 
@@ -1854,14 +1856,14 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               checked={qrTextStrokeEnabled}
                               onChange={(e) => setQrTextStrokeEnabled(e.target.checked)}
                             />
-                            Add Text Outline (Stroke)
+                            {t('tool-qrbarcode.ui.addOutline')}
                           </label>
                         </div>
 
                         {qrTextStrokeEnabled && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-app border border-border rounded-lg p-3">
                             <div className="flex flex-col gap-1.5 w-full">
-                              <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Color</label>
+                              <label htmlFor="qr-text-stroke-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.outlineColor')}</label>
                               <div className="flex items-center gap-2">
                                 <ColorPickerSwatch pickerKey="textStroke" color={qrTextStrokeColor} setter={setQrTextStrokeColor} defaultColor="#ffffff" />
                                 <input 
@@ -1875,7 +1877,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                               </div>
                             </div>
                             <div className="flex flex-col gap-1.5 w-full">
-                              <label htmlFor="qr-text-stroke-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outline Thickness ({qrTextStrokeWidth}px)</label>
+                              <label htmlFor="qr-text-stroke-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.outlineThickness', { value: qrTextStrokeWidth })}</label>
                               <input 
                                 id="qr-text-stroke-width"
                                 type="range" 
@@ -1898,7 +1900,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
               <div className="mt-2">
                 <Button variant="secondary" className="w-full" onClick={resetQR}>
-                  Reset QR Settings to Default
+                  {t('tool-qrbarcode.ui.resetQr')}
                 </Button>
               </div>
             </>
@@ -1909,26 +1911,26 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                 <FieldInput 
                   id="barcode-val"
                   type="text" 
-                  label="Barcode Value"
+                  label={t('tool-qrbarcode.ui.barcodeValue')}
                   value={barcodeValue} 
                   onChange={(e) => setBarcodeValue(e.target.value)}
                   error={barcodeError}
                 />
 
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label htmlFor="barcode-format" className="text-sm font-semibold text-text-main">Format</label>
+                  <label htmlFor="barcode-format" className="text-sm font-semibold text-text-main">{t('tool-qrbarcode.ui.format')}</label>
                   <select 
                     id="barcode-format" 
                     className="bg-app border border-border rounded-lg px-3 py-2.5 text-sm text-text-main outline-none focus:border-accent"
                     value={barcodeFormat} 
                     onChange={(e) => setBarcodeFormat(e.target.value)}
                   >
-                    <option value="CODE128">Code 128 (Standard ASCII)</option>
-                    <option value="EAN13">EAN-13 (13 Digits)</option>
-                    <option value="EAN8">EAN-8 (8 Digits)</option>
-                    <option value="UPC">UPC-A (12 Digits)</option>
-                    <option value="CODE39">Code 39 (Alphanumeric)</option>
-                    <option value="ITF">ITF (Interleaved 2 of 5)</option>
+                    <option value="CODE128">{t('tool-qrbarcode.ui.code128')}</option>
+                    <option value="EAN13">{t('tool-qrbarcode.ui.ean13')}</option>
+                    <option value="EAN8">{t('tool-qrbarcode.ui.ean8')}</option>
+                    <option value="UPC">{t('tool-qrbarcode.ui.upca')}</option>
+                    <option value="CODE39">{t('tool-qrbarcode.ui.code39')}</option>
+                    <option value="ITF">{t('tool-qrbarcode.ui.itf')}</option>
                     <option value="CODABAR">Codabar</option>
                   </select>
                 </div>
@@ -1937,16 +1939,16 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                   id="barcode-display-value"
                   checked={barcodeDisplayValue}
                   onChange={(event) => setBarcodeDisplayValue(event.target.checked)}
-                  label="Show human-readable text beneath barcode"
+                  label={t('tool-qrbarcode.ui.showReadable')}
                 />
               </div>
 
-              <AccordionHeader sectionKey="barcode-style" label="Barcode Styling" />
+              <AccordionHeader sectionKey="barcode-style" label={t('tool-qrbarcode.ui.barcodeStyling')} />
               {openSection === 'barcode-style' && (
                 <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5 shadow-sm -mt-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Line Color</label>
+                      <label htmlFor="bc-line-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.lineColor')}</label>
                       <div className="flex items-center gap-2">
                         <ColorPickerSwatch pickerKey="bcLine" color={barcodeLineColor} setter={setBarcodeLineColor} defaultColor="#111827" />
                         <input 
@@ -1960,7 +1962,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">Background Color</label>
+                      <label htmlFor="bc-bg-color" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.backgroundColor')}</label>
                       <div className="flex items-center gap-2">
                         <ColorPickerSwatch pickerKey="bcBg" color={barcodeBgColor} setter={setBarcodeBgColor} defaultColor="#ffffff" />
                         <input 
@@ -1977,7 +1979,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Width ({barcodeWidth}px)</label>
+                      <label htmlFor="bc-width" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.barWidth', { value: barcodeWidth })}</label>
                       <input 
                         id="bc-width"
                         type="range" 
@@ -1990,7 +1992,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                       />
                     </div>
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">Bar Height ({barcodeHeight}px)</label>
+                      <label htmlFor="bc-height" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.barHeight', { value: barcodeHeight })}</label>
                       <input 
                         id="bc-height"
                         type="range" 
@@ -2006,7 +2008,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
                   {barcodeDisplayValue && (
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">Font Size ({barcodeFontSize}px)</label>
+                      <label htmlFor="bc-font-size" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.fontSize', { value: barcodeFontSize })}</label>
                       <input
                         id="bc-font-size"
                         type="range"
@@ -2022,7 +2024,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 w-full">
-                      <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">Outer Margin ({barcodeMargin}px)</label>
+                      <label htmlFor="bc-margin" className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-qrbarcode.ui.outerMargin', { value: barcodeMargin })}</label>
                       <input 
                         id="bc-margin"
                         type="range" 
@@ -2040,7 +2042,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
 
               <div className="mt-2">
                 <Button variant="secondary" className="w-full" onClick={resetBarcode}>
-                  Reset Barcode Settings to Default
+                  {t('tool-qrbarcode.ui.resetBarcode')}
                 </Button>
               </div>
             </>
@@ -2051,12 +2053,12 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
         {/* ================= RIGHT SIDE: STICKY PREVIEW CARD ================= */}
         <div className="flex flex-col gap-3 lg:sticky lg:top-3 lg:col-span-2">
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
-            <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">Live Preview</h3>
+            <h3 className="border-b border-border pb-2 text-center text-xs font-bold uppercase tracking-wider text-text-muted">{t('tool-qrbarcode.ui.livePreview')}</h3>
 
             <div className="relative flex h-[170px] select-none items-center justify-center rounded-xl border border-dashed border-border bg-app p-2">
               <FullscreenPreviewButton
                 disabled={activeTab === 'qr' ? !getQRValue() : !barcodeValue || Boolean(barcodeError)}
-                label={`Open fullscreen ${activeTab === 'qr' ? 'QR code' : 'barcode'} preview`}
+                label={activeTab === 'qr' ? t('tool-qrbarcode.ui.openQrFullscreen') : t('tool-qrbarcode.ui.openBarcodeFullscreen')}
                 onClick={openFullscreenPreview}
               />
               {activeTab === 'qr' ? (
@@ -2069,7 +2071,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <rect x="14" y="7" width="3" height="3"></rect>
                         <rect x="7" y="14" width="3" height="3"></rect>
                       </svg>
-                      <p className="text-xs font-medium">Enter content to generate QR Code</p>
+                      <p className="text-xs font-medium">{t('tool-qrbarcode.ui.enterQrContent')}</p>
                     </div>
                   ) : (
                     <canvas ref={qrCanvasRef} id="qr-preview-canvas" className="max-h-full max-w-full bg-transparent border border-border/30 rounded-lg shadow-sm" />
@@ -2088,7 +2090,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
                         <line x1="18" y1="5" x2="18" y2="19"></line>
                         <line x1="21" y1="5" x2="21" y2="19"></line>
                       </svg>
-                      <p className="text-xs font-medium">Enter value to generate Barcode</p>
+                      <p className="text-xs font-medium">{t('tool-qrbarcode.ui.enterBarcodeValue')}</p>
                     </div>
                   ) : barcodeError ? (
                     <div className="flex flex-col items-center gap-2 text-red-500/70 text-center">
@@ -2115,22 +2117,22 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
               {activeTab === 'qr' ? (
                 <>
                   <Button variant="primary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadPNG} className="w-full">
-                    Download PNG
+                    {t('tool-qrbarcode.ui.downloadPng')}
                   </Button>
                   <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrDownloadSVG} className="w-full">
-                    Download SVG
+                    {t('tool-qrbarcode.ui.downloadSvg')}
                   </Button>
                   <Button variant="secondary" size="sm" disabled={!getQRValue()} onClick={handleQrCopy} className="col-span-2 w-full sm:col-span-1">
-                    {copied ? 'Copied!' : 'Copy Image'}
+                    {copied ? t('tool-qrbarcode.ui.copied') : t('tool-qrbarcode.ui.copyImage')}
                   </Button>
                 </>
               ) : (
                 <>
                   <Button variant="primary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadPNG} className="w-full">
-                    Download PNG
+                    {t('tool-qrbarcode.ui.downloadPng')}
                   </Button>
                   <Button variant="secondary" size="sm" disabled={!barcodeValue || !!barcodeError} onClick={handleBarcodeDownloadSVG} className="w-full">
-                    Download SVG
+                    {t('tool-qrbarcode.ui.downloadSvg')}
                   </Button>
                 </>
               )}

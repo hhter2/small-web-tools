@@ -1,8 +1,9 @@
 import React from 'react';
+import { withTranslation } from 'react-i18next';
 import Card from './Card';
 import Button from './Button';
 
-export class ErrorBoundary extends React.Component {
+export class ErrorBoundaryBase extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -17,6 +18,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   render() {
+    const { t } = this.props;
     if (this.state.hasError) {
       return (
         <Card variant="tool">
@@ -25,9 +27,9 @@ export class ErrorBoundary extends React.Component {
               !
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-text-main">Failed to load component</h3>
+              <h3 className="text-lg font-bold text-text-main">{t('boundary.title')}</h3>
               <p className="text-xs text-text-muted max-w-md">
-                {this.state.error?.message || 'An unexpected error occurred while rendering this tool.'}
+                {this.state.error?.message || t('boundary.message')}
               </p>
             </div>
             <Button
@@ -38,7 +40,7 @@ export class ErrorBoundary extends React.Component {
                 window.location.reload();
               }}
             >
-              Reload Page
+              {t('boundary.retry')}
             </Button>
           </div>
         </Card>
@@ -49,4 +51,5 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
+export const ErrorBoundary = withTranslation('errors')(ErrorBoundaryBase);
 export default ErrorBoundary;

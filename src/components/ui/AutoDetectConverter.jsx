@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from './Button';
 import Card from './Card';
 import ToolHeader from './ToolHeader';
@@ -37,6 +38,7 @@ export default function AutoDetectConverter({
   renderSupplementary = null,
   showManualModes = true,
 }) {
+  const { t } = useTranslation('common');
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('auto'); // 'auto' | 'encode' | 'decode'
   const [copyState, setCopyState] = useState('idle');
@@ -78,10 +80,10 @@ export default function AutoDetectConverter({
 
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <section className="flex min-w-0 flex-col border-b border-border md:border-b-0 md:border-r" aria-label="Source">
+          <section className="flex min-w-0 flex-col border-b border-border md:border-b-0 md:border-r" aria-label={t('converter.source')}>
             <header className="flex min-h-[54px] flex-wrap items-center justify-between gap-2 border-b border-border bg-app/70 px-4 py-2.5 md:h-[54px] md:flex-nowrap">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <div className="flex rounded-md border border-border bg-card p-0.5" role="group" aria-label="Conversion Mode">
+                <div className="flex rounded-md border border-border bg-card p-0.5" role="group" aria-label={t('converter.mode')}>
                   <button
                     type="button"
                     onClick={() => setMode('auto')}
@@ -89,7 +91,7 @@ export default function AutoDetectConverter({
                       mode === 'auto' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
                     }`}
                   >
-                    Auto
+                    {t('converter.auto')}
                   </button>
                   {showManualModes && (
                     <>
@@ -100,7 +102,7 @@ export default function AutoDetectConverter({
                           mode === 'encode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
                         }`}
                       >
-                        Encode
+                        {t('converter.encode')}
                       </button>
                       <button
                         type="button"
@@ -109,7 +111,7 @@ export default function AutoDetectConverter({
                           mode === 'decode' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-main'
                         }`}
                       >
-                        Decode
+                        {t('converter.decode')}
                       </button>
                     </>
                   )}
@@ -127,11 +129,11 @@ export default function AutoDetectConverter({
                   variant="secondary"
                   disabled={pasteState === 'reading'}
                   onClick={handlePaste}
-                  aria-label={pasteState === 'error' ? 'Retry pasting from clipboard' : 'Paste from clipboard'}
+                  aria-label={t(pasteState === 'error' ? 'converter.retryPaste' : 'converter.pasteLabel')}
                   className="min-w-[74px]"
                 >
                   <PasteIcon />
-                  {pasteState === 'reading' ? 'Pasting' : pasteState === 'pasted' ? 'Pasted' : pasteState === 'error' ? 'Retry' : 'Paste'}
+                  {pasteState === 'reading' ? t('states.pasting') : pasteState === 'pasted' ? t('states.pasted') : pasteState === 'error' ? t('actions.retry') : t('converter.paste')}
                 </Button>
                 <button
                   type="button"
@@ -141,7 +143,7 @@ export default function AutoDetectConverter({
                   }}
                   className="rounded-md px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:bg-nav-hover-bg hover:text-text-main disabled:cursor-default disabled:opacity-30"
                 >
-                  Clear
+                  {t('actions.clear')}
                 </button>
               </div>
             </header>
@@ -155,7 +157,7 @@ export default function AutoDetectConverter({
                 updateInput(event.target.value);
               }}
               placeholder={inputPlaceholder}
-              aria-label="Source input"
+              aria-label={t('converter.sourceInput')}
               aria-describedby={result.error ? `${toolId}-error` : undefined}
               className={`${editorClasses} ${editorMinHeightClass}`}
             />
@@ -171,7 +173,7 @@ export default function AutoDetectConverter({
             )}
           </section>
 
-          <section className="flex min-w-0 flex-col bg-accent-light/20" aria-label="Result">
+          <section className="flex min-w-0 flex-col bg-accent-light/20" aria-label={t('converter.result')}>
             <header className="flex min-h-[54px] items-center justify-between gap-3 border-b border-border bg-app/45 px-4 py-2.5 md:h-[54px]">
               <div className="min-w-0">
                 <span className="block truncate text-sm font-bold text-text-main">
@@ -184,11 +186,11 @@ export default function AutoDetectConverter({
                 variant="secondary"
                 disabled={!output || Boolean(result.error)}
                 onClick={handleCopy}
-                aria-label={copyState === 'error' ? 'Retry copying converted result' : 'Copy converted result'}
+                aria-label={t(copyState === 'error' ? 'converter.retryCopy' : 'converter.copyLabel')}
                 className="min-w-[74px]"
               >
                 <CopyIcon />
-                {copyState === 'copied' ? 'Copied' : copyState === 'error' ? 'Retry' : 'Copy'}
+                {copyState === 'copied' ? t('actions.copied') : copyState === 'error' ? t('actions.retry') : t('actions.copy')}
               </Button>
             </header>
 
@@ -197,8 +199,8 @@ export default function AutoDetectConverter({
               rows={editorRows}
               readOnly
               value={output}
-              placeholder={result.error ? 'Fix the source input to see a result.' : result.outputPlaceholder}
-              aria-label="Converted result"
+              placeholder={result.error ? t('converter.fixInput') : result.outputPlaceholder}
+              aria-label={t('converter.convertedResult')}
               aria-live="polite"
               className={`${editorClasses} ${editorMinHeightClass} bg-accent-light/15`}
             />

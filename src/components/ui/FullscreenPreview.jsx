@@ -1,17 +1,20 @@
 import React, { useEffect, useId, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const TRANSPARENT_PREVIEW_CLASS = 'bg-[linear-gradient(45deg,#ddd_25%,transparent_25%),linear-gradient(-45deg,#ddd_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ddd_75%),linear-gradient(-45deg,transparent_75%,#ddd_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]';
 
 export function FullscreenPreviewButton({
   disabled = false,
-  label = 'Open fullscreen preview',
+  label,
   onClick,
 }) {
+  const { t } = useTranslation('common');
+  const accessibleLabel = label ?? t('fullscreen.open');
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
+      aria-label={accessibleLabel}
+      title={accessibleLabel}
       disabled={disabled}
       onClick={onClick}
       className="fullscreen-preview-control absolute right-2 top-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/65 text-white shadow-lg backdrop-blur-sm transition hover:scale-105 hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-white/80 disabled:cursor-not-allowed disabled:opacity-35"
@@ -40,9 +43,11 @@ export default function FullscreenPreview({
   children,
   open,
   onClose,
-  title = 'Fullscreen preview',
+  title,
   surfaceClassName = 'bg-card',
 }) {
+  const { t } = useTranslation('common');
+  const dialogTitle = title ?? t('fullscreen.title');
   const titleId = useId();
   const closeButtonRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -88,12 +93,12 @@ export default function FullscreenPreview({
         aria-labelledby={titleId}
         className="relative flex max-h-[92vh] w-full max-w-6xl items-center justify-center overflow-hidden rounded-xl border border-white/20 bg-black/30 p-3 shadow-2xl sm:p-5"
       >
-        <h2 id={titleId} className="sr-only">{title}</h2>
+        <h2 id={titleId} className="sr-only">{dialogTitle}</h2>
         <button
           ref={closeButtonRef}
           type="button"
-          aria-label="Close fullscreen preview"
-          title="Close fullscreen preview"
+          aria-label={t('fullscreen.close')}
+          title={t('fullscreen.close')}
           onClick={onClose}
           className="absolute right-2 top-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/70 text-white shadow-lg transition hover:scale-105 hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-white/80"
         >

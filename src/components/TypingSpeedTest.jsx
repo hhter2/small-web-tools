@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -223,6 +224,7 @@ fit_model <- function(x, y) {
 };
 
 export default function TypingSpeedTest() {
+  const { t, i18n } = useTranslation('tools');
   // Configuration states
   const [mode, setMode] = useState('template'); // 'free' or 'template'
   const [testType, setTestType] = useState('time'); // 'time' | 'words'
@@ -745,15 +747,15 @@ export default function TypingSpeedTest() {
 
     const newResult = {
       id: Date.now(),
-      date: new Date().toLocaleString(),
-      mode: mode === 'free' ? 'Free Typing' : 'Template',
-      language: activeLang === 'chinese' ? 'Chinese' : 'English/Code',
+      date: new Date().toISOString(),
+      mode,
+      language: activeLang === 'chinese' ? 'chinese' : 'englishCode',
       wpm,
       cpm: activeLang === 'chinese' ? '-' : cpm,
-      accuracy: mode === 'free' ? '-' : `${accuracy}%`,
+      accuracy: mode === 'free' ? '-' : accuracy,
       corrections: backspacesPressed,
-      correctionRate: `${correctionRate}%`,
-      duration: `${elapsedTime}s`
+      correctionRate,
+      duration: elapsedTime,
     };
 
     const updated = [newResult, ...history];
@@ -779,7 +781,7 @@ export default function TypingSpeedTest() {
 
   // Clear history
   const clearHistory = () => {
-    if (window.confirm("Are you sure you want to clear your typing test history?")) {
+    if (window.confirm(t('tool-typing.ui.clearHistoryConfirm'))) {
       setHistory([]);
       try {
         localStorage.removeItem('typing_test_history');
@@ -814,12 +816,20 @@ export default function TypingSpeedTest() {
   const customTemplateMissing = mode === 'template'
     && selectedPreset === 'custom'
     && !customText.trim();
+  const formatHistoryDate = (value) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString(i18n.language);
+  };
+  const formatHistoryPercent = (value) => value === '-'
+    ? value
+    : `${String(value).replace(/%$/, '')}%`;
+  const formatHistoryDuration = (value) => `${String(value).replace(/s$/, '')}s`;
 
   return (
     <Card id="tool-typing" variant="tool" size="wide">
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-center">
         <ToolHeader 
-          title="Typing Speed Test" 
+          title={t('tool-typing.title')}
           className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
@@ -828,14 +838,14 @@ export default function TypingSpeedTest() {
             size="sm"
             onClick={() => setMode('template')}
           >
-            Template Mode
+            {t('tool-typing.ui.templateMode')}
           </Button>
           <Button
             variant={mode === 'free' ? 'primary' : 'secondary'}
             size="sm"
             onClick={() => setMode('free')}
           >
-            Free Typing
+            {t('tool-typing.ui.freeTyping')}
           </Button>
         </div>
       </div>
@@ -862,7 +872,7 @@ export default function TypingSpeedTest() {
                       <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                     </svg>
                   )}
-                  <span>{preset.charAt(0).toUpperCase() + preset.slice(1)}</span>
+                  <span>{t(`tool-typing.ui.preset.${preset}`)}</span>
                 </button>
               ))}
             </div>
@@ -884,7 +894,7 @@ export default function TypingSpeedTest() {
                       <circle cx="12" cy="12" r="10"></circle>
                       <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
-                    <span>time</span>
+                    <span>{t('tool-typing.ui.time')}</span>
                   </button>
                   <button
                     type="button"
@@ -896,7 +906,7 @@ export default function TypingSpeedTest() {
                     onClick={() => setTestType('words')}
                   >
                     <span className="font-extrabold">A</span>
-                    <span>words</span>
+                    <span>{t('tool-typing.ui.words')}</span>
                   </button>
                 </div>
               )}
@@ -921,7 +931,7 @@ export default function TypingSpeedTest() {
                         </svg>
                       )}
                       {sm === 'words' && <span className="font-extrabold">A</span>}
-                      <span>{sm.charAt(0).toUpperCase() + sm.slice(1)}</span>
+                      <span>{t(`tool-typing.ui.stopMode.${sm}`)}</span>
                     </button>
                   ))}
                 </div>
@@ -962,7 +972,7 @@ export default function TypingSpeedTest() {
                       onClick={() => setShowPunctuation(!showPunctuation)}
                     >
                       <span>@</span>
-                      <span>punctuation</span>
+                      <span>{t('tool-typing.ui.punctuation')}</span>
                     </button>
                     <button
                       type="button"
@@ -972,7 +982,7 @@ export default function TypingSpeedTest() {
                       onClick={() => setShowNumbers(!showNumbers)}
                     >
                       <span>#</span>
-                      <span>numbers</span>
+                      <span>{t('tool-typing.ui.numbers')}</span>
                     </button>
                   </div>
                 )}
@@ -1038,19 +1048,19 @@ export default function TypingSpeedTest() {
           <FieldInput
             as="textarea"
             id="custom-paste-text"
-            label="Paste Custom Template Text"
-            placeholder="Paste template text here..."
+            label={t('tool-typing.ui.customTemplateLabel')}
+            placeholder={t('tool-typing.ui.customTemplatePlaceholder')}
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
           />
           <div className="flex items-center gap-3 text-xs md:text-sm font-semibold text-text-muted">
-            <span>Or upload a TXT file:</span>
+            <span>{t('tool-typing.ui.uploadPrompt')}</span>
             <label htmlFor="template-file-picker">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-nav-hover-bg cursor-pointer text-text-main transition-colors text-xs font-bold shadow-sm">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                 </svg>
-                Browse File
+                {t('tool-typing.ui.browseFile')}
               </span>
             </label>
             <input
@@ -1079,14 +1089,14 @@ export default function TypingSpeedTest() {
             >
               <div>
                 <h3 id="typing-ready-title" className="text-base font-extrabold text-text-main">
-                  Ready to start?
+                  {t('tool-typing.ui.readyTitle')}
                 </h3>
                 <p className="mt-1 text-sm text-text-muted">
-                  Choose your settings, select Start Test, then begin typing. The timer starts with your first keystroke.
+                  {t('tool-typing.ui.readyDescription')}
                 </p>
                 {customTemplateMissing && (
                   <p className="mt-1 text-xs font-semibold text-amber-600">
-                    Enter or upload custom template text before starting.
+                    {t('tool-typing.ui.customMissing')}
                   </p>
                 )}
               </div>
@@ -1096,7 +1106,7 @@ export default function TypingSpeedTest() {
                 disabled={customTemplateMissing}
                 className="w-full shrink-0 sm:w-auto"
               >
-                Start Test
+                {t('tool-typing.ui.startTest')}
               </Button>
             </section>
           )}
@@ -1133,24 +1143,24 @@ export default function TypingSpeedTest() {
               </div>
               <div className="flex flex-wrap gap-2 md:gap-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-text-muted">
                 <div className="bg-app border border-border px-2.5 py-1 rounded-md">
-                  WPM: <span className="text-text-main font-mono text-sm">{wpm}</span>
+                  {t('tool-typing.ui.wpm')}: <span className="text-text-main font-mono text-sm">{wpm}</span>
                 </div>
                 {activeLang !== 'chinese' && cpm !== null && (
                   <div className="bg-app border border-border px-2.5 py-1 rounded-md">
-                    CPM: <span className="text-text-main font-mono text-sm">{cpm}</span>
+                    {t('tool-typing.ui.cpm')}: <span className="text-text-main font-mono text-sm">{cpm}</span>
                   </div>
                 )}
                 {mode === 'template' && (
                   <div className="bg-app border border-border px-2.5 py-1 rounded-md">
-                    Accuracy: <span className="text-text-main font-mono text-sm">{accuracy}%</span>
+                    {t('tool-typing.ui.accuracy')}: <span className="text-text-main font-mono text-sm">{accuracy}%</span>
                   </div>
                 )}
                 <div className="bg-app border border-border px-2.5 py-1 rounded-md">
-                  Corrections: <span className="text-text-main font-mono text-sm">{backspacesPressed}</span>
+                  {t('tool-typing.ui.corrections')}: <span className="text-text-main font-mono text-sm">{backspacesPressed}</span>
                 </div>
                 {testType !== 'time' && (
                   <div className="bg-app border border-border px-2.5 py-1 rounded-md">
-                    Time: <span className="text-text-main font-mono text-sm">{elapsedTime}s</span>
+                    {t('tool-typing.ui.time')}: <span className="text-text-main font-mono text-sm">{elapsedTime}s</span>
                   </div>
                 )}
               </div>
@@ -1169,8 +1179,8 @@ export default function TypingSpeedTest() {
             onCompositionEnd={handleCompositionEnd}
             onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
-            aria-label="Typing input"
-            placeholder={mode === 'free' ? "Click here and start typing to begin test..." : ""}
+            aria-label={t('tool-typing.ui.typingInputAria')}
+            placeholder={mode === 'free' ? t('tool-typing.ui.clickToStart') : ''}
           />
 
           {mode === 'template' ? (
@@ -1187,7 +1197,7 @@ export default function TypingSpeedTest() {
                     <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" className="animate-bounce">
                       <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path>
                     </svg>
-                    <span>Select Start Test above, or click here, then begin typing</span>
+                    <span>{t('tool-typing.ui.startHint')}</span>
                   </div>
                 </div>
               )}
@@ -1365,16 +1375,16 @@ export default function TypingSpeedTest() {
             <div className={`relative border border-border rounded-2xl p-1 bg-card overflow-hidden ${paused ? 'pointer-events-none' : ''}`}>
               {paused && (
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center text-white select-none gap-2">
-                  <span className="text-xl font-bold">⏸ Paused</span>
-                  <span className="text-xs text-slate-300">Press Ctrl+Enter or click Resume to continue</span>
+                  <span className="text-xl font-bold">⏸ {t('tool-typing.ui.paused')}</span>
+                  <span className="text-xs text-slate-300">{t('tool-typing.ui.resumeHint')}</span>
                 </div>
               )}
               <textarea
                 ref={inputRef}
                 className="w-full bg-transparent border-none text-text-main outline-none resize-none p-5 font-mono text-base placeholder-text-muted/40 min-h-[140px]"
                 rows={6}
-                placeholder="Start typing here... Timer will begin automatically on the first keystroke."
-                aria-label="Typing input"
+                placeholder={t('tool-typing.ui.freePlaceholder')}
+                aria-label={t('tool-typing.ui.typingInputAria')}
                 value={typedText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
@@ -1393,13 +1403,13 @@ export default function TypingSpeedTest() {
                 variant="secondary" 
                 size="sm"
                 onClick={refreshTemplate} 
-                title="Refresh template text (loads a new text)"
+                title={t('tool-typing.ui.refreshTitle')}
                 className="flex items-center gap-1.5"
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                 </svg>
-                <span>New Text</span>
+                <span>{t('tool-typing.ui.newText')}</span>
               </Button>
             </div>
           )}
@@ -1408,8 +1418,8 @@ export default function TypingSpeedTest() {
           {(isTesting || typedText.length > 0) && (
             <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
               {isTesting && (
-                <Button variant="secondary" onClick={() => setPaused(!paused)} title={mode === 'free' ? 'Ctrl+Enter to toggle pause' : ''}>
-                  <span>{paused ? 'Resume' : 'Pause'}</span>
+                <Button variant="secondary" onClick={() => setPaused(!paused)} title={mode === 'free' ? t('tool-typing.ui.pauseTitle') : ''}>
+                  <span>{t(paused ? 'tool-typing.ui.resume' : 'tool-typing.ui.pause')}</span>
                   {mode === 'free' && !paused && <span className="opacity-50 text-[10px] ml-1.5 font-mono bg-white/10 px-1 rounded">Ctrl+↵</span>}
                 </Button>
               )}
@@ -1418,11 +1428,11 @@ export default function TypingSpeedTest() {
                   const currentElapsed = Math.round((Date.now() - startTimeRef.current) / 1000) || 1;
                   finishTest(typedText, currentElapsed);
                 }}>
-                  Stop &amp; Complete
+                  {t('tool-typing.ui.stopComplete')}
                 </Button>
               )}
               <Button variant="secondary" onClick={resetTest}>
-                Restart Test
+                {t('tool-typing.ui.restart')}
               </Button>
             </div>
           )}
@@ -1431,34 +1441,34 @@ export default function TypingSpeedTest() {
         /* Results screen */
         <div className="flex flex-col gap-6 items-center">
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl flex flex-col gap-6 shadow-sm">
-            <h3 className="text-lg font-bold text-text-main text-center border-b border-border pb-3">Test Completed!</h3>
+            <h3 className="text-lg font-bold text-text-main text-center border-b border-border pb-3">{t('tool-typing.ui.completed')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">WPM (Net Speed)</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.wpmNet')}</span>
                 <span className="text-3xl font-extrabold text-accent font-mono">{wpm}</span>
               </div>
               {activeLang !== 'chinese' && cpm !== null && (
                 <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">CPM (Char Speed)</span>
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.cpmSpeed')}</span>
                   <span className="text-2xl font-extrabold text-text-main font-mono">{cpm}</span>
                 </div>
               )}
               {mode === 'template' && (
                 <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Accuracy</span>
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.accuracy')}</span>
                   <span className="text-2xl font-extrabold text-text-main font-mono">{accuracy}%</span>
                 </div>
               )}
               <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Time Spent</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.timeSpent')}</span>
                 <span className="text-2xl font-extrabold text-text-main font-mono">{elapsedTime}s</span>
               </div>
               <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Corrections</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.corrections')}</span>
                 <span className="text-2xl font-extrabold text-text-main font-mono">{backspacesPressed}</span>
               </div>
               <div className="bg-app border border-border/60 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Correction Rate</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('tool-typing.ui.correctionRate')}</span>
                 <span className="text-2xl font-extrabold text-text-main font-mono">{correctionRate}%</span>
               </div>
             </div>
@@ -1469,10 +1479,10 @@ export default function TypingSpeedTest() {
                 onClick={saveResult}
                 disabled={resultsSaved}
               >
-                {resultsSaved ? 'Result Saved!' : 'Save Result'}
+                {t(resultsSaved ? 'tool-typing.ui.resultSaved' : 'tool-typing.ui.saveResult')}
               </Button>
               <Button variant="secondary" onClick={resetTest}>
-                Try Again
+                {t('tool-typing.ui.tryAgain')}
               </Button>
             </div>
           </div>
@@ -1482,49 +1492,57 @@ export default function TypingSpeedTest() {
       {/* History Dashboard */}
       <div className={`${history.length === 0 ? 'hidden' : 'mt-2 flex' } flex-col gap-2 border-t border-border pt-3`}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h3 className="text-sm font-bold text-text-main">Recent typing test results</h3>
+          <h3 className="text-sm font-bold text-text-main">{t('tool-typing.ui.recentResults')}</h3>
           {history.length > 0 && (
             <div className="flex items-center gap-3">
               <button className="text-xs font-bold text-accent hover:text-accent-hover cursor-pointer bg-transparent border-none" onClick={exportHistory}>
-                Export History (JSON)
+                {t('tool-typing.ui.exportHistory')}
               </button>
               <button className="text-xs font-bold text-red-500 hover:text-red-600 cursor-pointer bg-transparent border-none" onClick={clearHistory}>
-                Clear All
+                {t('tool-typing.ui.clearAll')}
               </button>
             </div>
           )}
         </div>
 
         {history.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border bg-card py-3 text-center text-xs text-text-muted">No recent results yet.</p>
+          <p className="rounded-xl border border-dashed border-border bg-card py-3 text-center text-xs text-text-muted">{t('tool-typing.ui.noResults')}</p>
         ) : (
           <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full border-collapse text-left text-xs text-text-main">
               <thead>
                 <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted select-none">
-                  <th className="p-3.5 pl-4">Date</th>
-                  <th className="p-3.5">Mode</th>
-                  <th className="p-3.5">Language</th>
+                  <th className="p-3.5 pl-4">{t('tool-typing.ui.date')}</th>
+                  <th className="p-3.5">{t('tool-typing.ui.mode')}</th>
+                  <th className="p-3.5">{t('tool-typing.ui.language')}</th>
                   <th className="p-3.5">WPM</th>
                   <th className="p-3.5">CPM</th>
-                  <th className="p-3.5">Accuracy</th>
-                  <th className="p-3.5">Backspaces</th>
-                  <th className="p-3.5">Correction Rate</th>
-                  <th className="p-3.5 pr-4">Time</th>
+                  <th className="p-3.5">{t('tool-typing.ui.accuracy')}</th>
+                  <th className="p-3.5">{t('tool-typing.ui.backspaces')}</th>
+                  <th className="p-3.5">{t('tool-typing.ui.correctionRate')}</th>
+                  <th className="p-3.5 pr-4">{t('tool-typing.ui.time')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {history.map((h) => (
                   <tr key={h.id} className="hover:bg-app/20 transition-colors">
-                    <td className="p-3.5 pl-4 text-text-muted whitespace-nowrap">{h.date}</td>
-                    <td className="p-3.5 capitalize">{h.mode}</td>
-                    <td className="p-3.5 capitalize">{h.language}</td>
+                    <td className="p-3.5 pl-4 text-text-muted whitespace-nowrap">{formatHistoryDate(h.date)}</td>
+                    <td className="p-3.5 capitalize">{h.mode === 'free'
+                      ? t('tool-typing.ui.freeTyping')
+                      : h.mode === 'template'
+                        ? t('tool-typing.ui.template')
+                        : h.mode}</td>
+                    <td className="p-3.5 capitalize">{h.language === 'chinese'
+                      ? t('tool-typing.ui.chinese')
+                      : h.language === 'englishCode'
+                        ? t('tool-typing.ui.englishCode')
+                        : h.language}</td>
                     <td className="p-3.5 font-bold font-mono text-accent text-sm">{h.wpm}</td>
                     <td className="p-3.5 font-mono">{h.cpm}</td>
-                    <td className="p-3.5 font-mono">{h.accuracy}%</td>
+                    <td className="p-3.5 font-mono">{formatHistoryPercent(h.accuracy)}</td>
                     <td className="p-3.5 font-mono text-text-muted">{h.corrections}</td>
-                    <td className="p-3.5 font-mono text-text-muted">{h.correctionRate}%</td>
-                    <td className="p-3.5 font-mono pr-4">{h.duration}s</td>
+                    <td className="p-3.5 font-mono text-text-muted">{formatHistoryPercent(h.correctionRate)}</td>
+                    <td className="p-3.5 font-mono pr-4">{formatHistoryDuration(h.duration)}</td>
                   </tr>
                 ))}
               </tbody>

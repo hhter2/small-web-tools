@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -68,6 +69,7 @@ function capitalizeSpecificTerms(str, specificTerms, specificTermsMode) {
 }
 
 export default function CasingSwitcher() {
+  const { t, i18n } = useTranslation(['tools', 'common']);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -179,7 +181,7 @@ export default function CasingSwitcher() {
   return (
     <Card id="tool-casing" variant="tool" size="wide">
       <ToolHeader 
-        title="Lowercase &amp; Capital Switcher" 
+        title={t('tools:tool-casing.ui.heading')}
       />
       
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -190,14 +192,14 @@ export default function CasingSwitcher() {
               id="casing-input"
               as="textarea"
               rows={3}
-              label="Input Text"
-              placeholder="Type or paste text to convert..."
+              label={t('tools:tool-casing.ui.input')}
+              placeholder={t('tools:tool-casing.ui.inputPlaceholder')}
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             <div className="flex justify-between text-xs text-text-muted mt-1">
-              <span>Words: {countWords(input)}</span>
-              <span>Characters: {input.length}</span>
+              <span>{t('tools:tool-casing.ui.words', { count: new Intl.NumberFormat(i18n.resolvedLanguage).format(countWords(input)) })}</span>
+              <span>{t('tools:tool-casing.ui.characters', { count: new Intl.NumberFormat(i18n.resolvedLanguage).format(input.length) })}</span>
             </div>
           </div>
 
@@ -208,7 +210,7 @@ export default function CasingSwitcher() {
               size="sm"
               onClick={handleClear}
               disabled={!input}
-              title="Clear input text"
+              title={t('tools:tool-casing.ui.clearTitle')}
             >
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -216,7 +218,7 @@ export default function CasingSwitcher() {
                 <line x1="10" y1="11" x2="10" y2="17"></line>
                 <line x1="14" y1="11" x2="14" y2="17"></line>
               </svg>
-              <span>Clear</span>
+              <span>{t('common:actions.clear')}</span>
             </Button>
           </div>
 
@@ -226,13 +228,13 @@ export default function CasingSwitcher() {
               as="textarea"
               rows={3}
               readOnly
-              label="Output Preview"
-              placeholder="Converted text will appear here in real time..."
+              label={t('tools:tool-casing.ui.output')}
+              placeholder={t('tools:tool-casing.ui.outputPlaceholder')}
               value={output}
             />
             <div className="flex justify-between text-xs text-text-muted mt-1">
-              <span>Words: {countWords(output)}</span>
-              <span>Characters: {output.length}</span>
+              <span>{t('tools:tool-casing.ui.words', { count: new Intl.NumberFormat(i18n.resolvedLanguage).format(countWords(output)) })}</span>
+              <span>{t('tools:tool-casing.ui.characters', { count: new Intl.NumberFormat(i18n.resolvedLanguage).format(output.length) })}</span>
             </div>
           </div>
 
@@ -243,14 +245,14 @@ export default function CasingSwitcher() {
               size="sm"
               onClick={handleCopy}
               disabled={!output}
-              title="Copy output to clipboard"
+              title={t('tools:tool-casing.ui.copyTitle')}
             >
               {copied ? (
                 <>
                   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                  <span>Copied</span>
+                  <span>{t('common:actions.copied')}</span>
                 </>
               ) : (
                 <>
@@ -258,7 +260,7 @@ export default function CasingSwitcher() {
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
-                  <span>Copy Output</span>
+                  <span>{t('tools:tool-casing.ui.copyOutput')}</span>
                 </>
               )}
             </Button>
@@ -268,7 +270,7 @@ export default function CasingSwitcher() {
         {/* Right Column: Options Panel */}
         <div className="flex flex-col gap-4">
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-5">
-            <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-1">Casing Controls</h3>
+            <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-1">{t('tools:tool-casing.ui.controls')}</h3>
             
             {/* Global Setting: Exclude Specific Words */}
             <div className="border-b border-border pb-4">
@@ -276,7 +278,7 @@ export default function CasingSwitcher() {
                 id="enable-exclude-words"
                 checked={enableExcludeWords}
                 onChange={(e) => setEnableExcludeWords(e.target.checked)}
-                label="Exclude Specific Words"
+                label={t('tools:tool-casing.ui.exclude')}
                 labelClassName="font-semibold text-accent"
               />
 
@@ -288,8 +290,8 @@ export default function CasingSwitcher() {
                       id="exclude-words-input"
                       value={excludeWords}
                       onChange={(e) => setExcludeWords(e.target.value)}
-                      placeholder="e.g. and, or, but, I"
-                      label="Words to preserve case (comma-separated)"
+                      placeholder={t('tools:tool-casing.ui.excludePlaceholder')}
+                      label={t('tools:tool-casing.ui.excludeLabel')}
                     />
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function CasingSwitcher() {
                 id="enable-case-change"
                 checked={enableCaseChange}
                 onChange={(e) => setEnableCaseChange(e.target.checked)}
-                label="1. All Case Conversion"
+                label={t('tools:tool-casing.ui.allCase')}
               />
 
               {enableCaseChange && (
@@ -316,7 +318,7 @@ export default function CasingSwitcher() {
                         checked={caseChangeMode === 'invert'}
                         onChange={() => setCaseChangeMode('invert')}
                       />
-                      Invert Case (Capital ⇄ Lowercase)
+                      {t('tools:tool-casing.ui.invert')}
                     </label>
                     <label className="radio-label">
                       <input
@@ -326,7 +328,7 @@ export default function CasingSwitcher() {
                         checked={caseChangeMode === 'upper'}
                         onChange={() => setCaseChangeMode('upper')}
                       />
-                      Convert to UPPERCASE
+                      {t('tools:tool-casing.ui.uppercase')}
                     </label>
                     <label className="radio-label">
                       <input
@@ -336,7 +338,7 @@ export default function CasingSwitcher() {
                         checked={caseChangeMode === 'lower'}
                         onChange={() => setCaseChangeMode('lower')}
                       />
-                      Convert to lowercase
+                      {t('tools:tool-casing.ui.lowercase')}
                     </label>
                   </div>
                 </div>
@@ -349,7 +351,7 @@ export default function CasingSwitcher() {
                 id="enable-title-case"
                 checked={enableTitleCase}
                 onChange={(e) => setEnableTitleCase(e.target.checked)}
-                label="2. Make Each Word Capital"
+                label={t('tools:tool-casing.ui.titleCase')}
               />
             </div>
 
@@ -359,7 +361,7 @@ export default function CasingSwitcher() {
                 id="enable-sentence-case"
                 checked={enableSentenceCase}
                 onChange={(e) => setEnableSentenceCase(e.target.checked)}
-                label="3. Sentence First Word Capital"
+                label={t('tools:tool-casing.ui.sentenceCase')}
               />
 
               {enableSentenceCase && (
@@ -372,7 +374,7 @@ export default function CasingSwitcher() {
                         checked={preserveCapitals}
                         onChange={(e) => setPreserveCapitals(e.target.checked)}
                       />
-                      Preserve other capitalized words
+                      {t('tools:tool-casing.ui.preserve')}
                     </label>
                   </div>
                 </div>
@@ -385,7 +387,7 @@ export default function CasingSwitcher() {
                 id="enable-specific-terms"
                 checked={enableSpecificTerms}
                 onChange={(e) => setEnableSpecificTerms(e.target.checked)}
-                label="4. Specific Terms Capitalization"
+                label={t('tools:tool-casing.ui.specific')}
               />
 
               {enableSpecificTerms && (
@@ -396,8 +398,8 @@ export default function CasingSwitcher() {
                       id="specific-terms-input"
                       value={specificTerms}
                       onChange={(e) => setExcludeWords(e.target.value)}
-                      placeholder="e.g. react, javascript, node js"
-                      label="Target Terms (comma/newline separated)"
+                      placeholder={t('tools:tool-casing.ui.termsPlaceholder')}
+                      label={t('tools:tool-casing.ui.termsLabel')}
                     />
                   </div>
                   <div className="flex flex-col gap-2 items-start radio-group text-[0.85rem]">
@@ -409,7 +411,7 @@ export default function CasingSwitcher() {
                         checked={specificTermsMode === 'first'}
                         onChange={() => setSpecificTermsMode('first')}
                       />
-                      Capitalize first word of term (e.g. Node js)
+                      {t('tools:tool-casing.ui.firstTerm')}
                     </label>
                     <label className="radio-label">
                       <input
@@ -419,7 +421,7 @@ export default function CasingSwitcher() {
                         checked={specificTermsMode === 'all'}
                         onChange={() => setSpecificTermsMode('all')}
                       />
-                      Capitalize all words of term (e.g. Node Js)
+                      {t('tools:tool-casing.ui.allTerms')}
                     </label>
                   </div>
                 </div>

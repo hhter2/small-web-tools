@@ -16,6 +16,6 @@ test('repeated media additions cannot bypass the queue limit', async ({ page }) 
     mimeType: 'video/mp4',
     buffer: Buffer.from('must not be read'),
   });
-  await expect(page.getByText(/exceed the limit of 10/)).toBeVisible();
+  await expect(page.getByText('The media queue exceeds its file-count limit.')).toBeVisible();
   await expect(page.getByText('over-limit.mp4')).toHaveCount(0);
 });

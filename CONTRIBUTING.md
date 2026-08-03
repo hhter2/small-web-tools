@@ -93,6 +93,28 @@ Node 24.
 - Add focused unit tests for pure/domain logic and Playwright coverage for critical
   journeys. Avoid relying only on route smoke tests.
 
+## Internationalization
+
+- Put user-facing text in the bounded `common`, `navigation`, `tools`, or `errors`
+  namespace under `src/i18n/locales/<locale>/`; never use translated labels as IDs.
+- Every UI change must add matching, non-empty `en-US` and `zh-TW` keys. Use
+  semantic lower-camel-case keys, `{{value}}` interpolation, and i18next plural suffixes.
+- Keep interpolation variables identical. Stable technical terms such as DNA,
+  MIME, QR, RGB, protocols, and file extensions may remain unchanged when clearer.
+- Use the active locale with `Intl` for reader-facing numbers, dates, times, and
+  sorting. Content algorithms must inspect content rather than assume the UI locale.
+- Run `npm run i18n:check`; it rejects invalid/duplicate JSON, key drift, empty
+  translations, interpolation mismatches, and explicit references to missing keys.
+- Run `npm run i18n:audit` to reject user-facing JSX literals. The reviewed allowlist
+  in `scripts/check-hardcoded-ui.mjs` is only for language-neutral formats, units,
+  formulas, font names, barcode names, and keyboard notation; keep it narrow.
+
+Example: add `feature.resetNotice` to both locale files, render it with
+`t('common:feature.resetNotice', { count })`, and test both locales. Verify visible
+text, placeholders, notifications, assistive text, and page titles without changing routes.
+
+Pull requests must state the translation impact and confirm bilingual desktop/mobile review.
+
 ## Documentation and commits
 
 - Update `ARCHITECTURE.md` for structural, route, API, dependency, or runtime changes.

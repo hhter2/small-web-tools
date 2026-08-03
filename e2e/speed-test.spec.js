@@ -10,14 +10,14 @@ test('rejects hostile custom plans and confirms the exact high-traffic total', a
   await page.getByLabel('Test Size Limit').selectOption('custom');
 
   await page.getByLabel('Download (MB)').fill('1000000');
-  await expect(page.getByRole('alert')).toContainText('between 1 and 1000 MB');
+  await expect(page.getByRole('alert')).toContainText('between 1 and 1,000 MB');
   await page.getByRole('button', { name: 'Start Test' }).click();
   expect(speedRequests).toBe(0);
 
   await page.getByLabel('Download (MB)').fill('1000');
   await page.getByLabel('Upload (MB)').fill('1000');
   page.once('dialog', async (dialog) => {
-    expect(dialog.message()).toContain('2000 MB total');
+    expect(dialog.message()).toContain('2,000 MB in total');
     await dialog.dismiss();
   });
   await page.getByRole('button', { name: 'Start Test' }).click();

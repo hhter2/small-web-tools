@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Html5Qrcode } from 'html5-qrcode';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -94,6 +95,7 @@ const parseQRPayload = (text) => {
 
 // ── Content-Aware Result Widget ───────────────────────────────────────────────
 function ResultWidget({ parsed }) {
+  const { t } = useTranslation('tools');
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -119,7 +121,7 @@ function ResultWidget({ parsed }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">URL Detected</div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.urlDetected')}</div>
           <div className="text-[0.9rem] text-accent underline underline-offset-2 cursor-pointer break-all leading-normal mb-2.5">{parsed.url}</div>
           <div className="flex gap-2 flex-wrap">
             <a href={parsed.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
@@ -128,14 +130,14 @@ function ResultWidget({ parsed }) {
                 <polyline points="15 3 21 3 21 9"/>
                 <line x1="10" y1="14" x2="21" y2="3"/>
               </svg>
-              Open Link
+              {t('tool-qrbarcodescan.ui.openLink')}
             </a>
             <Button variant="secondary" size="sm" onClick={() => copyText(parsed.url)}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
               </svg>
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? t('tool-qrbarcodescan.ui.copied') : t('tool-qrbarcodescan.ui.copy')}
             </Button>
           </div>
         </div>
@@ -155,24 +157,24 @@ function ResultWidget({ parsed }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Wi-Fi Network</div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.wifiNetwork')}</div>
           <div className="flex flex-col gap-1.5 mb-2.5">
             <div className="flex gap-2.5 items-baseline">
-              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Network (SSID)</span>
-              <span className="text-[0.88rem] text-text-main break-all">{parsed.ssid || '(hidden)'}</span>
+              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">{t('tool-qrbarcodescan.ui.networkSsid')}</span>
+              <span className="text-[0.88rem] text-text-main break-all">{parsed.ssid || t('tool-qrbarcodescan.ui.hiddenValue')}</span>
             </div>
             <div className="flex gap-2.5 items-baseline">
-              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Security</span>
-              <span className="text-[0.88rem] text-text-main break-all">{parsed.security || 'None'}</span>
+              <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">{t('tool-qrbarcodescan.ui.security')}</span>
+              <span className="text-[0.88rem] text-text-main break-all">{parsed.security || t('tool-qrbarcodescan.ui.none')}</span>
             </div>
             {parsed.password && (
               <div className="flex gap-2.5 items-baseline">
-                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Password</span>
+                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">{t('tool-qrbarcodescan.ui.password')}</span>
                 <span className="text-[0.88rem] text-text-main break-all inline-flex items-center gap-1.5">
                   <span className="font-mono text-[0.9rem] tracking-wider">
                     {showPassword ? parsed.password : '•'.repeat(parsed.password.length)}
                   </span>
-                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => setShowPassword(v => !v)} title={showPassword ? 'Hide' : 'Show'}>
+                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => setShowPassword(v => !v)} title={showPassword ? t('tool-qrbarcodescan.ui.hide') : t('tool-qrbarcodescan.ui.show')}>
                     {showPassword ? (
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -186,7 +188,7 @@ function ResultWidget({ parsed }) {
                       </svg>
                     )}
                   </button>
-                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => copyText(parsed.password)} title="Copy Password">
+                  <button className="bg-transparent border-none text-text-muted cursor-pointer p-0.5 inline-flex items-center rounded transition-colors hover:text-accent shrink-0" onClick={() => copyText(parsed.password)} title={t('tool-qrbarcodescan.ui.copyPassword')}>
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -197,8 +199,8 @@ function ResultWidget({ parsed }) {
             )}
             {parsed.hidden && (
               <div className="flex gap-2.5 items-baseline">
-                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">Hidden</span>
-                <span className="text-[0.88rem] text-text-main break-all">Yes</span>
+                <span className="text-[0.78rem] font-semibold text-text-muted w-[110px] shrink-0">{t('tool-qrbarcodescan.ui.hidden')}</span>
+                <span className="text-[0.88rem] text-text-main break-all">{t('tool-qrbarcodescan.ui.yes')}</span>
               </div>
             )}
           </div>
@@ -217,11 +219,11 @@ function ResultWidget({ parsed }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Email Detected</div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.emailDetected')}</div>
           <div className="flex flex-col gap-1.5 mb-2.5">
-            {parsed.to && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">To</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.to}</span></div>}
-            {parsed.subject && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Subject</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.subject}</span></div>}
-            {parsed.body && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Body</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.body}</span></div>}
+            {parsed.to && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">{t('tool-qrbarcodescan.ui.to')}</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.to}</span></div>}
+            {parsed.subject && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">{t('tool-qrbarcodescan.ui.subject')}</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.subject}</span></div>}
+            {parsed.body && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">{t('tool-qrbarcodescan.ui.body')}</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.body}</span></div>}
           </div>
           <div className="flex gap-2 flex-wrap">
             <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
@@ -229,7 +231,7 @@ function ResultWidget({ parsed }) {
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
               </svg>
-              Compose Email
+              {t('tool-qrbarcodescan.ui.composeEmail')}
             </a>
           </div>
         </div>
@@ -246,17 +248,17 @@ function ResultWidget({ parsed }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Phone Number</div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.phoneNumber')}</div>
           <div className="text-[0.9rem] text-text-main break-all leading-normal mb-2.5">{parsed.phone}</div>
           <div className="flex gap-2 flex-wrap">
             <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12"/>
               </svg>
-              Call
+              {t('tool-qrbarcodescan.ui.call')}
             </a>
             <Button variant="secondary" size="sm" onClick={() => copyText(parsed.phone)}>
-              {copied ? 'Copied!' : 'Copy Number'}
+              {copied ? t('tool-qrbarcodescan.ui.copied') : t('tool-qrbarcodescan.ui.copyNumber')}
             </Button>
           </div>
         </div>
@@ -273,13 +275,13 @@ function ResultWidget({ parsed }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">SMS Message</div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.smsMessage')}</div>
           <div className="flex flex-col gap-1.5 mb-2.5">
-            {parsed.phone && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">To</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.phone}</span></div>}
-            {parsed.message && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">Message</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.message}</span></div>}
+            {parsed.phone && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">{t('tool-qrbarcodescan.ui.to')}</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.phone}</span></div>}
+            {parsed.message && <div className="flex gap-2.5 items-start"><span className="text-[0.78rem] font-semibold text-text-muted w-[60px] shrink-0 pt-0.5">{t('tool-qrbarcodescan.ui.message')}</span><span className="text-[0.88rem] text-text-main break-all leading-normal">{parsed.message}</span></div>}
           </div>
           <div className="flex gap-2 flex-wrap">
-            <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">Send SMS</a>
+            <a href={parsed.raw} className="inline-flex items-center gap-1.5 bg-accent-gradient text-white px-3 py-1.5 rounded text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_10px_var(--accent-light)] transition-all duration-200 shadow-sm">{t('tool-qrbarcodescan.ui.sendSms')}</a>
           </div>
         </div>
       </div>
@@ -298,7 +300,7 @@ function ResultWidget({ parsed }) {
         </svg>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">Text / Data</div>
+        <div className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('tool-qrbarcodescan.ui.textData')}</div>
         <pre className="font-mono text-[0.84rem] whitespace-pre-wrap break-all bg-card border border-border rounded-lg p-2.5 px-3 mb-2.5 max-h-[160px] overflow-y-auto text-text-main leading-relaxed">{parsed.raw}</pre>
         <div className="flex gap-2 flex-wrap">
           <Button variant="primary" size="sm" onClick={() => copyText(parsed.raw)}>
@@ -306,7 +308,7 @@ function ResultWidget({ parsed }) {
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            {copied ? 'Copied!' : 'Copy Text'}
+            {copied ? t('tool-qrbarcodescan.ui.copied') : t('tool-qrbarcodescan.ui.copyText')}
           </Button>
         </div>
       </div>
@@ -320,6 +322,7 @@ const SCAN_MODE_FILE = 'file';
 const READER_ID = 'qrscan-camera-reader';
 
 export default function QrBarcodeScanner() {
+  const { t } = useTranslation('tools');
   const [scanMode, setScanMode] = useState(SCAN_MODE_CAMERA);
 
   // Camera state
@@ -387,7 +390,7 @@ export default function QrBarcodeScanner() {
     try {
       const devices = await Html5Qrcode.getCameras();
       if (!devices || devices.length === 0) {
-        setCameraError('No cameras detected on this device.');
+        setCameraError(t('tool-qrbarcodescan.ui.noCameras'));
         return;
       }
       setCameras(devices);
@@ -399,7 +402,7 @@ export default function QrBarcodeScanner() {
       setSelectedCamera(preferredId);
       startScanning(preferredId);
     } catch (err) {
-      setCameraError(`Camera access denied: ${err?.message || err}`);
+      setCameraError(t('tool-qrbarcodescan.ui.cameraDenied'));
     }
   };
 
@@ -423,7 +426,7 @@ export default function QrBarcodeScanner() {
       setIsScanning(true);
       setCameraError(null);
     } catch (err) {
-      setCameraError(`Failed to start camera: ${err?.message || err}`);
+      setCameraError(t('tool-qrbarcodescan.ui.cameraStartFailed'));
     }
   };
 
@@ -456,11 +459,11 @@ export default function QrBarcodeScanner() {
     if (!file) return;
     const sizeCheck = validateFileSize(file, RESOURCE_LIMITS.MAX_QR_IMAGE_BYTES, 'QR image');
     if (!sizeCheck.valid) {
-      setFileError(sizeCheck.error);
+      setFileError(t('tool-qrbarcodescan.ui.fileTooLarge'));
       return;
     }
     if (!/^image\//i.test(file.type)) {
-      setFileError('Please select an image file (JPEG, PNG, GIF, WebP, BMP, etc.).');
+      setFileError(t('tool-qrbarcodescan.ui.selectImage'));
       return;
     }
     setFileError(null);
@@ -488,7 +491,7 @@ export default function QrBarcodeScanner() {
       setLastResult(newResult);
       setHistory(h => [newResult, ...h].slice(0, 10));
     } catch (err) {
-      setFileError(`No QR code or barcode found in this image. (${err?.message || 'Unknown error'})`);
+      setFileError(t('tool-qrbarcodescan.ui.notFound'));
     } finally {
       setFileScanning(false);
     }
@@ -528,7 +531,7 @@ export default function QrBarcodeScanner() {
     <Card variant="tool" size="wide" id="tool-qrbarcodescan" className="active">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
         <ToolHeader 
-          title="QR &amp; Barcode Scanner" 
+          title={t('tool-qrbarcodescan.ui.title')}
           className="!border-b-0 !pb-0"
         />
         <div className="flex gap-2 shrink-0">
@@ -543,7 +546,7 @@ export default function QrBarcodeScanner() {
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            <span>Camera Scan</span>
+            <span>{t('tool-qrbarcodescan.ui.cameraScan')}</span>
           </Button>
           <Button
             variant={scanMode === SCAN_MODE_FILE ? 'primary' : 'secondary'}
@@ -557,7 +560,7 @@ export default function QrBarcodeScanner() {
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <span>Upload Image</span>
+            <span>{t('tool-qrbarcodescan.ui.uploadImage')}</span>
           </Button>
         </div>
       </div>
@@ -577,14 +580,14 @@ export default function QrBarcodeScanner() {
                       <circle cx="12" cy="13" r="4"/>
                     </svg>
                   </div>
-                  <p className="text-[1.1rem] font-bold text-text-main m-0">Camera Access Required</p>
-                  <p className="text-[0.88rem] text-text-muted max-w-[320px] leading-relaxed m-0">Allow camera access to scan QR codes and barcodes in real time. No data is sent to any server.</p>
+                  <p className="text-[1.1rem] font-bold text-text-main m-0">{t('tool-qrbarcodescan.ui.cameraRequired')}</p>
+                  <p className="text-[0.88rem] text-text-muted max-w-[320px] leading-relaxed m-0">{t('tool-qrbarcodescan.ui.cameraPrivacy')}</p>
                   <Button id="qrscan-start-camera-btn" variant="primary" className="flex items-center gap-2" onClick={requestCamerasAndStart}>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="23 7 16 12 23 17 23 7"/>
                       <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                     </svg>
-                    Enable Camera
+                    {t('tool-qrbarcodescan.ui.enableCamera')}
                   </Button>
                   {cameraError && <p className="text-[0.84rem] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 px-3.5 mt-1">{cameraError}</p>}
                 </div>
@@ -601,7 +604,7 @@ export default function QrBarcodeScanner() {
                       >
                         {cameras.map(cam => (
                           <option key={cam.id} value={cam.id}>
-                            {cam.label || `Camera ${cam.id.slice(0, 8)}`}
+                            {cam.label || t('tool-qrbarcodescan.ui.cameraFallback', { id: cam.id.slice(0, 8) })}
                           </option>
                         ))}
                       </select>
@@ -611,14 +614,14 @@ export default function QrBarcodeScanner() {
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                           <rect x="6" y="6" width="12" height="12" rx="1"/>
                         </svg>
-                        Stop Camera
+                        {t('tool-qrbarcodescan.ui.stopCamera')}
                       </Button>
                     ) : (
                       <Button id="qrscan-start-btn" variant="primary" size="sm" className="flex items-center gap-2" onClick={() => startScanning()}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                           <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
-                        Start Camera
+                        {t('tool-qrbarcodescan.ui.startCamera')}
                       </Button>
                     )}
                   </div>
@@ -640,11 +643,11 @@ export default function QrBarcodeScanner() {
                   </div>
 
                   {!isScanning && !cameraError && (
-                    <p className="text-[0.83rem] text-text-muted text-center mt-1 flex items-center justify-center gap-1.5">Camera is stopped. Press "Start Camera" to resume.</p>
+                    <p className="text-[0.83rem] text-text-muted text-center mt-1 flex items-center justify-center gap-1.5">{t('tool-qrbarcodescan.ui.cameraStopped')}</p>
                   )}
                   {isScanning && !lastResult && (
                     <p className="text-[0.83rem] text-accent text-center mt-1 flex items-center justify-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" /> Scanning… Point your camera at a QR code or barcode.
+                      <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" /> {t('tool-qrbarcodescan.ui.scanningCamera')}
                     </p>
                   )}
                 </>
@@ -673,11 +676,11 @@ export default function QrBarcodeScanner() {
                 />
                 {filePreviewUrl ? (
                   <div className="w-full h-full relative flex items-center justify-center">
-                    <img src={filePreviewUrl} alt="Uploaded image preview" className="w-full h-full object-contain rounded-xl" />
+                    <img src={filePreviewUrl} alt={t('tool-qrbarcodescan.ui.previewAlt')} className="w-full h-full object-contain rounded-xl" />
                     {fileScanning && (
                       <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center gap-3 text-white text-[0.9rem] font-semibold rounded-xl overflow-hidden">
                         <div className="absolute left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-transparent via-accent via-[#a3f07a] via-accent to-transparent shadow-[0_0_8px_2px_var(--accent)] animate-[qrscan-laser-sweep_1.5s_ease-in-out_infinite]" />
-                        <span>Scanning…</span>
+                        <span>{t('tool-qrbarcodescan.ui.scanning')}</span>
                       </div>
                     )}
                   </div>
@@ -689,9 +692,9 @@ export default function QrBarcodeScanner() {
                       <rect x="3" y="14" width="7" height="7" rx="1"/>
                       <rect x="14" y="14" width="7" height="7" rx="1"/>
                     </svg>
-                    <p className="text-base font-semibold text-text-main m-0">Drop an image here</p>
-                    <p className="text-[0.84rem] m-0">or click to browse files</p>
-                    <p className="text-[0.76rem] m-0 opacity-70">Supports JPEG, PNG, GIF, WebP, BMP</p>
+                    <p className="text-base font-semibold text-text-main m-0">{t('tool-qrbarcodescan.ui.dropImage')}</p>
+                    <p className="text-[0.84rem] m-0">{t('tool-qrbarcodescan.ui.browseFiles')}</p>
+                    <p className="text-[0.76rem] m-0 opacity-70">{t('tool-qrbarcodescan.ui.supportedImages')}</p>
                   </div>
                 )}
               </div>
@@ -699,9 +702,9 @@ export default function QrBarcodeScanner() {
               {filePreviewUrl && (
                 <div className="flex gap-2.5 flex-wrap">
                   <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                    Choose Different Image
+                    {t('tool-qrbarcodescan.ui.chooseDifferent')}
                   </Button>
-                  <Button variant="secondary" onClick={clearResult}>Clear</Button>
+                  <Button variant="secondary" onClick={clearResult}>{t('tool-qrbarcodescan.ui.clear')}</Button>
                 </div>
               )}
 
@@ -728,12 +731,12 @@ export default function QrBarcodeScanner() {
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  Decoded
+                  {t('tool-qrbarcodescan.ui.decoded')}
                 </div>
                 {lastResult.format && lastResult.format !== 'Unknown' && (
                   <span className="bg-nav-active-bg text-text-muted rounded-full px-2.5 py-0.5 text-[0.78rem] font-semibold">{FORMAT_LABELS[lastResult.format] || lastResult.format}</span>
                 )}
-                <button className="ml-auto bg-transparent border-none text-text-muted cursor-pointer p-1 rounded transition-colors hover:text-red-500" onClick={clearResult} title="Clear result">
+                <button className="ml-auto bg-transparent border-none text-text-muted cursor-pointer p-1 rounded transition-colors hover:text-red-500" onClick={clearResult} title={t('tool-qrbarcodescan.ui.clearResult')}>
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -750,18 +753,18 @@ export default function QrBarcodeScanner() {
                 <rect x="3" y="14" width="7" height="7" rx="1"/>
                 <path d="M14 14h3v3m0 4h4m0 0v-4m-7 4h3"/>
               </svg>
-              <p className="text-[0.95rem] font-semibold text-text-main m-0">No result yet</p>
+              <p className="text-[0.95rem] font-semibold text-text-main m-0">{t('tool-qrbarcodescan.ui.noResult')}</p>
               <p className="text-[0.83rem] m-0 leading-relaxed">
                 {scanMode === SCAN_MODE_CAMERA
-                  ? 'Start the camera and point it at a QR code or barcode.'
-                  : 'Upload an image containing a QR code or barcode.'}
+                  ? t('tool-qrbarcodescan.ui.cameraPrompt')
+                  : t('tool-qrbarcodescan.ui.uploadPrompt')}
               </p>
             </div>
           )}
 
           {/* Supported Formats */}
           <div className="bg-card border border-border rounded-2xl p-4 px-4.5">
-            <div className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted mb-2.5">Supported Formats</div>
+            <div className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted mb-2.5">{t('tool-qrbarcodescan.ui.supportedFormats')}</div>
             <div className="flex flex-wrap gap-1.5 mb-2.5">
               <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">QR Code</span>
               <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-emerald-500/10 text-accent border-emerald-500/20">Data Matrix</span>
@@ -779,8 +782,8 @@ export default function QrBarcodeScanner() {
               <span className="rounded-full px-2.5 py-0.5 text-[0.76rem] font-semibold border bg-indigo-500/10 text-indigo-500 border-indigo-500/20">RSS 14</span>
             </div>
             <div className="flex gap-3.5 mt-1.5">
-              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-accent" />2D Codes</span>
-              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-indigo-500" />1D Barcodes</span>
+              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-accent" />{t('tool-qrbarcodescan.ui.codes2d')}</span>
+              <span className="inline-flex items-center gap-1.5 text-[0.76rem] text-text-muted"><span className="w-2 h-2 rounded-full shrink-0 bg-indigo-500" />{t('tool-qrbarcodescan.ui.barcodes1d')}</span>
             </div>
           </div>
 
@@ -788,8 +791,8 @@ export default function QrBarcodeScanner() {
           {history.length > 0 && (
             <div className="bg-card border border-border rounded-2xl p-4 px-4.5">
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted">Scan History</span>
-                <Button variant="secondary" size="sm" className="px-2.5 py-1 text-[0.78rem]" onClick={clearHistory}>Clear</Button>
+                <span className="text-[0.8rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-qrbarcodescan.ui.history')}</span>
+                <Button variant="secondary" size="sm" className="px-2.5 py-1 text-[0.78rem]" onClick={clearHistory}>{t('tool-qrbarcodescan.ui.clear')}</Button>
               </div>
               <ul className="list-none m-0 p-0 flex flex-col gap-1">
                 {history.map((item, idx) => {
@@ -803,7 +806,7 @@ export default function QrBarcodeScanner() {
                     text: '📄',
                   }[p.type] || '📄';
                   return (
-                    <li key={idx} className="flex items-center gap-2 p-1.5 px-2.5 rounded-lg cursor-pointer transition-all border border-transparent hover:bg-nav-hover-bg hover:border-border" onClick={() => setLastResult(item)} title="Click to view">
+                    <li key={idx} className="flex items-center gap-2 p-1.5 px-2.5 rounded-lg cursor-pointer transition-all border border-transparent hover:bg-nav-hover-bg hover:border-border" onClick={() => setLastResult(item)} title={t('tool-qrbarcodescan.ui.clickView')}>
                       <span className="text-base shrink-0">{typeIcon}</span>
                       <span className="text-[0.82rem] text-text-muted truncate">{item.text.length > 60 ? item.text.slice(0, 60) + '…' : item.text}</span>
                     </li>

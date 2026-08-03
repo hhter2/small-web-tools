@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 
@@ -174,6 +175,7 @@ const getStrandGroups = (strandBases, direction, isRna) => {
 };
 
 export default function DnaConverter() {
+  const { t, i18n } = useTranslation('tools');
   const [input, setInput] = useState('');
   const [seqType, setSeqType] = useState('auto');
   const [direction, setDirection] = useState('5-3');
@@ -183,7 +185,7 @@ export default function DnaConverter() {
   const [copyWithoutDirectionLabels, setCopyWithoutDirectionLabels] = useState(false);
 
   // States to keep track of warning colors & messages
-  const [statusText, setStatusText] = useState('Enter a sequence to convert.');
+  const [statusText, setStatusText] = useState('');
   const [statusStyle, setStatusStyle] = useState({});
 
   const [outputs, setOutputs] = useState({
@@ -206,7 +208,7 @@ export default function DnaConverter() {
   useEffect(() => {
     if (!input.trim()) {
       setOutputs({ opposite: '', revcomp: '', reverse: '' });
-      setStatusText("Enter a sequence to convert.");
+      setStatusText(t('tool-dna.ui.enterSequence'));
       setStatusStyle({});
       return;
     }
@@ -236,7 +238,7 @@ export default function DnaConverter() {
 
     if (!cleaned) {
       setOutputs({ opposite: '', revcomp: '', reverse: '' });
-      setStatusText("Please enter a valid sequence.");
+      setStatusText(t('tool-dna.ui.validSequence'));
       setStatusStyle({});
       return;
     }
@@ -244,14 +246,14 @@ export default function DnaConverter() {
     // Validate characters: only A, T, C, G, U, and N are allowed
     if (/[^ACGUTN]/.test(cleaned)) {
       setOutputs({ opposite: '', revcomp: '', reverse: '' });
-      setStatusText("Error: Only A, T, C, G, U, and N characters are allowed.");
+      setStatusText(t('tool-dna.ui.invalidCharacters'));
       setStatusStyle({});
       return;
     }
 
     let warningMessage = "";
     if (cleaned.includes("N")) {
-      warningMessage = "Notification: 'N' detected (N represents any or unknown nucleotide).";
+      warningMessage = t('tool-dna.ui.nDetected');
     }
 
     // 3. Auto-detect sequence type (DNA vs RNA)
@@ -260,7 +262,9 @@ export default function DnaConverter() {
       const hasU = cleaned.includes("U");
       const hasT = cleaned.includes("T");
       if (hasU && hasT) {
-        warningMessage = (warningMessage ? warningMessage + " " : "") + "Warning: Both T and U detected. Defaulting to DNA.";
+        warningMessage = t('tool-dna.ui.warningCombined', {
+          prior: warningMessage ? `${warningMessage} ` : '',
+        });
         isRna = false;
       } else if (hasU) {
         isRna = true;
@@ -326,7 +330,7 @@ export default function DnaConverter() {
       revcomp: revcompStr,
       reverse: reverseStr,
     });
-  }, [input, seqType, direction, codonMode]);
+  }, [codonMode, direction, i18n.language, input, seqType, t]);
 
   const renderVisualDna = () => {
     const cleaned = input
@@ -338,7 +342,7 @@ export default function DnaConverter() {
     if (!cleaned) {
       return (
         <div className="p-12 text-center text-text-muted font-medium bg-card border border-border rounded-lg">
-          Enter a valid sequence to see the visual representation.
+          {t('tool-dna.ui.visualPrompt')}
         </div>
       );
     }
@@ -346,7 +350,7 @@ export default function DnaConverter() {
     if (/[^ACGUTN]/.test(cleaned)) {
       return (
         <div className="p-12 text-center text-text-muted font-medium bg-card border border-border rounded-lg text-red-500 border-red-500/20 bg-red-500/[0.02]">
-          Error: Only A, T, C, G, U, and N characters are allowed.
+          {t('tool-dna.ui.invalidCharacters')}
         </div>
       );
     }
@@ -390,22 +394,22 @@ export default function DnaConverter() {
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444]"></span>
-                  <span>Input Strand (5' → 3')</span>
+                  <span>{t('tool-dna.ui.inputStrand53')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6] opacity-30"></span>
-                  <span>Complementary Strand (3' → 5')</span>
+                  <span>{t('tool-dna.ui.complementaryStrand35')}</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#3b82f6]"></span>
-                  <span>Input Strand (3' → 5')</span>
+                  <span>{t('tool-dna.ui.inputStrand35')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-6 h-1.5 rounded-sm bg-[#ef4444] opacity-30"></span>
-                  <span>Complementary Strand (5' → 3')</span>
+                  <span>{t('tool-dna.ui.complementaryStrand53')}</span>
                 </div>
               </>
             )}
@@ -576,7 +580,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Input Strand Direction (5' → 3')" : "Complementary Strand Direction (5' → 3')"}
+                  {t(isTopSense ? 'tool-dna.ui.inputDirection53' : 'tool-dna.ui.complementaryDirection53')}
                 </text>
               </g>
 
@@ -601,7 +605,7 @@ export default function DnaConverter() {
                   fontSize="10" 
                   fontWeight="600"
                 >
-                  {isTopSense ? "Complementary Strand Direction (3' → 5')" : "Input Strand Direction (3' → 5')"}
+                  {t(isTopSense ? 'tool-dna.ui.complementaryDirection35' : 'tool-dna.ui.inputDirection35')}
                 </text>
               </g>
             </svg>
@@ -613,69 +617,69 @@ export default function DnaConverter() {
 
   return (
     <Card id="tool-dna" variant="tool" size="wide">
-      <ToolHeader title="DNA/RNA Direction Transfer" />
+      <ToolHeader title={t('tool-dna.title')} />
       
       <div className="flex flex-col md:flex-row gap-4 w-full">
         <div className="flex flex-col gap-2 w-full flex-1">
-          <label className="text-sm font-semibold text-text-main" htmlFor="dna-seq-type">Sequence Type</label>
+          <label className="text-sm font-semibold text-text-main" htmlFor="dna-seq-type">{t('tool-dna.ui.sequenceType')}</label>
           <select
             id="dna-seq-type"
             className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
             value={seqType}
             onChange={(e) => setSeqType(e.target.value)}
           >
-            <option value="auto">Auto-detect (DNA/RNA)</option>
+            <option value="auto">{t('tool-dna.ui.autoDetect')}</option>
             <option value="dna">DNA</option>
             <option value="rna">RNA</option>
           </select>
         </div>
         <div className="flex flex-col gap-2 w-full flex-1">
-          <label className="text-sm font-semibold text-text-main" htmlFor="dna-direction">Input Direction</label>
+          <label className="text-sm font-semibold text-text-main" htmlFor="dna-direction">{t('tool-dna.ui.inputDirection')}</label>
           <select
             id="dna-direction"
             className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card"
             value={direction}
             onChange={(e) => setDirection(e.target.value)}
           >
-            <option value="5-3">5' → 3' (Default)</option>
+            <option value="5-3">{t('tool-dna.ui.defaultDirection')}</option>
             <option value="3-5">3' → 5'</option>
           </select>
         </div>
         <div className="flex flex-col gap-2 w-full flex-1">
-          <label className="text-sm font-semibold text-text-main">Codon Display</label>
-          <div className="flex h-10 w-full rounded-md border border-border bg-app p-1" role="group" aria-label="Codon Display Mode">
+          <label className="text-sm font-semibold text-text-main">{t('tool-dna.ui.codonDisplay')}</label>
+          <div className="flex h-10 w-full rounded-md border border-border bg-app p-1" role="group" aria-label={t('tool-dna.ui.codonDisplayAria')}>
             <button
               type="button"
               className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'none' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('none')}
             >
-              Standard
+              {t('tool-dna.ui.standard')}
             </button>
             <button
               type="button"
               className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'codon' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('codon')}
             >
-              Codons
+              {t('tool-dna.ui.codons')}
             </button>
             <button
               type="button"
               className={`flex-1 bg-transparent border-none rounded py-1 text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 flex items-center justify-center text-center leading-none hover:text-text-main ${codonMode === 'amino' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
               onClick={() => setCodonMode('amino')}
             >
-              Amino Acids
+              {t('tool-dna.ui.aminoAcids')}
             </button>
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 w-full">
-        <label className="text-sm font-semibold text-text-main" htmlFor="dna-input">DNA/RNA Sequence</label>
+        <label className="text-sm font-semibold text-text-main" htmlFor="dna-input">{t('tool-dna.ui.sequence')}</label>
         <textarea
           id="dna-input"
           className="w-full px-3.5 py-2.5 text-[0.92rem] rounded border border-border bg-app text-text-main outline-none transition-all duration-200 hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus focus:bg-card resize-none"
           rows={3}
-          placeholder="Enter sequence (e.g., 5'-CACGT-3' or simply CACGT)"
+          placeholder={t('tool-dna.ui.placeholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
@@ -688,14 +692,14 @@ export default function DnaConverter() {
             className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'text' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
             onClick={() => setViewMode('text')}
           >
-            Text Mode
+            {t('tool-dna.ui.textMode')}
           </button>
           <button
             type="button"
             className={`bg-transparent border-none py-1.5 px-4 rounded text-sm font-semibold text-text-muted cursor-pointer transition-all duration-200 hover:text-text-main ${viewMode === 'figure' ? 'bg-card text-accent shadow-sm dark:shadow-md' : ''}`}
             onClick={() => setViewMode('figure')}
           >
-            Figure Mode
+            {t('tool-dna.ui.figureMode')}
           </button>
         </div>
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-app px-3 py-2 text-sm font-semibold text-text-main">
@@ -708,7 +712,7 @@ export default function DnaConverter() {
             }}
             className="h-4 w-4 accent-accent"
           />
-          Copy without 5'/3' labels
+          {t('tool-dna.ui.copyWithoutLabels')}
         </label>
       </div>
 
@@ -716,12 +720,12 @@ export default function DnaConverter() {
         <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-3">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex justify-between items-center mb-0.5">
-              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-opposite">Opposite Strand (3' ↔ 5' Swap)</label>
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-opposite">{t('tool-dna.ui.oppositeStrand')}</label>
               <button
                 className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'opposite' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.opposite, 'opposite')}
               >
-                {copiedBtn === 'opposite' ? 'Copied!' : 'Copy'}
+                {t(copiedBtn === 'opposite' ? 'tool-dna.ui.copied' : 'tool-dna.ui.copy')}
               </button>
             </div>
             <input 
@@ -734,12 +738,12 @@ export default function DnaConverter() {
           </div>
           <div className="flex flex-col gap-2 w-full">
             <div className="flex justify-between items-center mb-0.5">
-              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-revcomp">Reverse Complement (Standard 5' → 3')</label>
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-revcomp">{t('tool-dna.ui.reverseComplement')}</label>
               <button
                 className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'revcomp' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.revcomp, 'revcomp')}
               >
-                {copiedBtn === 'revcomp' ? 'Copied!' : 'Copy'}
+                {t(copiedBtn === 'revcomp' ? 'tool-dna.ui.copied' : 'tool-dna.ui.copy')}
               </button>
             </div>
             <input 
@@ -752,12 +756,12 @@ export default function DnaConverter() {
           </div>
           <div className="flex w-full flex-col gap-2">
             <div className="flex justify-between items-center mb-0.5">
-              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-reverse">Same Strand (Reverse Direction)</label>
+              <label className="text-sm font-semibold text-text-main" htmlFor="dna-output-reverse">{t('tool-dna.ui.sameStrand')}</label>
               <button
                 className={`px-2.5 py-1 text-xs font-semibold rounded-sm bg-accent-light text-accent border border-accent/15 dark:border-accent/30 cursor-pointer transition-all duration-200 leading-none hover:bg-accent hover:text-white hover:border-accent ${copiedBtn === 'reverse' ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' : ''}`}
                 onClick={() => handleCopy(outputs.reverse, 'reverse')}
               >
-                {copiedBtn === 'reverse' ? 'Copied!' : 'Copy'}
+                {t(copiedBtn === 'reverse' ? 'tool-dna.ui.copied' : 'tool-dna.ui.copy')}
               </button>
             </div>
             <input 
@@ -774,7 +778,7 @@ export default function DnaConverter() {
       )}
       {input.trim() && statusText && <p className="text-sm font-medium text-red-500" id="dna-status" style={statusStyle}>{statusText}</p>}
       <p className="text-xs text-text-muted mt-1">
-        Supports standard bases (A, C, G, T, U) and full IUPAC ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N). N represents any or unknown nucleotide.
+        {t('tool-dna.ui.supportNote')}
       </p>
     </Card>
   );

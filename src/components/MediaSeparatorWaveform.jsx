@@ -38,7 +38,7 @@ export default function MediaSeparatorWaveform({ audioURL, className }) {
         } finally {
           ctx.close();
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) setPeaks([]);
       }
     }

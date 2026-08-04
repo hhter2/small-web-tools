@@ -87,7 +87,7 @@ export async function lookupIpGeolocation(ip = '', options = {}) {
 
   if (typeof fetchImpl !== 'function') throw new Error('Fetch is unavailable');
 
-  let lastError = null;
+  let lastErrorMessage = '';
   for (const provider of getIpLookupProviders(ip)) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -99,12 +99,12 @@ export async function lookupIpGeolocation(ip = '', options = {}) {
       });
       return normalizeProviderResponse(provider.name, data);
     } catch (error) {
-      lastError = error;
+      lastErrorMessage = error instanceof Error ? error.message : String(error);
       onProviderError(provider, error);
     } finally {
       clearTimeout(timer);
     }
   }
 
-  throw new Error(lastError?.message || 'All IP lookup providers failed');
+  throw new Error(lastErrorMessage || 'All IP lookup providers failed');
 }

@@ -4,7 +4,7 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import FullscreenPreview, { FullscreenPreviewButton } from './ui/FullscreenPreview';
 import ToolHeader from './ui/ToolHeader';
-import { highlightCode, normalizeCodeLanguage } from './CodePreviewer/lib/codePreviewDomain';
+import { highlightCode, normalizeCodeLanguage } from '../lib/codeHighlighting.js';
 import {
   MARKDOWN_FILE_LIMIT_BYTES,
   normalizeMarkdownFilename,

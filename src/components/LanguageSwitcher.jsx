@@ -18,8 +18,11 @@ export default function LanguageSwitcher({
   const { t, i18n } = useTranslation('common');
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  /** @type {React.MutableRefObject<HTMLDivElement | null>} */
   const containerRef = useRef(null);
+  /** @type {React.MutableRefObject<HTMLButtonElement | null>} */
   const triggerRef = useRef(null);
+  /** @type {React.MutableRefObject<Array<HTMLButtonElement | null>>} */
   const itemRefs = useRef([]);
   const menuId = `language-menu-${useId().replaceAll(':', '')}`;
   const isMobile = variant === 'mobile';
@@ -132,8 +135,7 @@ export default function LanguageSwitcher({
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        onClick={(event) => {
-          event.stopPropagation();
+        onClick={() => {
           if (isOpen) {
             closeMenu();
           } else {
@@ -201,10 +203,7 @@ export default function LanguageSwitcher({
               tabIndex={activeIndex === index ? 0 : -1}
               className={`w-full rounded-sm border-none px-3 py-2 text-left text-[0.8rem] font-medium ${i18n.resolvedLanguage === locale ? 'bg-accent-light text-accent' : 'bg-transparent text-text-main hover:bg-nav-hover-bg'}`}
               onFocus={() => setActiveIndex(index)}
-              onClick={(event) => {
-                event.stopPropagation();
-                selectLocale(locale);
-              }}
+              onClick={() => selectLocale(locale)}
             >
               {t(`language.${locale}`)}
             </button>

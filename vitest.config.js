@@ -1,6 +1,20 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+const DOMAIN_BASELINE = {
+  lines: 80,
+  functions: 80,
+  branches: 70,
+  statements: 80,
+};
+
+const UI_BASELINE = {
+  lines: 20,
+  functions: 20,
+  branches: 15,
+  statements: 20,
+};
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -11,30 +25,27 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/lib/**', 'functions/_shared/**', 'functions/api/**'],
+      include: [
+        'src/lib/**',
+        'functions/_shared/**',
+        'functions/api/**',
+        'src/toolRegistry.js',
+        'src/toolModes.js',
+        'src/components/LanguageSwitcher.jsx',
+        'src/components/ui/{Button,Card,FieldInput,FullscreenPreview,ToolHeader}.jsx',
+      ],
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 70,
-        statements: 80,
-        'src/lib/**': {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
-        'functions/_shared/**': {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
-        'functions/api/**': {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
+        lines: 60,
+        functions: 60,
+        branches: 50,
+        statements: 60,
+        'src/lib/**': DOMAIN_BASELINE,
+        'functions/_shared/**': DOMAIN_BASELINE,
+        'functions/api/**': DOMAIN_BASELINE,
+        'src/toolRegistry.js': UI_BASELINE,
+        'src/toolModes.js': UI_BASELINE,
+        'src/components/LanguageSwitcher.jsx': UI_BASELINE,
+        'src/components/ui/**': UI_BASELINE,
       },
     },
   },

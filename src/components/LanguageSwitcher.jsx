@@ -13,7 +13,7 @@ function clampIndex(index) {
 export default function LanguageSwitcher({
   variant = 'desktop',
   className = '',
-  onOpen,
+  onOpen = () => {},
 }) {
   const { t, i18n } = useTranslation('common');
   const [isOpen, setIsOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function LanguageSwitcher({
   };
 
   const openMenu = (nextIndex = currentLocaleIndex) => {
-    onOpen?.();
+    onOpen();
     setActiveIndex(clampIndex(nextIndex));
     setIsOpen(true);
   };

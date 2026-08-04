@@ -24,8 +24,10 @@
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
     "lint": "eslint src functions workers test scripts e2e --max-warnings 68",
-    "typecheck": "tsc --project jsconfig.json --noEmit",
-    "typecheck:strict": "tsc --project jsconfig.strict.json --noEmit",
+    "typecheck": "npm run typecheck:baseline && npm run typecheck:domain && npm run typecheck:ui",
+    "typecheck:baseline": "tsc --project jsconfig.json --noEmit",
+    "typecheck:domain": "tsc --project jsconfig.domain.json --noEmit",
+    "typecheck:ui": "tsc --project jsconfig.ui.json --noEmit",
     "docs:check": "node scripts/check-doc-consistency.mjs",
     "test": "vitest",
     "test:run": "vitest run",
@@ -36,11 +38,10 @@
     "test:ssrf-runtime": "node scripts/verify-ssrf-cloudflare-runtime.mjs",
     "deps:check": "knip --dependencies --no-progress",
     "audit": "npm audit --audit-level=moderate",
-    "verify": "npm run version:check && npm run i18n:check && npm run i18n:audit && npm run lint && npm run typecheck && npm run typecheck:strict && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check && npm run docs:check"
+    "verify": "npm run version:check && npm run i18n:check && npm run i18n:audit && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check && npm run docs:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
-    "@eslint/js": "9.39.5",
     "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^24.13.3",
@@ -49,6 +50,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.5.2",
+    "@eslint/js": "9.39.5",
     "eslint": "9.39.5",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",

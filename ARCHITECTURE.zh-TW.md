@@ -82,6 +82,15 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 
 dist/ 是 npm run build 產生的目錄，刻意被忽略。
 
+## 型別檢查邊界
+
+JavaScript 遷移使用三個明確的 TypeScript checkJs 專案。`jsconfig.json` 是廣泛的
+非 strict baseline；`jsconfig.domain.json` 保留既有的狹窄領域／共用 helper 邊界；
+`jsconfig.ui.json` 是漸進式共用 UI 邊界，啟用 `strictNullChecks`，初始涵蓋
+`LanguageSwitcher.jsx` 與其 i18n 相依項。CI 中的 `npm run typecheck` 會執行三個
+專案。新增排除必須維持最少並加以記錄；擴大 UI 邊界時必須在同一變更修正所有
+新揭露的錯誤。
+
 ## 應用程式架構
 
 ### 入口與 shell

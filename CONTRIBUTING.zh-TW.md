@@ -71,9 +71,13 @@ npm run audit
 接受 Cloudflare 當前的服務條款與隱私權政策時，才可執行。指令會遮蔽 bearer 與
 認領憑證；絕不要把全域 Wrangler 設定或認領 URL 貼入記錄。
 
-npm run verify 會執行 Git 標籤版本解析、Lint 警告預算、一般與嚴格 checkJs、
-覆蓋率、建置／套件大小、標頭、網路清單、Cloudflare 設定與文件一致性檢查。
-CI 會在 Node 22 與 Node 24 上執行。
+npm run verify 會執行 Git 標籤版本解析、Lint 警告預算、baseline、domain 與 UI
+三個 checkJs 專案、覆蓋率、建置／套件大小、標頭、網路清單、Cloudflare 設定與
+文件一致性檢查。CI 會在 Node 22 與 Node 24 上執行。`npm run typecheck:baseline`
+檢查未啟用 strict mode 的廣泛 JavaScript 圖；`npm run typecheck:domain` 保留既有的
+領域／共用 helper 邊界；`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界
+啟用 `strictNullChecks`。只有在同一變更中修正錯誤時才擴大該邊界，並讓
+`jsconfig.ui.json` 的排除項目維持最少且有文件說明。
 
 ## 工程標準
 

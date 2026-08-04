@@ -30,7 +30,7 @@ export default function LanguageSwitcher({
   );
 
   const restoreTriggerFocus = () => {
-    requestAnimationFrame(() => triggerRef.current?.focus());
+    queueMicrotask(() => triggerRef.current?.focus());
   };
 
   const closeMenu = ({ restoreFocus = false } = {}) => {
@@ -47,23 +47,23 @@ export default function LanguageSwitcher({
   const focusItem = (nextIndex) => {
     const normalizedIndex = clampIndex(nextIndex);
     setActiveIndex(normalizedIndex);
-    requestAnimationFrame(() => itemRefs.current[normalizedIndex]?.focus());
+    queueMicrotask(() => itemRefs.current[normalizedIndex]?.focus());
   };
 
   useEffect(() => {
     if (!isOpen) return undefined;
 
-    requestAnimationFrame(() => itemRefs.current[activeIndex]?.focus());
+    queueMicrotask(() => itemRefs.current[activeIndex]?.focus());
 
     const handlePointerDown = (event) => {
       if (!containerRef.current?.contains(event.target)) {
-        closeMenu();
+        setIsOpen(false);
       }
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isOpen]);
+  }, [activeIndex, isOpen]);
 
   const handleTriggerKeyDown = (event) => {
     if (event.key === 'ArrowDown') {

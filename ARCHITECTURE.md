@@ -99,6 +99,7 @@ small-web-tools/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
 │       ├── HomeGrid.jsx      Full and audience dashboard tool grid
 │       ├── SimpleHome.jsx    Search-first essential-tool launcher
+│       ├── LanguageSwitcher.jsx Shared responsive locale menu and focus lifecycle
 │       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
 │       ├── useMediaSeparator.js
@@ -131,6 +132,8 @@ small-web-tools/
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
 
+`src/components/LanguageSwitcher.jsx` is rendered directly by `App.jsx` in the mobile and desktop headers. It is the shared owner of locale options, menu state, keyboard navigation, and focus restoration; the desktop control is omitted in the Simple workspace.
+
 ### Internationalization runtime
 
 `src/i18n/index.js` initializes `i18next` with the `react-i18next` adapter and
@@ -141,7 +144,7 @@ English (`en-US`) is the default and fallback locale; Traditional Chinese
 
 Initial locale resolution is deterministic: a valid persisted value at
 `small-web-tools.locale` wins, then the browser's preferred languages, then
-English. The language menu in `App.jsx` calls `changeLocale()`, updates
+English. `src/components/LanguageSwitcher.jsx` calls `changeLocale()`, updates
 `document.documentElement.lang`, and persists only the normalized supported
 locale. Storage failures do not prevent an in-memory language change.
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import SimpleHome from './components/SimpleHome.jsx';
+import LanguageSwitcher from './components/LanguageSwitcher.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -16,7 +17,6 @@ import {
   isToolPath,
   localizeToolMode,
 } from './toolModes.js';
-import { changeLocale, SUPPORTED_LOCALES } from './i18n/index.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -168,7 +168,6 @@ export default function App() {
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
 
@@ -197,7 +196,6 @@ export default function App() {
   useEffect(() => {
     const handleOutsideClick = (e) => {
       setOpenDropdown(null);
-      setLangDropdownOpen(false);
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchFocused(false);
       }
@@ -494,6 +492,7 @@ export default function App() {
             </svg>
           </button>
           <span className="min-w-0 flex-1 truncate font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
+          <LanguageSwitcher variant="mobile" />
           <button
             type="button"
             onClick={() => (
@@ -905,50 +904,12 @@ export default function App() {
               </div>
 
               {/* Language Selector */}
-              <div className={`${modeProfile.simplified ? 'hidden' : 'block'} relative`}>
-                <button
-                  type="button"
-                  className={`flex items-center gap-[6px] bg-app border border-border pl-[10px] pr-2 rounded h-8 text-text-muted transition-all duration-150 cursor-pointer hover:border-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${langDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)] text-text-main' : ''}`}
-                  aria-label={t('common:language.label')}
-                  aria-haspopup="menu"
-                  aria-expanded={langDropdownOpen}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLangDropdownOpen((open) => !open);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  <svg className="flex-shrink-0 opacity-80 text-text-muted" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="2" y1="12" x2="22" y2="12"></line>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                  </svg>
-                  <span className="hidden select-none text-[0.8rem] font-medium text-text-main xl:inline">{t(`common:language.${i18n.resolvedLanguage}`)}</span>
-                  <svg className="flex-shrink-0 opacity-50 text-text-muted pointer-events-none ml-0.5" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                {langDropdownOpen && (
-                  <div role="menu" className="absolute top-full right-0 mt-2 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-1 min-w-[10rem] box-border shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1">
-                    {SUPPORTED_LOCALES.map((locale) => (
-                      <button
-                        key={locale}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={i18n.resolvedLanguage === locale}
-                        className={`w-full text-left px-3 py-[7px] border-none rounded-sm text-[0.8rem] font-medium cursor-pointer ${i18n.resolvedLanguage === locale ? 'text-accent bg-accent-light' : 'text-text-main bg-transparent hover:bg-nav-hover-bg'}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void changeLocale(locale);
-                          setLangDropdownOpen(false);
-                        }}
-                      >
-                        {t(`common:language.${locale}`)}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {!modeProfile.simplified && (
+                <LanguageSwitcher
+                  variant="desktop"
+                  onOpen={() => setOpenDropdown(null)}
+                />
+              )}
 
               {/* Theme Toggle (Desktop Header) */}
               <button

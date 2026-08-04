@@ -73,6 +73,7 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
+- src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
 - src/i18n/：地區設定解析、i18next 設定、持久化，以及成對的 en-US／zh-TW 命名空間資源。
 - functions/：共用無伺服器工具與 Cloudflare Pages API handler。
 - workers/：rate-limiter Worker。
@@ -103,6 +104,8 @@ src/App.jsx 負責應用程式 shell：
 Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵包屑、footer、搜尋、主題控制項
 與置中的工具工作區。
 
+`src/components/LanguageSwitcher.jsx` 由 `App.jsx` 直接渲染於行動與桌面 header。它是地區設定選項、選單狀態、鍵盤導覽與焦點復原的共用負責元件；Simple 工作區不渲染桌面控制項。
+
 ### 國際化執行階段
 
 `src/i18n/index.js` 以 `react-i18next` 初始化 `i18next`，載入
@@ -111,9 +114,9 @@ Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵�
 fallback，繁體中文 (`zh-TW`) 是第二個支援地區設定。
 
 初始地區設定按固定順序解析：有效的 `small-web-tools.locale` 儲存值優先，其次是
-瀏覽器偏好的語言，最後使用 `en-US`。`App.jsx` 的語言選單呼叫 `changeLocale()`，更新
-`document.documentElement.lang`，並只儲存正規化後的支援地區設定；儲存失敗不會阻止
-記憶體中的切換。
+瀏覽器偏好的語言，最後使用 `en-US`。`src/components/LanguageSwitcher.jsx` 呼叫
+`changeLocale()`，更新 `document.documentElement.lang`，並只儲存正規化後的支援地區設定；
+儲存失敗不會阻止記憶體中的切換。
 
 路由 ID、URL 路徑、工具 ID、檔案副檔名、協定名稱等互通性識別碼保持穩定。
 `toolRegistry.js` 將這些識別碼與標題、描述、tooltip、搜尋中繼資料分離；英文搜尋詞

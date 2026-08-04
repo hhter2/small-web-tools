@@ -1,10 +1,10 @@
 # Language switcher architecture
 
-The responsive language controls are owned by one React application tree.
+The responsive language controls are rendered directly by `App.jsx` in one React application tree.
 
 - `src/components/LanguageSwitcher.jsx` is the only implementation of locale choices, selection, menu state, keyboard navigation, and focus restoration.
-- `src/components/LanguageSwitcherProvider.jsx` wraps `App` and places desktop and mobile presentations into the existing shell positions.
-- `src/main.jsx` mounts the provider and `App` as one root hierarchy. The former standalone `MobileLanguageSwitcher` root child is removed.
-- The legacy language markup in `App.jsx` remains temporarily hidden by the provider to keep this change isolated from the large application-shell component. It does not own active locale behavior.
+- `App.jsx` renders the mobile variant in `#mobile-header` and the desktop variant in the desktop control group.
+- The desktop variant is omitted in the Simple workspace to preserve the shell visibility contract.
+- `src/main.jsx` mounts `App` directly. No language-switcher portal or secondary mount is used.
 
-The menu follows the ARIA menu-button pattern with `menuitemradio` options. Opening moves focus to the selected locale. Arrow keys, Home, End, Escape, pointer selection, outside-pointer dismissal, and trigger-focus restoration are covered by `src/tests/languageSwitcher.test.jsx`.
+The menu follows the ARIA menu-button pattern with `menuitemradio` options. Opening moves focus to the selected locale. Arrow keys, Home, End, Escape, pointer selection, outside-pointer dismissal, and trigger-focus restoration are covered by `src/tests/languageSwitcher.test.jsx`; real header placement and workspace visibility are covered by `e2e/language-switcher.spec.js`.

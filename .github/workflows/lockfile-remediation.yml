@@ -1,0 +1,44 @@
+name: Lockfile remediation
+
+on:
+  push:
+    branches:
+      - agent/fix-language-switcher-focus
+
+permissions:
+  contents: read
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Use repository npm version
+        shell: bash
+        run: |
+          NPM_VERSION="$(node -p "require('./package.json').packageManager.replace(/^npm@/, '')")"
+          npm install --global "npm@${NPM_VERSION}"
+
+      - name: Generate secure lockfile
+        run: |
+          npm pkg set overrides.brace-expansion=5.0.9
+          npm pkg set overrides.undici=7.29.0
+          npm install --package-lock-only --ignore-scripts
+          npm audit --audit-level=moderate
+
+      - name: Upload remediated manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: remediated-manifests
+          path: |
+            package.json
+            package-lock.json
+          retention-days: 1

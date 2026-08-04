@@ -9,9 +9,26 @@ function run(command, args, options = {}) {
   });
 }
 
-const mergeBase = run('git', ['merge-base', 'HEAD', 'origin/develop'], { capture: true });
+function resolveBaseRef() {
+  const explicitBase = process.env.LINT_BASE_REF?.trim();
+  if (explicitBase) return explicitBase;
+
+  const pullRequestBase = process.env.GITHUB_BASE_REF?.trim();
+  if (pullRequestBase) return `origin/${pullRequestBase}`;
+
+  const parent = run('git', ['rev-parse', '--verify', 'HEAD^'], { capture: true });
+  return parent.status === 0 ? 'HEAD^' : null;
+}
+
+const baseRef = resolveBaseRef();
+if (!baseRef) {
+  console.log('Changed-file lint skipped: no comparison base is available.');
+  process.exit(0);
+}
+
+const mergeBase = run('git', ['merge-base', 'HEAD', baseRef], { capture: true });
 if (mergeBase.status !== 0) {
-  console.log('Changed-file lint skipped: origin/develop is unavailable.');
+  console.log(`Changed-file lint skipped: ${baseRef} is unavailable.`);
   process.exit(0);
 }
 
@@ -33,10 +50,10 @@ const files = changed.stdout
   .filter((file) => SOURCE_PATTERN.test(file));
 
 if (files.length === 0) {
-  console.log('Changed-file lint: no changed JavaScript files.');
+  console.log(`Changed-file lint: no changed JavaScript files relative to ${baseRef}.`);
   process.exit(0);
 }
 
-console.log(`Changed-file lint: checking ${files.length} file(s) with zero warnings allowed.`);
+console.log(`Changed-file lint: checking ${files.length} file(s) relative to ${baseRef} with zero warnings allowed.`);
 const lint = run('npx', ['eslint', '--max-warnings', '0', ...files]);
 process.exit(lint.status || 0);

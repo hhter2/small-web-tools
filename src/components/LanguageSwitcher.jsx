@@ -27,9 +27,10 @@ export default function LanguageSwitcher({
   const menuId = `language-menu-${useId().replaceAll(':', '')}`;
   const isMobile = variant === 'mobile';
 
+  const currentLocale = i18n.resolvedLanguage ?? i18n.language ?? SUPPORTED_LOCALES[0];
   const currentLocaleIndex = Math.max(
     0,
-    SUPPORTED_LOCALES.indexOf(i18n.resolvedLanguage),
+    SUPPORTED_LOCALES.indexOf(currentLocale),
   );
 
   const restoreTriggerFocus = () => {
@@ -163,7 +164,7 @@ export default function LanguageSwitcher({
         {!isMobile && (
           <>
             <span className="hidden select-none text-[0.8rem] font-medium text-text-main xl:inline">
-              {t(`language.${i18n.resolvedLanguage}`)}
+              {t(`language.${currentLocale}`)}
             </span>
             <svg
               className="ml-0.5 shrink-0 opacity-50"
@@ -199,9 +200,9 @@ export default function LanguageSwitcher({
               }}
               type="button"
               role="menuitemradio"
-              aria-checked={i18n.resolvedLanguage === locale}
+              aria-checked={currentLocale === locale}
               tabIndex={activeIndex === index ? 0 : -1}
-              className={`w-full rounded-sm border-none px-3 py-2 text-left text-[0.8rem] font-medium ${i18n.resolvedLanguage === locale ? 'bg-accent-light text-accent' : 'bg-transparent text-text-main hover:bg-nav-hover-bg'}`}
+              className={`w-full rounded-sm border-none px-3 py-2 text-left text-[0.8rem] font-medium ${currentLocale === locale ? 'bg-accent-light text-accent' : 'bg-transparent text-text-main hover:bg-nav-hover-bg'}`}
               onFocus={() => setActiveIndex(index)}
               onClick={() => selectLocale(locale)}
             >

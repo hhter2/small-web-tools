@@ -1,0 +1,48 @@
+name: Issue 48 docs
+on:
+  push:
+    branches: [agent/typecheck-scope-strict-ui]
+permissions:
+  contents: write
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/typecheck-scope-strict-ui
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Update paired guidance
+        shell: python
+        run: |
+          from pathlib import Path
+          replacements = {
+            'CONTRIBUTING.md': ("`npm run verify` runs Git-tag version resolution, lint-warning budget, normal and\nstrict checkJs, coverage, build/bundle, headers, network inventory, Cloudflare\nconfiguration, and documentation-consistency gates. CI runs it on Node 22 and\nNode 24.", "`npm run verify` runs Git-tag version resolution, lint-warning budget, the\nbaseline, domain, and UI checkJs projects, coverage, build/bundle, headers, network\ninventory, Cloudflare configuration, and documentation-consistency gates. CI runs\nit on Node 22 and Node 24. `npm run typecheck:baseline` checks the broad JavaScript\ngraph without strict mode, `npm run typecheck:domain` preserves the existing narrow\ndomain/shared-helper boundary, and `npm run typecheck:ui` enables `strictNullChecks`\nfor the explicitly listed shared UI migration boundary. Expand that boundary only\nwith fixes in the same change; keep exclusions minimal and documented in\n`jsconfig.ui.json`."),
+            'CONTRIBUTING.zh-TW.md': ("npm run verify 會執行 Git 標籤版本解析、Lint 警告預算、一般與嚴格 checkJs、\n覆蓋率、建置／套件大小、標頭、網路清單、Cloudflare 設定與文件一致性檢查。\nCI 會在 Node 22 與 Node 24 上執行。", "npm run verify 會執行 Git 標籤版本解析、Lint 警告預算、baseline、domain 與 UI\n三個 checkJs 專案、覆蓋率、建置／套件大小、標頭、網路清單、Cloudflare 設定與\n文件一致性檢查。CI 會在 Node 22 與 Node 24 上執行。`npm run typecheck:baseline`\n檢查未啟用 strict mode 的廣泛 JavaScript 圖；`npm run typecheck:domain` 保留既有的\n領域／共用 helper 邊界；`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界\n啟用 `strictNullChecks`。只有在同一變更中修正錯誤時才擴大該邊界，並讓\n`jsconfig.ui.json` 的排除項目維持最少且有文件說明。")
+          }
+          for filename, (old, new) in replacements.items():
+            path=Path(filename); text=path.read_text()
+            if old not in text: raise SystemExit(f'missing anchor {filename}')
+            path.write_text(text.replace(old,new,1))
+          architecture = [
+            ('ARCHITECTURE.md','## Application architecture',"## Type-checking boundaries\n\nThe JavaScript migration uses three explicit TypeScript checkJs projects.\n`jsconfig.json` is the broad non-strict baseline. `jsconfig.domain.json` preserves\nthe existing narrow domain/shared-helper boundary. `jsconfig.ui.json` is the\nincremental shared-UI boundary; it enables `strictNullChecks` and initially covers\n`LanguageSwitcher.jsx` plus its i18n dependency. `npm run typecheck` executes all\nthree projects in CI. New exclusions must remain minimal and documented, and an\nexpanded UI boundary must fix every newly exposed error in the same change.\n\n"),
+            ('ARCHITECTURE.zh-TW.md','## 應用程式架構',"## 型別檢查邊界\n\nJavaScript 遷移使用三個明確的 TypeScript checkJs 專案。`jsconfig.json` 是廣泛的\n非 strict baseline；`jsconfig.domain.json` 保留既有的狹窄領域／共用 helper 邊界；\n`jsconfig.ui.json` 是漸進式共用 UI 邊界，啟用 `strictNullChecks`，初始涵蓋\n`LanguageSwitcher.jsx` 與其 i18n 相依項。CI 中的 `npm run typecheck` 會執行三個\n專案。新增排除必須維持最少並加以記錄；擴大 UI 邊界時必須在同一變更修正所有\n新揭露的錯誤。\n\n")]
+          for filename, anchor, block in architecture:
+            path=Path(filename); text=path.read_text()
+            if anchor not in text: raise SystemExit(f'missing anchor {filename}')
+            path.write_text(text.replace(anchor,block+anchor,1))
+      - run: |
+          npm install --global npm@10.9.2
+          npm ci
+          npm run typecheck
+          npm run docs:check
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CONTRIBUTING.md CONTRIBUTING.zh-TW.md ARCHITECTURE.md ARCHITECTURE.zh-TW.md
+          git commit -m "docs: document explicit typecheck boundaries"
+          git push

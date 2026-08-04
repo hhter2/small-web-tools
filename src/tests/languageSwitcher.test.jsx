@@ -2,7 +2,6 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
-import LanguageSwitcherProvider from '../components/LanguageSwitcherProvider.jsx';
 import { changeLocale } from '../i18n/index.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -78,37 +77,5 @@ describe('LanguageSwitcher', () => {
       document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     });
     expect(container.querySelector('[role="menu"]')).toBeNull();
-  });
-});
-
-describe('LanguageSwitcherProvider', () => {
-  it('owns both responsive controls and retires the legacy desktop control', async () => {
-    await act(async () => root.render(
-      <LanguageSwitcherProvider>
-        <div>
-          <header id="mobile-header">
-            <button type="button">Menu</button>
-            <span>Small Web Tools</span>
-            <button type="button" data-simple-mode>Simple</button>
-          </header>
-          <header>
-            <div className="controls">
-              <div className="relative">
-                <input className="header-search-input" />
-              </div>
-              <div data-legacy-language>
-                <button type="button" aria-haspopup="menu">Legacy language</button>
-              </div>
-              <button type="button">Theme</button>
-            </div>
-          </header>
-        </div>
-      </LanguageSwitcherProvider>,
-    ));
-
-    expect(container.querySelectorAll('[data-language-switcher]')).toHaveLength(2);
-    expect(container.querySelector('[data-language-switcher="mobile"]'))
-      .toBe(document.querySelector('[data-language-switcher-mount="mobile"]')?.firstElementChild);
-    expect(container.querySelector('[data-legacy-language]')).toHaveStyle({ display: 'none' });
   });
 });

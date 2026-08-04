@@ -1,10 +1,10 @@
 # 語言切換器架構
 
-回應式語言控制項由同一棵 React 應用程式樹負責。
+回應式語言控制項由 `App.jsx` 直接渲染於同一棵 React 應用程式樹。
 
 - `src/components/LanguageSwitcher.jsx` 是地區設定選項、選取流程、選單狀態、鍵盤導覽與焦點復原的唯一實作。
-- `src/components/LanguageSwitcherProvider.jsx` 包住 `App`，並將桌面版與行動版呈現放入既有 shell 的位置。
-- `src/main.jsx` 以單一根階層掛載 provider 與 `App`。原本獨立並列的 `MobileLanguageSwitcher` 根子元件已移除。
-- `App.jsx` 中舊有的語言標記目前由 provider 隱藏，以避免此次修正同時大幅改動大型應用程式 shell；它不再負責實際的地區設定行為。
+- `App.jsx` 在 `#mobile-header` 渲染行動版，並在桌面控制群組渲染桌面版。
+- Simple 工作區不渲染桌面版，以保留既有 shell 顯示契約。
+- `src/main.jsx` 直接掛載 `App`；語言切換器不使用 portal 或第二個 mount。
 
-選單採用 ARIA menu button 模式，選項使用 `menuitemradio`。開啟時焦點會移至目前選取的地區設定；方向鍵、Home、End、Escape、指標選取、外部指標關閉，以及回復觸發按鈕焦點，皆由 `src/tests/languageSwitcher.test.jsx` 覆蓋。
+選單採用 ARIA menu button 模式，選項使用 `menuitemradio`。開啟時焦點會移至目前選取的地區設定；方向鍵、Home、End、Escape、指標選取、外部指標關閉及觸發按鈕焦點復原由 `src/tests/languageSwitcher.test.jsx` 覆蓋，實際 header 位置與工作區顯示狀態則由 `e2e/language-switcher.spec.js` 覆蓋。

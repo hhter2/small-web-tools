@@ -43,16 +43,25 @@ export default function MermaidConverter() {
   const fullscreenPreviewRef = useRef(null);
 
   const background = backgroundMode === 'transparent' ? 'transparent' : backgroundColor;
+  const previewAria = t('tool-mermaid.ui.previewAria');
   const characterCount = useMemo(() => source.length.toLocaleString(i18n.language), [i18n.language, source.length]);
+  const currentRender = render
+    && render.sourceSnapshot === source
+    && render.backgroundSnapshot === background
+    && render.ariaLabelSnapshot === previewAria
+    ? render
+    : null;
 
-  const performRender = useCallback(async () => {
-    const sequence = ++renderSequence.current;
+  const performRender = useCallback(async ({ sequence, sourceSnapshot, backgroundSnapshot, ariaLabelSnapshot }) => {
     setError('');
     setStatus(t('tool-mermaid.ui.status.rendering'));
     try {
-      const next = await renderMermaidToSvg(source, { background, ariaLabel: t('tool-mermaid.ui.previewAria') });
+      const next = await renderMermaidToSvg(sourceSnapshot, {
+        background: backgroundSnapshot,
+        ariaLabel: ariaLabelSnapshot,
+      });
       if (sequence !== renderSequence.current) return;
-      setRender(next);
+      setRender({ ...next, sourceSnapshot, backgroundSnapshot, ariaLabelSnapshot });
       setStatus(t('tool-mermaid.ui.status.rendered'));
     } catch (cause) {
       if (sequence !== renderSequence.current) return;
@@ -60,12 +69,29 @@ export default function MermaidConverter() {
       setStatus('');
       setError(t(`tool-mermaid.ui.errors.${cause instanceof Error ? cause.message : 'parseError'}`));
     }
-  }, [background, source, t]);
+  }, [t]);
+
+  const requestRender = useCallback(() => {
+    const sequence = ++renderSequence.current;
+    setRender(null);
+    void performRender({
+      sequence,
+      sourceSnapshot: source,
+      backgroundSnapshot: background,
+      ariaLabelSnapshot: previewAria,
+    });
+  }, [background, performRender, previewAria, source]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => void performRender(), 400);
+    const sequence = ++renderSequence.current;
+    const timeout = window.setTimeout(() => void performRender({
+      sequence,
+      sourceSnapshot: source,
+      backgroundSnapshot: background,
+      ariaLabelSnapshot: previewAria,
+    }), 400);
     return () => window.clearTimeout(timeout);
-  }, [performRender]);
+  }, [background, performRender, previewAria, source]);
 
   const handlePaste = async () => {
     try {
@@ -94,16 +120,16 @@ export default function MermaidConverter() {
   };
 
   const downloadSvg = () => {
-    if (!render) return;
+    if (!currentRender) return;
     const name = normalizeMermaidFilename(filename, 'svg');
-    downloadBlob(render.svg, 'image/svg+xml;charset=utf-8', name);
+    downloadBlob(currentRender.svg, 'image/svg+xml;charset=utf-8', name);
     setStatus(t('tool-mermaid.ui.status.downloaded', { filename: name }));
   };
 
   const downloadPng = async () => {
-    if (!render) return;
+    if (!currentRender) return;
     try {
-      const blob = await svgToPngBlob(render, pngScale);
+      const blob = await svgToPngBlob(currentRender, pngScale);
       const name = normalizeMermaidFilename(filename, 'png');
       downloadBlob(blob, 'image/png', name);
       setStatus(t('tool-mermaid.ui.status.downloaded', { filename: name }));
@@ -129,15 +155,15 @@ export default function MermaidConverter() {
           <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>{t('tool-mermaid.ui.paste')}</Button>
           <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>{t('tool-mermaid.ui.upload')}</Button>
           <input ref={fileInputRef} type="file" accept=".mmd,text/plain" onChange={handleFile} className="hidden" aria-label={t('tool-mermaid.ui.uploadAria')} />
-          <Button type="button" variant="primary" size="sm" onClick={() => void performRender()} disabled={!source.trim()}>{t('tool-mermaid.ui.render')}</Button>
+          <Button type="button" variant="primary" size="sm" onClick={requestRender} disabled={!source.trim()}>{t('tool-mermaid.ui.render')}</Button>
           <Button type="button" variant="secondary" size="sm" onClick={clear} disabled={!source}>{t('tool-mermaid.ui.clear')}</Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor="mermaid-filename" className="sr-only">{t('tool-mermaid.ui.filename')}</label>
           <input id="mermaid-filename" value={filename} onChange={(event) => setFilename(event.target.value)} aria-label={t('tool-mermaid.ui.filename')} className="w-40 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus" />
           <Button type="button" variant="secondary" size="sm" onClick={downloadMmd} disabled={!source}>{t('tool-mermaid.ui.downloadMmd')}</Button>
-          <Button type="button" variant="secondary" size="sm" onClick={downloadSvg} disabled={!render}>{t('tool-mermaid.ui.downloadSvg')}</Button>
-          <Button type="button" variant="secondary" size="sm" onClick={() => void downloadPng()} disabled={!render}>{t('tool-mermaid.ui.downloadPng')}</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={downloadSvg} disabled={!currentRender}>{t('tool-mermaid.ui.downloadSvg')}</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void downloadPng()} disabled={!currentRender}>{t('tool-mermaid.ui.downloadPng')}</Button>
         </div>
       </div>
       <div className="flex flex-wrap items-end gap-4 rounded-xl border border-border bg-app/40 p-3">
@@ -153,12 +179,12 @@ export default function MermaidConverter() {
         </section>
         <section className="flex min-h-[420px] min-w-0 flex-col lg:min-h-0" aria-labelledby="mermaid-preview-title">
           <div className="relative flex min-h-12 items-center justify-between border-b border-border bg-app/70 px-4 py-2 pr-14"><h3 id="mermaid-preview-title" className="text-sm font-bold text-text-main">{t('tool-mermaid.ui.previewTitle')}</h3><FullscreenPreviewButton label={t('tool-mermaid.ui.expandPreview')} onClick={() => setFocusedPanel('preview')} /></div>
-          <SvgPreview render={render} previewRef={previewRef} label={render ? t('tool-mermaid.ui.previewAria') : t('tool-mermaid.ui.emptyPreview')} />
+          <SvgPreview render={currentRender} previewRef={previewRef} label={currentRender ? previewAria : t('tool-mermaid.ui.emptyPreview')} />
         </section>
       </div>
       {(status || error) && <p role={error ? 'alert' : 'status'} className={`text-sm ${error ? 'text-danger' : 'text-text-muted'}`}>{error || status}</p>}
       <FullscreenPreview open={focusedPanel !== null} title={focusedPanel === 'editor' ? t('tool-mermaid.ui.editorTitle') : t('tool-mermaid.ui.previewTitle')} onClose={() => setFocusedPanel(null)}>
-        {focusedPanel === 'editor' ? <textarea ref={fullscreenTextareaRef} value={source} onChange={(event) => setSource(event.target.value)} spellCheck="false" className="h-full w-full resize-none bg-card p-5 font-mono text-sm leading-6 text-text-main outline-none" aria-label={t('tool-mermaid.ui.editorAria')} /> : <SvgPreview render={render} previewRef={fullscreenPreviewRef} label={render ? t('tool-mermaid.ui.previewAria') : t('tool-mermaid.ui.emptyPreview')} className="bg-card" />}
+        {focusedPanel === 'editor' ? <textarea ref={fullscreenTextareaRef} value={source} onChange={(event) => setSource(event.target.value)} spellCheck="false" className="h-full w-full resize-none bg-card p-5 font-mono text-sm leading-6 text-text-main outline-none" aria-label={t('tool-mermaid.ui.editorAria')} /> : <SvgPreview render={currentRender} previewRef={fullscreenPreviewRef} label={currentRender ? previewAria : t('tool-mermaid.ui.emptyPreview')} className="bg-card" />}
       </FullscreenPreview>
     </Card>
   );

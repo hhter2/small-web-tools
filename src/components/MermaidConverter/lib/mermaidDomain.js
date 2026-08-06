@@ -6,6 +6,8 @@ export const MAX_PNG_PIXELS = 32_000_000;
 const SAFE_FILENAME = /[^a-z0-9._-]+/gi;
 const BLOCKED_ELEMENTS = 'script,foreignObject,iframe,object,embed,image,audio,video,canvas';
 const UNSAFE_VALUE = /(?:javascript:|vbscript:|data:text\/html|@import|-moz-binding|expression\s*\()/i;
+const UNSAFE_STYLESHEET = /(?:@import\b|(?:url|image-set|-webkit-image-set|cross-fade)\s*\(|-moz-binding\s*:|expression\s*\()/i;
+const CSS_ESCAPE = /\\(?:[0-9a-f]{1,6}\s?|.)/i;
 let mermaidPromise;
 let renderCounter = 0;
 
@@ -45,6 +47,15 @@ async function loadMermaid() {
 function unwrapLinks(document) {
   for (const link of [...document.querySelectorAll('a')]) {
     link.replaceWith(...link.childNodes);
+  }
+}
+
+function sanitizeStyleElements(document) {
+  for (const style of [...document.querySelectorAll('style')]) {
+    const stylesheet = (style.textContent || '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (UNSAFE_STYLESHEET.test(stylesheet) || CSS_ESCAPE.test(stylesheet)) {
+      style.remove();
+    }
   }
 }
 
@@ -100,6 +111,7 @@ export function sanitizeMermaidSvg(svg, options = {}) {
 
   document.querySelectorAll(BLOCKED_ELEMENTS).forEach((element) => element.remove());
   unwrapLinks(document);
+  sanitizeStyleElements(document);
   sanitizeAttributes(document);
 
   root.setAttribute('xmlns', 'http://www.w3.org/2000/svg');

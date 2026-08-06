@@ -1,0 +1,38 @@
+name: Issue 57 lockfile generation
+
+on:
+  push:
+    branches:
+      - feature/issue-57-mermaid-converter
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/issue-57-mermaid-converter
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Use repository npm version
+        run: npm install --global "npm@$(node -p \"require('./package.json').packageManager.replace(/^npm@/, '')\")"
+      - name: Refresh lockfile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: lock Mermaid dependency"
+          git push

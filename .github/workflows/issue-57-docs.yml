@@ -1,0 +1,56 @@
+name: Issue 57 documentation update
+
+on:
+  push:
+    branches:
+      - feature/issue-57-mermaid-converter
+    paths:
+      - .github/workflows/issue-57-docs.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/issue-57-mermaid-converter
+      - name: Add Mermaid route inventory entries
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'ARCHITECTURE.md': (
+                  '| `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |',
+                  '| `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |\n| `tool-mermaid` | Mermaid Converter | `MermaidConverter.jsx` | Developer |',
+              ),
+              'ARCHITECTURE.zh-TW.md': (
+                  '| `tool-markdown` | Markdown 預覽器 | `MarkdownPreviewer.jsx` | 開發者 |',
+                  '| `tool-markdown` | Markdown 預覽器 | `MarkdownPreviewer.jsx` | 開發者 |\n| `tool-mermaid` | Mermaid 轉換器 | `MermaidConverter.jsx` | 開發者 |',
+              ),
+          }
+
+          for filename, (needle, replacement) in replacements.items():
+              path = Path(filename)
+              content = path.read_text()
+              if '`tool-mermaid`' in content:
+                  continue
+              if needle not in content:
+                  raise SystemExit(f'Expected route row not found in {filename}')
+              path.write_text(content.replace(needle, replacement, 1))
+          PY
+      - name: Commit documentation
+        shell: bash
+        run: |
+          if git diff --quiet -- ARCHITECTURE.md ARCHITECTURE.zh-TW.md; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ARCHITECTURE.md ARCHITECTURE.zh-TW.md
+          git commit -m "docs: add Mermaid route inventory"
+          git push origin HEAD:feature/issue-57-mermaid-converter

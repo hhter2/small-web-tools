@@ -193,6 +193,7 @@ public/fonts/MANIFEST.zh-TW.md。應用程式不會自動要求 Google Fonts。
 | tool-unicode | Unicode 轉換器 | UnicodeConverter.jsx | 開發 |
 | tool-url | URL 編碼與解碼器 | UrlEncoderDecoder.jsx | 開發 |
 | tool-markdown | Markdown 預覽器 | MarkdownPreviewer.jsx | 開發 |
+| tool-mermaid | Mermaid 轉換器 | MermaidConverter.jsx | 開發 |
 | tool-code-preview | VS Code 預覽器 | CodePreviewer.jsx | 開發 |
 | tool-fontextractor | 網站字型擷取器 | WebsiteFontExtractor.jsx | 開發 |
 | tool-base | 進位轉換器 | BaseConverter.jsx | 開發 |

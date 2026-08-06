@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import FieldInput from './ui/FieldInput';
 import ToolHeader from './ui/ToolHeader';
 import ToggleSwitch from './ui/ToggleSwitch';
-import { calculateTimeDifference, formatTimeDifference } from './DateCounter/lib/timeDomain';
+import { calculateTimeDifference } from './DateCounter/lib/timeDomain';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,7 @@ function parseDateToUTC(dateString) {
 }
 
 export default function DateCounter() {
+  const { t, i18n } = useTranslation('tools');
   const [mode, setMode] = useState('date');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -28,26 +30,38 @@ export default function DateCounter() {
     const startMs = parseDateToUTC(startDate);
     const endMs = parseDateToUTC(endDate);
 
-    if (startMs === null || endMs === null) return 'Select both dates.';
+    if (startMs === null || endMs === null) return t('tool-date.ui.selectDates');
 
     const diffDays = Math.round((endMs - startMs) / MS_PER_DAY);
-    return `${diffDays} day(s) (end - start)`;
+    return t('tool-date.ui.dateDifference', {
+      count: diffDays,
+      formattedCount: diffDays.toLocaleString(i18n.language),
+    });
   };
 
   const calculateTimeDiff = () => {
     const difference = calculateTimeDifference(startTime, endTime, endNextDay);
-    if (difference === null) return 'Select both times.';
-    return formatTimeDifference(difference, endNextDay);
+    if (difference === null) return t('tool-date.ui.selectTimes');
+    const sign = difference < 0 ? '-' : '';
+    let remaining = Math.abs(difference);
+    const hours = Math.floor(remaining / 3600);
+    remaining %= 3600;
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    return t('tool-date.ui.timeDifference', {
+      sign, hours, minutes, seconds,
+      nextDay: endNextDay ? t('tool-date.ui.nextDay') : '',
+    });
   };
 
   return (
     <Card id="tool-date" variant="tool" size="compact">
-      <ToolHeader title="Date & Time Counter" />
+      <ToolHeader title={t('tool-date.title')} />
 
-      <div className="flex w-full rounded-md border border-border bg-app p-1" role="tablist" aria-label="Counter mode">
+      <div className="flex w-full rounded-md border border-border bg-app p-1" role="tablist" aria-label={t('tool-date.ui.modeAria')}>
         {[
-          { id: 'date', label: 'Date Counter' },
-          { id: 'time', label: 'Time Counter' },
+          { id: 'date', label: t('tool-date.ui.dateCounter') },
+          { id: 'time', label: t('tool-date.ui.timeCounter') },
         ].map((option) => (
           <button
             key={option.id}
@@ -70,7 +84,7 @@ export default function DateCounter() {
         <div role="tabpanel" className="flex w-full flex-col gap-4 sm:flex-row">
           <FieldInput
             id="date-start"
-            label="Start date"
+            label={t('tool-date.ui.startDate')}
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
@@ -78,7 +92,7 @@ export default function DateCounter() {
           />
           <FieldInput
             id="date-end"
-            label="End date"
+            label={t('tool-date.ui.endDate')}
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
@@ -90,7 +104,7 @@ export default function DateCounter() {
           <div className="flex w-full flex-col gap-4 sm:flex-row">
             <FieldInput
               id="time-start"
-              label="Start time"
+              label={t('tool-date.ui.startTime')}
               type="time"
               step="1"
               value={startTime}
@@ -99,7 +113,7 @@ export default function DateCounter() {
             />
             <FieldInput
               id="time-end"
-              label="End time"
+              label={t('tool-date.ui.endTime')}
               type="time"
               step="1"
               value={endTime}
@@ -111,7 +125,7 @@ export default function DateCounter() {
             id="time-end-next-day"
             checked={endNextDay}
             onChange={(event) => setEndNextDay(event.target.checked)}
-            label="End time is on the next day"
+            label={t('tool-date.ui.endNextDay')}
           />
         </div>
       )}

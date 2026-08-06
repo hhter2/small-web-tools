@@ -17,13 +17,18 @@
     "bundle:check": "node scripts/check-bundle.mjs",
     "headers:check": "node scripts/check-headers.mjs",
     "external-hosts:check": "node scripts/check-external-hosts.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "i18n:audit": "node scripts/check-hardcoded-ui.mjs",
     "platform:check": "node scripts/check-cloudflare-config.mjs",
     "platform:integration": "node scripts/check-rate-limit-integration.mjs",
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
-    "lint": "eslint src functions workers test scripts e2e --max-warnings 68",
-    "typecheck": "tsc --project jsconfig.json --noEmit",
-    "typecheck:strict": "tsc --project jsconfig.strict.json --noEmit",
+    "lint": "eslint src functions workers test scripts e2e --max-warnings 67",
+    "lint:changed": "node scripts/check-changed-lint.mjs",
+    "typecheck": "npm run typecheck:baseline && npm run typecheck:domain && npm run typecheck:ui",
+    "typecheck:baseline": "tsc --project jsconfig.json --noEmit",
+    "typecheck:domain": "tsc --project jsconfig.domain.json --noEmit",
+    "typecheck:ui": "tsc --project jsconfig.ui.json --noEmit",
     "docs:check": "node scripts/check-doc-consistency.mjs",
     "test": "vitest",
     "test:run": "vitest run",
@@ -34,12 +39,11 @@
     "test:ssrf-runtime": "node scripts/verify-ssrf-cloudflare-runtime.mjs",
     "deps:check": "knip --dependencies --no-progress",
     "audit": "npm audit --audit-level=moderate",
-    "verify": "npm run version:check && npm run lint && npm run typecheck && npm run typecheck:strict && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check && npm run docs:check"
+    "verify": "npm run version:check && npm run i18n:check && npm run i18n:audit && npm run lint && npm run lint:changed && npm run typecheck && npm run test:coverage && npm run build && npm run bundle:check && npm run headers:check && npm run external-hosts:check && npm run platform:check && npm run docs:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
-    "@eslint/js": "9.39.5",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^24.13.3",
     "@types/react": "^18.3.31",
@@ -47,23 +51,26 @@
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.5.2",
+    "@eslint/js": "9.39.5",
     "eslint": "9.39.5",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
     "jsdom": "^26.1.0",
-    "knip": "5.64",
-    "postcss": "^8.5.16",
+    "json-dup-key-validator": "^1.0.3",
+    "knip": "5.88",
+    "postcss": "^8.5.25",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.8.3",
     "vite": "^6.0.0",
     "vitest": "^4.1.10",
-    "wrangler": "4.114.0"
+    "wrangler": "4.115.0"
   },
   "overrides": {
-    "brace-expansion": "5.0.8",
+    "brace-expansion": "5.0.9",
     "esbuild": "^0.25.0",
-    "minimatch": "10.2.5"
+    "minimatch": "10.2.5",
+    "undici": "7.29.0"
   },
   "knip": {
     "ignoreDependencies": [
@@ -79,12 +86,15 @@
     "highlight.js": "^11.11.1",
     "html-to-image": "^1.11.13",
     "html5-qrcode": "^2.3.8",
+    "i18next": "^26.3.6",
     "ignore": "^7.0.6",
     "ipaddr.js": "^2.4.0",
     "jsbarcode": "^3.11.6",
     "jszip": "^3.10.1",
+    "mermaid": "^11.12.0",
     "qrcode": "^1.5.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.11"
   }
 }

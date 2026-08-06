@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 import Button from './ui/Button';
@@ -235,6 +236,7 @@ export const runUploadTest = async (durationMs, maxUploadBytes, onProgress, oute
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function NetworkSpeedTest() {
+  const { t, i18n } = useTranslation('tools');
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState('idle'); // idle | ping | download | upload | complete | error
   const [pingVal, setPingVal] = useState(null);
@@ -268,20 +270,22 @@ export default function NetworkSpeedTest() {
 
   const startTest = async () => {
     if (!isConsentGranted) {
-      setError('Allow the disclosed Cloudflare speed-test service before starting.');
+      setError(t('tool-speedtest.ui.error.consentRequired'));
       return;
     }
     let plan;
     try {
       plan = getDataPlan(dataLimit, customDownload, customUpload);
     } catch (planError) {
-      setError(planError.message);
+      setError(t(`tool-speedtest.ui.error.${planError.code || 'invalidPlan'}`));
       setPhase('error');
       return;
     }
     if (
       plan.totalBytes > 250_000_000
-      && !window.confirm(`This test may transfer exactly ${formatDecimalMb(plan.totalBytes)} total. Continue?`)
+      && !window.confirm(t('tool-speedtest.ui.largeTransferConfirm', {
+        total: formatDecimalMb(plan.totalBytes, i18n.language),
+      }))
     ) {
       return;
     }
@@ -324,11 +328,11 @@ export default function NetworkSpeedTest() {
       try {
         const ping = await runPingTest(signal);
         setPingVal(ping);
-        if (ping === null) unavailable.push('latency');
+        if (ping === null) unavailable.push(t('tool-speedtest.ui.latency'));
       } catch (pingError) {
         if (signal.aborted) throw pingError;
         setPingVal(null);
-        unavailable.push('latency');
+        unavailable.push(t('tool-speedtest.ui.latency'));
       }
       if (signal.aborted) return;
 
@@ -350,11 +354,11 @@ export default function NetworkSpeedTest() {
         );
         setAvgDownloadSpeed(dl.avgMbps);
         setActualDownloadBytes(dl.bytes);
-        if (dl.avgMbps === null) unavailable.push('download');
+        if (dl.avgMbps === null) unavailable.push(t('tool-speedtest.ui.download'));
       } catch (downloadError) {
         if (signal.aborted) throw downloadError;
         setAvgDownloadSpeed(null);
-        unavailable.push('download');
+        unavailable.push(t('tool-speedtest.ui.download'));
       }
       if (signal.aborted) { setPhase('cancelled'); return; }
 
@@ -376,14 +380,14 @@ export default function NetworkSpeedTest() {
         );
         setAvgUploadSpeed(ul.avgMbps);
         setActualUploadBytes(ul.bytes);
-        if (ul.avgMbps === null) unavailable.push('upload');
+        if (ul.avgMbps === null) unavailable.push(t('tool-speedtest.ui.upload'));
       } catch (uploadError) {
         if (signal.aborted) throw uploadError;
         setAvgUploadSpeed(null);
-        unavailable.push('upload');
+        unavailable.push(t('tool-speedtest.ui.upload'));
       }
       if (unavailable.length > 0) {
-        setError(`Unavailable measurements: ${unavailable.join(', ')}.`);
+        setError(t('tool-speedtest.ui.error.unavailable', { measurements: unavailable.join(', ') }));
       }
       setPhase('complete');
 
@@ -391,7 +395,7 @@ export default function NetworkSpeedTest() {
       if (err.name === 'AbortError') {
         setPhase('cancelled');
       } else {
-        setError(err.message || 'An error occurred');
+        setError(t('tool-speedtest.ui.error.general'));
         setPhase('error');
       }
     } finally {
@@ -413,7 +417,7 @@ export default function NetworkSpeedTest() {
   try {
     selectedPlan = getDataPlan(dataLimit, customDownload, customUpload);
   } catch (planError) {
-    planValidationError = planError.message;
+    planValidationError = t(`tool-speedtest.ui.error.${planError.code || 'invalidPlan'}`);
   }
 
   // ── Speedometer math ────────────────────────────────────────────────────────
@@ -467,16 +471,16 @@ export default function NetworkSpeedTest() {
   return (
     <Card id="tool-speedtest" variant="tool" size="wide">
       <ToolHeader 
-        title="Network Speed Test" 
+        title={t('tool-speedtest.title')}
       />
       <p className="text-xs text-text-muted mb-3">
-        This benchmark transfers test payloads to Cloudflare speed-test servers after permission.
+        {t('tool-speedtest.ui.description')}
       </p>
 
       <div className="flex flex-row flex-wrap gap-4 items-end justify-start mb-5">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="data-limit-select" className="text-xs font-bold text-text-muted">
-            Test Size Limit
+            {t('tool-speedtest.ui.testSizeLimit')}
           </label>
           <select
             id="data-limit-select"
@@ -485,10 +489,10 @@ export default function NetworkSpeedTest() {
             disabled={isRunning}
             className="px-3 py-2 rounded-md border border-border bg-card text-text-main outline-none text-sm disabled:cursor-not-allowed cursor-pointer"
           >
-            <option value="light">Light (20 MB down / 5 MB up)</option>
-            <option value="standard">Standard (50 MB down / 15 MB up)</option>
-            <option value="heavy">Heavy (100 MB down / 25 MB up)</option>
-            <option value="custom">Custom Size…</option>
+            <option value="light">{t('tool-speedtest.ui.plan.light')}</option>
+            <option value="standard">{t('tool-speedtest.ui.plan.standard')}</option>
+            <option value="heavy">{t('tool-speedtest.ui.plan.heavy')}</option>
+            <option value="custom">{t('tool-speedtest.ui.plan.custom')}</option>
           </select>
         </div>
 
@@ -496,7 +500,7 @@ export default function NetworkSpeedTest() {
           <div className="flex gap-3 flex-wrap">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="custom-down-input" className="text-xs font-bold text-text-muted">
-                Download (MB)
+                {t('tool-speedtest.ui.downloadMb')}
               </label>
               <input
                 id="custom-down-input"
@@ -511,7 +515,7 @@ export default function NetworkSpeedTest() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="custom-up-input" className="text-xs font-bold text-text-muted">
-                Upload (MB)
+                {t('tool-speedtest.ui.uploadMb')}
               </label>
               <input
                 id="custom-up-input"
@@ -529,20 +533,22 @@ export default function NetworkSpeedTest() {
 
         <div>
           {!isConsentGranted ? (
-            <Button variant="secondary" onClick={() => grantConsent('speedtest')}>Allow speed test</Button>
+            <Button variant="secondary" onClick={() => grantConsent('speedtest')}>{t('tool-speedtest.ui.allow')}</Button>
           ) : isRunning ? (
-            <Button variant="primary" onClick={stopTest}>Stop Test</Button>
+            <Button variant="primary" onClick={stopTest}>{t('tool-speedtest.ui.stop')}</Button>
           ) : (
-            <Button variant="primary" onClick={startTest}>Start Test</Button>
+            <Button variant="primary" onClick={startTest}>{t('tool-speedtest.ui.start')}</Button>
           )}
         </div>
       </div>
 
       {selectedPlan ? (
         <p className="text-xs text-text-muted mb-4">
-          Maximum transfer: {formatDecimalMb(selectedPlan.downloadBytes)} download +{' '}
-          {formatDecimalMb(selectedPlan.uploadBytes)} upload ={' '}
-          {formatDecimalMb(selectedPlan.totalBytes)} total (decimal MB).
+          {t('tool-speedtest.ui.maximumTransfer', {
+            download: formatDecimalMb(selectedPlan.downloadBytes, i18n.language),
+            upload: formatDecimalMb(selectedPlan.uploadBytes, i18n.language),
+            total: formatDecimalMb(selectedPlan.totalBytes, i18n.language),
+          })}
         </p>
       ) : (
         <p role="alert" className="text-xs text-red-500 mb-4">{planValidationError}</p>
@@ -550,19 +556,19 @@ export default function NetworkSpeedTest() {
 
       {constrainedConnection && (
         <p className="text-xs text-amber-600 mb-4">
-          Data Saver or a cellular/limited connection was detected. Light mode is recommended.
+          {t('tool-speedtest.ui.constrained')}
         </p>
       )}
 
       {phase === 'cancelled' && (
-        <p className="text-xs text-text-muted mb-4">Test cancelled; active requests were aborted.</p>
+        <p className="text-xs text-text-muted mb-4">{t('tool-speedtest.ui.cancelled')}</p>
       )}
 
       {!isConsentGranted && (
         <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs mb-4">
-          <span>🛡️ Speed Test transmits test payload chunks to Cloudflare benchmark servers.</span>
+          <span>🛡️ {t('tool-speedtest.ui.consentDisclosure')}</span>
           <Button variant="secondary" onClick={() => grantConsent('speedtest')} className="text-xs shrink-0">
-            Grant Consent
+            {t('tool-speedtest.ui.grantConsent')}
           </Button>
         </div>
       )}
@@ -618,10 +624,14 @@ export default function NetworkSpeedTest() {
               {/* Speed text */}
               <text x="100" y="124" fontSize="13" fontWeight="700" textAnchor="middle"
                 fill="var(--text-main)" id="speed-display">
-                {currentSpeed.toFixed(1)} Mbps
+                {new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(currentSpeed)} Mbps
               </text>
               <text x="100" y="135" fontSize="8" textAnchor="middle" fill="var(--text-muted)">
-                {phase === 'download' ? '↓ Downloading' : phase === 'upload' ? '↑ Uploading' : 'Speed'}
+                {t(phase === 'download'
+                  ? 'tool-speedtest.ui.downloading'
+                  : phase === 'upload'
+                    ? 'tool-speedtest.ui.uploading'
+                    : 'tool-speedtest.ui.speed')}
               </text>
             </svg>
           </div>
@@ -629,7 +639,9 @@ export default function NetworkSpeedTest() {
           {/* Download Speed Chart */}
           <div className="flex-[2_1_280px] flex flex-col gap-1 bg-card rounded-md border border-border p-3">
             <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">
-              ↓ Download Speed ({peakDl.toFixed(1)} Mbps max)
+              {t('tool-speedtest.ui.downloadChart', {
+                speed: new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 }).format(peakDl),
+              })}
             </span>
             <div className="flex-1 flex items-center">
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
@@ -655,7 +667,9 @@ export default function NetworkSpeedTest() {
           {/* Upload Speed Chart */}
           <div className="flex-[2_1_280px] flex flex-col gap-1 bg-card rounded-md border border-border p-3">
             <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">
-              ↑ Upload Speed ({peakUl.toFixed(1)} Mbps max)
+              {t('tool-speedtest.ui.uploadChart', {
+                speed: new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 }).format(peakUl),
+              })}
             </span>
             <div className="flex-1 flex items-center">
               <svg viewBox="0 0 300 90" style={{ width: '100%', height: 'auto' }}>
@@ -693,37 +707,37 @@ export default function NetworkSpeedTest() {
 
       {/* Phase labels */}
       {phase === 'ping' && (
-        <Spinner container label="Testing latency (ping)…" className="mb-5" />
+        <Spinner container label={t('tool-speedtest.ui.testingLatency')} className="mb-5" />
       )}
       {phase === 'download' && (
-        <Spinner container label={`Measuring download speed (${progress.toFixed(0)}%)…`} className="mb-5" />
+        <Spinner container label={t('tool-speedtest.ui.measuringDownload', { progress: progress.toFixed(0) })} className="mb-5" />
       )}
       {phase === 'upload' && (
-        <Spinner container label={`Measuring upload speed (${progress.toFixed(0)}%)…`} className="mb-5" />
+        <Spinner container label={t('tool-speedtest.ui.measuringUpload', { progress: progress.toFixed(0) })} className="mb-5" />
       )}
 
       {/* Results */}
       {phase === 'complete' && (
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-text-main">Test Results</h3>
+          <h3 className="text-lg font-bold text-text-main">{t('tool-speedtest.ui.results')}</h3>
           {error && (
             <p role="status" className="text-sm text-amber-600">{error}</p>
           )}
           {/* Row 1: Speed Performance Metrics */}
           <div className="flex flex-col md:flex-row gap-4 w-full mb-4">
             <ResultDisplay
-              label="↓ Avg Download"
-              value={avgDownloadSpeed != null ? `${avgDownloadSpeed.toFixed(2)} Mbps` : 'N/A'}
+              label={t('tool-speedtest.ui.averageDownload')}
+              value={avgDownloadSpeed != null ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(avgDownloadSpeed)} Mbps` : t('tool-speedtest.ui.notAvailable')}
               className="flex-[1_1_180px]"
             />
             <ResultDisplay
-              label="↑ Avg Upload"
-              value={avgUploadSpeed != null ? `${avgUploadSpeed.toFixed(2)} Mbps` : 'N/A'}
+              label={t('tool-speedtest.ui.averageUpload')}
+              value={avgUploadSpeed != null ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(avgUploadSpeed)} Mbps` : t('tool-speedtest.ui.notAvailable')}
               className="flex-[1_1_180px]"
             />
             <ResultDisplay
-              label="Latency (Ping)"
-              value={pingVal != null ? `${pingVal.toFixed(0)} ms` : 'N/A'}
+              label={t('tool-speedtest.ui.latencyPing')}
+              value={pingVal != null ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 0 }).format(pingVal)} ms` : t('tool-speedtest.ui.notAvailable')}
               className="flex-[1_1_180px]"
             />
           </div>
@@ -731,19 +745,22 @@ export default function NetworkSpeedTest() {
           {/* Row 2: Connection Details */}
           <div className="flex flex-col md:flex-row gap-4 w-full">
             <ResultDisplay
-              label="Actual data transferred"
-              value={formatDecimalMb(actualDownloadBytes) + ' down / ' + formatDecimalMb(actualUploadBytes) + ' up'}
+              label={t('tool-speedtest.ui.actualTransferred')}
+              value={t('tool-speedtest.ui.transferValue', {
+                download: formatDecimalMb(actualDownloadBytes, i18n.language),
+                upload: formatDecimalMb(actualUploadBytes, i18n.language),
+              })}
               className="flex-[1_1_250px]"
             />
             <ResultDisplay
-              label="IP Address"
-              value={clientIp || 'Fetching…'}
+              label={t('tool-speedtest.ui.ipAddress')}
+              value={clientIp || t('tool-speedtest.ui.fetching')}
               className="flex-[1_1_250px]"
               valueClassName="text-[1.25rem] font-bold"
             />
             <ResultDisplay
-              label="Provider (ISP)"
-              value={clientOrg || 'Fetching…'}
+              label={t('tool-speedtest.ui.provider')}
+              value={clientOrg || t('tool-speedtest.ui.fetching')}
               className="flex-[1_1_250px]"
               valueClassName="text-[1.25rem] font-bold"
             />

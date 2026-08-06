@@ -29,14 +29,14 @@ test('fresh initial load makes no undeclared or Google Fonts requests', async ({
 
 test('privacy route and consent manager expose the shared network inventory', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Privacy', exact: true }).click();
+  await page.getByRole('button', { name: 'Privacy & Network Services', exact: true }).click();
   await expect(page).toHaveURL(/\/home\/privacy$/);
   await expect(page.getByRole('heading', { name: 'Privacy & Network Services' })).toBeVisible();
   await expect(page.getByText('FFmpeg WebAssembly Runtime')).toBeVisible();
   await expect(page.getByText('Google Fonts Recommendations')).toBeVisible();
 
-  await page.getByRole('button', { name: /Consent/ }).click();
-  await page.getByRole('button', { name: /full Privacy/ }).click();
+  await page.getByRole('button', { name: 'Manage third-party service consent' }).click();
+  await page.getByRole('button', { name: 'Read the full Privacy & Network Services policy' }).click();
   await expect(page).toHaveURL(/\/home\/privacy$/);
 });
 

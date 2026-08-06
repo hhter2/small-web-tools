@@ -31,6 +31,17 @@ Small Web Tools is a browser-based collection of everyday utilities for text, de
 
 On a phone or narrow screen, the navigation becomes a drawer opened by the menu button.
 
+### Language and localization
+
+Use the **Language** menu in the header to switch between English (`en-US`) and
+Traditional Chinese (`zh-TW`). English is the default and fallback. The selected
+locale is saved locally under `small-web-tools.locale`; the browser language is
+used only when no saved preference exists. Route IDs, URL paths, and technical
+identifiers remain stable, while navigation, search metadata, tool controls,
+errors, announcements, and accessible labels are localized. Reader-facing
+numbers, dates, sorting, and word-count estimates use the active locale; user
+content and algorithmic interpretation are not translated.
+
 ### Audience and Simple modes
 
 The audience switcher beside the homepage introduction can show the unchanged
@@ -70,8 +81,8 @@ essentials. Tools opened there remain in the reduced shell at addresses such as
 - **URL Encoder & Decoder** — encode or decode complete URLs, components, and non-ASCII text.
 - **Markdown Previewer** — edit, upload, preview, and download Markdown locally.
 - **Base Converter** — convert values among binary, octal, decimal, hexadecimal, and sexagesimal.
-- **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads.
-- **Website Font Extractor** — inspect the fonts used by a public website.
+- **VS Code Preview** — edit and highlight code with line numbers, appearance controls, and local source or PNG downloads; code-file uploads are limited to 2 MiB.
+- **Website Font Extractor** — inspect bounded font declarations from a public website without downloading font files.
 - **Folder Analyzer** — inspect a selected folder's structure and metrics.
 
 ### Network
@@ -143,6 +154,10 @@ npm run verify
 npm run test:e2e
 ```
 
+`npm run i18n:check` validates the paired locale resources, `npm run i18n:audit`
+audits JSX for unreviewed user-facing literals, and `npm run docs:check` checks
+documentation consistency. All three checks are included in `npm run verify`.
+
 `npm run dev` mirrors only the IP lookup function (`/api/iplookup`). To exercise all
 Cloudflare Pages Functions locally (currency rates and website font extraction),
 follow the two-terminal Pages/Worker instructions in `CONTRIBUTING.md`. Run
@@ -168,9 +183,16 @@ operational approval; subdomains and preload require an explicit full-domain aud
 
 ## Documentation
 
+Maintained explanatory guides use an English file plus a Traditional Chinese
+companion with the .zh-TW.md suffix. The language links at the top of each
+guide keep navigation in one language. TODO.md is intentionally maintained in
+English only.
+
 `CONTRIBUTING.md` is the canonical engineering and local-runtime guide. `ARCHITECTURE.md`
 is the canonical architecture and route reference.
 
+- [CONTRIBUTING.md](CONTRIBUTING.md) — engineering standards and local-runtime instructions.
+- [PRIVACY.md](PRIVACY.md) — privacy policy and network-service disclosure.
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 

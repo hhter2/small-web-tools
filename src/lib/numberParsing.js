@@ -23,10 +23,10 @@ function parseCommaDecimal(value) {
 
 export function parseLocaleNumber(rawValue, mode = 'auto') {
   const trimmed = rawValue.trim();
-  if (!trimmed) return { value: null, error: 'Empty line' };
+  if (!trimmed) return { value: null, error: 'Empty line', errorCode: 'empty' };
   const numericText = removeSingleCurrencyToken(trimmed);
   if (numericText === null || !numericText || /\s/.test(numericText)) {
-    return { value: null, error: 'Use one number with at most one currency symbol or code' };
+    return { value: null, error: 'Use one number with at most one currency symbol or code', errorCode: 'single-number' };
   }
 
   let value = null;
@@ -43,13 +43,13 @@ export function parseLocaleNumber(rawValue, mode = 'auto') {
     } else if (commaCount === 1) {
       const fractionLength = numericText.length - numericText.lastIndexOf(',') - 1;
       if (fractionLength === 3) {
-        return { value: null, error: 'Ambiguous separator; choose a number format' };
+        return { value: null, error: 'Ambiguous separator; choose a number format', errorCode: 'ambiguous' };
       }
       value = parseCommaDecimal(numericText);
     } else if (dotCount === 1) {
       const fractionLength = numericText.length - numericText.lastIndexOf('.') - 1;
       if (fractionLength === 3) {
-        return { value: null, error: 'Ambiguous separator; choose a number format' };
+        return { value: null, error: 'Ambiguous separator; choose a number format', errorCode: 'ambiguous' };
       }
       value = parseDotDecimal(numericText);
     } else if (commaCount > 1) {
@@ -64,7 +64,7 @@ export function parseLocaleNumber(rawValue, mode = 'auto') {
   }
 
   if (value === null || !Number.isFinite(value)) {
-    return { value: null, error: 'Invalid number for the selected format' };
+    return { value: null, error: 'Invalid number for the selected format', errorCode: 'invalid' };
   }
   return { value, error: null };
 }
@@ -79,6 +79,7 @@ export function parseAmountLines(text, mode = 'auto') {
       originalLine,
       value: parsed.value,
       error: parsed.error ? 'Line ' + (index + 1) + ': ' + parsed.error : null,
+      ...(parsed.errorCode ? { errorCode: parsed.errorCode } : {}),
     }];
   });
 }

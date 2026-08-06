@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AutoDetectConverter from './ui/AutoDetectConverter';
 
 const CONTROL_LABELS = [
@@ -27,6 +28,7 @@ const ASCII_ENTRIES = Array.from({ length: 128 }, (_, code) => {
 });
 
 function AsciiReferenceTable({ input, setInput }) {
+  const { t } = useTranslation('tools');
   const selectedCode = /^\d+$/.test(input.trim()) && Number(input.trim()) <= 127
     ? Number(input.trim())
     : null;
@@ -35,14 +37,14 @@ function AsciiReferenceTable({ input, setInput }) {
     <section className="flex flex-col gap-2" aria-labelledby="ascii-reference-title">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h3 id="ascii-reference-title" className="text-sm font-bold text-text-main">ASCII reference</h3>
-          <p className="text-xs text-text-muted">Select any character to use its decimal code as the input.</p>
+          <h3 id="ascii-reference-title" className="text-sm font-bold text-text-main">{t('tool-ascii.ui.reference')}</h3>
+          <p className="text-xs text-text-muted">{t('tool-ascii.ui.referenceHint')}</p>
         </div>
-        <span className="text-[0.68rem] font-semibold text-text-muted">DEC · Character</span>
+        <span className="text-[0.68rem] font-semibold text-text-muted">{t('tool-ascii.ui.legend')}</span>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border bg-app/70 p-1.5">
-        <div className="grid min-w-[760px] grid-cols-[repeat(16,minmax(0,1fr))] gap-1" role="grid" aria-label="ASCII codes 0 through 127">
+        <div className="grid min-w-[760px] grid-cols-[repeat(16,minmax(0,1fr))] gap-1" role="grid" aria-label={t('tool-ascii.ui.gridLabel')}>
           {ASCII_ENTRIES.map((entry) => {
             const selected = selectedCode === entry.code;
             return (
@@ -51,7 +53,7 @@ function AsciiReferenceTable({ input, setInput }) {
                 type="button"
                 role="gridcell"
                 aria-pressed={selected}
-                aria-label={`ASCII ${entry.code}: ${entry.name}`}
+                aria-label={t('tool-ascii.ui.cellLabel', { code: entry.code, name: entry.name })}
                 title={`${entry.code} (0x${entry.code.toString(16).toUpperCase().padStart(2, '0')}) · ${entry.name}`}
                 onClick={() => setInput(String(entry.code))}
                 className={`group flex min-h-8 min-w-0 items-center justify-between gap-0.5 rounded-md border px-1 py-0.5 font-mono transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${selected
@@ -73,14 +75,14 @@ function AsciiReferenceTable({ input, setInput }) {
   );
 }
 
-function encodeAscii(text) {
+function encodeAscii(text, t) {
   const codes = [];
   for (const char of text) {
     const code = char.codePointAt(0);
     if (code > 127) {
       return {
         output: '',
-        error: `The character "${char}" is outside the ASCII range. Use Unicode Converter for non-ASCII text.`,
+        error: t('tool-ascii.ui.outsideAscii', { character: char }),
       };
     }
     codes.push(code);
@@ -88,29 +90,29 @@ function encodeAscii(text) {
   return { output: codes.join(' '), error: null };
 }
 
-function decodeAscii(codes) {
+function decodeAscii(codes, t) {
   const values = codes.trim().split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const value of values) {
     if (!/^\d+$/.test(value)) {
-      return { output: '', error: `"${value}" is not a decimal ASCII code.` };
+      return { output: '', error: t('tool-ascii.ui.notDecimal', { value }) };
     }
     const code = Number(value);
     if (code < 0 || code > 127) {
-      return { output: '', error: `ASCII code ${value} is outside the allowed range of 0 to 127.` };
+      return { output: '', error: t('tool-ascii.ui.outsideRange', { value }) };
     }
     chars.push(String.fromCharCode(code));
   }
   return { output: chars.join(''), error: null };
 }
 
-function analyzeAscii(input, mode = 'auto') {
+function analyzeAscii(input, mode = 'auto', t) {
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      sourceLabel: mode === 'encode' ? 'Plain text' : mode === 'decode' ? 'ASCII codes' : 'Text or ASCII codes',
-      targetLabel: mode === 'encode' ? 'ASCII codes' : mode === 'decode' ? 'Plain text' : '',
+      sourceLabel: mode === 'encode' ? t('tool-ascii.ui.plainText') : mode === 'decode' ? t('tool-ascii.ui.codes') : t('tool-ascii.ui.textOrCodes'),
+      targetLabel: mode === 'encode' ? t('tool-ascii.ui.codes') : mode === 'decode' ? t('tool-ascii.ui.plainText') : '',
       output: '',
       outputPlaceholder: '',
       error: null,
@@ -118,10 +120,10 @@ function analyzeAscii(input, mode = 'auto') {
   }
 
   if (mode === 'encode') {
-    const encoded = encodeAscii(input);
+    const encoded = encodeAscii(input, t);
     return {
-      sourceLabel: 'Plain text',
-      targetLabel: 'ASCII codes',
+      sourceLabel: t('tool-ascii.ui.plainText'),
+      targetLabel: t('tool-ascii.ui.codes'),
       output: encoded.output,
       outputPlaceholder: '',
       error: encoded.error,
@@ -129,10 +131,10 @@ function analyzeAscii(input, mode = 'auto') {
   }
 
   if (mode === 'decode') {
-    const decoded = decodeAscii(trimmed);
+    const decoded = decodeAscii(trimmed, t);
     return {
-      sourceLabel: 'ASCII codes',
-      targetLabel: 'Plain text',
+      sourceLabel: t('tool-ascii.ui.codes'),
+      targetLabel: t('tool-ascii.ui.plainText'),
       output: decoded.output,
       outputPlaceholder: '',
       error: decoded.error,
@@ -141,20 +143,20 @@ function analyzeAscii(input, mode = 'auto') {
 
   const looksLikeCodes = /^[\d\s,]+$/.test(trimmed);
   if (looksLikeCodes) {
-    const decoded = decodeAscii(trimmed);
+    const decoded = decodeAscii(trimmed, t);
     return {
-      sourceLabel: 'ASCII codes',
-      targetLabel: 'Plain text',
+      sourceLabel: t('tool-ascii.ui.codes'),
+      targetLabel: t('tool-ascii.ui.plainText'),
       output: decoded.output,
       outputPlaceholder: '',
       error: decoded.error,
     };
   }
 
-  const encoded = encodeAscii(input);
+  const encoded = encodeAscii(input, t);
   return {
-    sourceLabel: 'Plain text',
-    targetLabel: 'ASCII codes',
+    sourceLabel: t('tool-ascii.ui.plainText'),
+    targetLabel: t('tool-ascii.ui.codes'),
     output: encoded.output,
     outputPlaceholder: '',
     error: encoded.error,
@@ -162,13 +164,14 @@ function analyzeAscii(input, mode = 'auto') {
 }
 
 export default function AsciiConverter() {
+  const { t } = useTranslation('tools');
   return (
     <AutoDetectConverter
       toolId="tool-ascii"
-      title="ASCII Converter"
-      inputPlaceholder={'Hello\nor\n72 101 108 108 111'}
-      emptyTargetLabel="Converted result"
-      analyze={analyzeAscii}
+      title={t('tool-ascii.title')}
+      inputPlaceholder={t('tool-ascii.ui.placeholder')}
+      emptyTargetLabel={t('tool-ascii.ui.converted')}
+      analyze={(input, mode) => analyzeAscii(input, mode, t)}
       editorMinHeightClass="min-h-[76px] md:min-h-[84px]"
       editorRows={3}
       renderSupplementary={(props) => <AsciiReferenceTable {...props} />}

@@ -10,11 +10,15 @@ export const MAX_HISTORY_SAMPLES = 200;
 
 function parseCustomMegabytes(value, label) {
   if (typeof value === 'string' && value.trim() === '') {
-    throw new RangeError(`${label} must be between 1 and 1000 MB.`);
+    throw Object.assign(new RangeError(`${label} must be between 1 and 1000 MB.`), {
+      code: 'required-range',
+    });
   }
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < CUSTOM_MB_MIN || parsed > CUSTOM_MB_MAX) {
-    throw new RangeError(`${label} must be a finite value between 1 and 1000 MB.`);
+    throw Object.assign(new RangeError(`${label} must be a finite value between 1 and 1000 MB.`), {
+      code: 'finite-range',
+    });
   }
   return parsed;
 }
@@ -55,6 +59,11 @@ export function isConstrainedConnection(connection) {
   );
 }
 
-export function formatDecimalMb(bytes) {
-  return (bytes / 1_000_000).toFixed(bytes % 1_000_000 === 0 ? 0 : 2) + ' MB';
+export function formatDecimalMb(bytes, locale) {
+  const value = bytes / 1_000_000;
+  const fractionDigits = bytes % 1_000_000 === 0 ? 0 : 2;
+  return `${new Intl.NumberFormat(locale, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value)} MB`;
 }

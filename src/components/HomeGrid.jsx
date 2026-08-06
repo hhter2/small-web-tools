@@ -1,13 +1,15 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AudienceSwitcher from './AudienceSwitcher.jsx';
 import BioinfoIcon from './BioinfoIcon.jsx';
-import { getToolMode } from '../toolModes.js';
+import { getToolMode, localizeToolMode } from '../toolModes.js';
+import { sortLocalizedTools } from '../toolRegistry.js';
 import Card from './ui/Card.jsx';
 
 const categories = [
   {
     id: 'text',
-    name: 'Text',
+    nameKey: 'text',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -20,7 +22,7 @@ const categories = [
   },
   {
     id: 'developer',
-    name: 'Developer',
+    nameKey: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="16 18 22 12 16 6"></polyline>
@@ -30,7 +32,7 @@ const categories = [
   },
   {
     id: 'network',
-    name: 'Network',
+    nameKey: 'network',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -41,7 +43,7 @@ const categories = [
   },
   {
     id: 'media',
-    name: 'Media',
+    nameKey: 'media',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -52,12 +54,12 @@ const categories = [
   },
   {
     id: 'bioinfo',
-    name: 'Bioinfo',
+    nameKey: 'bioinfo',
     icon: <BioinfoIcon />
   },
   {
     id: 'utilities',
-    name: 'Utilities',
+    nameKey: 'utilities',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -114,12 +116,17 @@ export default function HomeGrid({
   modeId = 'all',
   onSelectMode = () => {},
 }) {
-  const mode = getToolMode(modeId);
+  const { t, i18n } = useTranslation('navigation');
+  const mode = localizeToolMode(getToolMode(modeId), t);
+  const localizedCategories = categories.map((category) => ({
+    ...category,
+    name: t(`categories.${category.nameKey}`),
+  }));
   const isCuratedMode = mode.id !== 'all';
   const curatedTools = activeTab === 'all'
     ? tools
     : tools.filter((tool) => tool.category === activeTab);
-  const activeCategory = categories.find((category) => category.id === activeTab);
+  const activeCategory = localizedCategories.find((category) => category.id === activeTab);
 
   function renderGrid(toolList) {
     return (
@@ -134,7 +141,7 @@ export default function HomeGrid({
   function renderSubGroups(catTools) {
     const subGroups = {};
     catTools.forEach(tool => {
-      const sg = tool.subGroup || 'Utilities';
+      const sg = tool.subGroup || t('categories.utilities');
       if (!subGroups[sg]) subGroups[sg] = [];
       subGroups[sg].push(tool);
     });
@@ -144,7 +151,7 @@ export default function HomeGrid({
         <h4 className="text-[0.9rem] font-bold uppercase tracking-[0.05em] text-text-muted mb-3 pl-1.5 border-l-2 border-accent leading-none">
           {sgName}
         </h4>
-        {renderGrid(subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)))}
+        {renderGrid(sortLocalizedTools(subGroups[sgName], i18n.resolvedLanguage))}
       </div>
     ));
   }
@@ -166,21 +173,21 @@ export default function HomeGrid({
       </div>
 
       {isCuratedMode ? (
-        <section aria-label={`${mode.label} tools`}>
+        <section aria-label={t('homeGrid.categoryTools', { category: mode.label })}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-bold text-text-main">
               {activeCategory
-                ? `${activeCategory.name} tools`
-                : `Recommended for ${mode.label.toLowerCase()}`}
+                ? t('homeGrid.categoryTools', { category: activeCategory.name })
+                : t('homeGrid.recommended', { audience: mode.label })}
             </h2>
             <span className="rounded-full border border-border bg-app px-3 py-1 text-xs font-semibold text-text-muted">
-              {curatedTools.length} {curatedTools.length === 1 ? 'tool' : 'tools'}
+              {t('homeGrid.toolCount', { count: curatedTools.length })}
             </span>
           </div>
           {renderGrid(curatedTools)}
         </section>
       ) : activeTab === 'all' ? (
-        categories.map(cat => {
+        localizedCategories.map(cat => {
           const catTools = tools.filter(t => t.category === cat.id);
           if (catTools.length === 0) return null;
 
@@ -204,7 +211,7 @@ export default function HomeGrid({
       ) : (
         <div className="mb-10">
           {(() => {
-            const cat = categories.find(c => c.id === activeTab);
+            const cat = localizedCategories.find(c => c.id === activeTab);
             return (
               <>
                 {cat && (

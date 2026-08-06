@@ -1,17 +1,11 @@
 const modeDefinitions = [
   {
     id: 'all',
-    label: 'All tools',
-    heading: 'Welcome to Small Web Tools!',
-    description: 'Browse the complete toolkit by category.',
     toolIds: null,
     simplified: false,
   },
   {
     id: 'daily',
-    label: 'Daily users',
-    heading: 'Everyday essentials',
-    description: 'Common writing, date, conversion, security, and sharing tools.',
     toolIds: [
       'tool-wc',
       'tool-casing',
@@ -28,9 +22,6 @@ const modeDefinitions = [
   },
   {
     id: 'developer',
-    label: 'Developers',
-    heading: 'Developer workspace',
-    description: 'Code, text, URL, network, and project inspection tools.',
     toolIds: [
       'tool-slash',
       'tool-ascii',
@@ -47,9 +38,6 @@ const modeDefinitions = [
   },
   {
     id: 'bioinformatics',
-    label: 'Bioinformatics researchers',
-    heading: 'Bioinformatics workspace',
-    description: 'Sequence, codon, quality-score, writing, and analysis helpers.',
     toolIds: [
       'tool-dna',
       'tool-codon',
@@ -63,9 +51,6 @@ const modeDefinitions = [
   },
   {
     id: 'designer',
-    label: 'Designers',
-    heading: 'Designer workspace',
-    description: 'Color, image, vector, font, code-preview, and sharing tools.',
     toolIds: [
       'tool-color',
       'tool-svg-png',
@@ -80,9 +65,6 @@ const modeDefinitions = [
   },
   {
     id: 'student',
-    label: 'Students',
-    heading: 'Student workspace',
-    description: 'Writing, study, coding, date, number, and science helpers.',
     toolIds: [
       'tool-wc',
       'tool-casing',
@@ -108,9 +90,6 @@ export const AUDIENCE_MODES = [...TOOL_MODES];
 
 export const SIMPLE_WORKSPACE = {
   id: 'simple',
-  label: 'Simple',
-  heading: 'Quick tools',
-  description: 'Search every tool or open an everyday essential.',
   toolIds: [
     'tool-wc',
     'tool-casing',
@@ -131,6 +110,15 @@ export function getToolMode(modeId) {
     return SIMPLE_WORKSPACE;
   }
   return modesById.get(modeId) ?? modesById.get('all');
+}
+
+export function localizeToolMode(mode, t) {
+  return {
+    ...mode,
+    label: t(`navigation:modes.${mode.id}.label`),
+    heading: t(`navigation:modes.${mode.id}.heading`),
+    description: t(`navigation:modes.${mode.id}.description`),
+  };
 }
 
 function getPathSegments(pathname) {

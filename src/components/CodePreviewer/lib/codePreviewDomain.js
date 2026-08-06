@@ -1,47 +1,55 @@
-import hljs from 'highlight.js/lib/common';
+import {
+  CODE_LANGUAGE_SPECS,
+  highlightCode,
+  normalizeCodeLanguage,
+} from '../../../lib/codeHighlighting.js';
 
-export const CODE_LANGUAGES = [
-  { id: 'plaintext', label: 'Plain text', extension: 'txt', aliases: ['txt', 'text'] },
-  { id: 'bash', label: 'Bash / Shell', extension: 'sh', aliases: ['sh', 'shell', 'zsh'] },
-  { id: 'javascript', label: 'JavaScript / JSX', extension: 'js', aliases: ['js', 'jsx', 'mjs', 'cjs'] },
-  { id: 'typescript', label: 'TypeScript / TSX', extension: 'ts', aliases: ['ts', 'tsx'] },
-  { id: 'html', label: 'HTML / XML', extension: 'html', aliases: ['html', 'htm', 'xml', 'svg'] },
-  { id: 'css', label: 'CSS', extension: 'css', aliases: ['css'] },
-  { id: 'json', label: 'JSON', extension: 'json', aliases: ['json', 'jsonc'] },
-  { id: 'markdown', label: 'Markdown', extension: 'md', aliases: ['md', 'markdown'] },
-  { id: 'python', label: 'Python', extension: 'py', aliases: ['py', 'pyw'] },
-  { id: 'java', label: 'Java', extension: 'java', aliases: ['java'] },
-  { id: 'c', label: 'C', extension: 'c', aliases: ['c', 'h'] },
-  { id: 'cpp', label: 'C++', extension: 'cpp', aliases: ['cpp', 'cc', 'cxx', 'hpp'] },
-  { id: 'csharp', label: 'C#', extension: 'cs', aliases: ['cs'] },
-  { id: 'go', label: 'Go', extension: 'go', aliases: ['go'] },
-  { id: 'rust', label: 'Rust', extension: 'rs', aliases: ['rs'] },
-  { id: 'php', label: 'PHP', extension: 'php', aliases: ['php'] },
-  { id: 'ruby', label: 'Ruby', extension: 'rb', aliases: ['rb'] },
-  { id: 'swift', label: 'Swift', extension: 'swift', aliases: ['swift'] },
-  { id: 'kotlin', label: 'Kotlin', extension: 'kt', aliases: ['kt', 'kts'] },
-  { id: 'r', label: 'R', extension: 'r', aliases: ['r'] },
-  { id: 'sql', label: 'SQL', extension: 'sql', aliases: ['sql'] },
-  { id: 'yaml', label: 'YAML', extension: 'yml', aliases: ['yml', 'yaml'] },
-  { id: 'diff', label: 'Diff / Patch', extension: 'diff', aliases: ['diff', 'patch'] },
-  { id: 'graphql', label: 'GraphQL', extension: 'graphql', aliases: ['graphql', 'gql'] },
-  { id: 'lua', label: 'Lua', extension: 'lua', aliases: ['lua'] },
-  { id: 'perl', label: 'Perl', extension: 'pl', aliases: ['pl', 'pm'] },
-];
+export { highlightCode, normalizeCodeLanguage };
+
+export const CODE_FILE_LIMIT_BYTES = 2 * 1024 * 1024;
+
+const LANGUAGE_LABELS = {
+  plaintext: 'Plain text',
+  bash: 'Bash / Shell',
+  javascript: 'JavaScript / JSX',
+  typescript: 'TypeScript / TSX',
+  html: 'HTML / XML',
+  css: 'CSS',
+  json: 'JSON',
+  markdown: 'Markdown',
+  python: 'Python',
+  java: 'Java',
+  c: 'C',
+  cpp: 'C++',
+  csharp: 'C#',
+  go: 'Go',
+  rust: 'Rust',
+  php: 'PHP',
+  ruby: 'Ruby',
+  swift: 'Swift',
+  kotlin: 'Kotlin',
+  r: 'R',
+  sql: 'SQL',
+  yaml: 'YAML',
+  diff: 'Diff / Patch',
+  graphql: 'GraphQL',
+  lua: 'Lua',
+  perl: 'Perl',
+};
+
+export const CODE_LANGUAGES = CODE_LANGUAGE_SPECS.map((language) => ({
+  ...language,
+  label: LANGUAGE_LABELS[language.id],
+}));
 
 const languageById = new Map(CODE_LANGUAGES.map((language) => [language.id, language]));
-
-export function highlightCode(code, languageId) {
-  const language = languageById.has(languageId) ? languageId : 'plaintext';
-  return hljs.highlight(code, { language, ignoreIllegals: true }).value;
-}
 
 export function getLineCount(code) {
   return Math.max(1, code.split('\n').length);
 }
 
 export function getDefaultFilename(languageId) {
-  const language = languageById.get(languageId) ?? languageById.get('plaintext');
+  const language = languageById.get(normalizeCodeLanguage(languageId)) ?? languageById.get('plaintext');
   return `snippet.${language.extension}`;
 }
 
@@ -55,14 +63,14 @@ export function normalizeCodeFilename(filename, languageId) {
     .replace(/^\.+$/, '');
   if (!safeName) return fallback;
 
-  const language = languageById.get(languageId) ?? languageById.get('plaintext');
+  const language = languageById.get(normalizeCodeLanguage(languageId)) ?? languageById.get('plaintext');
   return safeName.includes('.') ? safeName : `${safeName}.${language.extension}`;
 }
 
 export function inferLanguageFromFilename(filename) {
   const basename = filename.trim().split(/[\\/]/).pop()?.toLowerCase() ?? '';
   const extension = basename.includes('.') ? basename.split('.').pop() : '';
-  return CODE_LANGUAGES.find((language) => language.aliases.includes(extension))?.id ?? 'plaintext';
+  return normalizeCodeLanguage(extension);
 }
 
 export function getSyntaxTheme(backgroundColor) {

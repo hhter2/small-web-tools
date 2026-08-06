@@ -59,7 +59,7 @@ describe('HomeGrid audience presentation', () => {
     ));
 
     expect(container).toHaveTextContent('Everyday essentials');
-    expect(container).toHaveTextContent('Recommended for daily users');
+    expect(container).toHaveTextContent('Recommended for Daily users');
     expect(container).toHaveTextContent('2 tools');
     expect([...container.querySelectorAll('h3')].map((heading) => heading.textContent))
       .toEqual(['Word Counter', 'Date & Time Counter']);

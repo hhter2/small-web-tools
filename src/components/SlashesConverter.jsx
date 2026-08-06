@@ -1,22 +1,23 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AutoDetectConverter from './ui/AutoDetectConverter';
 
-function analyzePath(input) {
+function analyzePath(input, t) {
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      sourceLabel: 'Path style',
+      sourceLabel: t('tool-slash.ui.pathStyle'),
       targetLabel: '',
       output: '',
-      outputPlaceholder: 'The normalized path appears here.',
+      outputPlaceholder: t('tool-slash.ui.normalizedPlaceholder'),
       error: null,
     };
   }
 
   if (/^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)) {
     return {
-      sourceLabel: 'Web URL',
-      targetLabel: 'Web URL',
+      sourceLabel: t('tool-slash.ui.webUrl'),
+      targetLabel: t('tool-slash.ui.webUrl'),
       output: input,
       outputPlaceholder: '',
       error: null,
@@ -28,8 +29,8 @@ function analyzePath(input) {
 
   if (backslashCount > 0 && backslashCount >= forwardSlashCount) {
     return {
-      sourceLabel: 'Backslash path',
-      targetLabel: 'Forward-slash path',
+      sourceLabel: t('tool-slash.ui.backslashPath'),
+      targetLabel: t('tool-slash.ui.forwardSlashPath'),
       output: input.replace(/\\/g, '/'),
       outputPlaceholder: '',
       error: null,
@@ -38,8 +39,8 @@ function analyzePath(input) {
 
   if (forwardSlashCount > 0) {
     return {
-      sourceLabel: 'Forward-slash path',
-      targetLabel: 'Backslash path',
+      sourceLabel: t('tool-slash.ui.forwardSlashPath'),
+      targetLabel: t('tool-slash.ui.backslashPath'),
       output: input.replace(/\//g, '\\'),
       outputPlaceholder: '',
       error: null,
@@ -47,8 +48,8 @@ function analyzePath(input) {
   }
 
   return {
-    sourceLabel: 'Plain text',
-    targetLabel: 'Unchanged text',
+    sourceLabel: t('tool-slash.ui.plainText'),
+    targetLabel: t('tool-slash.ui.unchangedText'),
     output: input,
     outputPlaceholder: '',
     error: null,
@@ -56,13 +57,14 @@ function analyzePath(input) {
 }
 
 export default function SlashesConverter() {
+  const { t } = useTranslation('tools');
   return (
     <AutoDetectConverter
       toolId="tool-slash"
-      title="Slashes Converter"
-      inputPlaceholder={'C:\\Users\\name\\Documents\\report.pdf\nor\n/Users/name/Documents/report.pdf'}
-      emptyTargetLabel="Converted path"
-      analyze={analyzePath}
+      title={t('tool-slash.title')}
+      inputPlaceholder={t('tool-slash.ui.placeholder')}
+      emptyTargetLabel={t('tool-slash.ui.convertedPath')}
+      analyze={(input) => analyzePath(input, t)}
       showManualModes={false}
     />
   );

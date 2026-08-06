@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <a href="CONTRIBUTING.md">貢獻指南</a>
+  <a href="CONTRIBUTING.zh-TW.md">貢獻指南</a>
   &nbsp;·&nbsp;
-  <a href="ARCHITECTURE.md">架構</a>
+  <a href="ARCHITECTURE.zh-TW.md">架構</a>
   &nbsp;·&nbsp;
-  <a href="PRIVACY.md">隱私權</a>
+  <a href="PRIVACY.zh-TW.md">隱私權</a>
 </p>
 
 <p align="center">
@@ -30,6 +30,14 @@ Small Web Tools 是一套以瀏覽器為基礎的日常工具集合，涵蓋文�
 4. 需要時使用淺色／深色切換。選定的主題、桌面版側邊欄是否收合，以及最近開啟的工具都會儲存在瀏覽器中。
 
 在手機或窄螢幕上，導覽列會變成可由選單按鈕開啟的抽屜式介面。
+
+### 語言與在地化
+
+使用標頭中的 **Language** 選單，在 English (`en-US`) 與繁體中文 (`zh-TW`) 之間切換。
+English 是預設與 fallback 語言。選定的地區設定會以 `small-web-tools.locale` 儲存在
+本機；只有在沒有已儲存偏好時才會使用瀏覽器語言。路由 ID、URL 路徑與技術識別碼保持
+穩定，導覽、搜尋中繼資料、工具控制項、錯誤、通知與輔助標籤則會在地化。讀者可見的
+數字、日期、排序與單字計數估算會使用目前地區設定；使用者內容與演算法解讀不會翻譯。
 
 ### 使用者群組與 Simple 模式
 
@@ -63,8 +71,8 @@ Small Web Tools 是一套以瀏覽器為基礎的日常工具集合，涵蓋文�
 - **URL 編碼與解碼器** — 編碼或解碼完整 URL、元件及非 ASCII 文字。
 - **Markdown 預覽器** — 在本機編輯、上傳、預覽與下載 Markdown。
 - **進位轉換器** — 在二進位、八進位、十進位、十六進位與六十進位之間轉換數值。
-- **VS Code 預覽器** — 編輯並醒目顯示含行號的程式碼，提供外觀控制，以及本機來源檔或 PNG 下載功能。
-- **網站字型擷取器** — 檢查公開網站所使用的字型。
+- **VS Code 預覽器** — 編輯並醒目顯示含行號的程式碼，提供外觀控制，以及本機來源檔或 PNG 下載功能；程式碼檔案上傳上限為 2 MiB。
+- **網站字型擷取器** — 檢查公開網站中受限制的字型宣告，不會下載字型檔案。
 - **資料夾分析器** — 檢查選定資料夾的結構與指標。
 
 ### 網路
@@ -132,7 +140,11 @@ npm run verify
 npm run test:e2e
 ```
 
-`npm run dev` 只會模擬 IP 查詢函式（`/api/iplookup`）。若要在本機執行所有 Cloudflare Pages Functions（貨幣匯率與網站字型擷取），請依照 `CONTRIBUTING.md` 中的 Pages／Worker 雙終端機說明。執行 `npm run platform:integration` 以進行自動化的並行限制與故障關閉服務繫結檢查。
+`npm run i18n:check` 會驗證成對的地區設定資源，`npm run i18n:audit` 會掃描 JSX 中
+未審查的使用者可見字串，`npm run docs:check` 會檢查文件一致性。三項檢查都包含在
+`npm run verify` 中。
+
+`npm run dev` 只會模擬 IP 查詢函式（`/api/iplookup`）。若要在本機執行所有 Cloudflare Pages Functions（貨幣匯率與網站字型擷取），請依照 `CONTRIBUTING.zh-TW.md` 中的 Pages／Worker 雙終端機說明。執行 `npm run platform:integration` 以進行自動化的並行限制與故障關閉服務繫結檢查。
 
 Cloudflare Pages 正式環境建置必須使用 Node.js 22 或 24，先執行 `npm ci` 再執行 `npm run build`，並發布 `dist/`。
 
@@ -148,10 +160,12 @@ DEPLOYED_BASE_URL=https://small-web-tools.pages.dev npm run test:e2e:deployed
 
 ## 文件
 
-`CONTRIBUTING.md` 是正式的工程與本機執行指南。`ARCHITECTURE.md` 是正式的架構與路由參考。
+維護中的說明文件以英文檔案搭配 .zh-TW.md 結尾的繁體中文對照檔。每份文件頂端的語言連結會維持同一種語言的導覽。TODO.md 特別維持英文單一版本。
 
-- [`TODO.md`](TODO.md) — 目前待辦事項、已完成工作與專案更新流程。
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — 架構、路由清單、共用 UI 慣例與開發人員指南。
+- [CONTRIBUTING.zh-TW.md](CONTRIBUTING.zh-TW.md) — 工程標準與本機執行說明。
+- [PRIVACY.zh-TW.md](PRIVACY.zh-TW.md) — 隱私權政策與網路服務揭露。
+- [TODO.md](TODO.md) — 目前待辦事項、已完成工作與專案更新流程（僅提供英文）。
+- [ARCHITECTURE.zh-TW.md](ARCHITECTURE.zh-TW.md) — 架構、路由清單、共用 UI 慣例與開發人員指南。
 
 ## 授權條款
 

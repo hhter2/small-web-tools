@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AutoDetectConverter from './ui/AutoDetectConverter';
 
 function encodeUnicode(text) {
@@ -7,20 +8,20 @@ function encodeUnicode(text) {
     .join(' ');
 }
 
-function decodeUnicode(codes) {
+function decodeUnicode(codes, t) {
   const values = codes.trim().split(/[\s,]+/).filter(Boolean);
   const chars = [];
 
   for (const raw of values) {
     const cleaned = raw.replace(/^U\+/i, '').replace(/^0x/i, '');
     if (!/^[0-9A-F]+$/i.test(cleaned)) {
-      return { output: '', error: `"${raw}" is not a hexadecimal Unicode code point.` };
+      return { output: '', error: t('tool-unicode.ui.notHex', { value: raw }) };
     }
 
     const codePoint = Number.parseInt(cleaned, 16);
     const isSurrogate = codePoint >= 0xd800 && codePoint <= 0xdfff;
     if (codePoint > 0x10ffff || isSurrogate) {
-      return { output: '', error: `"${raw}" is not a valid Unicode scalar value.` };
+      return { output: '', error: t('tool-unicode.ui.invalidScalar', { value: raw }) };
     }
     chars.push(String.fromCodePoint(codePoint));
   }
@@ -40,67 +41,68 @@ function looksLikeUnicodeCodes(text) {
     && values.some((value) => /\d/.test(value));
 }
 
-function analyzeUnicode(input, mode = 'auto') {
+function analyzeUnicode(input, mode = 'auto', t) {
   const trimmed = input.trim();
   if (!trimmed) {
     return {
-      sourceLabel: mode === 'encode' ? 'Plain text' : mode === 'decode' ? 'Unicode code points' : 'Text or code points',
-      targetLabel: mode === 'encode' ? 'Unicode code points' : mode === 'decode' ? 'Plain text' : '',
+      sourceLabel: mode === 'encode' ? t('tool-unicode.ui.plainText') : mode === 'decode' ? t('tool-unicode.ui.codePoints') : t('tool-unicode.ui.textOrCodePoints'),
+      targetLabel: mode === 'encode' ? t('tool-unicode.ui.codePoints') : mode === 'decode' ? t('tool-unicode.ui.plainText') : '',
       output: '',
-      outputPlaceholder: 'The converted result appears here.',
+      outputPlaceholder: t('tool-unicode.ui.convertedPlaceholder'),
       error: null,
     };
   }
 
   if (mode === 'encode') {
     return {
-      sourceLabel: 'Plain text',
-      targetLabel: 'Unicode code points',
+      sourceLabel: t('tool-unicode.ui.plainText'),
+      targetLabel: t('tool-unicode.ui.codePoints'),
       output: encodeUnicode(input),
-      outputPlaceholder: 'Unicode code points appear here.',
+      outputPlaceholder: t('tool-unicode.ui.pointsPlaceholder'),
       error: null,
     };
   }
 
   if (mode === 'decode') {
-    const decoded = decodeUnicode(trimmed);
+    const decoded = decodeUnicode(trimmed, t);
     return {
-      sourceLabel: 'Unicode code points',
-      targetLabel: 'Plain text',
+      sourceLabel: t('tool-unicode.ui.codePoints'),
+      targetLabel: t('tool-unicode.ui.plainText'),
       output: decoded.output,
-      outputPlaceholder: 'Decoded text appears here.',
+      outputPlaceholder: t('tool-unicode.ui.decodedPlaceholder'),
       error: decoded.error,
     };
   }
 
   if (looksLikeUnicodeCodes(trimmed)) {
-    const decoded = decodeUnicode(trimmed);
+    const decoded = decodeUnicode(trimmed, t);
     return {
-      sourceLabel: 'Unicode code points',
-      targetLabel: 'Plain text',
+      sourceLabel: t('tool-unicode.ui.codePoints'),
+      targetLabel: t('tool-unicode.ui.plainText'),
       output: decoded.output,
-      outputPlaceholder: 'Decoded text appears here.',
+      outputPlaceholder: t('tool-unicode.ui.decodedPlaceholder'),
       error: decoded.error,
     };
   }
 
   return {
-    sourceLabel: 'Plain text',
-    targetLabel: 'Unicode code points',
+    sourceLabel: t('tool-unicode.ui.plainText'),
+    targetLabel: t('tool-unicode.ui.codePoints'),
     output: encodeUnicode(input),
-    outputPlaceholder: 'Unicode code points appear here.',
+    outputPlaceholder: t('tool-unicode.ui.pointsPlaceholder'),
     error: null,
   };
 }
 
 export default function UnicodeConverter() {
+  const { t } = useTranslation('tools');
   return (
     <AutoDetectConverter
       toolId="tool-unicode"
-      title="Unicode Converter"
-      inputPlaceholder={'Hello 👋\nor\nU+0048 U+0065 U+006C U+006C U+006F'}
-      emptyTargetLabel="Converted result"
-      analyze={analyzeUnicode}
+      title={t('tool-unicode.title')}
+      inputPlaceholder={t('tool-unicode.ui.placeholder')}
+      emptyTargetLabel={t('tool-unicode.ui.converted')}
+      analyze={(input, mode) => analyzeUnicode(input, mode, t)}
     />
   );
 }

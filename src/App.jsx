@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import SimpleHome from './components/SimpleHome.jsx';
+import LanguageSwitcher from './components/LanguageSwitcher.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import { NAVIGATION_ROUTES, PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, getToolRoute } from './toolRegistry.js';
+import { PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, getLocalizedToolRoutes, getToolRoute, localizeToolRoute, sortLocalizedTools } from './toolRegistry.js';
 import { TOOL_ICONS } from './toolIcons.jsx';
 import {
   buildModeUrl,
@@ -13,6 +15,7 @@ import {
   getRouteIdFromLocation,
   getToolMode,
   isToolPath,
+  localizeToolMode,
 } from './toolModes.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -23,7 +26,7 @@ const APP_CHANNEL = typeof __APP_CHANNEL__ !== 'undefined' ? __APP_CHANNEL__ : '
 const categories = [
   {
     id: 'text',
-    name: 'Text',
+    nameKey: 'text',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -36,7 +39,7 @@ const categories = [
   },
   {
     id: 'developer',
-    name: 'Developer',
+    nameKey: 'developer',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="16 18 22 12 16 6"></polyline>
@@ -46,7 +49,7 @@ const categories = [
   },
   {
     id: 'network',
-    name: 'Network',
+    nameKey: 'network',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -57,7 +60,7 @@ const categories = [
   },
   {
     id: 'media',
-    name: 'Media',
+    nameKey: 'media',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -68,12 +71,12 @@ const categories = [
   },
   {
     id: 'bioinfo',
-    name: 'Bioinfo',
+    nameKey: 'bioinfo',
     icon: <BioinfoIcon />
   },
   {
     id: 'utilities',
-    name: 'Utilities',
+    nameKey: 'utilities',
     icon: (
       <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -86,12 +89,6 @@ const categories = [
   }
 ];
 
-const navItems = NAVIGATION_ROUTES.map((route) => ({
-  ...route,
-  name: route.title,
-  desc: route.description,
-  icon: TOOL_ICONS[route.iconKey],
-}));
 const staticTools = STATIC_LAYOUT_IDS;
 
 const VALID_TOOL_IDS = new Set(PUBLIC_ROUTE_IDS);
@@ -104,6 +101,7 @@ function getValidToolId(rawId) {
 }
 
 export default function App() {
+  const { t, i18n } = useTranslation(['common', 'navigation', 'tools', 'errors']);
   const [activeTool, setActiveTool] = useState(() => {
     try {
       const locationRouteId = getRouteIdFromLocation(
@@ -132,7 +130,7 @@ export default function App() {
         return saved;
       }
       return "tool-home";
-    } catch (e) {
+    } catch {
       return "tool-home";
     }
   });
@@ -148,7 +146,7 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem("sidebarCollapsed") === "true";
-    } catch (e) {
+    } catch {
       return false;
     }
   });
@@ -157,7 +155,7 @@ export default function App() {
     try {
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme) return savedTheme;
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; keep the in-memory default.
     }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -170,7 +168,6 @@ export default function App() {
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
 
@@ -190,7 +187,7 @@ export default function App() {
   const handleEmailClick = () => {
     navigator.clipboard.writeText("emailforvirtualmachine@gmail.com")
       .then(() => {
-        showToast("Email address copied to clipboard!");
+        showToast(t('navigation:toast.emailCopied'));
       })
       .catch(() => {});
   };
@@ -199,7 +196,6 @@ export default function App() {
   useEffect(() => {
     const handleOutsideClick = (e) => {
       setOpenDropdown(null);
-      setLangDropdownOpen(false);
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchFocused(false);
       }
@@ -215,29 +211,40 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     try {
       localStorage.setItem("theme", theme);
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; keep the current state.
     }
   }, [theme]);
 
-  const modeProfile = getToolMode(toolMode);
+  const modeProfile = localizeToolMode(getToolMode(toolMode), t);
+  const categoriesLocalized = useMemo(() => categories.map((category) => ({
+    ...category,
+    name: t(`navigation:categories.${category.nameKey}`),
+  })), [i18n.resolvedLanguage, t]);
+  const navItems = useMemo(() => getLocalizedToolRoutes(t)
+    .filter((route) => route.navigationVisible)
+    .map((route) => ({
+      ...route,
+      name: route.title,
+      desc: route.description,
+      icon: TOOL_ICONS[route.iconKey],
+    })), [i18n.resolvedLanguage, t]);
 
   // Sync activeTool state, sessionStorage, and document title
   useEffect(() => {
     try {
       sessionStorage.setItem("activeTool", activeTool);
       const route = getToolRoute(activeTool);
-      document.title = route?.id === 'privacy'
-        ? 'Privacy & Network Services — Small Web Tools'
-        : route?.id === 'tool-home' && modeProfile.id !== 'all'
-          ? `${modeProfile.label} – Small Web Tools`
-        : route && route.id !== 'tool-home'
-          ? `${route.title} – Small Web Tools`
-          : 'Small Web Tools — Simple, Private Browser Utilities';
-    } catch (e) {
+      const localizedRoute = route ? localizeToolRoute(route, t) : null;
+      document.title = localizedRoute?.id === 'tool-home' && modeProfile.id === 'all'
+        ? t('navigation:titles.default')
+        : t('navigation:titles.tool', {
+          tool: localizedRoute?.id === 'tool-home' ? modeProfile.label : localizedRoute?.title,
+        });
+    } catch {
       // Storage access can be blocked by the browser; navigation still works.
     }
-  }, [activeTool, modeProfile.id, modeProfile.label]);
+  }, [activeTool, modeProfile.id, modeProfile.label, i18n.resolvedLanguage, t]);
 
   // Listen for address changes to sync the active tool and audience/simple mode.
   useEffect(() => {
@@ -268,7 +275,7 @@ export default function App() {
         }
         setActiveTool(validId);
         setToolMode(nextModeId);
-      } catch (e) {
+      } catch {
         setActiveTool('tool-home');
         setToolMode('all');
       }
@@ -307,7 +314,7 @@ export default function App() {
       if (nextAddress !== window.location.href) {
         window.history.replaceState(null, '', nextAddress);
       }
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; the UI remains usable.
     }
   }, [activeTool, toolMode]);
@@ -316,7 +323,7 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem("sidebarCollapsed", isSidebarCollapsed ? "true" : "false");
-    } catch (e) {
+    } catch {
       // Storage access can be blocked by the browser; the UI remains usable.
     }
   }, [isSidebarCollapsed]);
@@ -373,12 +380,11 @@ export default function App() {
   // Audience modes filter the home, sidebar, and search; header shortcuts stay complete.
   const modeNavItems = filterToolsForMode(navItems, toolMode);
   const searchNavItems = modeProfile.simplified ? navItems : modeNavItems;
-  const filteredModeNavItems = modeNavItems.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
-  );
-  const filteredSearchNavItems = searchNavItems.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
-  );
+  const normalizedQuery = searchQuery.toLocaleLowerCase(i18n.resolvedLanguage).trim();
+  const matchesSearch = (item) => item.searchMetadata.some((term) =>
+    term.toLocaleLowerCase(i18n.resolvedLanguage).includes(normalizedQuery));
+  const filteredModeNavItems = modeNavItems.filter(matchesSearch);
+  const filteredSearchNavItems = searchNavItems.filter(matchesSearch);
   // Render the active registry component.
   const renderActiveTool = () => {
     const route = getToolRoute(activeTool) || getToolRoute('tool-home');
@@ -401,7 +407,7 @@ export default function App() {
       : route.componentProps;
     return (
       <ErrorBoundary key={activeTool}>
-        <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">Loading tool...</span></div>}>
+        <Suspense fallback={<div className="flex flex-col items-center justify-center p-12 gap-3"><Spinner /><span className="text-xs text-text-muted">{t('common:states.loadingTool')}</span></div>}>
           <ToolComponent {...componentProps} key={activeTool} />
         </Suspense>
       </ErrorBoundary>
@@ -410,7 +416,10 @@ export default function App() {
 
   const activeTitle = activeTool === 'tool-home' && modeProfile.id !== 'all'
     ? modeProfile.label
-    : getToolRoute(activeTool)?.title || '';
+    : (() => {
+      const route = getToolRoute(activeTool);
+      return route ? localizeToolRoute(route, t).title : '';
+    })();
 
   // --banner-height is 0px by default, 36px when SHOW_CHANNEL_ALERT is true
   // We must use inline styles for calc() expressions using this CSS variable
@@ -449,11 +458,11 @@ export default function App() {
           </svg>
           {/* Desktop text */}
           <span className="hidden sm:inline">
-            This site is running on a {APP_CHANNEL} version ({APP_VERSION}). May provide wrong information. Check before using.
+            {t('navigation:banner.desktop', { channel: APP_CHANNEL, version: APP_VERSION })}
           </span>
           {/* Mobile text */}
           <span className="sm:hidden">
-            {APP_CHANNEL} version ({APP_VERSION}) - Site may provide wrong info.
+            {t('navigation:banner.mobile', { channel: APP_CHANNEL, version: APP_VERSION })}
           </span>
         </div>
       )}
@@ -473,7 +482,7 @@ export default function App() {
           <button
             id="sidebar-toggle"
             className="bg-transparent border-none text-text-main cursor-pointer p-1 flex items-center justify-center rounded-sm transition-colors duration-200 hover:bg-accent-light hover:text-accent"
-            aria-label="Toggle Sidebar"
+            aria-label={t('navigation:sidebar.toggle')}
             onClick={() => setMobileSidebarOpen(prev => !prev)}
           >
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -483,6 +492,7 @@ export default function App() {
             </svg>
           </button>
           <span className="min-w-0 flex-1 truncate font-['TASA_Orbiter',sans-serif] font-bold text-[1.15rem] text-accent">Small Web Tools</span>
+          <LanguageSwitcher variant="mobile" />
           <button
             type="button"
             onClick={() => (
@@ -492,7 +502,7 @@ export default function App() {
             )}
             className="shrink-0 rounded-lg border border-border bg-app px-2.5 py-1.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
-            {modeProfile.simplified ? 'Exit Simple mode' : 'Simple mode'}
+            {t(modeProfile.simplified ? 'navigation:exitSimpleMode' : 'navigation:simpleMode')}
           </button>
         </header>
 
@@ -515,8 +525,8 @@ export default function App() {
               type="button"
               className={`flex items-center gap-[10px] cursor-pointer bg-transparent border-none p-0 text-left ${isSidebarCollapsed ? 'md:justify-center' : ''}`}
               id="brand-logo-btn"
-              title="Go to Home"
-              aria-label="Go to home"
+              title={t('navigation:goHome')}
+              aria-label={t('navigation:goHome')}
               onClick={() => {
                 handleAllToolsHomeClick();
               }}
@@ -541,7 +551,7 @@ export default function App() {
                 hover:bg-nav-hover-bg hover:text-text-sidebar
                 ${isSidebarCollapsed ? 'md:bg-accent md:text-white md:rotate-180 hover:md:bg-accent-hover hover:md:text-white hover:md:scale-105' : ''}
               `}
-              aria-label="Collapse Sidebar"
+              aria-label={t('navigation:sidebar.collapse')}
               onClick={toggleSidebarCollapse}
             >
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -562,8 +572,8 @@ export default function App() {
                 type="text"
                 id="tool-search"
                 className="w-full !py-2 !pl-8 !pr-3 text-[0.83rem] rounded-[7px] bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar outline-none transition-all duration-200 placeholder:text-text-sidebar-muted focus:border-accent focus:shadow-[0_0_0_2px_var(--focus-ring)]"
-                placeholder="Search tools..."
-                aria-label="Search tools"
+                placeholder={t('navigation:search.placeholder')}
+                aria-label={t('navigation:search.label')}
                 autoComplete="off"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -589,7 +599,7 @@ export default function App() {
                 </button>
               ))
             ) : (
-              categories.map(cat => {
+              categoriesLocalized.map(cat => {
                 const catItems = filteredModeNavItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
 
@@ -622,7 +632,7 @@ export default function App() {
                               {sgName}
                             </span>
                           </div>
-                          {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                          {sortLocalizedTools(subGroups[sgName], i18n.resolvedLanguage).map(item => (
                             <button
                               key={item.id}
                               className={`${navItemBase} ${navItemHover} pl-5 ${activeTool === item.id ? navItemActive : ''} ${isSidebarCollapsed ? 'md:justify-center md:pl-0 md:px-0 md:py-2' : ''}`}
@@ -678,11 +688,11 @@ export default function App() {
           <div className={`px-[14px] py-3 border-t border-border-sidebar flex flex-col gap-[10px] transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:px-0 md:items-center' : ''}`}>
             <div className={`flex items-center justify-between ${isSidebarCollapsed ? 'md:justify-center md:w-full' : ''}`}>
               {/* Theme label — hidden when collapsed on desktop */}
-              <span className={`text-[0.82rem] font-medium text-text-sidebar-muted ${isSidebarCollapsed ? 'md:hidden' : ''}`}>Theme</span>
+              <span className={`text-[0.82rem] font-medium text-text-sidebar-muted ${isSidebarCollapsed ? 'md:hidden' : ''}`}>{t('navigation:theme')}</span>
               <button
                 id="theme-toggle"
                 className="bg-[var(--bg-search-sidebar)] border border-border-sidebar text-text-sidebar-muted cursor-pointer w-[34px] h-[34px] rounded flex items-center justify-center transition-all duration-200 hover:bg-nav-hover-bg hover:text-text-sidebar"
-                aria-label="Toggle dark/light mode"
+                aria-label={t('navigation:toggleTheme')}
                 onClick={toggleTheme}
               >
                 {theme === 'dark' ? (
@@ -728,8 +738,8 @@ export default function App() {
                 type="button"
                 id="desktop-brand-logo"
                 className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85 bg-transparent border-none p-0"
-                title="Go to Home"
-                aria-label="Go to home"
+                title={t('navigation:goHome')}
+                aria-label={t('navigation:goHome')}
                 onClick={handleAllToolsHomeClick}
               >
                 <div className="bg-accent-gradient text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.15)] flex-shrink-0 [&_svg]:w-[18px] [&_svg]:[stroke-width:2.2]">
@@ -743,7 +753,7 @@ export default function App() {
 
             {/* Center: category navigation */}
             <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 min-[1380px]:gap-2`}>
-              {categories.map(cat => {
+              {categoriesLocalized.map(cat => {
                 const catItems = navItems.filter(item => item.category === cat.id);
                 if (catItems.length === 0) return null;
                 const isOpen = openDropdown === cat.id;
@@ -842,7 +852,7 @@ export default function App() {
                 )}
                 className="flex h-8 shrink-0 items-center rounded border border-border bg-app px-2.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:px-3"
               >
-                <span>{modeProfile.simplified ? 'Exit Simple mode' : 'Simple mode'}</span>
+                <span>{t(modeProfile.simplified ? 'navigation:exitSimpleMode' : 'navigation:simpleMode')}</span>
               </button>
               {/* Header Search */}
               <div
@@ -858,8 +868,8 @@ export default function App() {
                   <input
                     type="text"
                     className="header-search-input w-full !h-8 !pl-8 !pr-8 !py-0 border border-border rounded bg-[var(--bg-search-sidebar)] text-text-main text-[0.8rem] outline-none font-sans transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
-                    placeholder="Search tools..."
-                    aria-label="Search tools"
+                    placeholder={t('navigation:search.placeholder')}
+                    aria-label={t('navigation:search.label')}
                     autoComplete="off"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -887,44 +897,24 @@ export default function App() {
                         </button>
                       ))
                     ) : (
-                      <div className="p-3 text-center text-[0.8rem] text-text-muted">No tools found</div>
+                      <div className="p-3 text-center text-[0.8rem] text-text-muted">{t('navigation:search.noResults')}</div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Language Selector */}
-              <div
-                className={`${modeProfile.simplified ? 'hidden' : 'flex'} items-center gap-[6px] bg-app border border-border pl-[10px] pr-2 rounded h-8 text-text-muted transition-all duration-150 cursor-pointer relative hover:border-border-hover ${langDropdownOpen ? 'border-accent shadow-[0_0_0_2px_var(--focus-ring)] text-text-main' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLangDropdownOpen(!langDropdownOpen);
-                  setOpenDropdown(null);
-                }}
-              >
-                <svg className="flex-shrink-0 opacity-80 text-text-muted" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                </svg>
-                <span className="hidden select-none text-[0.8rem] font-medium text-text-main xl:inline">English</span>
-                <svg className="flex-shrink-0 opacity-50 text-text-muted pointer-events-none ml-0.5" viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-
-                {langDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-1 min-w-full box-border shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1">
-                    <button className="w-full text-center px-0 py-[6px] bg-transparent border-none rounded-sm text-[0.8rem] font-medium text-accent cursor-pointer bg-accent-light">
-                      English
-                    </button>
-                  </div>
-                )}
-              </div>
+              {!modeProfile.simplified && (
+                <LanguageSwitcher
+                  variant="desktop"
+                  onOpen={() => setOpenDropdown(null)}
+                />
+              )}
 
               {/* Theme Toggle (Desktop Header) */}
               <button
                 className="bg-transparent border border-border rounded-full w-8 h-8 flex items-center justify-center text-text-muted cursor-pointer transition-all duration-150 hover:border-accent hover:text-accent hover:bg-accent-light"
-                aria-label="Toggle dark/light mode"
+                aria-label={t('navigation:toggleTheme')}
                 onClick={toggleTheme}
               >
                 {theme === 'dark' ? (
@@ -960,8 +950,8 @@ export default function App() {
                 type="button"
                 id="top-brand-logo"
                 className="cursor-pointer bg-transparent border-none p-0 text-accent"
-                title="Go to Home"
-                aria-label="Go to home"
+                title={t('navigation:goHome')}
+                aria-label={t('navigation:goHome')}
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
                   handleAllToolsHomeClick();
@@ -976,12 +966,12 @@ export default function App() {
                   <button
                     className="flex items-center gap-1 bg-transparent border-none text-text-muted cursor-pointer text-[0.82rem] font-sans px-2 py-1 rounded-sm transition-[color,background] duration-150 hover:text-accent hover:bg-accent-light"
                     onClick={() => handleNavClick('tool-home')}
-                    title="Back to Home"
+                    title={t('navigation:backHome')}
                   >
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
-                    Home
+                    {t('navigation:home')}
                   </button>
                   <span className="text-text-muted text-[0.82rem] opacity-50">/</span>
                 </>
@@ -1001,7 +991,7 @@ export default function App() {
             {/* Footer Links Grid */}
             {activeTool === 'tool-home' && modeProfile.id === 'all' && (
               <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
-                {categories.map(cat => {
+                {categoriesLocalized.map(cat => {
                   const catItems = modeNavItems.filter(item => item.category === cat.id);
                   if (catItems.length === 0) return null;
                   return (
@@ -1027,7 +1017,7 @@ export default function App() {
                           return sortedSubGroupNames.map(sgName => (
                             <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
                               <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
-                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+                              {sortLocalizedTools(subGroups[sgName], i18n.resolvedLanguage).map(item => (
                                 <button
                                   key={item.id}
                                   className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
@@ -1064,12 +1054,12 @@ export default function App() {
               <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
                 <span className="font-display font-bold text-text-main">Small Web Tools</span>
                 <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
-                <span className="text-text-muted">Local-first tools. &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
+                <span className="text-text-muted">{t('navigation:footer.tagline')} &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
               </div>
               {/* Right: Social Links */}
               <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
                 {/* Personal Website */}
-                <a href="https://rhosiqs.com" target="_blank" rel="noopener noreferrer" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="Personal Website" aria-label="Personal Website">
+                <a href="https://rhosiqs.com" target="_blank" rel="noopener noreferrer" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title={t('navigation:footer.website')} aria-label={t('navigation:footer.website')}>
                   <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                 </a>
                 {/* Email: copy the address and open the configured mail client */}
@@ -1077,8 +1067,8 @@ export default function App() {
                   href="mailto:emailforvirtualmachine@gmail.com"
                   onClick={handleEmailClick}
                   className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title="Email Rhosiqs (copies address)"
-                  aria-label="Email Rhosiqs; copy address and open mail app"
+                  title={t('navigation:footer.email')}
+                  aria-label={t('navigation:footer.email')}
                 >
                   <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -1090,8 +1080,8 @@ export default function App() {
                   type="button"
                   onClick={() => setIsConsentModalOpen(true)}
                   className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title="Manage Third-Party Service Consent"
-                  aria-label="Manage Third-Party Service Consent"
+                  title={t('navigation:footer.consent')}
+                  aria-label={t('navigation:footer.consent')}
                 >
                   <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -1102,8 +1092,8 @@ export default function App() {
                   type="button"
                   onClick={() => handleNavClick('privacy')}
                   className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title="Read Privacy and Network Services"
-                  aria-label="Privacy"
+                  title={t('navigation:footer.privacy')}
+                  aria-label={t('tools:privacy.title')}
                 >
                   <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>

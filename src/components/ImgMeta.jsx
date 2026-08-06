@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ExifReader from 'exifreader';
 import JSZip from 'jszip';
 import Card from './ui/Card';
@@ -719,6 +720,7 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 export default function ImgMeta() {
+  const { t } = useTranslation('tools');
   const { createObjectUrl, revokeObjectUrl, revokeAllObjectUrls } = useObjectUrlRegistry();
   const [dragOver, setDragOver] = useState(false);
   const [images, setImages] = useState([]); // Array of parsed image objects
@@ -769,7 +771,7 @@ export default function ImgMeta() {
 
     const resourceCheck = validateResourceAddition(images, files, FILE_RESOURCE_POLICIES.imageMetadata);
     if (!resourceCheck.valid) {
-      setStatus(`Error: ${resourceCheck.error}`);
+      setStatus(t('tool-imgmeta.ui.resourceRejected'));
       return;
     }
 
@@ -840,12 +842,12 @@ export default function ImgMeta() {
             
           } catch (err) {
             console.error("Processing error:", err);
-            setStatus(`Error processing ${file.name}: ${err.message}`);
+            setStatus(t('tool-imgmeta.ui.processingFailed', { name: file.name }));
             resolve(null);
           }
         };
         reader.onerror = () => {
-          setStatus(`Failed to read ${file.name}`);
+          setStatus(t('tool-imgmeta.ui.readFailed', { name: file.name }));
           resolve(null);
         };
         reader.readAsArrayBuffer(file);
@@ -942,11 +944,11 @@ export default function ImgMeta() {
         lossless = true;
       } else {
         if (mode === 'private') {
-          setStatus('Private-only stripping is available for JPEG/JPG. Use Remove All Metadata for other image formats.');
+          setStatus(t('tool-imgmeta.ui.privateJpegOnly'));
           return;
         }
         if (!image.previewSrc || image.type === 'Canon CR3 RAW') {
-          setStatus('This image format cannot be safely re-encoded by the browser.');
+          setStatus(t('tool-imgmeta.ui.cannotEncode'));
           return;
         }
         const reencoded = await reencodeImageWithoutMetadata(image.previewSrc, sourceMimeType);
@@ -1005,14 +1007,10 @@ export default function ImgMeta() {
         return img;
       }));
       
-      setStatus(
-        `Successfully stripped ${mode === 'private' ? 'private info' : 'all metadata'}${
-          lossless ? ' losslessly' : ` by re-encoding as ${outputExtension.toUpperCase()}`
-        }!`,
-      );
+      setStatus(t('tool-imgmeta.ui.stripSuccess', { format: outputExtension.toUpperCase() }));
     } catch (err) {
       console.error(err);
-      setStatus("Error stripping metadata: " + err.message);
+      setStatus(t('tool-imgmeta.ui.stripFailed'));
     }
   };
 
@@ -1029,7 +1027,7 @@ export default function ImgMeta() {
       }
       return img;
     }));
-    setStatus("Restored original metadata.");
+    setStatus(t('tool-imgmeta.ui.restored'));
   };
 
   const downloadStrippedFile = (image) => {
@@ -1050,7 +1048,7 @@ export default function ImgMeta() {
 
   const handleExportZip = async () => {
     if (images.length === 0) return;
-    setStatus('Generating ZIP file...');
+    setStatus(t('tool-imgmeta.ui.generatingZip'));
     try {
       const zip = new JSZip();
       
@@ -1076,10 +1074,10 @@ export default function ImgMeta() {
       document.body.removeChild(a);
       revokeObjectUrl(url);
       
-      setStatus('ZIP file exported successfully!');
+      setStatus(t('tool-imgmeta.ui.zipSuccess'));
     } catch (err) {
       console.error(err);
-      setStatus('Error generating ZIP: ' + err.message);
+      setStatus(t('tool-imgmeta.ui.zipFailed'));
     }
   };
 
@@ -1096,7 +1094,7 @@ export default function ImgMeta() {
     <ExternalMapPreview
       latitude={gpsCoords.lat}
       longitude={gpsCoords.lon}
-      title="GPS Location"
+      title={t('imgmeta-extra.gpsLocation')}
       collapsible
     />
   ) : null;
@@ -1179,7 +1177,7 @@ export default function ImgMeta() {
     }
 
     if (!anyGroup) {
-      return <div className="text-center py-8 text-sm text-text-muted italic bg-card border border-border rounded-xl">No matching parameters found.</div>;
+      return <div className="text-center py-8 text-sm text-text-muted italic bg-card border border-border rounded-xl">{t('imgmeta-extra.noMatchingParameters')}</div>;
     }
 
     return <div className="flex flex-col gap-4 w-full">{groupsToRender}</div>;
@@ -1253,7 +1251,7 @@ export default function ImgMeta() {
     if (matchCount === 0) {
       return (
         <div id="imgmeta-no-tags" className="text-center py-8 text-sm text-text-muted italic bg-card border border-border rounded-xl">
-          No matching tags found.
+          {t('imgmeta-extra.noMatchingTags')}
         </div>
       );
     }
@@ -1261,7 +1259,7 @@ export default function ImgMeta() {
     return (
       <div className="flex flex-col gap-4 w-full">
         <div className="flex justify-between items-center gap-4 bg-card border border-border rounded-xl p-3 shadow-sm">
-          <span className="text-xs font-semibold text-text-main">Found {matchCount} metadata tags</span>
+          <span className="text-xs font-semibold text-text-main">{t('imgmeta-extra.foundTags', { count: matchCount })}</span>
           <Button variant="secondary" size="sm" onClick={toggleExpandAll}>
             {Object.values(collapsedGroups).every(v => !v) ? 'Collapse All' : 'Expand All'}
           </Button>
@@ -1293,9 +1291,9 @@ export default function ImgMeta() {
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                          <th className="p-3 pl-4">Tag Name</th>
-                          <th className="p-3">Value</th>
-                          <th className="p-3 pr-4">Description</th>
+                          <th className="p-3 pl-4">{t('imgmeta-extra.tagName')}</th>
+                          <th className="p-3">{t('imgmeta-extra.value')}</th>
+                          <th className="p-3 pr-4">{t('imgmeta-extra.description')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1324,9 +1322,9 @@ export default function ImgMeta() {
     return (
       <div className="border border-border bg-card rounded-xl p-5 flex flex-col gap-5 shadow-sm w-full">
         <div className="flex justify-between items-center gap-4 border-b border-border pb-3">
-          <h3 className="text-sm font-bold text-text-main">⚖️ Side-by-Side Metadata Comparison</h3>
+          <h3 className="text-sm font-bold text-text-main">⚖️ {t('imgmeta-extra.comparisonTitle')}</h3>
           <Button variant="secondary" size="sm" onClick={() => setCompareMode(false)}>
-            Back to Detail View
+            {t('tool-imgmeta.ui.backDetail')}
           </Button>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border">
@@ -1334,7 +1332,7 @@ export default function ImgMeta() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-app/50 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                  <th className="p-3.5 pl-4 w-48 shrink-0">Field / Parameter</th>
+                  <th className="p-3.5 pl-4 w-48 shrink-0">{t('tool-imgmeta.ui.fieldParameter')}</th>
                   {comparedImages.map(img => (
                     <th key={img.id} className={`p-3.5 min-w-[200px] max-w-[300px] ${img.id === selectedImageId ? 'bg-accent-light/10 border-x border-accent/20' : ''}`}>
                       <div className="flex items-center justify-between gap-2">
@@ -1346,7 +1344,7 @@ export default function ImgMeta() {
                             e.stopPropagation();
                             handleToggleCompareSelection(img.id);
                           }}
-                          title="Exclude from comparison"
+                          title={t('metadata-common.excludeComparison')}
                         >
                           ×
                         </button>
@@ -1376,9 +1374,9 @@ export default function ImgMeta() {
             </table>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center bg-app/20">
-              <p className="text-sm font-semibold text-text-muted">No images selected for comparison.</p>
+              <p className="text-sm font-semibold text-text-muted">{t('tool-imgmeta.ui.noImagesCompared')}</p>
               <p className="text-xs text-text-muted/60 mt-1">
-                Use the checkboxes on the thumbnails above to select images to compare.
+                {t('tool-imgmeta.ui.selectComparisonHint')}
               </p>
             </div>
           )}
@@ -1418,7 +1416,7 @@ export default function ImgMeta() {
                     handleToggleCompareSelection(img.id);
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  title="Include in comparison"
+                  title={t('metadata-common.includeComparison')}
                 />
               )}
               <div className="relative w-12 h-12 rounded-lg bg-app overflow-hidden flex items-center justify-center border border-border/50 shrink-0">
@@ -1435,7 +1433,7 @@ export default function ImgMeta() {
                     handleRemoveImage(img.id);
                   }}
                   style={{ transform: 'scale(0.85)' }}
-                  title="Remove image"
+                  title={t('imgmeta-extra.removeImage')}
                 >
                   ×
                 </button>
@@ -1452,7 +1450,7 @@ export default function ImgMeta() {
             onClick={handleDropzoneClick}
           >
             <span className="text-base font-bold text-accent">+</span>
-            <span>Add More</span>
+            <span>{t('tool-imgmeta.ui.addMore')}</span>
           </div>
         </div>
         
@@ -1462,7 +1460,7 @@ export default function ImgMeta() {
             <div className="flex flex-wrap items-center gap-2.5">
               {!activeImage.strippedInfo ? (
                 <>
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0">Strip Meta:</span>
+                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0">{t('tool-imgmeta.ui.stripMeta')}</span>
                   {isJpeg && (
                     <Button
                       variant="secondary"
@@ -1470,7 +1468,7 @@ export default function ImgMeta() {
                       className="flex items-center gap-1 hover:text-accent font-bold"
                       onClick={() => handleStripMetadata(activeImage, 'private')}
                     >
-                      🔒 Private
+                      🔒 {t('metadata-common.private')}
                     </Button>
                   )}
                   <Button
@@ -1479,34 +1477,34 @@ export default function ImgMeta() {
                     className="flex items-center gap-1 hover:text-red-500 font-bold"
                     onClick={() => handleStripMetadata(activeImage, 'all')}
                   >
-                    🗑️ Remove All Metadata
+                    🗑️ {t('imgmeta-extra.removeAll')}
                   </Button>
                 </>
               ) : (
                 <>
                   <span className="text-xs font-bold text-accent">
-                    ✓ Stripped: {activeImage.strippedInfo.mode === 'private' ? 'Private Only' : 'All Meta'}
+                    ✓ {t('imgmeta-extra.stripped', { mode: activeImage.strippedInfo.mode === 'private' ? t('imgmeta-extra.privateOnly') : t('imgmeta-extra.allMetadata') })}
                   </span>
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={() => downloadStrippedFile(activeImage)}
                   >
-                    💾 Download Stripped
+                    💾 {t('imgmeta-extra.downloadStripped')}
                   </Button>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => handleRestoreOriginal(activeImage.id)}
                   >
-                    🔄 Restore Original
+                    🔄 {t('imgmeta-extra.restoreOriginal')}
                   </Button>
                 </>
               )}
             </div>
           ) : (
             <div className="text-xs text-text-muted/60 italic">
-              This RAW image cannot be safely re-encoded by the browser.
+              {t('tool-imgmeta.ui.rawCannotEncode')}
             </div>
           )}
 
@@ -1515,22 +1513,22 @@ export default function ImgMeta() {
               variant={compareMode ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setCompareMode(!compareMode)}
-              title="Toggle side-by-side comparison"
+              title={t('metadata-common.toggleComparison')}
               className="flex items-center gap-1.5"
             >
-              <span>⚖️ Compare {images.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
+              <span>⚖️ {t('imgmeta-extra.compare')} {images.length > 1 ? `(${compareSelectedIds.length})` : ''}</span>
             </Button>
             <Button
               variant="primary"
               size="sm"
               onClick={handleExportZip}
-              title="Export all images as a ZIP archive"
+              title={t('imgmeta-extra.exportZipTitle')}
               className="flex items-center gap-1.5"
             >
-              <span>📦 Export ZIP</span>
+              <span>📦 {t('imgmeta-extra.exportZip')}</span>
             </Button>
             <Button variant="secondary" size="sm" onClick={handleClear}>
-              Clear All
+              {t('tool-imgmeta.ui.clearAll')}
             </Button>
           </div>
         </div>
@@ -1541,7 +1539,7 @@ export default function ImgMeta() {
   return (
     <Card id="tool-imgmeta" variant="tool" size="wide">
       <ToolHeader 
-        title="Image Metadata Viewer &amp; Stripper" 
+        title={t('tool-imgmeta.ui.title')}
       />
       
       <div 
@@ -1570,7 +1568,7 @@ export default function ImgMeta() {
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <p className="text-sm font-bold">Drop files to add to Image Metadata</p>
+              <p className="text-sm font-bold">{t('tool-imgmeta.ui.dropAdd')}</p>
             </div>
           </div>
         )}
@@ -1592,19 +1590,19 @@ export default function ImgMeta() {
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
               <div>
-                <p className="text-base font-bold text-text-main">Drag &amp; drop images here</p>
-                <p className="text-xs text-text-muted mt-1">or</p>
+                <p className="text-base font-bold text-text-main">{t('tool-imgmeta.ui.dragDrop')}</p>
+                <p className="text-xs text-text-muted mt-1">{t('tool-imgmeta.ui.or')}</p>
               </div>
               <Button 
                 type="button" 
                 variant="secondary" 
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current.click(); }}
               >
-                Browse Files
+                {t('tool-imgmeta.ui.browse')}
               </Button>
-              <p className="text-[10px] text-text-muted/60 leading-relaxed">Supports JPG, PNG, WebP, HEIC, AVIF, and Canon CR3 RAW</p>
+              <p className="text-[10px] text-text-muted/60 leading-relaxed">{t('tool-imgmeta.ui.supports')}</p>
               <p role="note" className="rounded-md border border-accent/30 bg-accent-light px-2.5 py-1.5 text-xs font-semibold text-accent">
-                Metadata stripping supports JPEG/JPG, PNG, WebP, and other browser-decodable images. Non-JPEG formats are privacy-safe re-encodes.
+                {t('tool-imgmeta.ui.stripSupport')}
               </p>
             </div>
           </div>
@@ -1621,7 +1619,7 @@ export default function ImgMeta() {
               <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
                 <div className="relative bg-app/80 flex items-center justify-center p-4 border-b border-border/60 min-h-[180px] max-h-[360px] overflow-hidden">
                   {displayedPreviewSrc && (
-                    <img id="imgmeta-preview-img" alt="Preview" src={displayedPreviewSrc} className="max-w-full max-h-[320px] rounded-lg object-contain shadow-sm" />
+                    <img id="imgmeta-preview-img" alt={t('metadata-common.imagePreview')} src={displayedPreviewSrc} className="max-w-full max-h-[320px] rounded-lg object-contain shadow-sm" />
                   )}
                   {isRaw && (
                     <div id="imgmeta-raw-icon" className="flex flex-col items-center gap-2 text-text-muted/40">
@@ -1629,15 +1627,15 @@ export default function ImgMeta() {
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
                       </svg>
-                      <span className="text-xs font-bold uppercase tracking-wider">RAW Image (No Thumbnail)</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">{t('tool-imgmeta.ui.rawNoThumbnail')}</span>
                     </div>
                   )}
                 </div>
                 <div className="p-4 flex flex-col gap-1.5 bg-card">
                   <h3 id="imgmeta-file-name" className="text-sm font-bold text-text-main truncate" title={activeImage.name}>{activeImage.name}</h3>
                   <div className="flex justify-between items-center text-xs mt-1 border-t border-border/40 pt-2 text-text-muted">
-                    <p><span className="font-semibold text-text-main">Format:</span> <span className="font-mono">{activeImage.type}</span></p>
-                    <p><span className="font-semibold text-text-main">Size:</span> <span className="font-mono">{displayedSize}</span></p>
+                    <p><span className="font-semibold text-text-main">{t('metadata-common.format')}</span> <span className="font-mono">{activeImage.type}</span></p>
+                    <p><span className="font-semibold text-text-main">{t('metadata-common.size')}</span> <span className="font-mono">{displayedSize}</span></p>
                   </div>
                 </div>
               </div>
@@ -1645,30 +1643,30 @@ export default function ImgMeta() {
               {/* Stripper Diff (Visual list of removed vs retained tags) */}
               {activeImage.strippedInfo && (
                 <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-                  <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Stripped Tags Verification</h4>
+                  <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('tool-imgmeta.ui.verification')}</h4>
                   <div className="flex flex-col gap-3.5 border border-border rounded-lg p-3 bg-app/30">
                     <div className="flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Removed ({activeImage.strippedInfo.removedTags.length})</span>
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">{t('imgmeta-extra.removed', { count: activeImage.strippedInfo.removedTags.length })}</span>
                       <div className="flex flex-wrap gap-1.5">
                         {activeImage.strippedInfo.removedTags.slice(0, 10).map(t => (
                           <span key={t} className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 text-[10px] font-mono border border-red-500/20">{t}</span>
                         ))}
                         {activeImage.strippedInfo.removedTags.length > 10 && (
-                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">+{activeImage.strippedInfo.removedTags.length - 10} more</span>
+                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">{t('imgmeta-extra.more', { count: activeImage.strippedInfo.removedTags.length - 10 })}</span>
                         )}
-                        {activeImage.strippedInfo.removedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">None</span>}
+                        {activeImage.strippedInfo.removedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">{t('tool-imgmeta.ui.none')}</span>}
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 border-t border-border/60 pt-3">
-                      <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Retained ({activeImage.strippedInfo.retainedTags.length})</span>
+                      <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">{t('imgmeta-extra.retained', { count: activeImage.strippedInfo.retainedTags.length })}</span>
                       <div className="flex flex-wrap gap-1.5">
                         {activeImage.strippedInfo.retainedTags.slice(0, 10).map(t => (
                           <span key={t} className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono border border-emerald-500/20">{t}</span>
                         ))}
                         {activeImage.strippedInfo.retainedTags.length > 10 && (
-                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">+{activeImage.strippedInfo.retainedTags.length - 10} more</span>
+                          <span className="px-1.5 py-0.5 rounded bg-app text-text-muted text-[10px] font-mono border border-border">{t('imgmeta-extra.more', { count: activeImage.strippedInfo.retainedTags.length - 10 })}</span>
                         )}
-                        {activeImage.strippedInfo.retainedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">None</span>}
+                        {activeImage.strippedInfo.retainedTags.length === 0 && <span className="text-xs text-text-muted/50 italic">{t('tool-imgmeta.ui.none')}</span>}
                       </div>
                     </div>
                   </div>
@@ -1688,9 +1686,9 @@ export default function ImgMeta() {
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  <span>Export JSON</span>
+                  <span>{t('tool-imgmeta.ui.exportJson')}</span>
                 </Button>
-                <Button id="imgmeta-clear" variant="secondary" onClick={() => handleRemoveImage(activeImage.id)}>Remove</Button>
+                <Button id="imgmeta-clear" variant="secondary" onClick={() => handleRemoveImage(activeImage.id)}>{t('tool-imgmeta.ui.remove')}</Button>
               </div>
             </div>
 
@@ -1717,7 +1715,7 @@ export default function ImgMeta() {
                     type="text"
                     id="imgmeta-tag-search"
                     className="w-full bg-card border border-border rounded-lg pl-3 pr-8 py-1.5 text-xs text-text-main outline-none focus:border-accent"
-                    placeholder="Search tags..."
+                    placeholder={t('tool-imgmeta.ui.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />

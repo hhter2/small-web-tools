@@ -129,7 +129,7 @@ Unless the task explicitly involves them, **do not read or modify**:
 - `public/` — read or change it only when the task involves static assets,
   fonts, or response headers
 - `README.md` — maintained manually by the user; **do not update it as part of any task** unless explicitly instructed
-- `TODO.md` — maintained manually by the user. **Never modify this file by yourself**. All operations on it are done by the human. There may be issues or features written in it with a `#` prefix (e.g., `#fix`). Do **not** read this file unless explicitly instructed (e.g. when the user says "detail for #fix" or similar). Otherwise, there is no need to read it.
+- `TODO.md` — maintained by the project owner for backlog priorities and status. AI agents may read it when needed to preserve its format and may append a completed GitHub Issue to `Completed` only after the issue is closed and its implementation, validation, and commit are complete. Use the existing date, checklist, label, and English-only format. Do not change `Active backlog`, existing entries, label definitions, this update process, or any other TODO.md content unless explicitly instructed. Do not read or modify TODO.md for unrelated tasks.
 
 ---
 
@@ -160,6 +160,25 @@ Before producing any code, confirm:
 **Do not wait to be asked — updating `ARCHITECTURE.md` is part of every task that changes the file structure.**
 
 ---
+
+## Bilingual documentation transition
+
+This project is transitioning to bilingual English and Traditional Chinese
+documentation for users and human developers. Before changing a user-facing or
+developer-facing explanatory document, check whether a Traditional Chinese
+companion with the .zh-TW.md suffix exists. When the documented behavior,
+structure, policy, or workflow changes, update both language versions and keep
+English links pointing to English documents and Chinese links pointing to
+Chinese documents.
+
+AGENTS.md is an AI-facing instruction file and is intentionally English-only;
+do not create or maintain a Chinese counterpart. TODO.md is also intentionally
+English-only. Work may additionally be tracked by AI agents through GitHub
+Issues and Pull Requests, so not every issue, pull request, or completed change
+will appear in TODO.md. Before finishing a documentation task, check README,
+CONTRIBUTING, ARCHITECTURE, PRIVACY, font manifests, and test-harness guides
+for paired updates; exclude this agent guide and TODO.md from the bilingual
+document set.
 
 ## 10. Styling Migration Status (Tailwind CSS)
 

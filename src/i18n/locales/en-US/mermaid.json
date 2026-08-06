@@ -1,0 +1,52 @@
+{
+  "tool-mermaid": {
+    "title": "Mermaid Converter",
+    "tooltip": "Mermaid Converter",
+    "description": "Render Mermaid diagrams locally and download matching source, SVG, and PNG files.",
+    "search": ["Mermaid", "flowchart", "diagram", "SVG", "PNG"],
+    "ui": {
+      "paste": "Paste",
+      "upload": "Upload .mmd",
+      "uploadAria": "Upload a Mermaid source file",
+      "render": "Render",
+      "clear": "Clear",
+      "filename": "Download filename",
+      "downloadMmd": "Download .mmd",
+      "downloadSvg": "Download .svg",
+      "downloadPng": "Download .png",
+      "backgroundMode": "Background mode",
+      "background": "Background color",
+      "solid": "Solid",
+      "transparent": "Transparent",
+      "pngScale": "PNG scale",
+      "localOnly": "Source and exports stay in this browser.",
+      "editorTitle": "Mermaid source",
+      "previewTitle": "Preview",
+      "characterCount": "{{count}} characters",
+      "editorAria": "Mermaid source editor",
+      "previewAria": "Rendered Mermaid diagram",
+      "emptyPreview": "Enter valid Mermaid source to preview it.",
+      "expandEditor": "Expand Mermaid editor",
+      "expandPreview": "Expand Mermaid preview",
+      "status": {
+        "rendering": "Rendering…",
+        "rendered": "Diagram rendered locally.",
+        "downloaded": "Downloaded {{filename}}.",
+        "loaded": "Loaded {{filename}}.",
+        "pasted": "Pasted Mermaid source.",
+        "cleared": "Diagram cleared."
+      },
+      "errors": {
+        "empty": "Enter Mermaid source before rendering.",
+        "tooLarge": "The Mermaid source is too large.",
+        "parseError": "The Mermaid source could not be parsed.",
+        "tooManyNodes": "The diagram contains too many statements.",
+        "invalidSvg": "Mermaid returned an invalid SVG.",
+        "invalidFile": "Choose a .mmd file.",
+        "clipboardDenied": "Clipboard access was denied.",
+        "pngTooLarge": "The selected PNG dimensions exceed the safe pixel limit.",
+        "pngFailed": "The PNG could not be generated in this browser."
+      }
+    }
+  }
+}

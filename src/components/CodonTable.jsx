@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -89,6 +90,13 @@ const BASES = ['U', 'C', 'A', 'G'];
 const SECOND_BASES = ['U', 'C', 'A', 'G'];
 const THIRD_BASES  = ['U', 'C', 'A', 'G'];
 
+function getAminoName(t, data, codon) {
+  if (!data) return t('tool-codon.ui.unknown');
+  if (data.type === 'stop') return t(`tool-codon.ui.amino.${codon}`);
+  if (data.type === 'start') return t('tool-codon.ui.amino.MetStart');
+  return t(`tool-codon.ui.amino.${data.aa}`);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Amino acid colour palette — distinct hue per AA group
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +154,7 @@ function useRipple() {
 // CodonButton — one interactive codon element
 // ─────────────────────────────────────────────────────────────────────────────
 function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
+  const { t } = useTranslation('tools');
   const data       = CODON_MAP[codon];
   const triggerRipple = useRipple();
 
@@ -192,9 +201,9 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
         color: '#fff'
       } : undefined}
       onClick={handleClick}
-      aria-label={`Codon ${codon} encodes ${data?.full ?? 'unknown'}`}
+      aria-label={t('tool-codon.ui.codonAria', { codon, amino: getAminoName(t, data, codon) })}
       aria-pressed={isSelected}
-      title={`${codon} → ${data?.full ?? '?'} (${data?.abbr ?? '?'})`}
+      title={t('tool-codon.ui.codonTitle', { codon, amino: getAminoName(t, data, codon), abbr: data?.abbr ?? '?' })}
     >
       <span className={isHighlighted ? 'font-extrabold' : ''}>{codon}</span>
     </button>
@@ -205,6 +214,7 @@ function CodonButton({ codon, isSelected, isHighlighted, isDimmed, onSelect }) {
 // AminoAcidButton — the AA label inside each cell group
 // ─────────────────────────────────────────────────────────────────────────────
 function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
+  const { t } = useTranslation('tools');
   const data = CODON_MAP[codon];
   const triggerRipple = useRipple();
   if (!data) return null;
@@ -242,7 +252,7 @@ function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
   const label = data.type === 'start'
     ? `${data.aa} ★`
     : data.type === 'stop'
-    ? '■ Stop'
+    ? t('tool-codon.ui.stopLabel')
     : data.aa;
 
   return (
@@ -251,9 +261,9 @@ function AminoAcidButton({ codon, isHighlighted, isDimmed, onSelect }) {
       className={cls}
       onClick={handleClick}
       style={inlineStyle}
-      aria-label={`${data.aa}: ${data.full}`}
+      aria-label={t('tool-codon.ui.aminoAria', { code: data.aa, amino: getAminoName(t, data, codon) })}
       aria-pressed={isHighlighted}
-      title={`${data.full} · 1-letter: ${data.abbr}`}
+      title={t('tool-codon.ui.aminoTitle', { amino: getAminoName(t, data, codon), abbr: data.abbr })}
     >
       {label}
     </button>
@@ -564,6 +574,7 @@ function renderSideChain(aa) {
 
 // Fischer Projection Widget Component
 function FischerProjection({ aa, customGroups = [] }) {
+  const { t } = useTranslation('tools');
   const details = AMINO_ACID_DETAILS[aa];
   if (!details) return null;
 
@@ -572,9 +583,9 @@ function FischerProjection({ aa, customGroups = [] }) {
   const height = Math.round(baseHeight * 1.2);
 
   // Match standard group names
-  const matchedStd = Object.values(AA_GROUPS)
-    .filter(grp => grp.aas.includes(aa))
-    .map(grp => grp.name);
+  const matchedStd = Object.entries(AA_GROUPS)
+    .filter(([, grp]) => grp.aas.includes(aa))
+    .map(([key]) => t(`tool-codon.ui.group.${key}`));
 
   // Match custom group names
   const matchedCustom = customGroups
@@ -582,11 +593,11 @@ function FischerProjection({ aa, customGroups = [] }) {
     .map(grp => grp.name);
 
   const allMatched = [...matchedStd, ...matchedCustom];
-  const groupText = allMatched.length > 0 ? allMatched.join(', ') : details.type;
+  const groupText = allMatched.length > 0 ? allMatched.join(', ') : t(`tool-codon.ui.groupType.${aa}`);
 
   return (
     <div className="flex flex-col gap-2.5 p-3.5 px-4 rounded-xl bg-app border border-border mt-1">
-      <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">Fischer Projection (L-Form)</span>
+      <span className="text-[0.72rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.fischer')}</span>
       <div className="flex flex-col items-center gap-3 w-full">
         <svg className="shrink-0 bg-card rounded-lg border border-border p-2" width={width} height={height} viewBox={`0 0 160 ${baseHeight}`}>
           {/* Main Backbone Bonds */}
@@ -614,11 +625,11 @@ function FischerProjection({ aa, customGroups = [] }) {
 
         <div className="flex flex-col gap-1.5 w-full border-t border-dashed border-border pt-2.5">
           <div className="flex gap-2 items-center justify-center text-center">
-            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">Side Chain:</span>
-            <span className="text-[0.82rem] font-semibold text-text-main">{details.name}</span>
+            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">{t('tool-codon.ui.sideChain')}:</span>
+            <span className="text-[0.82rem] font-semibold text-text-main">{t(`tool-codon.ui.sideChainName.${aa}`)}</span>
           </div>
           <div className="flex gap-2 items-center justify-center text-center">
-            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">Group Type:</span>
+            <span className="text-[0.68rem] uppercase tracking-wide text-text-muted font-bold">{t('tool-codon.ui.groupTypeLabel')}:</span>
             <span className="text-[0.82rem] font-semibold text-text-main">{groupText}</span>
           </div>
         </div>
@@ -716,6 +727,7 @@ function InfoPanel({
   setSelectedCodon,
   panelRef
 }) {
+  const { t } = useTranslation('tools');
   const codon = selectedCodon || (typedCodon.length === 3 ? typedCodon : null);
   const data = codon ? CODON_MAP[codon] : null;
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
@@ -744,8 +756,8 @@ function InfoPanel({
     : AA_GROUPS[selectedGroup];
 
   const selectedGroupLabel = selectedGroup === 'all'
-    ? 'All Groups'
-    : activeGroup?.name || 'All Groups';
+    ? t('tool-codon.ui.allGroups')
+    : (selectedGroup.startsWith('custom-') ? activeGroup?.name : t(`tool-codon.ui.group.${selectedGroup}`)) || t('tool-codon.ui.allGroups');
 
   const selectGroup = (value) => {
     setSelectedGroup(value);
@@ -772,7 +784,7 @@ function InfoPanel({
       
       {/* ── Filter by Groups Block ────────────────── */}
       <div className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card animate-[ct-panel-slide-in_0.25s_ease] lg:col-start-2 lg:row-start-1 xl:col-start-1">
-        <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">Filter by Group</span>
+        <span className="border-b border-border pb-1 text-[0.75rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.filterByGroup')}</span>
         <div className="flex flex-col gap-2.5">
           
           <div className="flex w-full items-center gap-2">
@@ -795,7 +807,7 @@ function InfoPanel({
               </button>
 
               {isGroupDropdownOpen && (
-                <div id="ct-group-options" role="listbox" aria-label="Amino acid groups" className="absolute left-0 z-50 mt-2 flex max-h-64 w-full min-w-[190px] flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-[var(--bg-card-solid,var(--bg-card))] p-1 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.18)]">
+                <div id="ct-group-options" role="listbox" aria-label={t('tool-codon.ui.aminoGroupsAria')} className="absolute left-0 z-50 mt-2 flex max-h-64 w-full min-w-[190px] flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-[var(--bg-card-solid,var(--bg-card))] p-1 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.18)]">
                   <button
                     type="button"
                     role="option"
@@ -803,10 +815,10 @@ function InfoPanel({
                     className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === 'all' ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
                     onClick={() => selectGroup('all')}
                   >
-                    All Groups
+                    {t('tool-codon.ui.allGroups')}
                   </button>
 
-                  <div className="px-2.5 pt-1 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Standard Groups</div>
+                  <div className="px-2.5 pt-1 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.standardGroups')}</div>
                   {Object.entries(AA_GROUPS).map(([key, grp]) => (
                     <button
                       key={key}
@@ -816,13 +828,13 @@ function InfoPanel({
                       className={`w-full rounded-md px-2.5 py-1.5 text-left text-[0.78rem] font-medium transition-colors ${selectedGroup === key ? 'bg-accent-light text-accent' : 'text-text-main hover:bg-app'}`}
                       onClick={() => selectGroup(key)}
                     >
-                      {grp.name}
+                      {t(`tool-codon.ui.group.${key}`)}
                     </button>
                   ))}
 
                   {customGroups.length > 0 && (
                     <>
-                      <div className="mt-1 border-t border-border px-2.5 pt-2 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">Custom Groups</div>
+                      <div className="mt-1 border-t border-border px-2.5 pt-2 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.customGroups')}</div>
                       {customGroups.map((grp, idx) => {
                         const value = `custom-${idx}`;
                         return (
@@ -850,9 +862,9 @@ function InfoPanel({
                   type="button"
                   className="cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-red-500/40 hover:bg-red-500/15 hover:text-red-500 active:scale-96"
                   onClick={() => handleDeleteCustomGroup(parseInt(selectedGroup.split('-')[1], 10))}
-                  title="Delete active custom group"
+                  title={t('tool-codon.ui.deleteGroupTitle')}
                 >
-                  Delete
+                  {t('tool-codon.ui.delete')}
                 </button>
               )}
               <button
@@ -860,7 +872,7 @@ function InfoPanel({
                 className={`cursor-pointer whitespace-nowrap rounded-lg border border-border bg-white/3 px-2 py-1.5 text-[0.72rem] font-semibold text-text-main transition-all hover:border-text-muted hover:bg-white/8 active:scale-96 ${isCreatingGroup ? 'bg-accent border-accent text-white shadow-[0_1px_6px_rgba(99, 102, 241, 0.25)]' : ''}`}
                 onClick={() => setIsCreatingGroup(prev => !prev)}
               >
-                {isCreatingGroup ? 'Close' : '+ Custom'}
+                {isCreatingGroup ? t('tool-codon.ui.close') : t('tool-codon.ui.addCustom')}
               </button>
             </div>
           </div>
@@ -868,25 +880,25 @@ function InfoPanel({
           {/* Custom Group Creator Panel */}
           {isCreatingGroup && (
             <div className="flex flex-col gap-4 bg-white/2 border border-border rounded-lg p-4 mt-1 animate-[ct-fade-in_0.25s_ease-out]">
-              <span className="text-[0.9rem] font-bold text-text-main uppercase tracking-wider border-b border-dashed border-border pb-2">Create Custom Group</span>
+              <span className="text-[0.9rem] font-bold text-text-main uppercase tracking-wider border-b border-dashed border-border pb-2">{t('tool-codon.ui.createCustomGroup')}</span>
               <div className="flex flex-col gap-4">
                 
                 {/* Name Input */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Group Name</label>
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">{t('tool-codon.ui.groupName')}</label>
                   <input
                     type="text"
                     className="bg-black/20 border border-border rounded-lg p-2 px-3 text-text-main text-[0.85rem] outline-none focus:border-accent transition-colors"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="e.g. My Favorite AAs"
+                    placeholder={t('tool-codon.ui.groupNamePlaceholder')}
                     maxLength={20}
                   />
                 </div>
 
                 {/* Color Picker */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Label Color</label>
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">{t('tool-codon.ui.labelColor')}</label>
                   <div className="flex gap-2.5 flex-wrap">
                     {[
                       '#d97706', '#e11d48', '#059669', '#4f46e5', '#ea580c', '#06b6d4', '#db2777'
@@ -904,7 +916,7 @@ function InfoPanel({
 
                 {/* Amino Acid Selector Grid */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">Select Amino Acids ({newGroupAAs.length} chosen)</label>
+                  <label className="text-[0.72rem] font-bold text-text-muted uppercase">{t('tool-codon.ui.selectAminoAcids', { count: newGroupAAs.length })}</label>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-1.5">
                     {Object.keys(AMINO_ACID_DETAILS).map(aa => {
                       const isChosen = newGroupAAs.includes(aa);
@@ -940,7 +952,7 @@ function InfoPanel({
                     onClick={handleCreateCustomGroup}
                     disabled={!newGroupName.trim() || newGroupAAs.length === 0}
                   >
-                    Save Group
+                    {t('tool-codon.ui.saveGroup')}
                   </button>
                   <button
                     type="button"
@@ -951,7 +963,7 @@ function InfoPanel({
                       setNewGroupAAs([]);
                     }}
                   >
-                    Cancel
+                    {t('tool-codon.ui.cancel')}
                   </button>
                 </div>
 
@@ -962,7 +974,7 @@ function InfoPanel({
           {/* AA chips in active group */}
           {selectedGroup !== 'all' && activeGroup && (
             <div className="flex flex-col gap-1.5 animate-[ct-fade-in_0.25s_ease-out]">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">Amino acids in group:</span>
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-wider">{t('tool-codon.ui.aminoInGroup')}</span>
               <div className="flex flex-wrap gap-1.5">
                 {activeGroup.aas.map(aa => {
                   const isSelected = highlightedAA === aa;
@@ -1013,8 +1025,8 @@ function InfoPanel({
           className="absolute w-0 h-0 opacity-0 pointer-events-none"
           value={typedCodon}
           onChange={(e) => onType(e.target.value)}
-          placeholder="Type codon"
-          aria-label="Type codon code"
+          placeholder={t('tool-codon.ui.typeCodon')}
+          aria-label={t('tool-codon.ui.typeCodonAria')}
         />
 
         {/* Header section */}
@@ -1022,23 +1034,23 @@ function InfoPanel({
           {data ? (
             <>
               <div className="flex items-center gap-2.5 flex-nowrap">
-                <span className="text-[1.65rem] font-bold text-text-main tracking-tight">{data.full}</span>
+                <span className="text-[1.65rem] font-bold text-text-main tracking-tight">{getAminoName(t, data, codon)}</span>
                 {data.aa !== 'Stop' && (
                   <div className="flex gap-1 flex-nowrap items-center shrink-0">
                     <span className="p-1 px-2.5 rounded-lg text-[0.95rem] font-bold bg-app border border-border text-text-main font-mono transition-all dark:bg-white/5">{data.aa}</span>
                     <span className="p-1 px-2.5 rounded-lg text-[0.95rem] font-bold bg-app border border-border text-text-main font-mono transition-all dark:bg-white/5">{data.abbr}</span>
                   </div>
                 )}
-                {data.type === 'start' && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-emerald-500/20 text-emerald-600 bg-emerald-500/10">START ★</span>}
-                {data.type === 'stop'  && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-red-500/20 text-red-600 bg-red-500/[0.08]">STOP ■</span>}
+                {data.type === 'start' && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-emerald-500/20 text-emerald-600 bg-emerald-500/10">{t('tool-codon.ui.start')}</span>}
+                {data.type === 'stop'  && <span className="p-1 px-2.5 rounded-full text-[0.72rem] font-semibold border border-red-500/20 text-red-600 bg-red-500/[0.08]">{t('tool-codon.ui.stop')}</span>}
               </div>
-              <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label="Clear selection">✕</button>
+              <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label={t('tool-codon.ui.clearSelection')}>✕</button>
             </>
           ) : (
             <>
-              <span className="text-xl font-bold tracking-tight text-text-main">Codon Lookup</span>
+              <span className="text-xl font-bold tracking-tight text-text-main">{t('tool-codon.ui.lookup')}</span>
               {typedCodon.length > 0 && (
-                <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label="Clear typing">✕</button>
+                <button className="absolute top-3 right-3 w-5 h-5 rounded-full border border-border bg-app text-text-muted cursor-pointer text-[0.58rem] flex items-center justify-center transition-all hover:bg-accent hover:text-white hover:border-accent" onClick={onClear} aria-label={t('tool-codon.ui.clearTyping')}>✕</button>
               )}
             </>
           )}
@@ -1046,7 +1058,7 @@ function InfoPanel({
 
         {/* The 3 passcode typing cards */}
         <div className="my-2 flex w-full justify-center gap-2.5">
-          {['1ST', '2ND', '3RD'].map((posName, idx) => {
+          {[t('tool-codon.ui.firstShort'), t('tool-codon.ui.secondShort'), t('tool-codon.ui.thirdShort')].map((posName, idx) => {
             const char = typedCodon[idx] || '';
             const isActive = typedCodon.length === idx;
             const charColorClass = char === 'U' ? 'text-purple-400' : char === 'C' ? 'text-sky-400' : char === 'A' ? 'text-amber-400' : char === 'G' ? 'text-emerald-400' : '';
@@ -1055,7 +1067,7 @@ function InfoPanel({
                 key={idx}
                 className={`flex h-[68px] min-w-0 max-w-[96px] flex-1 cursor-pointer select-none flex-col items-center justify-center rounded-xl border-2 border-border bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-white/[0.05] ${isActive ? 'border-accent bg-accent/5 shadow-[0_0_10px_rgba(99,102,241,0.25)] animate-[ct-card-pulse_2s_infinite_ease-in-out]' : ''}`}
                 onClick={handleCardClick}
-                title="Click to type codon (U, C, A, G)"
+                title={t('tool-codon.ui.clickToType')}
               >
                 <span className="text-[0.65rem] font-bold text-text-muted mb-1 tracking-wider">{posName}</span>
                 <span className={`flex h-6 items-center justify-center font-mono text-2xl font-bold leading-none ${charColorClass}`}>
@@ -1073,7 +1085,7 @@ function InfoPanel({
             {/* Synonymous codons */}
             {synonyms.length > 0 && (
               <div className="flex flex-col gap-2">
-                <span className="text-[0.78rem] font-bold uppercase tracking-wider text-text-muted">Synonymous codons:</span>
+                <span className="text-[0.78rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.synonymous')}</span>
                 <div className="flex flex-wrap gap-1.5">
                   {synonyms.map(s => (
                     <span key={s} className="font-mono text-[0.85rem] p-1 px-2.5 rounded-lg bg-app border border-border text-text-muted">{s}</span>
@@ -1091,11 +1103,11 @@ function InfoPanel({
           <div className="flex min-h-[48px] items-center justify-center rounded-lg border border-dashed border-border bg-white/[0.01] p-2 text-center">
             {typedCodon.length > 0 ? (
               <span className="text-accent text-[0.85rem] font-semibold">
-                Type {3 - typedCodon.length} more {3 - typedCodon.length === 1 ? 'base' : 'bases'} (U, C, A, G)...
+                {t('tool-codon.ui.moreBases', { count: 3 - typedCodon.length })}
               </span>
             ) : (
               <span className="text-text-muted text-[0.85rem] italic">
-                Click cards above to type a codon sequence (e.g. UAU, AUG) or select a codon from the table.
+                {t('tool-codon.ui.lookupPrompt')}
               </span>
             )}
           </div>
@@ -1111,6 +1123,7 @@ function InfoPanel({
 // Main CodonTable component
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CodonTable() {
+  const { t } = useTranslation('tools');
   const [selectedCodon,    setSelectedCodon]    = useState(null);
   const [highlightedAA,    setHighlightedAA]    = useState(null);
   const [typedCodon,       setTypedCodon]       = useState('');
@@ -1273,11 +1286,11 @@ export default function CodonTable() {
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5 w-full">
-        <ToolHeader title="RNA Codon Table" />
+        <ToolHeader title={t('tool-codon.ui.title')} />
         <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs text-text-muted bg-app/50 border border-border px-3 py-2 rounded-lg">
           <p className="leading-relaxed">
-            <strong className="text-text-main">Standard Genetic Code (NCBI Translation Table 1)</strong>: Maps 64 RNA codons to 20 amino acids and 3 stop codons (UAA Ochre, UAG Amber, UGA Opal).
-            <span className="ml-1 opacity-90">AUG encodes Methionine (Met) and functions as canonical start codon in initiation context. <em>Note: Mitochondrial genomes and certain organisms use non-standard genetic codes.</em></span>
+            <strong className="text-text-main">{t('tool-codon.ui.standardCode')}</strong>: {t('tool-codon.ui.codeDescription')}
+            <span className="ml-1 opacity-90">{t('tool-codon.ui.startDescription')} <em>{t('tool-codon.ui.codeNote')}</em></span>
           </p>
         </div>
 
@@ -1290,18 +1303,18 @@ export default function CodonTable() {
           <div className="grid grid-cols-[22px_1fr_22px] grid-rows-[24px_auto] items-stretch gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-card sm:grid-cols-[26px_1fr_26px] sm:grid-rows-[26px_auto]">
 
             {/* Left axis: "First Codon" vertical label */}
-            <div className="col-start-1 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-r border-border flex items-center justify-center rotate-180" aria-label="First codon position">
-              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">First Codon (5')</span>
+            <div className="col-start-1 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-r border-border flex items-center justify-center rotate-180" aria-label={t('tool-codon.ui.firstPositionAria')}>
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">{t('tool-codon.ui.firstCodon')}</span>
             </div>
 
             {/* Top axis: "Second Codon" horizontal label */}
-            <div className="col-start-2 row-start-1 bg-gradient-to-r from-accent/8 to-accent/4 border-b border-border flex items-center justify-center" aria-label="Second codon position">
-              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">Second Codon</span>
+            <div className="col-start-2 row-start-1 bg-gradient-to-r from-accent/8 to-accent/4 border-b border-border flex items-center justify-center" aria-label={t('tool-codon.ui.secondPositionAria')}>
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">{t('tool-codon.ui.secondCodon')}</span>
             </div>
 
             {/* Right axis: "Third Codon" vertical label */}
-            <div className="col-start-3 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-l border-border flex items-center justify-center" aria-label="Third codon position">
-              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">Third Codon (3')</span>
+            <div className="col-start-3 row-start-1 row-end-3 [writing-mode:vertical-rl] bg-gradient-to-b from-accent/8 to-accent/4 border-l border-border flex items-center justify-center" aria-label={t('tool-codon.ui.thirdPositionAria')}>
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-accent whitespace-nowrap">{t('tool-codon.ui.thirdCodon')}</span>
             </div>
 
             {/* Inner: top axis + table */}
@@ -1332,7 +1345,7 @@ export default function CodonTable() {
                     <div key={b1} className="grid grid-cols-[28px_1fr_36px] border-t border-border first:border-t-0" role="rowgroup">
 
                       {/* Left row header: first base letter */}
-                      <div className={`flex items-center justify-center border-r border-border p-0.5 font-mono text-base font-bold ${b1ColorClass} ${b1BgHeaderClass}`} role="rowheader" aria-label={`First base: ${b1}`}>
+                      <div className={`flex items-center justify-center border-r border-border p-0.5 font-mono text-base font-bold ${b1ColorClass} ${b1BgHeaderClass}`} role="rowheader" aria-label={t('tool-codon.ui.firstBaseAria', { base: b1 })}>
                         <span>{b1}</span>
                       </div>
 
@@ -1354,7 +1367,7 @@ export default function CodonTable() {
                           });
 
                           return (
-                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-14 ${cellB2Bg}`} role="group" aria-label={`${b1}${b2}x group`}>
+                            <div key={b2} className={`relative grid grid-rows-4 border-l border-border pr-10 sm:pr-14 ${cellB2Bg}`} role="group" aria-label={t('tool-codon.ui.codonGroupAria', { prefix: `${b1}${b2}` })}>
                               {cellCodons.map((codon) => {
                                 return (
                                   <div
@@ -1374,7 +1387,7 @@ export default function CodonTable() {
                               })}
 
                               {/* AA labels — one per consecutive group, vertically centered */}
-                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-14" aria-label={`Amino acids for ${b1}${b2}x`}>
+                              <div className="absolute bottom-0 right-0 top-0 grid w-10 grid-rows-4 border-l border-border bg-card sm:w-14" aria-label={t('tool-codon.ui.aminoForAria', { prefix: `${b1}${b2}` })}>
                                 {aaGroups.map((group, gi) => (
                                   <div
                                     key={gi}

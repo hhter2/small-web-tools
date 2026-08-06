@@ -1,18 +1,35 @@
 # Architecture Guide: Small Web Tools
 
+<p align="center">
+  <a href="ARCHITECTURE.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="ARCHITECTURE.zh-TW.md">繁體中文</a>
+</p>
+
 `small-web-tools` is a React 18 and Vite single-page application containing browser-based utility tools. This document is the technical reference for maintaining the current application. Keep it updated when routes, shared components, APIs, or dependencies change.
+
+The project maintains paired English and Traditional Chinese explanatory guides.
+Companion files use the `.zh-TW.md` suffix; `TODO.md` remains the English-only
+backlog. Keep the two language versions synchronized when documented behavior or
+structure changes.
 
 ## Documentation roles
 
 - `README.md` is the brief English manual for people using the site; `README.zh-TW.md`
   is its Traditional Chinese translation.
-- `CONTRIBUTING.md` is the single source of truth for contribution standards and AI guidelines.
-- `TODO.md` is the maintained backlog, completed-work log, and update process.
-- `ARCHITECTURE.md` is this architecture and maintenance reference.
+- `CONTRIBUTING.md` is the English source for contribution standards and AI guidelines;
+  `CONTRIBUTING.zh-TW.md` is its Traditional Chinese companion.
+- `TODO.md` is the maintained English-only backlog, completed-work log, and update process.
+- `ARCHITECTURE.md` is this English architecture and maintenance reference;
+  `ARCHITECTURE.zh-TW.md` is its Traditional Chinese companion.
+- `PRIVACY.md` and `PRIVACY.zh-TW.md` are the paired privacy policy and data-flow disclosures.
+- `src/i18n/` is the source of truth for the two supported UI locales and their
+  `common`, `navigation`, `tools`, and `errors` namespaces.
 
 ## Quick facts
 
 | Package | `small-web-tools` |
+| --- | --- |
 | Version | Latest version-formatted Git tag; `VITE_APP_VERSION` fallback for archives without Git metadata |
 | UI framework | React 18 |
 | Build tool | Vite 6 |
@@ -26,13 +43,24 @@ At build time, `scripts/resolve-version.mjs` selects the newest version-sorted G
 
 ## Repository map
 
+The maintained documentation pairs are README.md/README.zh-TW.md,
+CONTRIBUTING.md/CONTRIBUTING.zh-TW.md, ARCHITECTURE.md/ARCHITECTURE.zh-TW.md,
+and PRIVACY.md/PRIVACY.zh-TW.md. TODO.md is intentionally English-only.
+Supporting explanatory documents are public/fonts/MANIFEST.md with its
+Traditional Chinese companion, the two SSRF harness READMEs, and the
+English-only AI agent instructions in .agents/.
+
 ```text
 small-web-tools/
 ├── README.md                 English user-facing site manual
 ├── README.zh-TW.md           Traditional Chinese user-facing site manual
-├── PRIVACY.md                User-facing privacy policy and disclaimers
+├── CONTRIBUTING.md           English engineering and local-runtime guide
+├── CONTRIBUTING.zh-TW.md     Traditional Chinese engineering guide
+├── PRIVACY.md                English privacy policy and data-flow disclosure
+├── PRIVACY.zh-TW.md          Traditional Chinese privacy policy
 ├── TODO.md                   Backlog, completed work, and update process
 ├── ARCHITECTURE.md           Architecture and maintenance reference
+├── ARCHITECTURE.zh-TW.md     Traditional Chinese architecture reference
 ├── package.json              Scripts, dependencies, and pipeline commands
 ├── jsconfig.json             TypeScript checkJs configuration for JavaScript
 ├── eslint.config.js          ESLint flat config for React, hooks, and Cloudflare functions
@@ -44,6 +72,10 @@ small-web-tools/
 ├── config/
 │   ├── network-services.json Network-service policy source of truth
 │   └── ffmpeg-assets.json    Pinned FFmpeg asset sizes and SHA-256 values
+├── scripts/
+│   ├── check-i18n.mjs         Locale-pair structure and interpolation checks
+│   ├── check-hardcoded-ui.mjs User-facing string audit
+│   └── check-doc-consistency.mjs Documentation/link consistency checks
 ├── .github/
 │   ├── dependabot.yml        Weekly dependency update configuration
 │   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
@@ -58,12 +90,16 @@ small-web-tools/
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
+│   ├── i18n/
+│   │   ├── index.js           Locale resolution, i18next setup, persistence, and document language
+│   │   └── locales/           Paired en-US and zh-TW namespace JSON resources
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
 │   ├── tests/                Vitest unit test suites and setup
 │   └── components/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
 │       ├── HomeGrid.jsx      Full and audience dashboard tool grid
 │       ├── SimpleHome.jsx    Search-first essential-tool launcher
+│       ├── LanguageSwitcher.jsx Shared responsive locale menu and focus lifecycle
 │       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
 │       ├── useMediaSeparator.js
@@ -76,6 +112,16 @@ small-web-tools/
 ```
 
 `dist/` is generated by `npm run build` and is intentionally ignored.
+
+## Type-checking boundaries
+
+The JavaScript migration uses three explicit TypeScript checkJs projects.
+`jsconfig.json` is the broad non-strict baseline. `jsconfig.domain.json` preserves
+the existing narrow domain/shared-helper boundary. `jsconfig.ui.json` is the
+incremental shared-UI boundary; it enables `strictNullChecks` and initially covers
+`LanguageSwitcher.jsx` plus its i18n dependency. `npm run typecheck` executes all
+three projects in CI. New exclusions must remain minimal and documented, and an
+expanded UI boundary must fix every newly exposed error in the same change.
 
 ## Application architecture
 
@@ -95,6 +141,37 @@ small-web-tools/
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
+
+`src/components/LanguageSwitcher.jsx` is rendered directly by `App.jsx` in the mobile and desktop headers. It is the shared owner of locale options, menu state, keyboard navigation, and focus restoration; the desktop control is omitted in the Simple workspace.
+
+### Internationalization runtime
+
+`src/i18n/index.js` initializes `i18next` with the `react-i18next` adapter and
+the four paired namespaces under `src/i18n/locales/en-US/` and
+`src/i18n/locales/zh-TW/`: `common`, `navigation`, `tools`, and `errors`.
+English (`en-US`) is the default and fallback locale; Traditional Chinese
+(`zh-TW`) is the second supported locale.
+
+Initial locale resolution is deterministic: a valid persisted value at
+`small-web-tools.locale` wins, then the browser's preferred languages, then
+English. `src/components/LanguageSwitcher.jsx` calls `changeLocale()`, updates
+`document.documentElement.lang`, and persists only the normalized supported
+locale. Storage failures do not prevent an in-memory language change.
+
+Route IDs, URL paths, tool IDs, file extensions, protocol names, and other
+interoperability-sensitive identifiers remain stable. `toolRegistry.js` keeps
+those identifiers separate from localized titles, descriptions, tooltips, and
+search metadata; English search terms remain available as fallback aliases.
+`sortLocalizedTools()` uses the active locale's `Intl.Collator`, while tools use
+locale-aware `Intl` formatting for reader-facing numbers, dates, and times.
+User content and content algorithms are not translated based on the UI locale.
+
+Every UI string change must update both locale resource trees. `npm run i18n:check`
+checks key parity, duplicate keys, non-empty values, and interpolation parity;
+`npm run i18n:audit` scans JSX for unreviewed user-facing literals. Focused
+runtime and resource tests are in `src/tests/i18n.test.js`,
+`src/tests/i18nValidation.test.js`, `src/tests/i18nHardcodedUi.test.js`, and
+`src/tests/wordCounterLocale.test.js`.
 
 ### Audience and Simple workspaces
 
@@ -150,6 +227,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
 | `tool-url` | URL Encoder & Decoder | `UrlEncoderDecoder.jsx` | Developer |
 | `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |
+| `tool-mermaid` | Mermaid Converter | `MermaidConverter.jsx` | Developer |
 | `tool-code-preview` | VS Code Preview | `CodePreviewer.jsx` | Developer |
 | `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
 | `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |
@@ -319,6 +397,29 @@ the browser cannot safely reconstruct its RAW image data.
 
 Color Converter exposes Color Sync as a high-contrast pressed toggle.
 
+## Locale-sensitive behavior
+
+The selected UI locale controls labels and reader-facing formatting, but it does
+not determine the language of user content. Word Counter inspects each input:
+CJK characters use a character-based reading pace (500 characters per minute),
+while non-CJK text uses a word-based pace (200 words per minute); mixed content
+combines both estimates. `Intl.Segmenter` supplies grapheme and sentence
+boundaries when available, and `Intl.NumberFormat` formats the displayed result.
+
+Typing Speed Test fixtures remain language-neutral test content. Its correctness
+and WPM metrics operate on the supplied graphemes/keystrokes rather than silently
+assuming that the active UI locale is the content language. Locale changes only
+translate the surrounding controls, metrics, status, and history presentation.
+
+Password analysis continues to use the bundled English `zxcvbn` dictionary for
+pattern detection in this beta. The UI deliberately maps the numeric score to
+localized labels, generic feedback, and crack-time bands, so interface translation
+is independent of the analysis dictionary. A future language-specific dictionary
+can improve recognition without changing the UI contract. Technical algorithms
+such as encoders, checksums, codon lookup, media parsing, and cryptographic random
+selection remain language-neutral; reader-facing numbers, dates, units, and
+pluralized messages use platform `Intl` APIs or i18next interpolation.
+
 ## Network-service policy
 
 `config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the canonical `/home/privacy` route consume this inventory. Legacy hash addresses are accepted only for backward-compatible redirects. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.
@@ -329,6 +430,7 @@ Color Converter exposes Color Sync as a high-contrast pressed toggle.
 | --- | --- |
 | `react`, `react-dom` | React rendering. |
 | `@vitejs/plugin-react`, `vite` | Development server and production build. |
+| `i18next`, `react-i18next` | Synchronous locale resources, React translation hooks, fallback, and language switching. |
 | `vitest`, `@vitest/coverage-v8` | Unit/integration runner and coverage gates. |
 | `eslint`, React lint plugins | Static-analysis rules and the non-increasing warning budget. |
 | `wrangler` | Pinned Cloudflare Pages/Worker configuration validation and local integration runtime. |
@@ -351,8 +453,11 @@ npm install --global npm@10.9.2
 npm ci
 npm run dev
 npm run build
+npm run i18n:check
+npm run i18n:audit
 npm run verify
 npm run test:e2e
+npm run docs:check
 npm run preview
 ```
 
@@ -372,9 +477,20 @@ journeys, and `npm audit`.
 3. Follow the shared `Card` plus one `ToolHeader` layout contract.
 4. Reuse existing UI primitives and theme tokens.
 5. Add an API handler only when browser-side code is insufficient; mirror it in `vite.config.js` if local development needs the endpoint.
-6. Update the route inventory and any affected sections of this document.
-7. Build the project and verify the changed route at desktop and mobile widths.
+6. Add or update matching `en-US` and `zh-TW` namespace keys, including labels,
+   placeholders, errors, announcements, and accessible names; keep route IDs and
+   technical identifiers stable.
+7. Update the route inventory and any affected sections of this document and its
+   Traditional Chinese companion.
+8. Build the project and verify the changed route at desktop and mobile widths in
+   both supported locales.
 
 ## Documentation maintenance
 
-When user behavior changes, update the relevant entry in `README.md`. When implementation structure changes, update this document. Record the work and follow the validation/commit sequence in `TODO.md`.
+When user behavior changes, update the relevant entries in `README.md` and
+`README.zh-TW.md`. When implementation structure changes, update this document
+and `ARCHITECTURE.zh-TW.md`. Keep the CONTRIBUTING and PRIVACY pairs
+synchronized when engineering or data-flow policy changes. For locale changes,
+also update both resource trees and run `i18n:check`, `i18n:audit`, and
+`docs:check`. Record the work and follow the validation/commit sequence in
+`TODO.md`.

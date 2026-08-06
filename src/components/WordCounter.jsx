@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import FieldInput from './ui/FieldInput';
 import ToolHeader from './ui/ToolHeader';
@@ -47,13 +48,15 @@ function countSentences(text) {
   return matches ? matches.length : 1;
 }
 
-function calcReadingTime(wordCount) {
-  if (wordCount === 0) return '0 min';
-  const minutes = Math.ceil(wordCount / 200);
-  return minutes <= 1 ? '< 1 min' : `~${minutes} min`;
+export function calculateReadingMinutes(text) {
+  const cjkCount = (text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu) ?? []).length;
+  const nonCjkText = text.replace(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu, ' ');
+  const latinWordCount = countWords(nonCjkText);
+  return (cjkCount / 500) + (latinWordCount / 200);
 }
 
 export default function WordCounter() {
+  const { t, i18n } = useTranslation('tools');
   const [text, setText] = useState('');
 
   const wordCount = countWords(text);
@@ -61,47 +64,53 @@ export default function WordCounter() {
   const charNoSpacesCount = countGraphemesNoSpaces(text);
   const lineCount = countLines(text);
   const sentenceCount = countSentences(text);
-  const readingTime = calcReadingTime(wordCount);
+  const readingMinutes = calculateReadingMinutes(text);
+  const roundedMinutes = Math.ceil(readingMinutes);
+  const readingTime = readingMinutes === 0
+    ? t('tool-wc.ui.zeroMinutes')
+    : readingMinutes <= 1
+      ? t('tool-wc.ui.underMinute')
+      : t('tool-wc.ui.minutes', { count: new Intl.NumberFormat(i18n.resolvedLanguage).format(roundedMinutes) });
 
   return (
     <Card id="tool-wc" variant="tool">
-      <ToolHeader title="Word & Character Counter" />
+      <ToolHeader title={t('tool-wc.ui.heading')} />
       <FieldInput
         as="textarea"
         id="wc-input"
-        label="Text"
+        label={t('tool-wc.ui.text')}
         rows={5}
-        placeholder="Type or paste text..."
+        placeholder={t('tool-wc.ui.placeholder')}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full mt-2">
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Words</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.words')}</span>
           <span id="wc-words" className="text-[1.5rem] font-extrabold text-accent">{wordCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Characters</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.characters')}</span>
           <span id="wc-chars" className="text-[1.5rem] font-extrabold text-accent">{charCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Lines</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.lines')}</span>
           <span id="wc-lines" className="text-[1.5rem] font-extrabold text-accent">{lineCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">No Spaces</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.noSpaces')}</span>
           <span id="wc-chars-nospace" className="text-[1.5rem] font-extrabold text-accent">{charNoSpacesCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Sentences</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.sentences')}</span>
           <span id="wc-sentences" className="text-[1.5rem] font-extrabold text-accent">{sentenceCount}</span>
         </div>
         <div className="bg-accent-light border border-accent/10 rounded-xl p-3.5 flex flex-col gap-1 transition-all duration-300">
-          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">Reading Time</span>
+          <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.05em]">{t('tool-wc.ui.readingTime')}</span>
           <span id="wc-readingtime" className="text-[1.5rem] font-extrabold text-accent">{readingTime}</span>
         </div>
       </div>
-      <p className="text-sm text-text-muted">Character count includes perceived Unicode grapheme clusters (emojis & combining marks).</p>
+      <p className="text-sm text-text-muted">{t('tool-wc.ui.graphemeHint')}</p>
     </Card>
   );
 }

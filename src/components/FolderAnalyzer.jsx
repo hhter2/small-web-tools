@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -25,6 +26,7 @@ const SYSTEM_EXCLUDES = new Set(['node_modules', '.git', 'dist', 'build', '.next
 
 
 export default function FolderAnalyzer() {
+  const { t, i18n } = useTranslation('tools');
   const [status, setStatus] = useState('idle'); // idle, scanning, success, error
   const [progress, setProgress] = useState({ current: 0, total: 0, phase: '' });
   const [errorMsg, setErrorMsg] = useState('');
@@ -156,12 +158,12 @@ export default function FolderAnalyzer() {
       FILE_RESOURCE_POLICIES.folderAnalysis,
     );
     if (!resourceCheck.valid) {
-      setErrorMsg(resourceCheck.error);
+      setErrorMsg(t(`tool-folder-analyzer.ui.resourceError.${resourceCheck.reason}`));
       setStatus('error');
       return;
     }
     setStatus('scanning');
-    setProgress({ current: 0, total: fileList ? fileList.length : 0, phase: 'Reading folder contents...' });
+    setProgress({ current: 0, total: fileList ? fileList.length : 0, phase: t('tool-folder-analyzer.ui.progress.reading') });
 
     try {
       const existingNames = new Set(scannedProjects.map(p => p.name));
@@ -231,7 +233,7 @@ export default function FolderAnalyzer() {
           setProgress({
             current: totalFilesProcessed,
             total: fileList ? fileList.length : 0,
-            phase: `Analyzing ${file.name}...`
+            phase: t('tool-folder-analyzer.ui.progress.analyzing', { filename: file.name })
           });
 
           const isIgnored = matcher(fullPath, false);
@@ -277,7 +279,7 @@ export default function FolderAnalyzer() {
       setStatus('success');
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to process folder: ' + err.message);
+      setErrorMsg(t('tool-folder-analyzer.ui.error.processFailed', { message: err.message }));
       setStatus('error');
     }
   }
@@ -362,7 +364,7 @@ export default function FolderAnalyzer() {
     if (!items || items.length === 0) return;
 
     setStatus('scanning');
-    setProgress({ current: 0, total: 100, phase: 'Starting drag scan...' });
+    setProgress({ current: 0, total: 100, phase: t('tool-folder-analyzer.ui.progress.starting') });
 
     try {
       const allFiles = [];
@@ -390,12 +392,12 @@ export default function FolderAnalyzer() {
       if (uniqueRoots.length > 0 || allFiles.length > 0) {
         processFiles(allFiles, uniqueRoots, scannedProjects.length > 0);
       } else {
-        setErrorMsg('No files or folders detected in the dropped selection.');
+        setErrorMsg(t('tool-folder-analyzer.ui.error.nothingDetected'));
         setStatus('error');
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Drag & Drop scanning failed: ' + err.message);
+      setErrorMsg(t('tool-folder-analyzer.ui.error.dropFailed', { message: err.message }));
       setStatus('error');
     }
   };
@@ -572,7 +574,7 @@ export default function FolderAnalyzer() {
 
         let compare = 0;
         if (typeof valA === 'string') {
-          compare = valA.localeCompare(valB);
+          compare = valA.localeCompare(valB, i18n.language);
         } else {
           compare = valA - valB;
         }
@@ -635,7 +637,7 @@ export default function FolderAnalyzer() {
       if (node.children && node.children.length > 0) {
         const sorted = [...node.children].sort((a, b) => {
           if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
-          return a.name.localeCompare(b.name);
+          return a.name.localeCompare(b.name, i18n.language);
         });
         for (const child of sorted) {
           buildSvgRows(child, depth + 1);
@@ -665,7 +667,10 @@ export default function FolderAnalyzer() {
         ? 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z'
         : 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
 
-      const lineText = isDir ? '' : ` (${item.lineCount} lines)`;
+      const lineText = isDir ? '' : ` (${t('tool-folder-analyzer.ui.exportLines', {
+        count: item.lineCount,
+        formattedCount: item.lineCount.toLocaleString(i18n.language),
+      })})`;
       const safeName = escapeXml(item.name);
 
       svgRows += `
@@ -681,13 +686,11 @@ export default function FolderAnalyzer() {
       `;
     });
 
-    const safeRootName = escapeXml(rootNode.name);
-
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
         <rect width="100%" height="100%" fill="#0f172a" rx="12" />
         <!-- Header -->
-        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${safeRootName} Folder Structure</text>
+        <text x="20" y="35" fill="#5EC95A" font-family="system-ui, sans-serif" font-size="16px" font-weight="bold">${escapeXml(t('tool-folder-analyzer.ui.exportTitle', { name: rootNode.name }))}</text>
         <line x1="20" y1="45" x2="${width - 20}" y2="45" stroke="#334155" stroke-width="1" />
         
         <!-- Tree content -->
@@ -769,7 +772,7 @@ export default function FolderAnalyzer() {
 
         let compare = 0;
         if (typeof valA === 'string') {
-          compare = valA.localeCompare(valB);
+          compare = valA.localeCompare(valB, i18n.language);
         } else {
           compare = valA - valB;
         }
@@ -793,9 +796,9 @@ export default function FolderAnalyzer() {
   }
 
   function getFileLabel(name, type) {
-    if (type === 'directory') return 'Folder';
+    if (type === 'directory') return t('tool-folder-analyzer.ui.fileType.folder');
     const ext = name.split('.').pop().toLowerCase();
-    if (ext === name.toLowerCase()) return 'File';
+    if (ext === name.toLowerCase()) return t('tool-folder-analyzer.ui.fileType.file');
     switch (ext) {
       case 'js': return 'JavaScript';
       case 'jsx': return 'React JS';
@@ -809,20 +812,20 @@ export default function FolderAnalyzer() {
       case 'md': return 'Markdown';
       case 'py': return 'Python';
       case 'java': return 'Java';
-      case 'c': return 'C Code';
-      case 'cpp': return 'C++ Code';
-      case 'h': return 'C Header';
-      case 'cs': return 'C# Code';
-      case 'go': return 'Go Source';
-      case 'rs': return 'Rust Source';
-      case 'php': return 'PHP Code';
-      case 'rb': return 'Ruby Code';
-      case 'sh': return 'Shell Script';
+      case 'c': return t('tool-folder-analyzer.ui.fileType.code', { language: 'C' });
+      case 'cpp': return t('tool-folder-analyzer.ui.fileType.code', { language: 'C++' });
+      case 'h': return t('tool-folder-analyzer.ui.fileType.header', { language: 'C' });
+      case 'cs': return t('tool-folder-analyzer.ui.fileType.code', { language: 'C#' });
+      case 'go': return t('tool-folder-analyzer.ui.fileType.source', { language: 'Go' });
+      case 'rs': return t('tool-folder-analyzer.ui.fileType.source', { language: 'Rust' });
+      case 'php': return t('tool-folder-analyzer.ui.fileType.code', { language: 'PHP' });
+      case 'rb': return t('tool-folder-analyzer.ui.fileType.code', { language: 'Ruby' });
+      case 'sh': return t('tool-folder-analyzer.ui.fileType.script', { language: 'Shell' });
       case 'yml':
-      case 'yaml': return 'YAML Config';
+      case 'yaml': return t('tool-folder-analyzer.ui.fileType.config', { format: 'YAML' });
       case 'xml': return 'XML';
-      case 'svg': return 'SVG Icon';
-      default: return ext.toUpperCase() + ' File';
+      case 'svg': return t('tool-folder-analyzer.ui.fileType.icon', { format: 'SVG' });
+      default: return t('tool-folder-analyzer.ui.fileType.extension', { extension: ext.toUpperCase() });
     }
   }
 
@@ -920,7 +923,7 @@ export default function FolderAnalyzer() {
       <div className="flex justify-between items-start flex-wrap gap-4 w-full mb-3">
         <div className="flex-1 min-w-0">
           <ToolHeader 
-            title="Folder Structure Analyzer" 
+            title={t('tool-folder-analyzer.title')}
           />
           {status === 'success' && activeProject && scannedProjects.length === 1 && (
             <div className="flex flex-wrap gap-3 items-center mt-2.5">
@@ -935,9 +938,9 @@ export default function FolderAnalyzer() {
                 type="button"
                 className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
                 onClick={openFolderInput}
-                aria-label="Select another folder path"
+                aria-label={t('tool-folder-analyzer.ui.addFolderAria')}
               >
-                + Add Another Folder
+                {t('tool-folder-analyzer.ui.addFolder')}
               </button>
             </div>
           )}
@@ -948,7 +951,7 @@ export default function FolderAnalyzer() {
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
-            Clear All
+            {t('tool-folder-analyzer.ui.clearAll')}
           </Button>
         )}
       </div>
@@ -974,7 +977,7 @@ export default function FolderAnalyzer() {
                   e.stopPropagation();
                   handleRemoveProject(idx);
                 }}
-                title="Remove path"
+                title={t('tool-folder-analyzer.ui.removePath')}
               >
                 &times;
               </button>
@@ -985,9 +988,9 @@ export default function FolderAnalyzer() {
             type="button"
             className="rounded-md border border-accent/40 bg-accent-light px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-white"
             onClick={openFolderInput}
-            aria-label="Select another folder path"
+            aria-label={t('tool-folder-analyzer.ui.addFolderAria')}
           >
-            + Add Another Folder
+            {t('tool-folder-analyzer.ui.addFolder')}
           </button>
         </div>
       )}
@@ -1037,19 +1040,19 @@ export default function FolderAnalyzer() {
                 openFolderInput();
               }
             }}
-            aria-label="Select a folder to analyze"
+            aria-label={t('tool-folder-analyzer.ui.selectAria')}
           >
             <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted transition-transform duration-300 hover:scale-110">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <h3 className="text-lg font-bold text-text-main">Select or Drag &amp; Drop Folder</h3>
-            <p className="text-sm text-text-muted">Click to open native folder picker or drop folder here</p>
+            <h3 className="text-lg font-bold text-text-main">{t('tool-folder-analyzer.ui.selectTitle')}</h3>
+            <p className="text-sm text-text-muted">{t('tool-folder-analyzer.ui.selectDescription')}</p>
           </button>
 
           <div className="flex items-center gap-2 p-3 bg-app border border-border rounded-xl text-xs text-text-muted">
-            <span>🔒 <strong>Local Privacy Guarantee:</strong> All file scanning and tree rendering is performed 100% in your browser memory. No folder contents or path details are ever uploaded to any server.</span>
+            <span>🔒 <strong>{t('tool-folder-analyzer.ui.privacyTitle')}</strong> {t('tool-folder-analyzer.ui.privacyDescription')}</span>
           </div>
         </div>
       )}
@@ -1058,7 +1061,7 @@ export default function FolderAnalyzer() {
       {status === 'scanning' && (
         <div className="flex flex-col items-center justify-center p-8 gap-4 bg-card border border-border rounded-xl mt-4">
           <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin"></div>
-          <h4 className="text-lg font-bold text-text-main">Scanning your folder...</h4>
+          <h4 className="text-lg font-bold text-text-main">{t('tool-folder-analyzer.ui.scanning')}</h4>
           <p className="text-sm text-text-muted">{progress.phase}</p>
           <div className="w-full max-w-md h-2 bg-border rounded-full overflow-hidden mt-2">
             <div 
@@ -1067,7 +1070,7 @@ export default function FolderAnalyzer() {
             ></div>
           </div>
           <span className="text-xs text-text-muted">
-            {progress.current} / {progress.total} files completed
+            {t('tool-folder-analyzer.ui.progress.completed', { current: progress.current, total: progress.total })}
           </span>
         </div>
       )}
@@ -1080,9 +1083,9 @@ export default function FolderAnalyzer() {
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
-          <h4 className="text-lg font-bold text-text-main">Something went wrong</h4>
+          <h4 className="text-lg font-bold text-text-main">{t('tool-folder-analyzer.ui.errorTitle')}</h4>
           <p className="text-sm text-red-500 font-medium">{errorMsg}</p>
-          <Button variant="secondary" onClick={() => setStatus('idle')}>Try Again</Button>
+          <Button variant="secondary" onClick={() => setStatus('idle')}>{t('tool-folder-analyzer.ui.tryAgain')}</Button>
         </div>
       )}
 
@@ -1093,15 +1096,15 @@ export default function FolderAnalyzer() {
           {/* Metrics summary */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Total Files</span>
-              <span className="text-2xl font-bold text-text-main">{projectStats.filesCount}</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t('tool-folder-analyzer.ui.totalFiles')}</span>
+              <span className="text-2xl font-bold text-text-main">{projectStats.filesCount.toLocaleString(i18n.language)}</span>
             </div>
             <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Total Code Lines</span>
-              <span className="text-2xl font-bold text-accent">{projectStats.totalLines.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t('tool-folder-analyzer.ui.totalLines')}</span>
+              <span className="text-2xl font-bold text-accent">{projectStats.totalLines.toLocaleString(i18n.language)}</span>
             </div>
             <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-1 items-center justify-center text-center">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Project Size</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t('tool-folder-analyzer.ui.projectSize')}</span>
               <span className="text-2xl font-bold text-text-main">{formatSize(projectStats.totalSize)}</span>
             </div>
           </div>
@@ -1114,14 +1117,14 @@ export default function FolderAnalyzer() {
                 size="sm"
                 onClick={() => setViewMode('figure')}
               >
-                Figure
+                {t('tool-folder-analyzer.ui.figure')}
               </Button>
               <Button 
                 variant={viewMode === 'text' ? 'primary' : 'secondary'}
                 size="sm"
                 onClick={() => setViewMode('text')}
               >
-                Plaintext
+                {t('tool-folder-analyzer.ui.plaintext')}
               </Button>
             </div>
 
@@ -1131,9 +1134,9 @@ export default function FolderAnalyzer() {
                 variant="secondary"
                 size="sm"
                 onClick={toggleExpandCollapseAll} 
-                title={hasCollapsedSubfolders ? "Expand all folders" : "Collapse all folders"}
+                title={t(hasCollapsedSubfolders ? 'tool-folder-analyzer.ui.expandAllAria' : 'tool-folder-analyzer.ui.collapseAllAria')}
               >
-                {hasCollapsedSubfolders ? "Expand All" : "Collapse All"}
+                {t(hasCollapsedSubfolders ? 'tool-folder-analyzer.ui.expandAll' : 'tool-folder-analyzer.ui.collapseAll')}
               </Button>
             )}
 
@@ -1147,7 +1150,7 @@ export default function FolderAnalyzer() {
                   onChange={(e) => setShowSystemExclude(e.target.checked)}
                   className="rounded border-border text-accent focus:ring-accent w-4 h-4"
                 />
-                <span>Excluded Folders</span>
+                <span>{t('tool-folder-analyzer.ui.excludedFolders')}</span>
               </label>
               
               {gitignoreText && (
@@ -1159,7 +1162,7 @@ export default function FolderAnalyzer() {
                     onChange={(e) => setShowGitignored(e.target.checked)}
                     className="rounded border-border text-accent focus:ring-accent w-4 h-4"
                   />
-                  <span>Gitignored Files</span>
+                  <span>{t('tool-folder-analyzer.ui.gitignoredFiles')}</span>
                 </label>
               )}
             </div>
@@ -1168,7 +1171,7 @@ export default function FolderAnalyzer() {
               <Button 
                 variant="secondary"
                 size="sm"
-                title="Copy tree structure"
+                title={t('tool-folder-analyzer.ui.copyTitle')}
                 onClick={handleCopy}
                 className="relative"
               >
@@ -1176,7 +1179,7 @@ export default function FolderAnalyzer() {
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
-                {copySuccess && <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-2 py-0.5 rounded shadow">Copied!</span>}
+                {copySuccess && <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-2 py-0.5 rounded shadow">{t('tool-folder-analyzer.ui.copied')}</span>}
               </Button>
 
               <div 
@@ -1188,7 +1191,7 @@ export default function FolderAnalyzer() {
                 <Button 
                   variant="secondary"
                   size="sm"
-                  title="Download structure file"
+                  title={t('tool-folder-analyzer.ui.downloadTitle')}
                   onClick={(e) => {
                     e.stopPropagation();
                     setDownloadOpen(!downloadOpen);
@@ -1203,8 +1206,8 @@ export default function FolderAnalyzer() {
                 </Button>
                 {downloadOpen && (
                   <div className="absolute right-0 mt-1 bg-card border border-border rounded-xl shadow-lg py-1.5 z-50 min-w-[160px] flex flex-col">
-                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('txt'); setDownloadOpen(false); }}>As Plaintext (.txt)</button>
-                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('svg'); setDownloadOpen(false); }}>As SVG Diagram (.svg)</button>
+                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('txt'); setDownloadOpen(false); }}>{t('tool-folder-analyzer.ui.downloadPlaintext')}</button>
+                    <button className="px-4 py-2 text-xs font-semibold text-text-main hover:bg-hover-bg text-left bg-transparent border-none cursor-pointer" onClick={() => { handleDownload('svg'); setDownloadOpen(false); }}>{t('tool-folder-analyzer.ui.downloadSvg')}</button>
                   </div>
                 )}
               </div>
@@ -1225,22 +1228,22 @@ export default function FolderAnalyzer() {
                   <tr className="bg-app border-b border-border">
                     <th onClick={() => handleSort('name')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
                       <div className="flex items-center gap-1.5">
-                        Name {renderSortIcon('name')}
+                        {t('tool-folder-analyzer.ui.name')} {renderSortIcon('name')}
                       </div>
                     </th>
                     <th onClick={() => handleSort('type')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
                       <div className="flex items-center gap-1.5">
-                        Type {renderSortIcon('type')}
+                        {t('tool-folder-analyzer.ui.type')} {renderSortIcon('type')}
                       </div>
                     </th>
                     <th onClick={() => handleSort('lines')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
                       <div className="flex items-center gap-1.5">
-                        Lines {renderSortIcon('lines')}
+                        {t('tool-folder-analyzer.ui.lines')} {renderSortIcon('lines')}
                       </div>
                     </th>
                     <th onClick={() => handleSort('size')} className="p-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider cursor-pointer hover:bg-hover-bg/50 select-none">
                       <div className="flex items-center gap-1.5">
-                        Size {renderSortIcon('size')}
+                        {t('tool-folder-analyzer.ui.size')} {renderSortIcon('size')}
                       </div>
                     </th>
                   </tr>
@@ -1262,7 +1265,7 @@ export default function FolderAnalyzer() {
                               <button 
                                 className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-hover-bg text-text-muted hover:text-text-main bg-transparent border-none cursor-pointer shrink-0 transition-all"
                                 onClick={() => toggleFolder(row.path)}
-                                aria-label={isCollapsed ? 'Expand folder' : 'Collapse folder'}
+                                aria-label={t(isCollapsed ? 'tool-folder-analyzer.ui.expandFolder' : 'tool-folder-analyzer.ui.collapseFolder')}
                               >
                                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="3" fill="none" className={`transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}>
                                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -1286,15 +1289,15 @@ export default function FolderAnalyzer() {
                         <td className="p-2 px-5 text-xs font-mono">
                           {isDir ? (
                             <span className="bg-secondary/40 text-text-muted px-2 py-0.5 rounded-full font-sans font-semibold text-[10px]">
-                              {row.lineCount.toLocaleString()} total
+                              {t('tool-folder-analyzer.ui.totalCount', { count: row.lineCount.toLocaleString(i18n.language) })}
                             </span>
                           ) : (
                             row.isText ? (
                               <span className="bg-accent-light/10 text-accent px-2 py-0.5 rounded-full font-sans font-semibold text-[10px]">
-                                {row.lineCount.toLocaleString()} lines
+                                {t('tool-folder-analyzer.ui.lineCount', { count: row.lineCount, formattedCount: row.lineCount.toLocaleString(i18n.language) })}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider font-sans bg-secondary px-1.5 py-0.5 rounded">binary</span>
+                              <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider font-sans bg-secondary px-1.5 py-0.5 rounded">{t('tool-folder-analyzer.ui.binary')}</span>
                             )
                           )}
                         </td>

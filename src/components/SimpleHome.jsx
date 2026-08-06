@@ -1,19 +1,20 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SIMPLE_WORKSPACE } from '../toolModes.js';
 
 export default function SimpleHome({ tools = [], onSelectTool }) {
+  const { t, i18n } = useTranslation('navigation');
   const [query, setQuery] = useState('');
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.trim().toLocaleLowerCase(i18n.resolvedLanguage);
   const essentialIds = new Set(SIMPLE_WORKSPACE.toolIds);
   const essentialTools = tools.filter((tool) => essentialIds.has(tool.id));
   const searchResults = useMemo(() => {
     if (!normalizedQuery) return [];
     return tools.filter((tool) => (
-      tool.name.toLowerCase().includes(normalizedQuery)
-      || tool.desc.toLowerCase().includes(normalizedQuery)
-      || tool.category.toLowerCase().includes(normalizedQuery)
+      (tool.searchMetadata ?? [tool.name, tool.desc, tool.category]).some((term) =>
+        term.toLocaleLowerCase(i18n.resolvedLanguage).includes(normalizedQuery))
     ));
-  }, [normalizedQuery, tools]);
+  }, [i18n.resolvedLanguage, normalizedQuery, tools]);
 
   const openTool = (toolId) => {
     setQuery('');
@@ -23,17 +24,17 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
   return (
     <div id="simple-home" className="mx-auto w-full max-w-[980px]">
       <header className="mx-auto mb-8 max-w-[720px] text-center">
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">Simple mode</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">{t('simpleHome.eyebrow')}</p>
         <h1 className="text-3xl font-bold tracking-[-0.025em] text-text-main sm:text-4xl">
-          Find a tool and get started
+          {t('simpleHome.heading')}
         </h1>
         <p className="mt-3 text-sm leading-6 text-text-muted">
-          Search the complete toolkit or open one of the everyday essentials below.
+          {t('simpleHome.description')}
         </p>
       </header>
 
-      <section className="relative mx-auto mb-10 max-w-[720px]" aria-label="Search every tool">
-        <label htmlFor="simple-tool-search" className="sr-only">Search every tool</label>
+      <section className="relative mx-auto mb-10 max-w-[720px]" aria-label={t('simpleHome.searchLabel')}>
+        <label htmlFor="simple-tool-search" className="sr-only">{t('simpleHome.searchLabel')}</label>
         <svg
           className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-text-muted"
           viewBox="0 0 24 24"
@@ -52,7 +53,7 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search all tools..."
+          placeholder={t('simpleHome.searchPlaceholder')}
           autoComplete="off"
           className="h-14 w-full rounded-xl border border-border bg-card !pl-12 !pr-4 text-base text-text-main shadow-card outline-none transition focus:border-accent focus:ring-2 focus:ring-focus"
         />
@@ -74,7 +75,7 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
                 </span>
               </button>
             )) : (
-              <p className="px-3 py-5 text-center text-sm text-text-muted">No tools found.</p>
+              <p className="px-3 py-5 text-center text-sm text-text-muted">{t('simpleHome.noResults')}</p>
             )}
           </div>
         )}
@@ -83,9 +84,9 @@ export default function SimpleHome({ tools = [], onSelectTool }) {
       <section aria-labelledby="simple-essentials-heading">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id="simple-essentials-heading" className="text-lg font-bold text-text-main">
-            Everyday essentials
+            {t('simpleHome.essentials')}
           </h2>
-          <span className="text-xs font-semibold text-text-muted">8 tools</span>
+          <span className="text-xs font-semibold text-text-muted">{t('homeGrid.toolCount', { count: essentialTools.length })}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {essentialTools.map((tool) => (

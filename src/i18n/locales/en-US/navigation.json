@@ -1,0 +1,24 @@
+{
+  "categories": { "text": "Text", "developer": "Developer", "network": "Network", "media": "Media", "bioinfo": "Bioinfo", "utilities": "Utilities", "calculation": "Calculation" },
+  "modes": {
+    "all": { "label": "All tools", "heading": "Welcome to Small Web Tools!", "description": "Browse the complete toolkit by category." },
+    "daily": { "label": "Daily users", "heading": "Everyday essentials", "description": "Common writing, date, conversion, security, and sharing tools." },
+    "developer": { "label": "Developers", "heading": "Developer workspace", "description": "Code, text, URL, network, and project inspection tools." },
+    "bioinformatics": { "label": "Bioinformatics researchers", "heading": "Bioinformatics workspace", "description": "Sequence, codon, quality-score, writing, and analysis helpers." },
+    "designer": { "label": "Designers", "heading": "Designer workspace", "description": "Color, image, vector, font, code-preview, and sharing tools." },
+    "student": { "label": "Students", "heading": "Student workspace", "description": "Writing, study, coding, date, number, and science helpers." },
+    "simple": { "label": "Simple", "heading": "Quick tools", "description": "Search every tool or open an everyday essential." }
+  },
+  "search": { "placeholder": "Search tools…", "label": "Search tools", "noResults": "No tools found" },
+  "audience": { "choose": "Choose audience", "showAll": "Show all tools", "switchTo": "Switch to {{audience}}", "short": { "all": "Home", "daily": "Daily", "developer": "Developer", "bioinformatics": "Bioinfo", "designer": "Designer", "student": "Student" } },
+  "homeGrid": { "categoryTools": "{{category}} tools", "recommended": "Recommended for {{audience}}", "toolCount_one": "{{count}} tool", "toolCount_other": "{{count}} tools" },
+  "simpleHome": { "eyebrow": "Simple mode", "heading": "Find a tool and get started", "description": "Search the complete toolkit or open one of the everyday essentials below.", "searchLabel": "Search every tool", "searchPlaceholder": "Search all tools…", "noResults": "No tools found.", "essentials": "Everyday essentials" },
+  "sidebar": { "toggle": "Toggle sidebar", "collapse": "Collapse sidebar" },
+  "home": "Home", "goHome": "Go to home", "backHome": "Back to home",
+  "simpleMode": "Simple mode", "exitSimpleMode": "Exit Simple mode",
+  "theme": "Theme", "toggleTheme": "Toggle dark/light mode",
+  "footer": { "tagline": "Local-first tools.", "website": "Personal website", "email": "Email Rhosiqs; copy address and open mail app", "consent": "Manage third-party service consent", "privacy": "Read Privacy and Network Services" },
+  "toast": { "emailCopied": "Email address copied to clipboard!" },
+  "banner": { "desktop": "This site is running on a {{channel}} version ({{version}}). It may provide incorrect information; check before using.", "mobile": "{{channel}} version ({{version}}) — site may provide incorrect information." },
+  "titles": { "default": "Small Web Tools — Simple, Private Browser Utilities", "tool": "{{tool}} — Small Web Tools" }
+}

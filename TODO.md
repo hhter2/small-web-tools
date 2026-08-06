@@ -2,6 +2,17 @@
 
 This file is the working backlog and update checklist for Small Web Tools. Keep it focused on planned work, completed maintenance, and release preparation. User-facing instructions belong in `README.md`; architecture belongs in `ARCHITECTURE.md`.
 
+Work tracking is complementary: AI agents may create GitHub issues, prepare and
+push branches, and open pull requests for some work. Not every issue, pull
+request, or completed change is recorded in this file; check the repository's
+GitHub Issues and Pull Requests for the complete work history. TODO.md is
+intentionally maintained in English only. The project owner controls backlog
+priorities and status. AI agents may append a completed GitHub Issue to the
+`Completed` section only after the issue is closed and its implementation,
+validation, and commit are complete, using the existing format. They must not
+change the active backlog, existing entries, labels, or this update process
+unless explicitly instructed.
+
 ## Labels
 
 - `feat` — new or expanded user capability.
@@ -17,7 +28,7 @@ Use this sequence for each meaningful update:
 1. **Define the change.** Record the task below with an appropriate label and confirm the affected tools, routes, APIs, or shared components.
 2. **Implement in the right place.** Keep tool registration in `src/toolRegistry.js`; use the shared `Card` and `ToolHeader` primitives for tool pages; add server functionality under `functions/api/` only when browser-only code is insufficient.
 3. **Validate.** Run `npm run verify`. For layout or interaction work, also run the relevant Playwright journeys, check the affected routes at desktop and mobile widths, and review browser console errors.
-4. **Update documentation.** Refresh `README.md` for changed user behavior and `ARCHITECTURE.md` for structural changes. The project owner updates this file when a task's backlog state changes; do not turn the README into a changelog.
+4. **Update documentation.** Refresh the relevant English and Traditional Chinese companion documents for changed user behavior or structure. For a completed GitHub Issue, the project owner or an AI agent may append one entry under `Completed` after implementation, validation, and commit are complete; preserve the existing date, checklist, label, and English-only format. The project owner controls backlog priorities and status; do not turn the README into a changelog.
 5. **Review and commit.** Check `git diff` and `git status`, then create a focused commit after each completed logical stage.
 6. **Prepare a release when appropriate.** Confirm the version in `package.json`; create or update the git tag only as part of an agreed release. The app displays the newest git tag when one is available, otherwise it falls back to the package version.
 
@@ -32,6 +43,11 @@ Use this sequence for each meaningful update:
 
 
 ## Completed
+
+### 2026-08-03
+
+- [x] `feat 31` Complete the bilingual `en-US`/`zh-TW` refactor with persisted locale selection, localized shell and tool behavior, synchronized resources, and bilingual validation; released as `v0.8.0-beta`.
+- [x] `docs` Synchronize the paired README, architecture, and contribution guides with the shipped bilingual runtime and its maintenance checks.
 
 ### 2026-07-30
 

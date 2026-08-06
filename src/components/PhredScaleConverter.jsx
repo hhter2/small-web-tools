@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import ToolHeader from './ui/ToolHeader';
 import {
@@ -10,6 +11,7 @@ import {
 const REFERENCE_SCORES = [0, 10, 20, 30, 40, 50, 60];
 
 export default function PhredScaleConverter() {
+  const { t, i18n } = useTranslation('tools');
   const [mode, setMode] = useState('score');
   const [input, setInput] = useState('30');
   const metrics = useMemo(() => calculatePhredMetrics(mode, input), [mode, input]);
@@ -28,10 +30,10 @@ export default function PhredScaleConverter() {
 
   return (
     <Card id="tool-phred" variant="tool" size="wide" className="max-w-[920px]">
-      <ToolHeader title="Mapping Quality & Phred Scale Converter" />
+      <ToolHeader title={t('tool-phred.title')} />
 
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-app/70 p-4">
-        <div className="flex w-full rounded-md border border-border bg-card p-1" role="tablist" aria-label="Phred input type">
+        <div className="flex w-full rounded-md border border-border bg-card p-1" role="tablist" aria-label={t('tool-phred.ui.inputTypeAria')}>
           <button
             type="button"
             role="tab"
@@ -41,7 +43,7 @@ export default function PhredScaleConverter() {
               mode === 'score' ? 'bg-accent text-white shadow-sm' : 'text-text-muted hover:text-text-main'
             }`}
           >
-            Phred score (Q)
+            {t('tool-phred.ui.scoreTab')}
           </button>
           <button
             type="button"
@@ -52,13 +54,13 @@ export default function PhredScaleConverter() {
               mode === 'probability' ? 'bg-accent text-white shadow-sm' : 'text-text-muted hover:text-text-main'
             }`}
           >
-            Error probability (P)
+            {t('tool-phred.ui.probabilityTab')}
           </button>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="phred-input" className="text-sm font-bold text-text-main">
-            {mode === 'score' ? 'Phred score (0–300)' : 'Error probability (greater than 0, up to 1)'}
+            {t(mode === 'score' ? 'tool-phred.ui.scoreLabel' : 'tool-phred.ui.probabilityLabel')}
           </label>
           <input
             id="phred-input"
@@ -79,8 +81,8 @@ export default function PhredScaleConverter() {
           {hasError ? (
             <p id="phred-error" role="alert" className="text-xs text-red-500">
               {mode === 'score'
-                ? 'Enter a Phred score from 0 to 300.'
-                : 'Enter an error probability greater than 0 and no greater than 1.'}
+                ? t('tool-phred.ui.scoreError')
+                : t('tool-phred.ui.probabilityError')}
             </p>
           ) : (
             <p id="phred-formula" className="text-xs text-text-muted">
@@ -91,10 +93,10 @@ export default function PhredScaleConverter() {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
           {[
-            ['Phred score', metrics ? formatPhredScore(metrics.score) : '—'],
-            ['Error probability', metrics ? formatProbability(metrics.errorProbability) : '—'],
-            ['Call accuracy', metrics ? `${(metrics.accuracy * 100).toFixed(6).replace(/0+$/, '').replace(/\.$/, '')}%` : '—'],
-            ['Expected frequency', metrics ? `1 in ${Math.max(1, Math.round(metrics.oneIn)).toLocaleString()}` : '—'],
+            [t('tool-phred.ui.score'), metrics ? formatPhredScore(metrics.score) : '—'],
+            [t('tool-phred.ui.errorProbability'), metrics ? formatProbability(metrics.errorProbability) : '—'],
+            [t('tool-phred.ui.callAccuracy'), metrics ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 6 }).format(metrics.accuracy * 100)}%` : '—'],
+            [t('tool-phred.ui.expectedFrequency'), metrics ? t('tool-phred.ui.oneIn', { count: Math.max(1, Math.round(metrics.oneIn)).toLocaleString(i18n.language) }) : '—'],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl border border-accent/15 bg-accent-light p-3">
               <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">{label}</span>
@@ -106,17 +108,17 @@ export default function PhredScaleConverter() {
 
       <section className="flex flex-col gap-3" aria-labelledby="phred-reference-title">
         <div>
-          <h3 id="phred-reference-title" className="text-sm font-bold text-text-main">Common Phred scores</h3>
-          <p className="text-xs text-text-muted">Select a score to inspect its error rate and accuracy.</p>
+          <h3 id="phred-reference-title" className="text-sm font-bold text-text-main">{t('tool-phred.ui.referenceTitle')}</h3>
+          <p className="text-xs text-text-muted">{t('tool-phred.ui.referenceDescription')}</p>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead className="bg-app text-left text-xs uppercase tracking-wide text-text-muted">
               <tr>
                 <th className="px-3 py-2">Q</th>
-                <th className="px-3 py-2">Error probability</th>
-                <th className="px-3 py-2">Accuracy</th>
-                <th className="px-3 py-2">Expected errors</th>
+                <th className="px-3 py-2">{t('tool-phred.ui.errorProbability')}</th>
+                <th className="px-3 py-2">{t('tool-phred.ui.accuracy')}</th>
+                <th className="px-3 py-2">{t('tool-phred.ui.expectedErrors')}</th>
               </tr>
             </thead>
             <tbody>
@@ -132,14 +134,14 @@ export default function PhredScaleConverter() {
                           setInput(String(score));
                         }}
                         className="w-full px-3 py-2 text-left font-mono font-extrabold text-accent"
-                        aria-label={`Use Phred score ${score}`}
+                        aria-label={t('tool-phred.ui.useScoreAria', { score })}
                       >
                         {score}
                       </button>
                     </td>
                     <td className="px-3 py-2 font-mono">{formatProbability(row.errorProbability)}</td>
                     <td className="px-3 py-2">{(row.accuracy * 100).toFixed(score === 0 ? 0 : Math.min(6, score / 10 + 1))}%</td>
-                    <td className="px-3 py-2">1 in {Math.max(1, Math.round(row.oneIn)).toLocaleString()}</td>
+                    <td className="px-3 py-2">{t('tool-phred.ui.oneIn', { count: Math.max(1, Math.round(row.oneIn)).toLocaleString(i18n.language) })}</td>
                   </tr>
                 );
               })}
@@ -147,7 +149,7 @@ export default function PhredScaleConverter() {
           </table>
         </div>
         <p className="text-xs text-text-muted">
-          Mapping quality estimates whether a read is placed incorrectly; base quality estimates whether an individual base call is incorrect. Both commonly use the same Phred transformation.
+          {t('tool-phred.ui.note')}
         </p>
       </section>
     </Card>

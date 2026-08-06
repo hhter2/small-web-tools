@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -6,18 +7,18 @@ import ToolHeader from './ui/ToolHeader';
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 const BASE_OPTIONS = [
-  { base: 2, short: 'BIN', label: 'Binary', example: '101010' },
-  { base: 8, short: 'OCT', label: 'Octal', example: '377' },
-  { base: 10, short: 'DEC', label: 'Decimal', example: '255' },
-  { base: 16, short: 'HEX', label: 'Hexadecimal', example: 'FF' },
-  { base: 60, short: 'BASE 60', label: 'Sexagesimal', example: '3:25:15' },
+  { base: 2, short: 'BIN', labelKey: 'binary', example: '101010' },
+  { base: 8, short: 'OCT', labelKey: 'octal', example: '377' },
+  { base: 10, short: 'DEC', labelKey: 'decimal', example: '255' },
+  { base: 16, short: 'HEX', labelKey: 'hexadecimal', example: 'FF' },
+  { base: 60, short: 'BASE 60', labelKey: 'sexagesimal', example: '3:25:15' },
 ];
 
 const COMMON_BASES = [
-  { base: 2, short: 'BIN', label: 'Binary' },
-  { base: 8, short: 'OCT', label: 'Octal' },
-  { base: 10, short: 'DEC', label: 'Decimal' },
-  { base: 16, short: 'HEX', label: 'Hexadecimal' },
+  { base: 2, short: 'BIN', labelKey: 'binary' },
+  { base: 8, short: 'OCT', labelKey: 'octal' },
+  { base: 10, short: 'DEC', labelKey: 'decimal' },
+  { base: 16, short: 'HEX', labelKey: 'hexadecimal' },
 ];
 
 const COMMON_VALUES = Array.from({ length: 16 }, (_, value) => value);
@@ -101,6 +102,7 @@ function PasteIcon() {
 }
 
 export default function BaseConverter() {
+  const { t } = useTranslation('tools');
   const [input, setInput] = useState('');
   const [baseFrom, setBaseFrom] = useState(10);
   const [copiedBase, setCopiedBase] = useState(null);
@@ -118,11 +120,11 @@ export default function BaseConverter() {
   const selectedBase = BASE_OPTIONS.find((option) => option.base === baseFrom);
 
   const results = [
-    { base: 2, short: 'BIN', label: 'Binary', value: parsed === null ? '' : parsed.toString(2) },
-    { base: 8, short: 'OCT', label: 'Octal', value: parsed === null ? '' : parsed.toString(8) },
-    { base: 10, short: 'DEC', label: 'Decimal', value: parsed === null ? '' : parsed.toString(10) },
-    { base: 16, short: 'HEX', label: 'Hexadecimal', value: parsed === null ? '' : parsed.toString(16).toUpperCase() },
-    { base: 60, short: 'BASE 60', label: 'Sexagesimal', value: parsed === null ? '' : formatBase60(parsed) },
+    { base: 2, short: 'BIN', label: t('tool-base.ui.binary'), value: parsed === null ? '' : parsed.toString(2) },
+    { base: 8, short: 'OCT', label: t('tool-base.ui.octal'), value: parsed === null ? '' : parsed.toString(8) },
+    { base: 10, short: 'DEC', label: t('tool-base.ui.decimal'), value: parsed === null ? '' : parsed.toString(10) },
+    { base: 16, short: 'HEX', label: t('tool-base.ui.hexadecimal'), value: parsed === null ? '' : parsed.toString(16).toUpperCase() },
+    { base: 60, short: 'BASE 60', label: t('tool-base.ui.sexagesimal'), value: parsed === null ? '' : formatBase60(parsed) },
   ];
 
   const selectInputBase = (base) => {
@@ -174,20 +176,20 @@ export default function BaseConverter() {
 
   return (
     <Card id="tool-base" variant="tool" size="wide" className="max-w-[920px]">
-      <ToolHeader title="Base Converter" />
+      <ToolHeader title={t('tool-base.ui.heading')} />
 
       <section className="flex flex-col gap-2.5 rounded-xl border border-border bg-app/70 p-3" aria-labelledby="base-conversion-title">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 id="base-conversion-title" className="text-sm font-bold text-text-main">Input base &amp; converted values</h3>
-            <p className="text-xs text-text-muted">Choose an input base to edit the current value in that notation.</p>
+            <h3 id="base-conversion-title" className="text-sm font-bold text-text-main">{t('tool-base.ui.conversionTitle')}</h3>
+            <p className="text-xs text-text-muted">{t('tool-base.ui.conversionHint')}</p>
           </div>
           <span className="rounded-full border border-accent/25 bg-accent-light px-2.5 py-1 text-xs font-bold text-accent">
-            Base {baseFrom}
+            {t('tool-base.ui.base', { base: baseFrom })}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="group" aria-label="Input base">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="group" aria-label={t('tool-base.ui.inputBase')}>
           {BASE_OPTIONS.map((option) => {
             const active = option.base === baseFrom;
             return (
@@ -201,7 +203,7 @@ export default function BaseConverter() {
                   : 'border-border bg-card text-text-muted hover:border-accent hover:text-text-main'}`}
               >
                 <span className="block text-xs font-extrabold tracking-wide">{option.short}</span>
-                <span className={`block text-[0.68rem] ${active ? 'text-white/75' : 'text-text-muted'}`}>Base {option.base}</span>
+                <span className={`block text-[0.68rem] ${active ? 'text-white/75' : 'text-text-muted'}`}>{t('tool-base.ui.base', { base: option.base })}</span>
               </button>
             );
           })}
@@ -209,8 +211,8 @@ export default function BaseConverter() {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="base-input" className="text-sm font-bold text-text-main">Number</label>
-            <span className="text-xs text-text-muted">Example: {selectedBase.example}</span>
+            <label htmlFor="base-input" className="text-sm font-bold text-text-main">{t('tool-base.ui.number')}</label>
+            <span className="text-xs text-text-muted">{t('tool-base.ui.example', { example: selectedBase.example })}</span>
           </div>
           <div className="flex gap-2">
             <input
@@ -239,11 +241,11 @@ export default function BaseConverter() {
               variant="secondary"
               disabled={pasteState === 'reading'}
               onClick={pasteInput}
-              aria-label={pasteState === 'error' ? 'Retry pasting from clipboard' : 'Paste from clipboard'}
+              aria-label={t(pasteState === 'error' ? 'tool-base.ui.retryPaste' : 'tool-base.ui.paste')}
               className="min-w-[74px]"
             >
               <PasteIcon />
-              {pasteState === 'reading' ? 'Pasting' : pasteState === 'pasted' ? 'Pasted' : pasteState === 'error' ? 'Retry' : 'Paste'}
+              {t(pasteState === 'reading' ? 'tool-base.ui.pasting' : pasteState === 'pasted' ? 'tool-base.ui.pasted' : pasteState === 'error' ? 'tool-base.ui.retry' : 'tool-base.ui.pasteShort')}
             </Button>
             <button
               type="button"
@@ -257,7 +259,7 @@ export default function BaseConverter() {
               }}
               className="rounded-lg border border-border bg-card px-4 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-35"
             >
-              Clear
+              {t('tool-base.ui.clear')}
             </button>
           </div>
         </div>
@@ -270,13 +272,13 @@ export default function BaseConverter() {
       >
         <span className={`h-2 w-2 flex-none rounded-full ${hasError ? 'bg-red-500' : trimmed ? 'bg-accent' : 'bg-text-muted/40'}`} />
         <span>{hasError
-          ? `“${input}” is not valid ${selectedBase.label.toLowerCase()} input.`
+          ? t('tool-base.ui.invalid', { input, base: t(`tool-base.ui.${selectedBase.labelKey}`).toLocaleLowerCase() })
           : trimmed
-            ? `Interpreting the value as ${selectedBase.label.toLowerCase()} (base ${baseFrom}).`
-            : 'Enter a number to generate all base representations automatically.'}</span>
+            ? t('tool-base.ui.interpreting', { baseName: t(`tool-base.ui.${selectedBase.labelKey}`).toLocaleLowerCase(), base: baseFrom })
+            : t('tool-base.ui.empty')}</span>
       </div>
 
-      <div className="flex flex-col gap-2" aria-label="Converted values">
+      <div className="flex flex-col gap-2" aria-label={t('tool-base.ui.convertedValues')}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {results.map((result) => (
             <div
@@ -303,14 +305,14 @@ export default function BaseConverter() {
                   disabled={!result.value}
                   onClick={() => copyValue(result)}
                   aria-label={copiedBase === result.base && copyState === 'error'
-                    ? `Retry copying ${result.label} value`
-                    : `Copy ${result.label} value`}
+                    ? t('tool-base.ui.retryCopy', { base: result.label })
+                    : t('tool-base.ui.copyValue', { base: result.label })}
                   className="min-w-[64px] !px-2 !py-0.5 !text-[0.7rem]"
                 >
                   <CopyIcon />
                   {copiedBase === result.base
-                    ? copyState === 'error' ? 'Retry' : 'Copied'
-                    : 'Copy'}
+                    ? t(copyState === 'error' ? 'tool-base.ui.retry' : 'tool-base.ui.copied')
+                    : t('tool-base.ui.copy')}
                 </Button>
               </div>
             </div>
@@ -322,16 +324,16 @@ export default function BaseConverter() {
       <section className="flex flex-col gap-2" aria-labelledby="common-base-reference-title">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h3 id="common-base-reference-title" className="text-sm font-bold text-text-main">0–15 quick reference</h3>
-            <p className="text-xs text-text-muted">Select any value to use that representation as the input.</p>
+            <h3 id="common-base-reference-title" className="text-sm font-bold text-text-main">{t('tool-base.ui.reference')}</h3>
+            <p className="text-xs text-text-muted">{t('tool-base.ui.referenceHint')}</p>
           </div>
-          <span className="text-[0.68rem] font-semibold text-text-muted">BIN · OCT · DEC · HEX</span>
+          <span className="text-[0.68rem] font-semibold text-text-muted">{t('tool-base.ui.legend')}</span>
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-border bg-app/70 p-1.5">
-          <div className="grid min-w-[760px] grid-cols-[58px_repeat(16,minmax(38px,1fr))] gap-1" role="grid" aria-label="Common base conversions for decimal 0 through 15">
+          <div className="grid min-w-[760px] grid-cols-[58px_repeat(16,minmax(38px,1fr))] gap-1" role="grid" aria-label={t('tool-base.ui.gridLabel')}>
             <div className="flex items-center justify-center text-[0.6rem] font-extrabold uppercase tracking-wide text-text-muted" role="columnheader">
-              Base
+              {t('tool-base.ui.baseHeading')}
             </div>
             {COMMON_VALUES.map((value) => (
               <div key={`heading-${value}`} className={`flex min-h-6 items-center justify-center rounded text-[0.62rem] font-bold tabular-nums ${selectedReferenceValue === value ? 'bg-accent text-white' : 'text-text-muted'}`} role="columnheader">
@@ -341,7 +343,7 @@ export default function BaseConverter() {
 
             {COMMON_BASES.map((row) => (
               <React.Fragment key={row.base}>
-                <div className="flex min-h-8 flex-col items-center justify-center rounded-md border border-border bg-card leading-none" role="rowheader" title={`${row.label} (base ${row.base})`}>
+                <div className="flex min-h-8 flex-col items-center justify-center rounded-md border border-border bg-card leading-none" role="rowheader" title={t('tool-base.ui.rowTitle', { name: t(`tool-base.ui.${row.labelKey}`), base: row.base })}>
                   <span className="text-[0.64rem] font-extrabold text-accent">{row.short}</span>
                   <span className="mt-0.5 text-[0.5rem] text-text-muted">{row.base}</span>
                 </div>
@@ -355,8 +357,8 @@ export default function BaseConverter() {
                       type="button"
                       role="gridcell"
                       aria-pressed={exactInput}
-                      aria-label={`${row.label} ${displayValue}, decimal ${value}`}
-                      title={`${displayValue} (base ${row.base}) = ${value} (decimal)`}
+                      aria-label={t('tool-base.ui.cellLabel', { name: t(`tool-base.ui.${row.labelKey}`), display: displayValue, decimal: value })}
+                      title={t('tool-base.ui.cellTitle', { display: displayValue, base: row.base, decimal: value })}
                       onClick={() => selectReferenceValue(row.base, value)}
                       className={`min-h-8 rounded-md border px-1 font-mono text-[0.72rem] font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${exactInput
                         ? 'border-accent bg-accent text-white shadow-[0_2px_8px_var(--accent-light)]'

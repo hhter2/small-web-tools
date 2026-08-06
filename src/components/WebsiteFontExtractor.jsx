@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
@@ -85,6 +86,7 @@ function formatBadgeClass(format) {
 }
 
 function FontCard({ font }) {
+  const { t } = useTranslation('tools');
   const [showSimilar, setShowSimilar] = useState(false);
   const similar = getSimilarGoogleFonts(font.family);
 
@@ -99,17 +101,17 @@ function FontCard({ font }) {
       </div>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[0.79rem] text-text-muted">
-        <div><dt className="font-semibold text-text-main">Weight</dt><dd>{font.weight || 'unknown'}</dd></div>
-        <div><dt className="font-semibold text-text-main">Style</dt><dd>{font.style || 'unknown'}</dd></div>
-        <div><dt className="font-semibold text-text-main">Stretch</dt><dd>{font.stretch || 'unknown'}</dd></div>
-        <div><dt className="font-semibold text-text-main">Variable</dt><dd>{font.isVariable ? 'Yes' : 'No'}</dd></div>
+        <div><dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.weight')}</dt><dd>{font.weight || t('tool-fontextractor.ui.unknown')}</dd></div>
+        <div><dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.style')}</dt><dd>{font.style || t('tool-fontextractor.ui.unknown')}</dd></div>
+        <div><dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.stretch')}</dt><dd>{font.stretch || t('tool-fontextractor.ui.unknown')}</dd></div>
+        <div><dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.variable')}</dt><dd>{t(font.isVariable ? 'tool-fontextractor.ui.yes' : 'tool-fontextractor.ui.no')}</dd></div>
         <div className="col-span-2">
-          <dt className="font-semibold text-text-main">Source host</dt>
-          <dd className="break-all">{font.sourceHost || 'Embedded declaration'}</dd>
+          <dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.sourceHost')}</dt>
+          <dd className="break-all">{font.sourceHost || t('tool-fontextractor.ui.embedded')}</dd>
         </div>
         {font.unicodeRange && font.unicodeRange !== 'unknown' && (
           <div className="col-span-2">
-            <dt className="font-semibold text-text-main">Unicode range</dt>
+            <dt className="font-semibold text-text-main">{t('tool-fontextractor.ui.unicodeRange')}</dt>
             <dd className="break-all">{font.unicodeRange}</dd>
           </div>
         )}
@@ -121,13 +123,13 @@ function FontCard({ font }) {
         active={showSimilar}
         onClick={() => setShowSimilar((visible) => !visible)}
       >
-        Similar Fonts
+        {t('tool-fontextractor.ui.similar')}
       </Button>
 
       {showSimilar && (
         <div className="bg-app border border-border rounded-xl p-3 flex flex-col gap-2">
           <p className="text-[0.77rem] text-text-muted">
-            Heuristic alternatives. Links open Google Fonts only after you select them.
+            {t('tool-fontextractor.ui.similarHint')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {similar.map((suggestion) => (
@@ -150,6 +152,7 @@ function FontCard({ font }) {
 }
 
 export default function WebsiteFontExtractor() {
+  const { t, i18n } = useTranslation('tools');
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -168,12 +171,12 @@ export default function WebsiteFontExtractor() {
 
   const doExtract = async (rawUrl) => {
     if (!extractorAllowed) {
-      setStatus('Website analysis is blocked until you allow the disclosed external service.');
+      setStatus(t('tool-fontextractor.ui.blocked'));
       return;
     }
     let target = (rawUrl || urlInput).trim();
     if (!target) {
-      setStatus('Please enter a website URL.');
+      setStatus(t('tool-fontextractor.ui.required'));
       return;
     }
     if (!/^https?:\/\//i.test(target)) target = `https://${target}`;
@@ -192,22 +195,22 @@ export default function WebsiteFontExtractor() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setStatus(`Error: ${data.error || 'Extraction failed.'}`);
+        setStatus(t('tool-fontextractor.ui.error', { message: data.error || t('tool-fontextractor.ui.failed') }));
       } else if (!data.fonts?.length) {
-        setStatus('No web font declarations were found. The site may use system fonts or dynamic loading.');
+        setStatus(t('tool-fontextractor.ui.noneDetailed'));
       } else {
         setFonts(data.fonts);
         setTruncation(data.truncation || null);
       }
     } catch {
-      setStatus('Error: Website analysis is currently unavailable.');
+      setStatus(t('tool-fontextractor.ui.error', { message: t('tool-fontextractor.ui.unavailable') }));
     } finally {
       setLoading(false);
     }
   };
 
   const groupedFonts = Array.from(fonts.reduce((groups, font) => {
-    const key = font.family || 'Unknown family';
+    const key = font.family || t('tool-fontextractor.ui.unknownFamily');
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(font);
     return groups;
@@ -215,23 +218,23 @@ export default function WebsiteFontExtractor() {
 
   return (
     <Card id="tool-fontextractor" variant="tool" size="wide">
-      <ToolHeader title="Website Font Extractor" />
+      <ToolHeader title={t('tool-fontextractor.ui.heading')} />
 
       {!extractorAllowed && (
         <div className="p-3 bg-app border border-border rounded-xl flex items-center justify-between gap-3 text-xs">
-          <span>Analysis sends the target URL to this site's server, which fetches bounded public HTML and CSS. Font files are not fetched.</span>
-          <Button variant="secondary" onClick={() => grantConsent('fontextractor')}>Allow website analysis</Button>
+          <span>{t('tool-fontextractor.ui.consentDisclosure')}</span>
+          <Button variant="secondary" onClick={() => grantConsent('fontextractor')}>{t('tool-fontextractor.ui.allow')}</Button>
         </div>
       )}
 
       <div className="flex flex-col gap-2 w-full mt-4">
-        <label htmlFor="fontextractor-input">Website URL</label>
+        <label htmlFor="fontextractor-input">{t('tool-fontextractor.ui.websiteUrl')}</label>
         <div className="search-input-group">
           <input
             ref={inputRef}
             id="fontextractor-input"
             type="url"
-            placeholder="Enter a website URL (e.g., stripe.com)"
+            placeholder={t('tool-fontextractor.ui.placeholder')}
             value={urlInput}
             onChange={(event) => setUrlInput(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && doExtract()}
@@ -239,11 +242,11 @@ export default function WebsiteFontExtractor() {
             spellCheck={false}
           />
           <Button id="fontextractor-btn" variant="primary" onClick={() => doExtract()} disabled={loading}>
-            {loading ? 'Scanning…' : 'Scan declarations'}
+            {t(loading ? 'tool-fontextractor.ui.scanning' : 'tool-fontextractor.ui.scan')}
           </Button>
         </div>
         <p className="text-[0.78rem] text-text-muted">
-          Try:{' '}
+          {t('tool-fontextractor.ui.try')}{' '}
           {exampleUrls.map((url, index) => (
             <React.Fragment key={url}>
               <button type="button" className="text-accent underline" onClick={() => { setUrlInput(url); inputRef.current?.focus(); }}>
@@ -255,24 +258,27 @@ export default function WebsiteFontExtractor() {
         </p>
       </div>
 
-      {loading && <Spinner container label="Fetching bounded HTML and CSS…" className="py-12 w-full" />}
+      {loading && <Spinner container label={t('tool-fontextractor.ui.fetching')} className="py-12 w-full" />}
       {!loading && status && <p role="status" className="text-red-500 font-medium text-sm mt-2">{status}</p>}
 
       {!loading && fonts.length > 0 && (
         <div className="flex flex-col gap-5 w-full mt-4">
           <div className="p-3 px-4 bg-app border border-border rounded-xl text-[0.88rem] text-text-muted">
-            <strong>{groupedFonts.length}</strong> families, <strong>{fonts.length}</strong> faces found
+            {t('tool-fontextractor.ui.summary', {
+              families: new Intl.NumberFormat(i18n.resolvedLanguage).format(groupedFonts.length),
+              faces: new Intl.NumberFormat(i18n.resolvedLanguage).format(fonts.length),
+            })}
           </div>
           {truncation?.truncated && (
             <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-text-main">
-              Results may be incomplete because the scan reached its safe {truncation.reasons.join(', ')} limit.
+              {t('tool-fontextractor.ui.truncated', { reasons: truncation.reasons.join(', ') })}
             </p>
           )}
           <div className="max-h-[420px] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-5">
             {groupedFonts.map(([family, faces]) => (
               <section key={family} className="flex flex-col gap-2">
                 <h3 className="text-sm font-bold text-text-main">
-                  {family} <span className="text-text-muted font-normal">({faces.length} face{faces.length === 1 ? '' : 's'})</span>
+                  {family} <span className="text-text-muted font-normal">{t('tool-fontextractor.ui.faceCount', { count: faces.length })}</span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {faces.map((font) => (
@@ -289,12 +295,11 @@ export default function WebsiteFontExtractor() {
       )}
 
       {!loading && searched && fonts.length === 0 && !status && (
-        <p className="py-10 text-center text-text-muted">No web font declarations were found.</p>
+        <p className="py-10 text-center text-text-muted">{t('tool-fontextractor.ui.none')}</p>
       )}
 
       <p className="text-xs text-text-muted mt-4 border-t border-border pt-3">
-        This scan reports declarations found in bounded public HTML and CSS; it does not prove a font was rendered.
-        Dynamically loaded or authenticated styles may not be detected. Recommendations are local heuristics.
+        {t('tool-fontextractor.ui.disclaimer')}
       </p>
     </Card>
   );

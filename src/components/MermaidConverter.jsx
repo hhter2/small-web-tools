@@ -5,6 +5,7 @@ import Card from './ui/Card';
 import FullscreenPreview, { FullscreenPreviewButton } from './ui/FullscreenPreview';
 import ToolHeader from './ui/ToolHeader';
 import {
+  MERMAID_SOURCE_LIMIT,
   PNG_SCALES,
   downloadBlob,
   normalizeMermaidFilename,
@@ -13,20 +14,13 @@ import {
 } from './MermaidConverter/lib/mermaidDomain.js';
 
 const SAMPLE = `flowchart LR
-Start[Write Mermaid]
-Preview[Preview locally]
-Export{Export}
-SVG[SVG]
-PNG[PNG]
-Start --> Preview
-Preview --> Export
-Export --> SVG
-Export --> PNG`;
+  Start([Write Mermaid]) --> Preview[Preview locally]
+  Preview --> Export{Export format}
+  Export --> SVG[SVG]
+  Export --> PNG[PNG]`;
 
 function SvgPreview({ render, label, className = '', previewRef }) {
-  if (!render) {
-    return <div ref={previewRef} className={`flex h-full min-h-0 items-center justify-center p-8 text-center text-sm text-text-muted ${className}`}>{label}</div>;
-  }
+  if (!render) return <div ref={previewRef} className={`flex h-full min-h-0 items-center justify-center p-8 text-center text-sm text-text-muted ${className}`}>{label}</div>;
   return <div ref={previewRef} className={`h-full min-h-0 overflow-auto p-5 ${className}`} aria-label={label}><div className="mx-auto w-fit max-w-full" dangerouslySetInnerHTML={{ __html: render.svg }} /></div>;
 }
 
@@ -34,43 +28,64 @@ export default function MermaidConverter() {
   const { t, i18n } = useTranslation('tools');
   const [source, setSource] = useState(SAMPLE);
   const [filename, setFilename] = useState('diagram.mmd');
-  const [background, setBackground] = useState('#ffffff');
+  const [backgroundMode, setBackgroundMode] = useState('solid');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [pngScale, setPngScale] = useState(2);
   const [render, setRender] = useState(null);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [focusedPanel, setFocusedPanel] = useState(null);
   const renderSequence = useRef(0);
-  const previewRef = useRef(null);
-  const fullscreenPreviewRef = useRef(null);
+  const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const fullscreenTextareaRef = useRef(null);
+  const previewRef = useRef(null);
+  const fullscreenPreviewRef = useRef(null);
 
+  const background = backgroundMode === 'transparent' ? 'transparent' : backgroundColor;
   const characterCount = useMemo(() => source.length.toLocaleString(i18n.language), [i18n.language, source.length]);
 
-  const performRender = useCallback(() => {
+  const performRender = useCallback(async () => {
     const sequence = ++renderSequence.current;
     setError('');
     setStatus(t('tool-mermaid.ui.status.rendering'));
-    requestAnimationFrame(() => {
-      try {
-        const next = renderMermaidToSvg(source, { background });
-        if (sequence !== renderSequence.current) return;
-        setRender(next);
-        setStatus(t('tool-mermaid.ui.status.rendered'));
-      } catch (cause) {
-        if (sequence !== renderSequence.current) return;
-        setRender(null);
-        setStatus('');
-        setError(t(`tool-mermaid.ui.errors.${cause instanceof Error ? cause.message : 'parseError'}`));
-      }
-    });
+    try {
+      const next = await renderMermaidToSvg(source, { background, ariaLabel: t('tool-mermaid.ui.previewAria') });
+      if (sequence !== renderSequence.current) return;
+      setRender(next);
+      setStatus(t('tool-mermaid.ui.status.rendered'));
+    } catch (cause) {
+      if (sequence !== renderSequence.current) return;
+      setRender(null);
+      setStatus('');
+      setError(t(`tool-mermaid.ui.errors.${cause instanceof Error ? cause.message : 'parseError'}`));
+    }
   }, [background, source, t]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(performRender, 350);
+    const timeout = window.setTimeout(() => void performRender(), 400);
     return () => window.clearTimeout(timeout);
   }, [performRender]);
+
+  const handlePaste = async () => {
+    try {
+      setSource(await navigator.clipboard.readText());
+      setStatus(t('tool-mermaid.ui.status.pasted'));
+    } catch {
+      setError(t('tool-mermaid.ui.errors.clipboardDenied'));
+    }
+  };
+
+  const handleFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!/\.mmd$/i.test(file.name)) { setError(t('tool-mermaid.ui.errors.invalidFile')); return; }
+    if (file.size > MERMAID_SOURCE_LIMIT) { setError(t('tool-mermaid.ui.errors.tooLarge')); return; }
+    setSource(await file.text());
+    setFilename(normalizeMermaidFilename(file.name, 'mmd'));
+    setStatus(t('tool-mermaid.ui.status.loaded', { filename: file.name }));
+  };
 
   const downloadMmd = () => {
     const name = normalizeMermaidFilename(filename, 'mmd');
@@ -92,8 +107,8 @@ export default function MermaidConverter() {
       const name = normalizeMermaidFilename(filename, 'png');
       downloadBlob(blob, 'image/png', name);
       setStatus(t('tool-mermaid.ui.status.downloaded', { filename: name }));
-    } catch {
-      setError(t('tool-mermaid.ui.errors.pngFailed'));
+    } catch (cause) {
+      setError(t(`tool-mermaid.ui.errors.${cause instanceof Error ? cause.message : 'pngFailed'}`));
     }
   };
 
@@ -110,20 +125,24 @@ export default function MermaidConverter() {
     <Card id="tool-mermaid" variant="tool" size="wide" className="max-w-[1180px]">
       <ToolHeader title={t('tool-mermaid.title')} />
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-app/60 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="primary" size="sm" onClick={performRender} disabled={!source.trim()}>{t('tool-mermaid.ui.render')}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" size="sm" onClick={handlePaste}>{t('tool-mermaid.ui.paste')}</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>{t('tool-mermaid.ui.upload')}</Button>
+          <input ref={fileInputRef} type="file" accept=".mmd,text/plain" onChange={handleFile} className="hidden" aria-label={t('tool-mermaid.ui.uploadAria')} />
+          <Button type="button" variant="primary" size="sm" onClick={() => void performRender()} disabled={!source.trim()}>{t('tool-mermaid.ui.render')}</Button>
           <Button type="button" variant="secondary" size="sm" onClick={clear} disabled={!source}>{t('tool-mermaid.ui.clear')}</Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor="mermaid-filename" className="sr-only">{t('tool-mermaid.ui.filename')}</label>
-          <input id="mermaid-filename" value={filename} onChange={(event) => setFilename(event.target.value)} className="w-40 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus" />
+          <input id="mermaid-filename" value={filename} onChange={(event) => setFilename(event.target.value)} aria-label={t('tool-mermaid.ui.filename')} className="w-40 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-text-main outline-none focus:border-accent focus:ring-2 focus:ring-focus" />
           <Button type="button" variant="secondary" size="sm" onClick={downloadMmd} disabled={!source}>{t('tool-mermaid.ui.downloadMmd')}</Button>
           <Button type="button" variant="secondary" size="sm" onClick={downloadSvg} disabled={!render}>{t('tool-mermaid.ui.downloadSvg')}</Button>
-          <Button type="button" variant="secondary" size="sm" onClick={downloadPng} disabled={!render}>{t('tool-mermaid.ui.downloadPng')}</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void downloadPng()} disabled={!render}>{t('tool-mermaid.ui.downloadPng')}</Button>
         </div>
       </div>
       <div className="flex flex-wrap items-end gap-4 rounded-xl border border-border bg-app/40 p-3">
-        <label className="grid gap-1 text-xs font-semibold text-text-muted">{t('tool-mermaid.ui.background')}<input type="color" value={background} onChange={(event) => setBackground(event.target.value)} className="h-9 w-16 rounded border border-border bg-card" /></label>
+        <label className="grid gap-1 text-xs font-semibold text-text-muted">{t('tool-mermaid.ui.backgroundMode')}<select value={backgroundMode} onChange={(event) => setBackgroundMode(event.target.value)} className="h-9 rounded-md border border-border bg-card px-3 text-sm text-text-main"><option value="solid">{t('tool-mermaid.ui.solid')}</option><option value="transparent">{t('tool-mermaid.ui.transparent')}</option></select></label>
+        {backgroundMode === 'solid' && <label className="grid gap-1 text-xs font-semibold text-text-muted">{t('tool-mermaid.ui.background')}<input type="color" value={backgroundColor} onChange={(event) => setBackgroundColor(event.target.value)} className="h-9 w-16 rounded border border-border bg-card" /></label>}
         <label className="grid gap-1 text-xs font-semibold text-text-muted">{t('tool-mermaid.ui.pngScale')}<select value={pngScale} onChange={(event) => setPngScale(Number(event.target.value))} className="h-9 rounded-md border border-border bg-card px-3 text-sm text-text-main">{PNG_SCALES.map((scale) => <option key={scale} value={scale}>{scale}×</option>)}</select></label>
         <p className="text-xs text-text-muted">{t('tool-mermaid.ui.localOnly')}</p>
       </div>

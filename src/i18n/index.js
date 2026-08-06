@@ -3,10 +3,12 @@ import { initReactI18next } from 'react-i18next';
 import enCommon from './locales/en-US/common.json';
 import enNavigation from './locales/en-US/navigation.json';
 import enTools from './locales/en-US/tools.json';
+import enMermaid from './locales/en-US/mermaid.json';
 import enErrors from './locales/en-US/errors.json';
 import zhCommon from './locales/zh-TW/common.json';
 import zhNavigation from './locales/zh-TW/navigation.json';
 import zhTools from './locales/zh-TW/tools.json';
+import zhMermaid from './locales/zh-TW/mermaid.json';
 import zhErrors from './locales/zh-TW/errors.json';
 
 export const DEFAULT_LOCALE = 'en-US';
@@ -53,8 +55,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      'en-US': { common: enCommon, navigation: enNavigation, tools: enTools, errors: enErrors },
-      'zh-TW': { common: zhCommon, navigation: zhNavigation, tools: zhTools, errors: zhErrors },
+      'en-US': { common: enCommon, navigation: enNavigation, tools: { ...enTools, ...enMermaid }, errors: enErrors },
+      'zh-TW': { common: zhCommon, navigation: zhNavigation, tools: { ...zhTools, ...zhMermaid }, errors: zhErrors },
     },
     lng: initialLocale,
     fallbackLng: DEFAULT_LOCALE,

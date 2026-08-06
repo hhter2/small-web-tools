@@ -35,6 +35,18 @@ describe('Mermaid converter domain', () => {
     expect(result.height).toBe(80);
   });
 
+  it('removes generated stylesheets that can load external resources', () => {
+    const malicious = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80">
+      <style data-safe="true">.node { fill: #fff; }</style>
+      <style data-unsafe="true">@import "https://example.com/theme.css"; .edge { stroke: url(https://example.com/paint.svg); }</style>
+      <style data-obfuscated="true">.label { background: u\\72l(https://example.com/label.png); }</style>
+      <rect class="node" width="10" height="10" />
+    </svg>`;
+    const result = sanitizeMermaidSvg(malicious);
+    expect(result.svg).toContain('data-safe="true"');
+    expect(result.svg).not.toMatch(/data-unsafe|data-obfuscated|@import|example\.com|u\\72l/i);
+  });
+
   it('preserves a transparent background without adding a rectangle', () => {
     const result = sanitizeMermaidSvg('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"></svg>', { background: 'transparent' });
     expect(result.background).toBe('transparent');

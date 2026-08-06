@@ -1,15 +1,16 @@
 name: Create v0.9.1-beta tag
 
 on:
-  push:
+  pull_request:
     branches:
-      - fix/mermaid-review-findings
+      - main
 
 permissions:
   contents: write
 
 jobs:
   create-tag:
+    if: github.head_ref == 'fix/mermaid-review-findings'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

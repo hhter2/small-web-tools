@@ -6,11 +6,6 @@ on:
       - feature/issue-57-mermaid-converter
     paths:
       - .github/workflows/issue-57-docs.yml
-  pull_request:
-    branches:
-      - develop
-    paths:
-      - .github/workflows/issue-57-docs.yml
 
 permissions:
   contents: write
@@ -32,34 +27,36 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          replacements = {
-              'ARCHITECTURE.md': (
-                  '| `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |',
-                  '| `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |\n| `tool-mermaid` | Mermaid Converter | `MermaidConverter.jsx` | Developer |',
-              ),
-              'ARCHITECTURE.zh-TW.md': (
-                  '| `tool-markdown` | Markdown 預覽器 | `MarkdownPreviewer.jsx` | 開發者 |',
-                  '| `tool-markdown` | Markdown 預覽器 | `MarkdownPreviewer.jsx` | 開發者 |\n| `tool-mermaid` | Mermaid 轉換器 | `MermaidConverter.jsx` | 開發者 |',
-              ),
+          labels = {
+              'ARCHITECTURE.md': 'Mermaid Converter',
+              'ARCHITECTURE.zh-TW.md': 'Mermaid 轉換器',
           }
 
-          for filename, (needle, replacement) in replacements.items():
+          for filename, label in labels.items():
               path = Path(filename)
-              content = path.read_text()
-              if '`tool-mermaid`' in content:
+              lines = path.read_text().splitlines()
+              if any('`tool-mermaid`' in line for line in lines):
                   continue
-              if needle not in content:
-                  raise SystemExit(f'Expected route row not found in {filename}')
-              path.write_text(content.replace(needle, replacement, 1))
+
+              for index, line in enumerate(lines):
+                  if line.startswith('| `tool-markdown` |'):
+                      columns = [column.strip() for column in line.split('|')]
+                      category = columns[4]
+                      lines.insert(
+                          index + 1,
+                          f'| `tool-mermaid` | {label} | `MermaidConverter.jsx` | {category} |',
+                      )
+                      path.write_text('\n'.join(lines) + '\n')
+                      break
+              else:
+                  raise SystemExit(f'Expected tool-markdown route row not found in {filename}')
           PY
-      - name: Commit documentation
+      - name: Commit documentation and remove temporary workflow
         shell: bash
         run: |
-          if git diff --quiet -- ARCHITECTURE.md ARCHITECTURE.zh-TW.md; then
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ARCHITECTURE.md ARCHITECTURE.zh-TW.md
+          git rm .github/workflows/issue-57-docs.yml
           git commit -m "docs: add Mermaid route inventory"
           git push origin HEAD:feature/issue-57-mermaid-converter

@@ -6,9 +6,18 @@ on:
       - feature/issue-57-mermaid-converter
     paths:
       - .github/workflows/issue-57-docs.yml
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - .github/workflows/issue-57-docs.yml
 
 permissions:
   contents: write
+
+concurrency:
+  group: issue-57-docs
+  cancel-in-progress: true
 
 jobs:
   update-docs:

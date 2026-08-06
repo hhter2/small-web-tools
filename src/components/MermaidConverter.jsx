@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from './ui/Button';
 import Card from './ui/Card';
@@ -13,10 +13,15 @@ import {
 } from './MermaidConverter/lib/mermaidDomain.js';
 
 const SAMPLE = `flowchart LR
-Start[Write Mermaid] --> Preview[Preview locally]
-Preview --> Export{Export}
-Export --> SVG[SVG]
-Export --> PNG[PNG]`;
+Start[Write Mermaid]
+Preview[Preview locally]
+Export{Export}
+SVG[SVG]
+PNG[PNG]
+Start --> Preview
+Preview --> Export
+Export --> SVG
+Export --> PNG`;
 
 function SvgPreview({ render, label, className = '', previewRef }) {
   if (!render) {
@@ -43,7 +48,7 @@ export default function MermaidConverter() {
 
   const characterCount = useMemo(() => source.length.toLocaleString(i18n.language), [i18n.language, source.length]);
 
-  const performRender = () => {
+  const performRender = useCallback(() => {
     const sequence = ++renderSequence.current;
     setError('');
     setStatus(t('tool-mermaid.ui.status.rendering'));
@@ -60,12 +65,12 @@ export default function MermaidConverter() {
         setError(t(`tool-mermaid.ui.errors.${cause instanceof Error ? cause.message : 'parseError'}`));
       }
     });
-  };
+  }, [background, source, t]);
 
   useEffect(() => {
     const timeout = window.setTimeout(performRender, 350);
     return () => window.clearTimeout(timeout);
-  }, [source, background]);
+  }, [performRender]);
 
   const downloadMmd = () => {
     const name = normalizeMermaidFilename(filename, 'mmd');
@@ -101,8 +106,6 @@ export default function MermaidConverter() {
     textareaRef.current?.focus();
   };
 
-  const closeFocusedPanel = () => setFocusedPanel(null);
-
   return (
     <Card id="tool-mermaid" variant="tool" size="wide" className="max-w-[1180px]">
       <ToolHeader title={t('tool-mermaid.title')} />
@@ -135,7 +138,7 @@ export default function MermaidConverter() {
         </section>
       </div>
       {(status || error) && <p role={error ? 'alert' : 'status'} className={`text-sm ${error ? 'text-danger' : 'text-text-muted'}`}>{error || status}</p>}
-      <FullscreenPreview open={focusedPanel !== null} title={focusedPanel === 'editor' ? t('tool-mermaid.ui.editorTitle') : t('tool-mermaid.ui.previewTitle')} onClose={closeFocusedPanel}>
+      <FullscreenPreview open={focusedPanel !== null} title={focusedPanel === 'editor' ? t('tool-mermaid.ui.editorTitle') : t('tool-mermaid.ui.previewTitle')} onClose={() => setFocusedPanel(null)}>
         {focusedPanel === 'editor' ? <textarea ref={fullscreenTextareaRef} value={source} onChange={(event) => setSource(event.target.value)} spellCheck="false" className="h-full w-full resize-none bg-card p-5 font-mono text-sm leading-6 text-text-main outline-none" aria-label={t('tool-mermaid.ui.editorAria')} /> : <SvgPreview render={render} previewRef={fullscreenPreviewRef} label={render ? t('tool-mermaid.ui.previewAria') : t('tool-mermaid.ui.emptyPreview')} className="bg-card" />}
       </FullscreenPreview>
     </Card>

@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  MERMAID_SOURCE_LIMIT,
   downloadBlob,
   normalizeMermaidFilename,
-  renderMermaidToSvg,
+  sanitizeMermaidSvg,
+  validateMermaidSource,
 } from '../components/MermaidConverter/lib/mermaidDomain.js';
 
 describe('Mermaid converter domain', () => {
@@ -11,22 +13,32 @@ describe('Mermaid converter domain', () => {
     expect(normalizeMermaidFilename('', 'mmd')).toBe('diagram.mmd');
   });
 
-  it('renders a deterministic local SVG', () => {
-    const source = `flowchart LR\nA[Start]\nB{Decision}\nA --> B`;
-    const result = renderMermaidToSvg(source, { background: '#ffffff' });
-    expect(result.svg).toContain('<svg');
-    expect(result.svg).toContain('Start');
-    expect(result.svg).toContain('Decision');
-    expect(result.svg).toContain('marker-end="url(#arrow)"');
-    expect(result.width).toBeGreaterThan(0);
-    expect(result.height).toBeGreaterThan(0);
+  it('bounds empty, oversized, and pathological source', () => {
+    expect(() => validateMermaidSource('')).toThrow('empty');
+    expect(() => validateMermaidSource('x'.repeat(MERMAID_SOURCE_LIMIT + 1))).toThrow('tooLarge');
+    expect(() => validateMermaidSource(Array.from({ length: 1001 }, (_, index) => `A${index}`).join('\n'))).toThrow('tooManyNodes');
   });
 
-  it('escapes user labels and rejects unsupported syntax', () => {
-    const result = renderMermaidToSvg('flowchart TB\nA[<script>alert(1)</script>]');
-    expect(result.svg).not.toContain('<script>');
-    expect(result.svg).toContain('&lt;script&gt;');
-    expect(() => renderMermaidToSvg('sequenceDiagram\nA->>B: hello')).toThrow('unsupportedDiagram');
+  it('sanitizes executable SVG content and external resources', () => {
+    const malicious = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" onload="alert(1)">
+      <script>alert(1)</script>
+      <foreignObject><div xmlns="http://www.w3.org/1999/xhtml">unsafe</div></foreignObject>
+      <image href="https://example.com/tracker.png" />
+      <a href="javascript:alert(1)"><text x="5" y="15">safe label</text></a>
+      <rect width="10" height="10" style="fill:url(https://example.com/a.svg#x)" />
+    </svg>`;
+    const result = sanitizeMermaidSvg(malicious, { background: '#ffffff' });
+    expect(result.svg).not.toMatch(/script|foreignObject|<image|onload|javascript:|https:\/\/example\.com/i);
+    expect(result.svg).toContain('safe label');
+    expect(result.svg).toContain('data-export-background="true"');
+    expect(result.width).toBe(120);
+    expect(result.height).toBe(80);
+  });
+
+  it('preserves a transparent background without adding a rectangle', () => {
+    const result = sanitizeMermaidSvg('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"></svg>', { background: 'transparent' });
+    expect(result.background).toBe('transparent');
+    expect(result.svg).not.toContain('data-export-background');
   });
 
   it('revokes object URLs after downloads', () => {

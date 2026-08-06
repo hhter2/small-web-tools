@@ -1,0 +1,41 @@
+{
+  "tool-mermaid": {
+    "title": "Mermaid Converter",
+    "tooltip": "Mermaid Converter",
+    "description": "Create local flowcharts and download matching Mermaid, SVG, and PNG files.",
+    "search": ["Mermaid", "flowchart", "diagram", "SVG", "PNG"],
+    "ui": {
+      "render": "Render",
+      "clear": "Clear",
+      "filename": "Download filename",
+      "downloadMmd": "Download .mmd",
+      "downloadSvg": "Download .svg",
+      "downloadPng": "Download .png",
+      "background": "Background",
+      "pngScale": "PNG scale",
+      "localOnly": "Source and exports stay in this browser.",
+      "editorTitle": "Mermaid source",
+      "previewTitle": "Preview",
+      "characterCount": "{{count}} characters",
+      "editorAria": "Mermaid source editor",
+      "previewAria": "Rendered Mermaid diagram",
+      "emptyPreview": "Enter a supported flowchart to preview it.",
+      "expandEditor": "Expand Mermaid editor",
+      "expandPreview": "Expand Mermaid preview",
+      "status": {
+        "rendering": "Rendering…",
+        "rendered": "Diagram rendered locally.",
+        "downloaded": "Downloaded {{filename}}.",
+        "cleared": "Diagram cleared."
+      },
+      "errors": {
+        "empty": "Enter Mermaid source before rendering.",
+        "tooLarge": "The Mermaid source is too large.",
+        "unsupportedDiagram": "This local renderer currently supports flowchart and graph diagrams.",
+        "parseError": "The Mermaid source could not be parsed.",
+        "tooManyNodes": "The diagram contains too many nodes.",
+        "pngFailed": "The PNG could not be generated in this browser."
+      }
+    }
+  }
+}

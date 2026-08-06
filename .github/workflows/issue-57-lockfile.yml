@@ -6,11 +6,13 @@ on:
       - feature/issue-57-mermaid-converter
     paths:
       - package.json
+      - .github/workflows/issue-57-lockfile.yml
   pull_request:
     branches:
       - develop
     paths:
       - package.json
+      - .github/workflows/issue-57-lockfile.yml
 
 permissions:
   contents: write
@@ -27,7 +29,11 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Use repository npm version
-        run: npm install --global "npm@$(node -p \"require('./package.json').packageManager.replace(/^npm@/, '')\")"
+        shell: bash
+        run: |
+          NPM_VERSION="$(node -p "require('./package.json').packageManager.replace(/^npm@/, '')")"
+          npm install --global "npm@${NPM_VERSION}"
+          test "$(npm --version)" = "${NPM_VERSION}"
       - name: Refresh lockfile
         run: npm install --package-lock-only --ignore-scripts
       - name: Commit lockfile

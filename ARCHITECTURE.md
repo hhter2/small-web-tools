@@ -227,6 +227,7 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
 | `tool-url` | URL Encoder & Decoder | `UrlEncoderDecoder.jsx` | Developer |
 | `tool-markdown` | Markdown Previewer | `MarkdownPreviewer.jsx` | Developer |
+| `tool-mermaid` | Mermaid Converter | `MermaidConverter.jsx` | Developer |
 | `tool-code-preview` | VS Code Preview | `CodePreviewer.jsx` | Developer |
 | `tool-fontextractor` | Font Extractor | `WebsiteFontExtractor.jsx` | Developer |
 | `tool-base` | Base Converter | `BaseConverter.jsx` | Developer |

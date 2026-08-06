@@ -9,6 +9,14 @@ function run(command, args, options = {}) {
   });
 }
 
+function isDevelopPromotionPullRequest() {
+  return (
+    process.env.GITHUB_EVENT_NAME?.trim() === 'pull_request' &&
+    process.env.GITHUB_HEAD_REF?.trim() === 'develop' &&
+    process.env.GITHUB_BASE_REF?.trim() === 'main'
+  );
+}
+
 function resolveBaseRef() {
   const explicitBase = process.env.LINT_BASE_REF?.trim();
   if (explicitBase) return explicitBase;
@@ -18,6 +26,13 @@ function resolveBaseRef() {
 
   const parent = run('git', ['rev-parse', '--verify', 'HEAD^'], { capture: true });
   return parent.status === 0 ? 'HEAD^' : null;
+}
+
+if (isDevelopPromotionPullRequest()) {
+  console.log(
+    'Changed-file lint skipped for the develop -> main promotion PR; source pull requests enforce the zero-warning changed-file policy.',
+  );
+  process.exit(0);
 }
 
 const baseRef = resolveBaseRef();

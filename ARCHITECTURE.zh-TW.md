@@ -309,6 +309,8 @@ wrangler.jsonc 以 RATE_LIMITER_SERVICE 將 Pages Functions 綁定至它。完�
 另外啟動該 Worker。npm run platform:integration 會以隔離本機狀態啟動 Pages 與 Worker
 設定，證明並行請求受到設定的平台限制，也證明缺少服務時會安全失效。程序內 limiter
 只在明確的 development mode 可用；正式環境在缺少綁定時會安全失效。
+Pages 端 deadline 會綁定至 service-binding 的 `Request.signal`，因此逾時會限制 caller
+工作並把取消傳遞至 Worker runtime，同時維持相同的故障關閉 503 回應。
 
 test/integration/ssrf-worker/ 與 test/integration/ssrf-target-worker/ 是針對對外抓取
 邊界的隔離 Cloudflare runtime fixture。只有預期進行臨時 Cloudflare 部署時才執行

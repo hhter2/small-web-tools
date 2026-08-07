@@ -344,6 +344,9 @@ Local and data sources are ignored without hiding later remote fallbacks; candid
 are deduplicated by normalized absolute URL and face metadata.
 
 Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. `npm run platform:integration` starts the Pages and Worker configurations with isolated local state, proves concurrent requests hit the configured platform limit, and proves the missing-service path fails closed. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
+The Pages-side deadline is attached to the service-binding `Request.signal`, so a
+timeout bounds the caller and propagates cancellation to the Worker runtime while
+still returning the same fail-closed 503 response.
 
 `test/integration/ssrf-worker/` and `test/integration/ssrf-target-worker/` are
 isolated Cloudflare-runtime fixtures for the outbound-fetch boundary. Run

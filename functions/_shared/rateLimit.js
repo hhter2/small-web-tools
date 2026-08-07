@@ -4,11 +4,11 @@ const developmentBuckets = new Map();
 const WINDOW_MS = 60_000;
 const SERVICE_TIMEOUT_MS = 1500;
 
-function limiterError(status, code, extraHeaders = {}, log = false) {
+function limiterError(status, code, extraHeaders = {}, log = false, diagnostic = 'rate-limiter-boundary') {
   return errorResponse(code, status, {
     headers: extraHeaders,
     log,
-    diagnostic: 'rate-limiter-boundary',
+    diagnostic,
   });
 }
 
@@ -78,32 +78,42 @@ export async function enforceRateLimit(context, options) {
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), SERVICE_TIMEOUT_MS);
+  const timeoutMs = options.serviceTimeoutMs ?? SERVICE_TIMEOUT_MS;
+  const timeoutError = new DOMException('Rate limiter timed out', 'TimeoutError');
+  const timer = setTimeout(() => controller.abort(timeoutError), timeoutMs);
+  let removeAbortListener = () => {};
   try {
+    const timeout = new Promise((_, reject) => {
+      const onAbort = () => reject(timeoutError);
+      controller.signal.addEventListener('abort', onAbort, { once: true });
+      removeAbortListener = () => controller.signal.removeEventListener('abort', onAbort);
+    });
     const serviceCall = env.RATE_LIMITER_SERVICE.fetch(
       new Request('https://rate-limiter.internal/limit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ route: options.name, clientKey }),
+        signal: controller.signal,
       }),
     );
-    const response = await Promise.race([
-      serviceCall,
-      new Promise((_, reject) => {
-        controller.signal.addEventListener('abort', () => reject(
-          new DOMException('Rate limiter timed out', 'TimeoutError'),
-        ), { once: true });
-      }),
-    ]);
-    if (!response.ok) throw new Error('limiter service failure');
+    const response = await Promise.race([serviceCall, timeout]);
+    if (!response.ok) {
+      return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true, 'rate-limiter-service-failure');
+    }
     const result = await response.json();
-    if (typeof result?.allowed !== 'boolean') throw new Error('invalid limiter response');
+    if (typeof result?.allowed !== 'boolean') {
+      return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true, 'rate-limiter-malformed-response');
+    }
     return result.allowed
       ? null
       : limiterError(429, 'RATE_LIMITED', { 'Retry-After': '60' });
-  } catch {
-    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true);
+  } catch (error) {
+    const diagnostic = controller.signal.aborted || error?.name === 'TimeoutError'
+      ? 'rate-limiter-timeout'
+      : 'rate-limiter-service-failure';
+    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true, diagnostic);
   } finally {
     clearTimeout(timer);
+    removeAbortListener();
   }
 }

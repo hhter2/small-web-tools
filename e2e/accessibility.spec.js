@@ -33,6 +33,32 @@ test('brand and folder-selection controls use native button semantics', async ({
   await expect(page.getByRole('button', { name: 'Select a folder to analyze' })).toBeVisible();
 });
 
+test('desktop category shortcuts remain pointer-only redundant navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/home');
+
+  const desktopHeader = page.locator('header');
+  const categoryButton = desktopHeader.getByRole('button', { name: 'Media', exact: true });
+  await expect(categoryButton).not.toHaveAttribute('aria-haspopup');
+  await expect(categoryButton).not.toHaveAttribute('aria-expanded');
+
+  await categoryButton.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/home$/);
+  await expect(page.getByRole('heading', { name: 'Media', exact: true })).toBeVisible();
+
+  await categoryButton.hover();
+  const shortcut = desktopHeader.getByRole('button', { name: 'Image Metadata' });
+  await expect(shortcut).toBeVisible();
+  await page.mouse.move(1400, 850);
+  await expect(shortcut).toHaveCount(0);
+  await expect(page.locator('footer').getByRole('button', { name: 'Image Metadata' })).toBeVisible();
+
+  await categoryButton.hover();
+  await shortcut.click();
+  await expect(page).toHaveURL(/\/home\/imgmeta$/);
+});
+
 for (const route of ['/home', '/simple', '/simple/color', '/home/privacy', '/home/currency', '/home/folder-analyzer']) {
   test(`${route} has no serious or critical automated accessibility findings`, async ({ page }) => {
     await page.goto(route);

@@ -766,8 +766,6 @@ export default function App() {
                   >
                     <button
                       aria-label={cat.name}
-                      aria-expanded={isOpen}
-                      aria-haspopup="menu"
                       className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent min-[1380px]:gap-2 min-[1380px]:px-3 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -787,8 +785,9 @@ export default function App() {
                       </span>
                     </button>
 
-                    <div
-                      className={`absolute top-full left-0 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-2 min-w-[200px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1 transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'opacity-100 visible translate-y-1' : 'opacity-0 invisible translate-y-[10px]'}`}
+                    {/* Redundant pointer convenience; every destination also exists in sidebar/search navigation. */}
+                    {isOpen && <div
+                      className="absolute top-full left-0 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-2 min-w-[200px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1 translate-y-1"
                     >
                       {cat.id === 'utilities' ? (
                         (() => {
@@ -835,7 +834,7 @@ export default function App() {
                           </button>
                         ))
                       )}
-                    </div>
+                    </div>}
                   </div>
                 );
               })}

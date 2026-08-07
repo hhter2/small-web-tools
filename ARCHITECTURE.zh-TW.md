@@ -298,6 +298,9 @@ functions/_shared/requestPolicy.js 管理 Font Extractor 的 4 KiB 請求上限�
 限制（HTML／CSS／總位元組、樣式表數量、import 深度、face 數量、並行數與 deadline）。
 functions/_shared/fontExtractionCapability.js 會在短期 runtime 證據未符合 Cloudflare
 compatibility date、fetch 實作版本與必要情境集合時，讓正式環境擷取功能故障關閉。
+字型擷取會把 HTML `rel` 視為不分大小寫的 token 清單，並依宣告順序回傳每個
+font-face source list 中所有遠端 `url()` 候選。`local()` 與 data source 會被略過，
+但不會遮蔽後續遠端 fallback；候選會依正規化絕對 URL 與 face metadata 去重。
 vite.config.js 只為 IP lookup（/api/iplookup）提供本機 Vite 代理。測試其他 Function
 時使用 Cloudflare Pages 本機執行環境。
 

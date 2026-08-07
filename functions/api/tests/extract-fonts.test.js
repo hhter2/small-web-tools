@@ -169,13 +169,13 @@ describe('extract-fonts API handler failures', () => {
     expect(response.status).toBe(200);
     expect(body.fonts).toEqual([
       expect.objectContaining({
-        family: 'Nested',
-        name: 'nested.woff2',
+        family: 'Redirected',
+        name: 'redirected.woff2',
         sourceHost: 'cdn.example',
       }),
       expect.objectContaining({
-        family: 'Redirected',
-        name: 'redirected.woff2',
+        family: 'Nested',
+        name: 'nested.woff2',
         sourceHost: 'cdn.example',
       }),
     ]);
@@ -184,5 +184,45 @@ describe('extract-fonts API handler failures', () => {
       'https://cdn.example/assets/nested.css',
       expect.any(Object),
     );
+  });
+
+  it('parses tokenized stylesheet links and every ordered remote font fallback', async () => {
+    safeExternalFetch
+      .mockResolvedValueOnce(fetched([
+        '<link REL="preload stylesheet" AS="style" href="/fonts/site.css">',
+        '<link rel=stylesheet href=/fonts/site.css>',
+      ].join('\n'), 'https://example.com/page'))
+      .mockResolvedValueOnce(fetched([
+        '/* @font-face { font-family: Hidden; src: url("/hidden.woff2"); } */',
+        '@font-face {',
+        '  font-family: "Fallback Face";',
+        '  src: local("Installed"),',
+        '       url(data:font/woff2;base64,AAAA) format("woff2"),',
+        '       url("./fallback.woff2") format("woff2"),',
+        '       url(./fallback.woff) format(woff),',
+        '       url("./fallback.woff2") format("woff2");',
+        '  font-weight: 400;',
+        '}',
+      ].join('\n'), 'https://cdn.example/styles/site.css'));
+
+    const response = await onRequestPost(postContext({ url: 'https://example.com/page' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(safeExternalFetch).toHaveBeenCalledTimes(2);
+    expect(body.fonts).toEqual([
+      expect.objectContaining({
+        family: 'Fallback Face',
+        name: 'fallback.woff2',
+        format: 'WOFF2',
+        sourceHost: 'cdn.example',
+      }),
+      expect.objectContaining({
+        family: 'Fallback Face',
+        name: 'fallback.woff',
+        format: 'WOFF',
+        sourceHost: 'cdn.example',
+      }),
+    ]);
   });
 });

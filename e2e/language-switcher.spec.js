@@ -30,3 +30,34 @@ test('desktop language control follows the workspace visibility contract', async
   await page.goto('/simple');
   await expect(page.locator('[data-language-switcher="desktop"]')).toHaveCount(0);
 });
+
+test('document title stays current when session storage writes are denied', async ({ page }) => {
+  await page.addInitScript(() => {
+    const realSessionStorage = window.sessionStorage;
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: {
+        getItem: realSessionStorage.getItem.bind(realSessionStorage),
+        removeItem: realSessionStorage.removeItem.bind(realSessionStorage),
+        setItem() { throw new DOMException('Storage denied', 'SecurityError'); },
+      },
+    });
+  });
+
+  await page.goto('/home');
+  await expect(page).toHaveTitle('Small Web Tools — Simple, Private Browser Utilities');
+
+  await page.goto('/home/currency');
+  await expect(page).toHaveTitle('Currency Converter — Small Web Tools');
+
+  const switcher = page.locator('[data-language-switcher="desktop"]');
+  await switcher.locator('button[aria-haspopup="menu"]').click();
+  await page.getByRole('menuitemradio').nth(1).click();
+  await expect(page).toHaveTitle('貨幣轉換器 — Small Web Tools');
+});
+
+test('normal session storage records the active tool', async ({ page }) => {
+  await page.goto('/home/currency');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('activeTool')))
+    .toBe('tool-currency');
+});

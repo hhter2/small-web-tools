@@ -234,17 +234,17 @@ export default function App() {
 
   // Sync activeTool state, sessionStorage, and document title
   useEffect(() => {
+    const route = getToolRoute(activeTool);
+    const localizedRoute = route ? localizeToolRoute(route, t) : null;
+    document.title = localizedRoute?.id === 'tool-home' && modeProfile.id === 'all'
+      ? t('navigation:titles.default')
+      : t('navigation:titles.tool', {
+        tool: localizedRoute?.id === 'tool-home' ? modeProfile.label : localizedRoute?.title,
+      });
     try {
       sessionStorage.setItem("activeTool", activeTool);
-      const route = getToolRoute(activeTool);
-      const localizedRoute = route ? localizeToolRoute(route, t) : null;
-      document.title = localizedRoute?.id === 'tool-home' && modeProfile.id === 'all'
-        ? t('navigation:titles.default')
-        : t('navigation:titles.tool', {
-          tool: localizedRoute?.id === 'tool-home' ? modeProfile.label : localizedRoute?.title,
-        });
     } catch {
-      // Storage access can be blocked by the browser; navigation still works.
+      // Storage access can be blocked; the already-computed document title remains current.
     }
   }, [activeTool, modeProfile.id, modeProfile.label, i18n.resolvedLanguage, t]);
 

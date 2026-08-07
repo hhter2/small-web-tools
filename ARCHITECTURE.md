@@ -330,7 +330,7 @@ Targeted `*.test.js` suites live in `functions/api/tests/`. `vitest.config.js`
 includes `functions/api/**` in the coverage gate with the same thresholds as
 the shared server and client libraries.
 
-`functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `vite.config.js` mirrors only IP lookup (`/api/iplookup`) for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions.
+`functions/_shared/requestPolicy.js` owns Font Extractor's 4 KiB request cap and aggregate job limits (HTML/CSS/total bytes, stylesheet count, import depth, face count, concurrency, and deadline). `functions/_shared/fontExtractionCapability.js` fails production extraction closed unless short-lived runtime evidence matches the configured Cloudflare compatibility date, fetch implementation revision, and required scenario set. `vite.config.js` mirrors only IP lookup (`/api/iplookup`) for local Vite development. Use a Cloudflare Pages local runtime when testing the other Functions.
 
 Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. `npm run platform:integration` starts the Pages and Worker configurations with isolated local state, proves concurrent requests hit the configured platform limit, and proves the missing-service path fails closed. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
 
@@ -338,6 +338,9 @@ Production rate limits are enforced by the service-bound Worker in `workers/rate
 isolated Cloudflare-runtime fixtures for the outbound-fetch boundary. Run
 `npm run test:ssrf-runtime` only when temporary Cloudflare deployment is intended;
 it uses an unclaimed, auto-expiring preview account and prints no token or claim URL.
+Successful output includes machine-readable, 30-day gate metadata tied to the
+compatibility date and fetch implementation revision; missing, mismatched,
+incomplete, or expired metadata leaves production extraction disabled.
 
 ### Local completion and deferred Cloudflare operations
 

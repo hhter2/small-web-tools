@@ -10,9 +10,25 @@ vi.mock('../../_shared/safeExternalFetch.js', async (importOriginal) => ({
 vi.mock('../../_shared/rateLimit.js', () => ({ enforceRateLimit }));
 
 const { onRequestPost } = await import('../extract-fonts.js');
+const { FONT_EXTRACTION_EGRESS_POLICY } = await import('../../_shared/fontExtractionCapability.js');
 const ORIGIN = 'https://small-web-tools.pages.dev';
 
-function postContext(body, rawBody) {
+function currentVerification() {
+  const now = Date.now();
+  return JSON.stringify({
+    schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+    runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+    outcome: 'pass',
+    compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+    implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+    evidenceSha256: 'a'.repeat(64),
+    verifiedAt: new Date(now - 60_000).toISOString(),
+    expiresAt: new Date(now + 60_000).toISOString(),
+    scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+  });
+}
+
+function postContext(body, rawBody, env = {}) {
   return {
     request: new Request(`${ORIGIN}/api/extract-fonts`, {
       method: 'POST',
@@ -23,7 +39,10 @@ function postContext(body, rawBody) {
       },
       body: rawBody ?? JSON.stringify(body),
     }),
-    env: {},
+    env: {
+      FONT_EXTRACTION_EGRESS_VERIFICATION: currentVerification(),
+      ...env,
+    },
   };
 }
 
@@ -40,6 +59,33 @@ describe('extract-fonts API handler failures', () => {
     safeExternalFetch.mockReset();
     enforceRateLimit.mockReset();
     enforceRateLimit.mockResolvedValue(null);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['malformed', '{'],
+    ['stale', JSON.stringify({
+      schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+      runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+      outcome: 'pass',
+      compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+      implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+      evidenceSha256: 'a'.repeat(64),
+      verifiedAt: '2026-01-01T00:00:00.000Z',
+      expiresAt: '2026-01-02T00:00:00.000Z',
+      scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+    })],
+  ])('fails closed when runtime verification is %s', async (_label, metadata) => {
+    const response = await onRequestPost(postContext(
+      { url: 'https://fonts.google.com' },
+      undefined,
+      { FONT_EXTRACTION_EGRESS_VERIFICATION: metadata },
+    ));
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ ok: false, code: 'FEATURE_UNAVAILABLE' });
+    expect(enforceRateLimit).not.toHaveBeenCalled();
+    expect(safeExternalFetch).not.toHaveBeenCalled();
   });
 
   it.each([

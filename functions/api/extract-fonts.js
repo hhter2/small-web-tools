@@ -1,6 +1,7 @@
 import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFetch';
 import { enforceRateLimit } from '../_shared/rateLimit';
 import { errorResponse } from '../_shared/errorResponse';
+import { evaluateFontExtractionCapability } from '../_shared/fontExtractionCapability';
 import {
   FONT_EXTRACTION_LIMITS,
   readLimitedJson,
@@ -277,6 +278,14 @@ export async function onRequestPost(context) {
     return errorResponse('VALIDATION_FAILED', policyError.status, {
       headers: corsHeaders,
       diagnostic: 'same-site-policy',
+    });
+  }
+
+  const capability = evaluateFontExtractionCapability(env);
+  if (!capability.enabled) {
+    return errorResponse('FEATURE_UNAVAILABLE', 503, {
+      headers: corsHeaders,
+      diagnostic: capability.reason,
     });
   }
 

@@ -25,6 +25,9 @@ if (service?.service !== workerConfig.name) {
 if (pagesConfig.vars?.RATE_LIMIT_DEVELOPMENT_MODE !== 'false') {
   throw new Error('Production Pages configuration must fail closed.');
 }
+if (!pagesConfig.compatibility_flags?.includes('global_fetch_strictly_public')) {
+  throw new Error('Production Pages Functions must force public-Internet fetch routing.');
+}
 const policies = Object.fromEntries(
   workerConfig.ratelimits?.map((entry) => [entry.name, entry.simple]) || [],
 );

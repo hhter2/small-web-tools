@@ -291,6 +291,8 @@ functions/api/** 納入覆蓋率門檻，與共用 server 與 client library 使
 
 functions/_shared/requestPolicy.js 管理 Font Extractor 的 4 KiB 請求上限與聚合工作
 限制（HTML／CSS／總位元組、樣式表數量、import 深度、face 數量、並行數與 deadline）。
+functions/_shared/fontExtractionCapability.js 會在短期 runtime 證據未符合 Cloudflare
+compatibility date、fetch 實作版本與必要情境集合時，讓正式環境擷取功能故障關閉。
 vite.config.js 只為 IP lookup（/api/iplookup）提供本機 Vite 代理。測試其他 Function
 時使用 Cloudflare Pages 本機執行環境。
 
@@ -303,6 +305,8 @@ wrangler.jsonc 以 RATE_LIMITER_SERVICE 將 Pages Functions 綁定至它。完�
 test/integration/ssrf-worker/ 與 test/integration/ssrf-target-worker/ 是針對對外抓取
 邊界的隔離 Cloudflare runtime fixture。只有預期進行臨時 Cloudflare 部署時才執行
 npm run test:ssrf-runtime；它使用未認領、會自動到期的預覽帳戶，不會輸出 token 或認領 URL。
+成功輸出包含綁定 compatibility date 與 fetch 實作版本、有效期 30 天的機器可讀 gate
+metadata；缺失、不符、不完整或過期時，正式環境擷取功能維持停用。
 測試工具的英文與繁中說明分別位於該目錄的 README.md 與 README.zh-TW.md。
 
 ### 本機完成與延後的 Cloudflare 工作

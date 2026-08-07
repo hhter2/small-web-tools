@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import BioinfoIcon from './components/BioinfoIcon.jsx';
 import SimpleHome from './components/SimpleHome.jsx';
 import LanguageSwitcher from './components/LanguageSwitcher.jsx';
+import MobileDrawer from './components/MobileDrawer.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -165,6 +166,7 @@ export default function App() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchRef = useRef(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const mobileSidebarOpenerRef = useRef(null);
   const [tooltipState, setTooltipState] = useState({ text: '', top: 0, left: 0, visible: false });
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedHomeTab, setSelectedHomeTab] = useState('all');
@@ -475,15 +477,19 @@ export default function App() {
 
         {/* Mobile Header — hidden on desktop (md+) */}
         <header
+          data-drawer-background
           id="mobile-header"
           className="hidden max-md:flex bg-sidebar border-b border-border-sidebar px-5 py-3 items-center gap-4 fixed left-0 right-0 z-[90] h-[60px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
           style={{ top: 'var(--banner-height)' }}
         >
           <button
+            ref={mobileSidebarOpenerRef}
             id="sidebar-toggle"
             className="bg-transparent border-none text-text-main cursor-pointer p-1 flex items-center justify-center rounded-sm transition-colors duration-200 hover:bg-accent-light hover:text-accent"
             aria-label={t('navigation:sidebar.toggle')}
-            onClick={() => setMobileSidebarOpen(prev => !prev)}
+            aria-expanded={mobileSidebarOpen}
+            aria-controls="mobile-navigation-drawer"
+            onClick={() => setMobileSidebarOpen(true)}
           >
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -506,17 +512,12 @@ export default function App() {
           </button>
         </header>
 
-        {/* Sidebar — hidden on desktop (md+), slide-in on mobile */}
-        <aside
-          id="sidebar"
-          className={`
-            w-[260px] flex-shrink-0 bg-sidebar border-r border-border-sidebar flex flex-col
-            shadow-sidebar z-[100]
-            transition-[left,width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-            md:hidden
-            max-md:fixed max-md:bottom-0
-            ${mobileSidebarOpen ? 'max-md:left-0 max-md:shadow-[10px_0_30px_rgba(0,0,0,0.15)]' : 'max-md:-left-[280px]'}
-          `}
+        {/* Closed drawers are unmounted so their controls leave the focus and accessibility trees. */}
+        {mobileSidebarOpen && <MobileDrawer
+          label={t('navigation:sidebar.navigationLabel')}
+          closeLabel={t('navigation:sidebar.close')}
+          onClose={() => setMobileSidebarOpen(false)}
+          openerRef={mobileSidebarOpenerRef}
           style={sidebarHeightStyle}
         >
           {/* Sidebar Brand */}
@@ -715,18 +716,11 @@ export default function App() {
               </button>
             </div>
           </div>
-        </aside>
-
-        {/* Sidebar Overlay for mobile */}
-        <div
-          id="sidebar-overlay"
-          className={`fixed top-0 left-0 right-0 bottom-0 bg-[rgba(15,23,42,0.5)] backdrop-blur-[4px] z-[95] transition-opacity duration-300 ${mobileSidebarOpen ? 'block opacity-100' : 'hidden opacity-0'}`}
-          style={{ top: 'var(--banner-height)' }}
-          onClick={() => setMobileSidebarOpen(false)}
-        />
+        </MobileDrawer>}
 
         {/* Main Content Area */}
         <main
+          data-drawer-background
           className={`flex-1 min-w-0 p-0 flex flex-col overflow-x-hidden ${staticTools.has(activeTool) ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-auto'}`}
           style={mainContentHeightStyle}
         >

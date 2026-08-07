@@ -74,6 +74,7 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
 - src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
+- src/components/MobileDrawer.jsx：行動導覽的焦點、inert、關閉與捲動生命週期。
 - src/i18n/：地區設定解析、i18next 設定、持久化，以及成對的 en-US／zh-TW 命名空間資源。
 - functions/：共用無伺服器工具與 Cloudflare Pages API handler。
 - workers/：rate-limiter Worker。
@@ -112,6 +113,10 @@ src/App.jsx 負責應用程式 shell：
 
 Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵包屑、footer、搜尋、主題控制項
 與置中的工具工作區。
+
+src/components/MobileDrawer.jsx 負責窄螢幕抽屜邊界。關閉時會卸載抽屜；開啟時會移入並
+限制焦點、讓被遮蔽的 shell inert、鎖定 body 捲動，並支援 Escape、overlay、明確關閉
+與路由選取後關閉，最後將焦點還給開啟按鈕。
 
 `src/components/LanguageSwitcher.jsx` 由 `App.jsx` 直接渲染於行動與桌面 header。它是地區設定選項、選單狀態、鍵盤導覽與焦點復原的共用負責元件；Simple 工作區不渲染桌面控制項。
 

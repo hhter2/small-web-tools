@@ -13,7 +13,7 @@
   "audience": { "choose": "選擇使用者類型", "showAll": "顯示所有工具", "switchTo": "切換至{{audience}}", "short": { "all": "首頁", "daily": "日常", "developer": "開發者", "bioinformatics": "生物資訊", "designer": "設計師", "student": "學生" } },
   "homeGrid": { "categoryTools": "{{category}}工具", "recommended": "推薦給{{audience}}", "toolCount_one": "{{count}} 個工具", "toolCount_other": "{{count}} 個工具" },
   "simpleHome": { "eyebrow": "簡易模式", "heading": "找到工具，立即開始", "description": "搜尋完整工具組，或開啟下方的日常必備工具。", "searchLabel": "搜尋所有工具", "searchPlaceholder": "搜尋所有工具…", "noResults": "找不到工具。", "essentials": "日常必備工具" },
-  "sidebar": { "toggle": "切換側邊欄", "collapse": "收合側邊欄" },
+  "sidebar": { "toggle": "切換側邊欄", "collapse": "收合側邊欄", "close": "關閉導覽", "navigationLabel": "工具導覽" },
   "home": "首頁", "goHome": "前往首頁", "backHome": "返回首頁",
   "simpleMode": "簡易模式", "exitSimpleMode": "離開簡易模式",
   "theme": "佈景主題", "toggleTheme": "切換深色／淺色模式",

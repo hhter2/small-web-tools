@@ -13,7 +13,7 @@
   "audience": { "choose": "Choose audience", "showAll": "Show all tools", "switchTo": "Switch to {{audience}}", "short": { "all": "Home", "daily": "Daily", "developer": "Developer", "bioinformatics": "Bioinfo", "designer": "Designer", "student": "Student" } },
   "homeGrid": { "categoryTools": "{{category}} tools", "recommended": "Recommended for {{audience}}", "toolCount_one": "{{count}} tool", "toolCount_other": "{{count}} tools" },
   "simpleHome": { "eyebrow": "Simple mode", "heading": "Find a tool and get started", "description": "Search the complete toolkit or open one of the everyday essentials below.", "searchLabel": "Search every tool", "searchPlaceholder": "Search all tools…", "noResults": "No tools found.", "essentials": "Everyday essentials" },
-  "sidebar": { "toggle": "Toggle sidebar", "collapse": "Collapse sidebar" },
+  "sidebar": { "toggle": "Toggle sidebar", "collapse": "Collapse sidebar", "close": "Close navigation", "navigationLabel": "Tool navigation" },
   "home": "Home", "goHome": "Go to home", "backHome": "Back to home",
   "simpleMode": "Simple mode", "exitSimpleMode": "Exit Simple mode",
   "theme": "Theme", "toggleTheme": "Toggle dark/light mode",

@@ -100,6 +100,7 @@ small-web-tools/
 │       ├── HomeGrid.jsx      Full and audience dashboard tool grid
 │       ├── SimpleHome.jsx    Search-first essential-tool launcher
 │       ├── LanguageSwitcher.jsx Shared responsive locale menu and focus lifecycle
+│       ├── MobileDrawer.jsx  Mobile navigation focus, inert, dismissal, and scroll lifecycle
 │       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
 │       ├── useMediaSeparator.js
@@ -141,6 +142,11 @@ expanded UI boundary must fix every newly exposed error in the same change.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
 The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
+
+`src/components/MobileDrawer.jsx` owns the narrow-screen drawer boundary. The closed
+drawer is unmounted; opening moves and traps focus, makes the obscured shell inert,
+locks body scrolling, and supports Escape, overlay, explicit-close, and route
+dismissal before restoring focus to the opener.
 
 `src/components/LanguageSwitcher.jsx` is rendered directly by `App.jsx` in the mobile and desktop headers. It is the shared owner of locale options, menu state, keyboard navigation, and focus restoration; the desktop control is omitted in the Simple workspace.
 

@@ -59,6 +59,48 @@ test('desktop category shortcuts remain pointer-only redundant navigation', asyn
   await expect(page).toHaveURL(/\/home\/imgmeta$/);
 });
 
+test('mobile navigation has a complete focus and dismissal lifecycle', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/home');
+
+  const opener = page.getByRole('button', { name: 'Toggle sidebar' });
+  await expect(opener).toHaveAttribute('aria-expanded', 'false');
+  await expect(opener).toHaveAttribute('aria-controls', 'mobile-navigation-drawer');
+  await expect(page.getByRole('dialog', { name: 'Tool navigation' })).toHaveCount(0);
+
+  await opener.click();
+  const drawer = page.getByRole('dialog', { name: 'Tool navigation' });
+  const closeButton = page.getByRole('button', { name: 'Close navigation' });
+  await expect(opener).toHaveAttribute('aria-expanded', 'true');
+  await expect(drawer).toBeVisible();
+  await expect(closeButton).toBeFocused();
+  await expect(page.locator('main')).toHaveJSProperty('inert', true);
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+  const openDrawerAxe = await new AxeBuilder({ page }).analyze();
+  expect(openDrawerAxe.violations.filter(
+    (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+  )).toEqual([]);
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(drawer.getByRole('button', { name: 'Toggle dark/light mode' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(closeButton).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(opener).toHaveAttribute('aria-expanded', 'false');
+  await expect(opener).toBeFocused();
+
+  await opener.click();
+  await drawer.getByRole('button', { name: 'Word Counter' }).click();
+  await expect(page).toHaveURL(/\/home\/wc$/);
+  await expect(drawer).toHaveCount(0);
+
+  await opener.click();
+  await page.locator('#mobile-drawer-overlay').click({ position: { x: 350, y: 400 } });
+  await expect(drawer).toHaveCount(0);
+});
+
 for (const route of ['/home', '/simple', '/simple/color', '/home/privacy', '/home/currency', '/home/folder-analyzer']) {
   test(`${route} has no serious or critical automated accessibility findings`, async ({ page }) => {
     await page.goto(route);

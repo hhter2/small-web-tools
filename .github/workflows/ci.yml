@@ -10,28 +10,29 @@ on:
       - main
       - develop
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify (${{ matrix.node-version }})
+  node22-compat:
+    name: Verify (22)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ['22', '24']
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '22'
           cache: 'npm'
 
       - name: Use repository npm version
@@ -48,48 +49,80 @@ jobs:
         shell: bash
         run: echo "VITE_APP_VERSION=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
 
-      - name: Node 22 compatibility gate
-        if: matrix.node-version == '22'
-        run: npm run typecheck && npm run test:run && npm run build
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:run
+
+      - name: Production build
+        run: npm run build
+
+  node24-verify:
+    name: Verify (24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Use repository npm version
+        shell: bash
+        run: |
+          NPM_VERSION="$(node -p "require('./package.json').packageManager.replace(/^npm@/, '')")"
+          npm install --global "npm@${NPM_VERSION}"
+          test "$(npm --version)" = "${NPM_VERSION}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Provide CI version fallback
+        shell: bash
+        run: echo "VITE_APP_VERSION=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
 
       - name: Full verification
-        if: matrix.node-version == '24'
         run: npm run verify
 
-      - name: Pages/Worker Rate Limit Integration
-        if: matrix.node-version == '24'
-        run: npm run platform:integration
-
       - name: Dependency Check
-        if: matrix.node-version == '24'
         run: npm run deps:check
 
+      - name: Security Audit
+        run: npm run audit
+
+      - name: Pages/Worker Rate Limit Integration
+        run: npm run platform:integration
+
       - name: Install Playwright Chromium
-        if: matrix.node-version == '24'
         run: npx playwright install --with-deps chromium
 
       - name: End-to-End Tests
-        if: matrix.node-version == '24'
+        id: e2e
         run: npm run test:e2e
 
       - name: Upload browser failure artifacts
-        uses: actions/upload-artifact@v4
-        if: failure() && matrix.node-version == '24'
+        uses: actions/upload-artifact@v7
+        if: failure() && steps.e2e.outcome == 'failure'
         with:
-          name: playwright-report-node-${{ matrix.node-version }}-${{ github.sha }}
+          name: playwright-report-node-24-${{ github.sha }}
           path: |
             playwright-report/
             test-results/
+          if-no-files-found: ignore
           retention-days: 7
 
-      - name: Security Audit
-        if: matrix.node-version == '24'
-        run: npm run audit
-
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        if: matrix.node-version == '24'
+        uses: actions/upload-artifact@v7
         with:
           name: dist-${{ github.sha }}
           path: dist/
+          if-no-files-found: error
           retention-days: 7

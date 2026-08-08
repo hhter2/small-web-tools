@@ -79,18 +79,22 @@ implementation revision changes and before the metadata expires.
 
 `npm run verify` runs Git-tag version resolution, lint-warning budget, the
 baseline, domain, and UI checkJs projects, coverage, build/bundle, headers, network
-inventory, Cloudflare configuration, and documentation-consistency gates. CI runs
-the complete verification, dependency check, Cloudflare integration, Playwright
-journeys, security audit, and build artifact generation on Node 24. Node 22 remains
-a minimum-runtime compatibility gate that runs type checking, the unit-test suite,
-and a production build. Keeping the two `Verify (22)` and `Verify (24)` checks
-preserves explicit coverage of both supported LTS release lines without duplicating
-the most expensive browser and audit work. `npm run typecheck:baseline` checks the broad JavaScript
-graph without strict mode, `npm run typecheck:domain` preserves the existing narrow
-domain/shared-helper boundary, and `npm run typecheck:ui` enables `strictNullChecks`
-for the explicitly listed shared UI migration boundary. Expand that boundary only
-with fixes in the same change; keep exclusions minimal and documented in
-`jsconfig.ui.json`.
+inventory, Cloudflare configuration, and documentation-consistency gates. CI uses
+two independent jobs while preserving the required check names `Verify (22)` and
+`Verify (24)`. Node 24 runs the complete verification, dependency check, security
+audit, Cloudflare integration, Playwright journeys, and build artifact generation;
+the dependency and audit gates run before the more expensive integration/browser
+steps. Node 22 remains a minimum-runtime compatibility gate that runs type checking,
+the unit-test suite, and a production build. Both jobs have explicit timeouts, and
+workflow concurrency cancels superseded runs for the same ref. The workflow uses
+`actions/checkout@v7`, `actions/setup-node@v6`, and `actions/upload-artifact@v7`.
+This preserves explicit coverage of both supported LTS release lines without
+duplicating the most expensive browser and audit work. `npm run typecheck:baseline`
+checks the broad JavaScript graph without strict mode, `npm run typecheck:domain`
+preserves the existing narrow domain/shared-helper boundary, and
+`npm run typecheck:ui` enables `strictNullChecks` for the explicitly listed shared
+UI migration boundary. Expand that boundary only with fixes in the same change;
+keep exclusions minimal and documented in `jsconfig.ui.json`.
 
 ## Engineering standards
 

@@ -11,7 +11,7 @@ current architecture, route inventory, API topology, and project map.
 
 ## Supported environment
 
-- Node.js 22 and Node.js 24 are supported; `.nvmrc` selects Node 22.
+- Node.js 22 and Node.js 24 are supported LTS majors; `.nvmrc` selects Node 22 for the repository default. `package.json` accepts only the supported 22.x and 24.x release lines rather than unbounded future Node majors.
 - Use npm 10.9.2, pinned by the `packageManager` field. CI rejects a different
   npm version, so install it before restoring dependencies:
 
@@ -80,7 +80,12 @@ implementation revision changes and before the metadata expires.
 `npm run verify` runs Git-tag version resolution, lint-warning budget, the
 baseline, domain, and UI checkJs projects, coverage, build/bundle, headers, network
 inventory, Cloudflare configuration, and documentation-consistency gates. CI runs
-it on Node 22 and Node 24. `npm run typecheck:baseline` checks the broad JavaScript
+the complete verification, dependency check, Cloudflare integration, Playwright
+journeys, security audit, and build artifact generation on Node 24. Node 22 remains
+a minimum-runtime compatibility gate that runs type checking, the unit-test suite,
+and a production build. Keeping the two `Verify (22)` and `Verify (24)` checks
+preserves explicit coverage of both supported LTS release lines without duplicating
+the most expensive browser and audit work. `npm run typecheck:baseline` checks the broad JavaScript
 graph without strict mode, `npm run typecheck:domain` preserves the existing narrow
 domain/shared-helper boundary, and `npm run typecheck:ui` enables `strictNullChecks`
 for the explicitly listed shared UI migration boundary. Expand that boundary only

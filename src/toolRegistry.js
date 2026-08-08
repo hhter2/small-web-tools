@@ -10,7 +10,7 @@ import {
 const loaders = {
   'tool-home': () => import('./components/HomeGrid.jsx'), 'tool-slash': () => import('./components/SlashesConverter.jsx'),
   'tool-wc': () => import('./components/WordCounter.jsx'), 'tool-casing': () => import('./components/CasingSwitcher.jsx'),
-  'tool-typing': () => import('./components/TypingSpeedTest.jsx'), 'tool-color': () => import('./components/ColorConverter.jsx'),
+  'tool-color': () => import('./components/ColorConverter.jsx'),
   'tool-ascii': () => import('./components/AsciiConverter.jsx'), 'tool-unicode': () => import('./components/UnicodeConverter.jsx'),
   'tool-url': () => import('./components/UrlEncoderDecoder.jsx'), 'tool-markdown': () => import('./components/MarkdownPreviewer.jsx'),
   'tool-mermaid': () => import('./components/MermaidConverter.jsx'), 'tool-code-preview': () => import('./components/CodePreviewer.jsx'),

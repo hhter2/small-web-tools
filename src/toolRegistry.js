@@ -1,97 +1,40 @@
 import React from 'react';
+import {
+  PUBLIC_ROUTE_IDS,
+  ROUTE_DEFINITIONS,
+  STATIC_LAYOUT_IDS,
+  localizeToolRoute,
+  sortLocalizedTools,
+} from './toolRouteMetadata.js';
 
-function route(id, category, loader, options = {}) {
-  return {
-    id, aliases: [], category, subGroupKey: null, iconKey: id,
-    componentProps: {}, staticLayout: false, navigationVisible: true,
-    ...options, loader,
-  };
-}
+const loaders = {
+  'tool-home': () => import('./components/HomeGrid.jsx'), 'tool-slash': () => import('./components/SlashesConverter.jsx'),
+  'tool-wc': () => import('./components/WordCounter.jsx'), 'tool-casing': () => import('./components/CasingSwitcher.jsx'),
+  'tool-typing': () => import('./components/TypingSpeedTest.jsx'), 'tool-color': () => import('./components/ColorConverter.jsx'),
+  'tool-ascii': () => import('./components/AsciiConverter.jsx'), 'tool-unicode': () => import('./components/UnicodeConverter.jsx'),
+  'tool-url': () => import('./components/UrlEncoderDecoder.jsx'), 'tool-markdown': () => import('./components/MarkdownPreviewer.jsx'),
+  'tool-mermaid': () => import('./components/MermaidConverter.jsx'), 'tool-code-preview': () => import('./components/CodePreviewer.jsx'),
+  'tool-fontextractor': () => import('./components/WebsiteFontExtractor.jsx'), 'tool-base': () => import('./components/BaseConverter.jsx'),
+  'tool-folder-analyzer': () => import('./components/FolderAnalyzer.jsx'), 'tool-dna': () => import('./components/DnaConverter.jsx'),
+  'tool-codon': () => import('./components/CodonTable.jsx'), 'tool-phred': () => import('./components/PhredScaleConverter.jsx'),
+  'tool-iplookup': () => import('./components/IpLookup.jsx'), 'tool-speedtest': () => import('./components/NetworkSpeedTest.jsx'),
+  'tool-imgmeta': () => import('./components/ImgMeta.jsx'), 'tool-docmeta': () => import('./components/DocMeta.jsx'),
+  'tool-audiometa': () => import('./components/AudioMeta.jsx'), 'tool-videometa': () => import('./components/VideoMeta.jsx'),
+  'tool-mediasplit': () => import('./components/MediaSeparator.jsx'), 'tool-svg-png': () => import('./components/SvgToPngConverter.jsx'),
+  'tool-barcode': () => import('./components/QrBarcodeGenerator.jsx'), 'tool-currency': () => import('./components/CurrencyCounter.jsx'),
+  'tool-date': () => import('./components/DateCounter.jsx'), 'tool-roman': () => import('./components/RomanNumeralConverter.jsx'),
+  'tool-password': () => import('./components/PasswordGenerator.jsx'), 'tool-pwstrength': () => import('./components/PasswordGenerator.jsx'),
+  'tool-qrcode': () => import('./components/QrBarcodeGenerator.jsx'), 'tool-qrbarcodescan': () => import('./components/QrBarcodeScanner.jsx'),
+  'tool-wheel': () => import('./components/RandomWheel.jsx'), privacy: () => import('./components/PrivacyPolicy.jsx'),
+};
 
-const definitions = [
-  route('tool-home', 'home', () => import('./components/HomeGrid.jsx'), { navigationVisible: false }),
-  route('tool-slash', 'developer', () => import('./components/SlashesConverter.jsx')),
-  route('tool-wc', 'text', () => import('./components/WordCounter.jsx')),
-  route('tool-casing', 'text', () => import('./components/CasingSwitcher.jsx'), { staticLayout: true }),
-  route('tool-typing', 'text', () => import('./components/TypingSpeedTest.jsx')),
-  route('tool-color', 'media', () => import('./components/ColorConverter.jsx'), { staticLayout: true }),
-  route('tool-ascii', 'developer', () => import('./components/AsciiConverter.jsx'), { staticLayout: true }),
-  route('tool-unicode', 'developer', () => import('./components/UnicodeConverter.jsx'), { staticLayout: true }),
-  route('tool-url', 'developer', () => import('./components/UrlEncoderDecoder.jsx')),
-  route('tool-markdown', 'developer', () => import('./components/MarkdownPreviewer.jsx')),
-  route('tool-mermaid', 'developer', () => import('./components/MermaidConverter.jsx'), { iconKey: 'tool-markdown' }),
-  route('tool-code-preview', 'developer', () => import('./components/CodePreviewer.jsx')),
-  route('tool-fontextractor', 'developer', () => import('./components/WebsiteFontExtractor.jsx'), { staticLayout: true }),
-  route('tool-base', 'developer', () => import('./components/BaseConverter.jsx'), { staticLayout: true }),
-  route('tool-folder-analyzer', 'developer', () => import('./components/FolderAnalyzer.jsx')),
-  route('tool-dna', 'bioinfo', () => import('./components/DnaConverter.jsx'), { staticLayout: true }),
-  route('tool-codon', 'bioinfo', () => import('./components/CodonTable.jsx')),
-  route('tool-phred', 'bioinfo', () => import('./components/PhredScaleConverter.jsx')),
-  route('tool-iplookup', 'network', () => import('./components/IpLookup.jsx')),
-  route('tool-speedtest', 'network', () => import('./components/NetworkSpeedTest.jsx'), { staticLayout: true }),
-  route('tool-imgmeta', 'media', () => import('./components/ImgMeta.jsx')),
-  route('tool-docmeta', 'media', () => import('./components/DocMeta.jsx'), { aliases: ['tool-officemeta'] }),
-  route('tool-audiometa', 'media', () => import('./components/AudioMeta.jsx')),
-  route('tool-videometa', 'media', () => import('./components/VideoMeta.jsx')),
-  route('tool-mediasplit', 'media', () => import('./components/MediaSeparator.jsx')),
-  route('tool-svg-png', 'media', () => import('./components/SvgToPngConverter.jsx')),
-  route('tool-barcode', 'utilities', () => import('./components/QrBarcodeGenerator.jsx'), { subGroupKey: 'utilities', componentProps: { initialTab: 'barcode' }, staticLayout: true }),
-  route('tool-currency', 'utilities', () => import('./components/CurrencyCounter.jsx'), { subGroupKey: 'calculation', staticLayout: true }),
-  route('tool-date', 'utilities', () => import('./components/DateCounter.jsx'), { subGroupKey: 'calculation' }),
-  route('tool-roman', 'utilities', () => import('./components/RomanNumeralConverter.jsx'), { subGroupKey: 'calculation' }),
-  route('tool-password', 'utilities', () => import('./components/PasswordGenerator.jsx'), { subGroupKey: 'utilities', componentProps: { initialTab: 'generate' }, staticLayout: true }),
-  route('tool-pwstrength', 'utilities', () => import('./components/PasswordGenerator.jsx'), { subGroupKey: 'utilities', componentProps: { initialTab: 'check' }, staticLayout: true }),
-  route('tool-qrcode', 'utilities', () => import('./components/QrBarcodeGenerator.jsx'), { subGroupKey: 'utilities', componentProps: { initialTab: 'qr' }, staticLayout: true }),
-  route('tool-qrbarcodescan', 'utilities', () => import('./components/QrBarcodeScanner.jsx'), { subGroupKey: 'utilities', staticLayout: true }),
-  route('tool-wheel', 'utilities', () => import('./components/RandomWheel.jsx'), { subGroupKey: 'utilities', staticLayout: true }),
-  route('privacy', 'policy', () => import('./components/PrivacyPolicy.jsx'), { navigationVisible: false, staticLayout: true }),
-];
-
-export const TOOL_ROUTES = definitions.map((definition) => ({
-  ...definition,
-  component: React.lazy(definition.loader),
-}));
-
+export const TOOL_ROUTES = ROUTE_DEFINITIONS.map((definition) => {
+  const loader = loaders[definition.id];
+  return { ...definition, loader, component: React.lazy(loader) };
+});
 export const NAVIGATION_ROUTES = TOOL_ROUTES.filter((item) => item.navigationVisible);
-export const PUBLIC_ROUTE_IDS = TOOL_ROUTES.flatMap((item) => [item.id, ...item.aliases]);
-export const STATIC_LAYOUT_IDS = new Set(
-  TOOL_ROUTES.flatMap((item) => item.staticLayout ? [item.id, ...item.aliases] : []),
-);
+const routesById = new Map(TOOL_ROUTES.flatMap((item) => [item.id, ...item.aliases].map((id) => [id, item])));
 
-const routesById = new Map(
-  TOOL_ROUTES.flatMap((item) => [item.id, ...item.aliases].map((id) => [id, item])),
-);
-
-export function getToolRoute(id) {
-  return routesById.get(id) || null;
-}
-
-export function localizeToolRoute(item, t, englishT) {
-  const prefix = `tools:${item.id}`;
-  const translateEnglish = englishT
-    || ((key, options) => t(key, { ...options, lng: 'en-US' }));
-  const currentSearch = t(`${prefix}.search`, { returnObjects: true });
-  const englishSearch = translateEnglish(`${prefix}.search`, { returnObjects: true });
-  return {
-    ...item,
-    title: t(`${prefix}.title`),
-    tooltip: t(`${prefix}.tooltip`),
-    description: t(`${prefix}.description`),
-    searchMetadata: [...new Set([
-      t(`${prefix}.title`),
-      ...(Array.isArray(currentSearch) ? currentSearch : []),
-      translateEnglish(`${prefix}.title`),
-      ...(Array.isArray(englishSearch) ? englishSearch : []),
-    ])],
-    subGroup: item.subGroupKey ? t(`navigation:categories.${item.subGroupKey}`) : null,
-  };
-}
-
-export function getLocalizedToolRoutes(t) {
-  return TOOL_ROUTES.map((item) => localizeToolRoute(item, t));
-}
-
-export function sortLocalizedTools(items, locale) {
-  const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
-  return [...items].sort((a, b) => collator.compare(a.title ?? a.name, b.title ?? b.name));
-}
+export function getToolRoute(id) { return routesById.get(id) || null; }
+export function getLocalizedToolRoutes(t) { return TOOL_ROUTES.map((item) => localizeToolRoute(item, t)); }
+export { PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, localizeToolRoute, sortLocalizedTools };

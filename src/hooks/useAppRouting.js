@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { PUBLIC_ROUTE_IDS } from '../toolRegistry.js';
+import { PUBLIC_ROUTE_IDS } from '../toolRouteMetadata.js';
 import {
   buildModeUrl,
   getModeIdFromLocation,

@@ -87,7 +87,8 @@ small-web-tools/
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
 │   ├── App.jsx               Application-shell composition and registry renderer
-│   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
+│   ├── toolRouteMetadata.js  Canonical routes, aliases, metadata, and layout flags
+│   ├── toolRegistry.js       Lazy component loaders joined to canonical route metadata
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
 │   ├── styles.css            Theme tokens, global rules, responsive and component styling
@@ -124,8 +125,9 @@ small-web-tools/
 The JavaScript migration uses three explicit TypeScript checkJs projects.
 `jsconfig.json` is the broad non-strict baseline. `jsconfig.domain.json` preserves
 the existing narrow domain/shared-helper boundary. `jsconfig.ui.json` is the
-incremental shared-UI boundary; it enables `strictNullChecks` and initially covers
-`LanguageSwitcher.jsx` plus its i18n dependency. `npm run typecheck` executes all
+incremental shared-UI boundary; it enables `strictNullChecks` for `LanguageSwitcher`,
+the desktop header/category/footer components, `MobileDrawer`, the routing/title/
+persistence hooks, and their pure route/mode dependencies. `npm run typecheck` executes all
 three projects in CI. New exclusions must remain minimal and documented, and an
 expanded UI boundary must fix every newly exposed error in the same change.
 
@@ -137,7 +139,7 @@ expanded UI boundary must fix every newly exposed error in the same change.
 
 `src/App.jsx` composes the application shell and registry renderer:
 
-- `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
+- `src/toolRouteMetadata.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it; `src/toolRegistry.js` only joins that metadata to lazy component loaders.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `useAppRouting` initializes `activeTool` from `/home[/<audience>]/<tool-slug>` or `/simple/<tool-slug>` and synchronizes navigation and browser history with the path.

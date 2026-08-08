@@ -17,7 +17,9 @@ export default function MobileDrawer({
   openerRef,
   style,
 }) {
+  /** @type {React.MutableRefObject<HTMLDivElement | null>} */
   const drawerRef = useRef(null);
+  /** @type {React.MutableRefObject<HTMLButtonElement | null>} */
   const closeButtonRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -39,7 +41,10 @@ export default function MobileDrawer({
       }
       if (event.key !== 'Tab') return;
 
-      const focusable = [...(drawerRef.current?.querySelectorAll(FOCUSABLE_SELECTOR) || [])]
+      const candidates = /** @type {NodeListOf<HTMLElement>} */ (
+        drawerRef.current?.querySelectorAll(FOCUSABLE_SELECTOR) || document.querySelectorAll(':not(*)')
+      );
+      const focusable = [...candidates]
         .filter((element) => !element.hasAttribute('disabled'));
       if (focusable.length === 0) {
         event.preventDefault();
@@ -48,6 +53,7 @@ export default function MobileDrawer({
       }
       const first = focusable[0];
       const last = focusable.at(-1);
+      if (!first || !last) return;
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();

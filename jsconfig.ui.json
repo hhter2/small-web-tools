@@ -16,8 +16,17 @@
     "types": ["vite/client"]
   },
   "include": [
+    "src/components/AppFooter.jsx",
+    "src/components/AppHeader.jsx",
+    "src/components/DesktopCategoryNav.jsx",
     "src/components/LanguageSwitcher.jsx",
-    "src/i18n/**/*.js"
+    "src/components/MobileDrawer.jsx",
+    "src/hooks/useAppRouting.js",
+    "src/hooks/useDocumentTitle.js",
+    "src/hooks/useShellPersistence.js",
+    "src/i18n/**/*.js",
+    "src/toolModes.js",
+    "src/toolRouteMetadata.js"
   ],
   "exclude": [
     "node_modules",

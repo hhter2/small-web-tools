@@ -1,4 +1,4 @@
-import { sortLocalizedTools } from '../toolRegistry.js';
+import { sortLocalizedTools } from '../toolRouteMetadata.js';
 
 const iconButtonClass = 'flex h-7 w-7 items-center justify-center rounded-full border border-border bg-transparent text-text-muted transition-all duration-150 hover:border-accent hover:text-accent';
 

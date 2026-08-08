@@ -1,9 +1,11 @@
+const DEFAULT_TOOL_MODE = {
+  id: 'all',
+  toolIds: null,
+  simplified: false,
+};
+
 const modeDefinitions = [
-  {
-    id: 'all',
-    toolIds: null,
-    simplified: false,
-  },
+  DEFAULT_TOOL_MODE,
   {
     id: 'daily',
     toolIds: [
@@ -109,7 +111,7 @@ export function getToolMode(modeId) {
   if (modeId === SIMPLE_WORKSPACE.id) {
     return SIMPLE_WORKSPACE;
   }
-  return modesById.get(modeId) ?? modesById.get('all');
+  return modesById.get(modeId) ?? DEFAULT_TOOL_MODE;
 }
 
 export function localizeToolMode(mode, t) {

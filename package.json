@@ -9,7 +9,7 @@
   "packageManager": "npm@10.9.2",
   "type": "module",
   "engines": {
-    "node": ">=22 <25"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "scripts": {
     "dev": "vite",

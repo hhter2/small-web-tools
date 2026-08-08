@@ -11,7 +11,7 @@ CONTRIBUTING.md 是正式的工程指南。請參閱 ARCHITECTURE.zh-TW.md 了�
 
 ## 支援環境
 
-- 支援 Node.js 22 與 Node.js 24；.nvmrc 選取 Node 22。
+- 支援 Node.js 22 與 Node.js 24 兩個 LTS 主要版本；.nvmrc 選取 Node 22 作為儲存庫預設版本。package.json 只接受受支援的 22.x 與 24.x 版本線，不會無限制宣告支援未來的 Node 主要版本。
 - 使用 package.json 的 packageManager 欄位固定的 npm 10.9.2。CI 會拒絕其他
   npm 版本，因此還原相依套件前請先安裝：
 
@@ -75,11 +75,15 @@ fetch 實作版本變更，以及 metadata 到期前，都必須重新執行。
 
 npm run verify 會執行 Git 標籤版本解析、Lint 警告預算、baseline、domain 與 UI
 三個 checkJs 專案、覆蓋率、建置／套件大小、標頭、網路清單、Cloudflare 設定與
-文件一致性檢查。CI 會在 Node 22 與 Node 24 上執行。`npm run typecheck:baseline`
-檢查未啟用 strict mode 的廣泛 JavaScript 圖；`npm run typecheck:domain` 保留既有的
-領域／共用 helper 邊界；`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界
-啟用 `strictNullChecks`。只有在同一變更中修正錯誤時才擴大該邊界，並讓
-`jsconfig.ui.json` 的排除項目維持最少且有文件說明。
+文件一致性檢查。CI 會在 Node 24 上執行完整 verify、相依檢查、Cloudflare 整合、
+Playwright 瀏覽器流程、安全稽核與 build artifact 產生；Node 22 則保留為最低
+執行環境相容性 gate，只執行型別檢查、單元測試與正式環境建置。保留 `Verify (22)`
+與 `Verify (24)` 兩個檢查，可明確覆蓋兩條受支援的 LTS 版本線，同時避免重複執行
+成本最高的瀏覽器與 audit 工作。`npm run typecheck:baseline` 檢查未啟用 strict mode
+的廣泛 JavaScript 圖；`npm run typecheck:domain` 保留既有的領域／共用 helper 邊界；
+`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界啟用 `strictNullChecks`。只有
+在同一變更中修正錯誤時才擴大該邊界，並讓 `jsconfig.ui.json` 的排除項目維持最少且
+有文件說明。
 
 ## 工程標準
 

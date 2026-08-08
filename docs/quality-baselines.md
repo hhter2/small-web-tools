@@ -20,4 +20,4 @@ The UI floor is intentionally incremental. New modules are added explicitly, and
 
 The repository-wide warning budget is zero. `npm run lint` checks every JavaScript source and fails on the first non-zero warning total, which also prevents correctness-adjacent `react-hooks/exhaustive-deps` and `no-unused-vars` warnings from increasing. `npm run lint:changed` independently compares the current branch with `origin/develop` and applies the same zero-warning rule to added or modified JavaScript files.
 
-CI runs both gates through `npm run verify` on Node.js 22 and Node.js 24.
+CI keeps both supported Node.js LTS lines visible as required checks. Node.js 24 runs the complete `npm run verify` quality baseline plus dependency, Cloudflare integration, Playwright, audit, and artifact steps. Node.js 22 is the minimum-runtime compatibility gate and runs type checking, unit tests, and a production build. This preserves compatibility coverage while avoiding duplicate execution of the most expensive gates.

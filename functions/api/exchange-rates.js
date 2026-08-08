@@ -1,5 +1,6 @@
 import { enforceRateLimit } from '../_shared/rateLimit';
 import { errorResponse } from '../_shared/errorResponse';
+import { withBaselineHeaders } from '../_shared/responseHeaders.js';
 
 const PROVIDER_URL = 'https://open.er-api.com/v6/latest/USD';
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -90,16 +91,15 @@ async function fetchProvider(fetchImpl, nowMs, timeoutMs = 5000) {
 function response(body, status, cacheControl) {
   return Response.json(body, {
     status,
-    headers: {
+    headers: withBaselineHeaders({
       'Cache-Control': cacheControl,
-      'X-Content-Type-Options': 'nosniff',
-    },
+    }),
   });
 }
 
 export function createExchangeRatesHandler({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(context) {
-    const limited = await enforceRateLimit(context, { name: 'exchange-rates', limit: 60 });
+    const limited = await enforceRateLimit(context, { name: 'exchange-rates' });
     if (limited) return limited;
 
     const timestamp = now();

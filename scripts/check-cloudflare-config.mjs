@@ -2,6 +2,7 @@ import { readFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
+import { validateRateLimitConfiguration } from '../config/rateLimitPolicies.js';
 
 const root = process.cwd();
 const pagesConfig = JSON.parse(await readFile(path.join(root, 'wrangler.jsonc'), 'utf8'));
@@ -25,15 +26,10 @@ if (service?.service !== workerConfig.name) {
 if (pagesConfig.vars?.RATE_LIMIT_DEVELOPMENT_MODE !== 'false') {
   throw new Error('Production Pages configuration must fail closed.');
 }
-const policies = Object.fromEntries(
-  workerConfig.ratelimits?.map((entry) => [entry.name, entry.simple]) || [],
-);
-if (policies.EXPENSIVE_LIMITER?.limit !== 20 || policies.EXPENSIVE_LIMITER?.period !== 60) {
-  throw new Error('EXPENSIVE_LIMITER must be configured for 20 requests per minute.');
+if (!pagesConfig.compatibility_flags?.includes('global_fetch_strictly_public')) {
+  throw new Error('Production Pages Functions must force public-Internet fetch routing.');
 }
-if (policies.STANDARD_LIMITER?.limit !== 60 || policies.STANDARD_LIMITER?.period !== 60) {
-  throw new Error('STANDARD_LIMITER must be configured for 60 requests per minute.');
-}
+validateRateLimitConfiguration(workerConfig.ratelimits);
 if (!ssrfConfig.compatibility_flags?.includes('global_fetch_strictly_public')) {
   throw new Error('The SSRF runtime harness must force public-Internet fetch routing.');
 }

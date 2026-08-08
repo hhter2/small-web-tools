@@ -38,6 +38,12 @@ describe('tool route registry', () => {
     }
   });
 
+  it('resolves representative lazy loader boundaries', async () => {
+    const representativeIds = ['tool-slash', 'tool-wc', 'tool-unicode', 'tool-url', 'tool-date'];
+    const modules = await Promise.all(representativeIds.map((id) => getToolRoute(id).loader()));
+    expect(modules.every((module) => typeof module.default === 'function')).toBe(true);
+  });
+
   it('derives navigation and static layout sets from registry flags', () => {
     expect(NAVIGATION_ROUTES.every((route) => route.navigationVisible)).toBe(true);
     for (const route of TOOL_ROUTES.filter((item) => item.staticLayout)) {

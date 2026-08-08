@@ -35,8 +35,12 @@ to an unclaimed Cloudflare temporary preview account. The harness is public only
 the short-lived verification window and requires a random 256-bit bearer token that
 is never printed or committed. Cloudflare deletes the temporary account if it is
 not claimed. The verifier covers a public control, redirects to loopback/metadata,
-a hostname resolving to loopback, and repeated alternating public/loopback DNS
-answers. It prints only redacted, non-secret evidence.
+a hostname resolving to loopback, same-zone public routing, mixed public/private
+address answers, IPv4-mapped IPv6, timeout cancellation, and repeated alternating
+public/loopback DNS answers. It prints only redacted, non-secret evidence plus
+short-lived gate metadata tied to the configured compatibility date and fetch
+implementation revision. Production extraction stays disabled when that metadata
+is missing, malformed, incomplete, mismatched, or expired.
 
 For a permanent-account run, keep the same authentication and allowlist controls,
 invoke through an authenticated route or Service Binding, and preserve the

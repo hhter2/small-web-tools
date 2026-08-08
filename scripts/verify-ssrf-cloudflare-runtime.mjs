@@ -1,8 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { FONT_EXTRACTION_EGRESS_POLICY } from '../functions/_shared/fontExtractionCapability.js';
 
 const root = process.cwd();
 const wranglerBin = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
@@ -60,6 +61,19 @@ async function invoke(harnessUrl, target) {
   };
 }
 
+async function invokeFixture(harnessUrl, fixture, target) {
+  const response = await fetch(harnessUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fixture, target }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  return { status: response.status, body: await response.json() };
+}
+
 await mkdir(tempRoot, { recursive: true });
 try {
   const targetUrl = temporaryDeploy(
@@ -69,7 +83,7 @@ try {
   const harnessUrl = temporaryDeploy(
     'test/integration/ssrf-worker/wrangler.jsonc',
     [
-      ['SSRF_TEST_HOSTS', [targetHost, privateDnsHost, rebindingHost].join(',')],
+      ['SSRF_TEST_HOSTS', [targetHost, privateDnsHost, rebindingHost, '[::ffff:7f00:1]'].join(',')],
       ['SSRF_TEST_TOKEN', token],
     ],
   );
@@ -81,6 +95,30 @@ try {
     || publicResult.body?.bytes !== 24
   ) {
     throw new Error(`Public control failed: ${JSON.stringify(publicResult)}`);
+  }
+
+  const sameZoneResult = await invoke(harnessUrl, `${harnessUrl}/same-zone-public`);
+  if (sameZoneResult.status !== 200 || sameZoneResult.body?.ok !== true) {
+    throw new Error(`Same-zone public routing control failed: ${JSON.stringify(sameZoneResult)}`);
+  }
+
+  const mixedAddressResult = await invokeFixture(
+    harnessUrl,
+    'mixed-public-private-addresses',
+    'https://mixed-addresses.invalid/',
+  );
+  if (mixedAddressResult.body?.ok !== false) {
+    throw new Error('Mixed public/private address resolution was not rejected.');
+  }
+
+  const mappedIpv6Result = await invoke(harnessUrl, 'http://[::ffff:7f00:1]/');
+  if (mappedIpv6Result.body?.ok !== false) {
+    throw new Error('IPv4-mapped IPv6 loopback target was not rejected.');
+  }
+
+  const timeoutResult = await invoke(harnessUrl, `${targetUrl}/slow`);
+  if (timeoutResult.body?.ok !== false || timeoutResult.body?.code !== 'UPSTREAM_TIMEOUT') {
+    throw new Error(`Cancellation/timeout control failed: ${JSON.stringify(timeoutResult)}`);
   }
 
   const blockedTargets = {
@@ -105,6 +143,7 @@ try {
     throw new Error('A DNS-rebinding attempt unexpectedly reached a target.');
   }
 
+  const verifiedAt = new Date();
   const evidence = {
     runtime: 'Cloudflare temporary Workers account',
     executedAt: new Date().toISOString(),
@@ -113,6 +152,14 @@ try {
       ok: publicResult.body.ok,
       bytes: publicResult.body.bytes,
     },
+    sameZoneRouting: { status: sameZoneResult.status, ok: sameZoneResult.body.ok },
+    mixedPublicPrivateAddresses: {
+      status: mixedAddressResult.status,
+      code: mixedAddressResult.body?.code,
+      resolver: 'deterministic in-runtime resolver fixture',
+    },
+    ipv4MappedIpv6: { status: mappedIpv6Result.status, code: mappedIpv6Result.body?.code },
+    cancellationTimeout: { status: timeoutResult.status, code: timeoutResult.body?.code },
     blocked: Object.fromEntries(
       Object.entries(blockedResults).map(([name, result]) => [
         name,
@@ -126,6 +173,21 @@ try {
       rejectionCodes: [...new Set(rebindingAttempts.map(({ body }) => body?.code))],
     },
     temporaryResources: 'Unclaimed; Cloudflare deletes the preview account automatically.',
+  };
+
+  const evidenceSha256 = createHash('sha256')
+    .update(JSON.stringify(evidence))
+    .digest('hex');
+  evidence.gateMetadata = {
+    schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+    runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+    outcome: 'pass',
+    compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+    implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+    evidenceSha256,
+    verifiedAt: verifiedAt.toISOString(),
+    expiresAt: new Date(verifiedAt.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
   };
 
   console.log(JSON.stringify(evidence, null, 2));

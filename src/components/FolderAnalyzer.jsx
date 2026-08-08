@@ -117,7 +117,7 @@ export default function FolderAnalyzer() {
         if (bytes[i] === 0) return false; // Null byte indicates binary
       }
       return file.size < 5 * 1024 * 1024; // text file limit 5MB
-    } catch (e) {
+  } catch {
       return false;
     }
   }
@@ -319,7 +319,7 @@ export default function FolderAnalyzer() {
           file.customPath = path ? `${path}/${entry.name}` : entry.name;
           try {
             file.webkitRelativePath = file.customPath;
-          } catch (e) {
+          } catch {
             // Some browsers expose webkitRelativePath as read-only.
           }
           resolve([file]);

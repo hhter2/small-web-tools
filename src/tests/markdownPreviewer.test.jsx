@@ -41,7 +41,7 @@ describe('Markdown Previewer', () => {
     await act(async () => pasteButton.click());
 
     expect(container.querySelector('[aria-label="Markdown editor"]')).toHaveValue('# Clipboard title');
-    expect(container.querySelector('h1')).toHaveTextContent('Clipboard title');
+    expect(container.querySelector('[aria-label="Markdown preview"] h1')).toHaveTextContent('Clipboard title');
     expect(container).toHaveTextContent('Pasted Markdown from the clipboard.');
   });
 
@@ -96,7 +96,7 @@ describe('Markdown Previewer', () => {
     await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
 
     expect(container.querySelector('[aria-label="Markdown editor"]')).toHaveValue('# Uploaded title');
-    expect(container.querySelector('h1')).toHaveTextContent('Uploaded title');
+    expect(container.querySelector('[aria-label="Markdown preview"] h1')).toHaveTextContent('Uploaded title');
     expect(container.querySelector('[aria-label="Download filename"]')).toHaveValue('notes.md');
   });
 

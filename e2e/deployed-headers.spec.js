@@ -1,26 +1,48 @@
 import { expect, test } from '@playwright/test';
+import { BASELINE_RESPONSE_HEADERS } from '../functions/_shared/responseHeaders.js';
 
-const deployedBaseUrl = process.env.DEPLOYED_BASE_URL;
+const productionHost = process.env.PRODUCTION_HOST;
+const productionOrigin = productionHost ? `https://${productionHost}` : null;
 
-test.describe('deployed security headers', () => {
-  test.skip(!deployedBaseUrl, 'Set DEPLOYED_BASE_URL to run operational header checks.');
+function expectBaselineHeaders(response) {
+  const actual = response.headers();
+  for (const [name, value] of Object.entries(BASELINE_RESPONSE_HEADERS)) {
+    expect(actual[name.toLowerCase()], name).toBe(value);
+  }
+}
 
-  test('HTTPS serves the staged HSTS policy', async ({ request }) => {
-    const url = new URL(deployedBaseUrl);
-    expect(url.protocol).toBe('https:');
-    const response = await request.get(url.toString());
-    expect(response.ok()).toBe(true);
-    expect(response.headers()['strict-transport-security']).toBe('max-age=86400');
+test.describe('deployed response policy', () => {
+  test.skip(!productionHost, 'Set PRODUCTION_HOST to the tested custom-domain hostname.');
+
+  test.beforeAll(() => {
+    expect(productionHost).toMatch(/^(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$/iu);
   });
 
-  test('HTTP redirects to the same HTTPS hostname', async ({ request }) => {
-    const httpsUrl = new URL(deployedBaseUrl);
-    const httpUrl = new URL(httpsUrl);
-    httpUrl.protocol = 'http:';
-    const response = await request.get(httpUrl.toString(), { maxRedirects: 0 });
+  test('HTTPS static and Function responses expose the baseline headers', async ({ request }) => {
+    const staticResponse = await request.get(`${productionOrigin}/`);
+    expect(staticResponse.ok()).toBe(true);
+    expectBaselineHeaders(staticResponse);
+
+    const functionResponse = await request.get(`${productionOrigin}/api/iplookup?ip=not-an-ip`);
+    expect(functionResponse.status()).toBe(400);
+    expectBaselineHeaders(functionResponse);
+  });
+
+  test('HTTP redirects to the canonical HTTPS origin', async ({ request }) => {
+    const response = await request.get(`http://${productionHost}/`, { maxRedirects: 0 });
     expect([301, 302, 307, 308]).toContain(response.status());
-    const location = new URL(response.headers().location, httpUrl);
-    expect(location.protocol).toBe('https:');
-    expect(location.hostname).toBe(httpsUrl.hostname);
+    expect(new URL(response.headers().location, `http://${productionHost}`).origin).toBe(productionOrigin);
+  });
+
+  test('candidate CSP loads representative bundled routes without violations', async ({ page }) => {
+    const violations = [];
+    page.on('console', (message) => {
+      if (/content security policy|refused to/iu.test(message.text())) violations.push(message.text());
+    });
+    for (const route of ['/home/mermaid', '/home/code-preview', '/home/mediasplit', '/home/imgmeta', '/home/iplookup']) {
+      await page.goto(`${productionOrigin}${route}`);
+      await expect(page.locator('main')).toBeVisible();
+    }
+    expect(violations).toEqual([]);
   });
 });

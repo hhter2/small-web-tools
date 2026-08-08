@@ -2,12 +2,28 @@ import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { getRateLimitPolicy } from '../config/rateLimitPolicies.js';
+import { FONT_EXTRACTION_EGRESS_POLICY } from '../functions/_shared/fontExtractionCapability.js';
 
 const root = process.cwd();
 const wranglerBin = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
 const tempRoot = path.join(root, '.tmp-rate-limit-integration');
 const secret = 'local-integration-secret-32-characters';
 const host = '127.0.0.1';
+const extractionPolicy = getRateLimitPolicy('extract-fonts');
+if (!extractionPolicy) throw new Error('Missing extract-fonts rate-limit policy.');
+const verificationNow = Date.now();
+const localEgressVerification = JSON.stringify({
+  schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+  runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+  outcome: 'pass',
+  compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+  implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+  evidenceSha256: 'a'.repeat(64),
+  verifiedAt: new Date(verificationNow - 60_000).toISOString(),
+  expiresAt: new Date(verificationNow + 60_000).toISOString(),
+  scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+});
 
 function terminateProcessTree(child) {
   if (!child?.pid || child.exitCode !== null) return;
@@ -63,6 +79,8 @@ async function withPagesRuntime({ port, includeWorker }, check) {
     `RATE_LIMIT_HMAC_SECRET=${secret}`,
     '--binding',
     'ALLOW_LOCAL_DEVELOPMENT=true',
+    '--binding',
+    `FONT_EXTRACTION_EGRESS_VERIFICATION=${localEgressVerification}`,
     '--log-level',
     'error',
   );
@@ -110,13 +128,13 @@ async function postInvalidExtraction(baseUrl) {
 try {
   await withPagesRuntime({ port: 8976, includeWorker: true }, async (baseUrl) => {
     const results = await Promise.all(
-      Array.from({ length: 30 }, () => postInvalidExtraction(baseUrl)),
+      Array.from({ length: extractionPolicy.limit + 10 }, () => postInvalidExtraction(baseUrl)),
     );
     const validationFailures = results.filter(({ status }) => status === 400);
     const limited = results.filter(({ status }) => status === 429);
-    if (validationFailures.length !== 20 || limited.length !== 10) {
+    if (validationFailures.length !== extractionPolicy.limit || limited.length !== 10) {
       throw new Error(
-        `Expected 20 validation responses and 10 rate limits; received `
+        `Expected ${extractionPolicy.limit} validation responses and 10 rate limits; received `
         + `${validationFailures.length} and ${limited.length}.`,
       );
     }

@@ -1,8 +1,4 @@
-const POLICY_BINDINGS = Object.freeze({
-  'extract-fonts': 'EXPENSIVE_LIMITER',
-  'exchange-rates': 'STANDARD_LIMITER',
-  iplookup: 'STANDARD_LIMITER',
-});
+import { getRateLimitPolicy } from '../../../config/rateLimitPolicies.js';
 
 function json(body, status = 200) {
   return Response.json(body, {
@@ -28,15 +24,15 @@ export function createRateLimiterWorker() {
       } catch {
         return json({ ok: false, code: 'INVALID_REQUEST' }, 400);
       }
-      const bindingName = POLICY_BINDINGS[input?.route];
+      const policy = getRateLimitPolicy(input?.route);
       if (
-        !bindingName
+        !policy
         || typeof input.clientKey !== 'string'
         || !/^[a-f0-9]{64}$/u.test(input.clientKey)
       ) {
         return json({ ok: false, code: 'INVALID_REQUEST' }, 400);
       }
-      const limiter = env[bindingName];
+      const limiter = env[policy.binding];
       if (!limiter?.limit) return json({ ok: false, code: 'LIMITER_UNAVAILABLE' }, 503);
 
       const result = await limiter.limit({ key: `${input.route}:${input.clientKey}` });

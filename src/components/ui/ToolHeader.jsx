@@ -9,7 +9,7 @@ import React from 'react';
 export default function ToolHeader({ title, className = '' }) {
   return (
     <header className={['tool-header pb-2 border-b border-border', className].filter(Boolean).join(' ')}>
-      <h2 className="text-2xl font-bold tracking-tight text-text-main m-0">{title}</h2>
+      <h1 className="text-2xl font-bold tracking-tight text-text-main m-0">{title}</h1>
     </header>
   );
 }

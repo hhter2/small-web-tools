@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -268,7 +268,7 @@ export default function TypingSpeedTest() {
     try {
       const saved = localStorage.getItem('typing_test_history');
       return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
@@ -280,6 +280,21 @@ export default function TypingSpeedTest() {
   const startTimeRef = useRef(0);
   const isComposingRef = useRef(false);
   const inputRef = useRef(null);
+
+  const resetTest = useCallback(() => {
+    setIsTesting(false);
+    setPaused(false);
+    setTestFinished(false);
+    setTypedText('');
+    setCompositionText('');
+    setBackspacesPressed(0);
+    setTotalKeystrokes(0);
+    setCorrectKeystrokes(0);
+    setResultsSaved(false);
+    setElapsedTime(0);
+    setTimeLeft(testType === 'time' && selectedPreset !== 'custom' ? Number(duration) : 0);
+    if (inputRef.current) inputRef.current.value = '';
+  }, [duration, selectedPreset, testType]);
 
   // Sync ref with states
   useEffect(() => {
@@ -301,7 +316,7 @@ export default function TypingSpeedTest() {
       setUploadedFileName('');
     }
     resetTest();
-  }, [selectedPreset, selectedCodeLanguage, customText]);
+  }, [selectedPreset, selectedCodeLanguage, customText, resetTest]);
 
   // Refresh/Get new random template text for the current preset (also forces template mode)
   const refreshTemplate = () => {
@@ -423,7 +438,7 @@ export default function TypingSpeedTest() {
   // Reset test when configuration changes
   useEffect(() => {
     resetTest();
-  }, [mode, testType, wordTarget, duration, showPunctuation, showNumbers, freeStopMode, freeWordTarget]);
+  }, [mode, testType, wordTarget, duration, showPunctuation, showNumbers, freeStopMode, freeWordTarget, resetTest]);
 
   // Parse template into line structures for IDE code rendering
   const codeLines = useMemo(() => {
@@ -486,24 +501,6 @@ export default function TypingSpeedTest() {
     }
     return idx;
   }, [wordsList, currentIndex]);
-
-  // Reset test state
-  const resetTest = () => {
-    setIsTesting(false);
-    setPaused(false);
-    setTestFinished(false);
-    setTypedText('');
-    setCompositionText('');
-    setBackspacesPressed(0);
-    setTotalKeystrokes(0);
-    setCorrectKeystrokes(0);
-    setResultsSaved(false);
-    setElapsedTime(0);
-    setTimeLeft(testType === 'time' && selectedPreset !== 'custom' ? Number(duration) : 0);
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
-  };
 
   // Start & Interval Timer logic
   useEffect(() => {
@@ -762,7 +759,7 @@ export default function TypingSpeedTest() {
     setHistory(updated);
     try {
       localStorage.setItem('typing_test_history', JSON.stringify(updated));
-    } catch (e) {
+    } catch {
       // Storage may be unavailable; the result remains visible in this session.
     }
     setResultsSaved(true);
@@ -785,7 +782,7 @@ export default function TypingSpeedTest() {
       setHistory([]);
       try {
         localStorage.removeItem('typing_test_history');
-      } catch (e) {
+      } catch {
         // Storage may be unavailable; clearing in-memory history is sufficient.
       }
     }

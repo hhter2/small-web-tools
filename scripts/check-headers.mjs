@@ -1,18 +1,36 @@
 import { readFile } from 'node:fs/promises';
+import { BASELINE_RESPONSE_HEADERS, CONTENT_SECURITY_POLICY } from '../functions/_shared/responseHeaders.js';
 
 const headers = await readFile('public/_headers', 'utf8');
-const requiredHeaders = [
-  'X-Content-Type-Options: nosniff',
-  'X-Frame-Options: DENY',
-  'Referrer-Policy: strict-origin-when-cross-origin',
-  'Permissions-Policy: camera=(self), microphone=(), geolocation=()',
-  'Cross-Origin-Opener-Policy: same-origin',
-  'Strict-Transport-Security: max-age=86400',
-  'Content-Security-Policy:',
-];
+const exceptions = JSON.parse(await readFile('config/csp-exceptions.json', 'utf8'));
+const requiredHeaders = Object.entries(BASELINE_RESPONSE_HEADERS).map(([name, value]) => `${name}: ${value}`);
 
 for (const header of requiredHeaders) {
   if (!headers.includes(header)) throw new Error(`Missing security header: ${header}`);
+}
+
+if (!headers.includes(`Content-Security-Policy: ${CONTENT_SECURITY_POLICY}`)) {
+  throw new Error('Static and Function CSP policies must remain identical.');
+}
+
+const exceptionKeys = new Set(exceptions.map(({ directive, source }) => `${directive} ${source}`));
+const expectedExceptionKeys = new Set([
+  "script-src 'wasm-unsafe-eval'", 'script-src blob:', "style-src 'unsafe-inline'",
+  'font-src data:', 'img-src data:', 'img-src blob:',
+  'connect-src https://speed.cloudflare.com', 'connect-src https://unpkg.com',
+  'media-src blob:', 'worker-src blob:', 'frame-src https://www.openstreetmap.org',
+]);
+if (exceptionKeys.size !== expectedExceptionKeys.size || [...expectedExceptionKeys].some((key) => !exceptionKeys.has(key))) {
+  throw new Error('CSP exception inventory must exactly match the reviewed policy exceptions.');
+}
+for (const exception of exceptions) {
+  if (!exception.reason || !exception.removalCondition || !exception.features?.length) {
+    throw new Error(`Incomplete CSP exception record: ${exception.directive} ${exception.source}`);
+  }
+  const directive = CONTENT_SECURITY_POLICY.split(';').find((part) => part.trim().startsWith(`${exception.directive} `));
+  if (!directive?.split(/\s+/u).includes(exception.source)) {
+    throw new Error(`Inventoried CSP source is absent from policy: ${exception.directive} ${exception.source}`);
+  }
 }
 
 for (const directive of [

@@ -5,7 +5,6 @@ import JSZip from 'jszip';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import FieldInput from './ui/FieldInput';
 import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
 import ExternalMapPreview from './ExternalMapPreview';
 import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
@@ -151,7 +150,7 @@ function isCR3(arrayBuffer) {
     const type = view.getUint32(4);
     const brand = view.getUint32(8);
     return type === 0x66747970 && brand === 0x63727820; // 'ftyp' and 'crx '
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -811,7 +810,7 @@ export default function ImgMeta() {
               
               try {
                 expandedTags = ExifReader.load(/** @type {ArrayBuffer} */ (arrayBuffer), { expanded: true });
-              } catch (e) {
+              } catch {
                 expandedTags = {};
               }
               
@@ -935,13 +934,11 @@ export default function ImgMeta() {
       let strippedBuffer;
       let outputMimeType;
       let outputExtension;
-      let lossless;
 
       if (isJpeg) {
         strippedBuffer = stripJpegMetadata(image.originalBuffer, mode);
         outputMimeType = 'image/jpeg';
         outputExtension = image.name.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'jpg';
-        lossless = true;
       } else {
         if (mode === 'private') {
           setStatus(t('tool-imgmeta.ui.privateJpegOnly'));
@@ -955,19 +952,18 @@ export default function ImgMeta() {
         strippedBuffer = reencoded.buffer;
         outputMimeType = reencoded.mimeType;
         outputExtension = reencoded.extension;
-        lossless = outputMimeType === 'image/png';
       }
       
       let strippedTags = {};
       let strippedExpanded = {};
       try {
         strippedTags = ExifReader.load(strippedBuffer);
-      } catch (e) {
+      } catch {
         console.log("Verified: No EXIF tags found in stripped image.");
       }
       try {
         strippedExpanded = ExifReader.load(strippedBuffer, { expanded: true });
-      } catch (e) {
+      } catch {
         strippedExpanded = {};
       }
       

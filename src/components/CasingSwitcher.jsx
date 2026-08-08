@@ -84,7 +84,7 @@ export default function CasingSwitcher() {
   const [enableTitleCase, setEnableTitleCase] = useState(false);
 
   const [enableSpecificTerms, setEnableSpecificTerms] = useState(false);
-  const [specificTerms, setSpecificTerms] = useState('react, javascript, node js');
+  const [specificTerms] = useState('react, javascript, node js');
   const [specificTermsMode, setSpecificTermsMode] = useState('all'); // 'first', 'all'
 
   // Exclude Specific Words state

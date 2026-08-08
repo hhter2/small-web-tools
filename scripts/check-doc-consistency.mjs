@@ -16,6 +16,7 @@ const docs = {
   CONTRIBUTING_ZH_TW: read('CONTRIBUTING.zh-TW.md'),
   PRIVACY: read('PRIVACY.md'),
   PRIVACY_ZH_TW: read('PRIVACY.zh-TW.md'),
+  SECURITY: read('SECURITY.md'),
   TODO: read('TODO.md'),
   AGENTS: read('.agents/AGENTS.md'),
 };
@@ -87,6 +88,12 @@ if (fontExtractor?.policyUrl !== '/home/privacy') {
 requireText('TODO', 'src/toolRegistry.js', 'canonical tool registration location');
 requireText('TODO', 'npm run verify', 'baseline verification command');
 requireText('AGENTS', 'canonical path', 'canonical path-routing guidance');
+requireText('README', 'SECURITY.md', 'vulnerability disclosure policy link');
+requireText('README_ZH_TW', 'SECURITY.md', 'vulnerability disclosure policy link');
+requireText('SECURITY', 'emailforvirtualmachine@gmail.com', 'private reporting contact');
+requireText('SECURITY', 'current `develop` revision', 'supported revision policy');
+requireText('SECURITY', 'URL-fetching surface', 'URL-fetching scope');
+requireText('SECURITY', 'file/media-processing tools', 'file-processing scope');
 
 const registrySource = read('src/toolRegistry.js');
 for (const [documentName, markdown] of [

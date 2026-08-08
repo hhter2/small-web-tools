@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import FieldInput from './ui/FieldInput';
 import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
 import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
 
@@ -131,14 +130,13 @@ function parseID3v2(uint8) {
   const end = Math.min(startOffset + 10 + tagSize, uint8.length);
 
   while (pos < end - 10) {
-    let frameId, frameSize, frameFlags;
+    let frameId, frameSize;
 
     if (majorVersion === 2) {
       // ID3v2.2 has 3-char IDs and 3-byte sizes
       frameId = latin1ToString(uint8.slice(pos, pos + 3));
       if (frameId === '\0\0\0') break;
       frameSize = (uint8[pos + 3] << 16) | (uint8[pos + 4] << 8) | uint8[pos + 5];
-      frameFlags = 0;
       pos += 6;
     } else {
       frameId = latin1ToString(uint8.slice(pos, pos + 4));
@@ -146,7 +144,6 @@ function parseID3v2(uint8) {
       frameSize = (majorVersion === 4)
         ? readSyncsafeInt(uint8, pos + 4)
         : readUint32BE(uint8, pos + 4);
-      frameFlags = readUint16BE(uint8, pos + 8);
       pos += 10;
     }
 
@@ -167,7 +164,6 @@ function parseID3v2(uint8) {
     // ID3v2.2 picture frame PIC
     if (frameId === 'PIC' && !coverArt) {
       try {
-        const picEnc = frameData[0];
         // 3-char image format
         const imgFmt = latin1ToString(frameData.slice(1, 4)).toLowerCase();
         const mimeType = imgFmt === 'jpg' || imgFmt === 'jpeg' ? 'image/jpeg' : `image/${imgFmt}`;
@@ -326,7 +322,6 @@ function parseWav(uint8) {
   const wave = latin1ToString(uint8.slice(8, 12));
   if (riff !== 'RIFF' || wave !== 'WAVE') return result;
 
-  const fileSize = readUint32LE(uint8, 4) + 8;
   let pos = 12;
 
   while (pos + 8 <= uint8.length) {
@@ -410,8 +405,6 @@ function parseFlac(uint8) {
 
     if (blockType === 0) {
       // STREAMINFO
-      const minBlockSize = (block[0] << 8) | block[1];
-      const maxBlockSize = (block[2] << 8) | block[3];
       const sampleRate = ((block[10] << 12) | (block[11] << 4) | (block[12] >> 4));
       const numChannels = ((block[12] >> 1) & 0x7) + 1;
       const bitsPerSample = (((block[12] & 0x1) << 4) | (block[13] >> 4)) + 1;
@@ -605,7 +598,7 @@ function parseM4a(uint8) {
 // Lossless MP3 Metadata Stripper
 // ─────────────────────────────────────────────────────────────────────────────
 
-function stripMp3Metadata(arrayBuffer, mode) {
+function stripMp3Metadata(arrayBuffer) {
   const uint8 = new Uint8Array(arrayBuffer);
   let start = 0;
   let end = uint8.length;
@@ -807,7 +800,7 @@ function getTagLabel(key) {
 // Mini Audio Player Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-function MiniPlayer({ file, objectUrl }) {
+function MiniPlayer({ objectUrl }) {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -1001,7 +994,7 @@ export default function AudioMeta() {
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'all' | 'compare'
   const [searchQuery, setSearchQuery] = useState('');
@@ -1121,7 +1114,7 @@ export default function AudioMeta() {
   const handleStripMp3 = () => {
     if (!activeFile || activeFile.ext !== 'mp3') return;
     try {
-      const stripped = stripMp3Metadata(activeFile.arrayBuffer, 'all');
+      const stripped = stripMp3Metadata(activeFile.arrayBuffer);
       const blob = new Blob([stripped], { type: 'audio/mpeg' });
       const strippedUrl = createObjectUrl(blob);
       setFiles(prev => prev.map(f => f.id === activeFile.id ? {
@@ -1134,7 +1127,7 @@ export default function AudioMeta() {
         }
       } : f));
       setStatus(t('tool-audiometa.ui.stripSuccess'));
-    } catch (err) {
+    } catch {
       setStatus(t('tool-audiometa.ui.stripFailed'));
     }
   };
@@ -1197,10 +1190,6 @@ export default function AudioMeta() {
   };
 
   const compareFiles = files.filter(f => compareSelectedIds.includes(f.id));
-
-  const displayFile = activeFile
-    ? (activeFile.strippedInfo ? { ...activeFile, ...activeFile.strippedInfo } : activeFile)
-    : null;
 
   const allParamGroups = buildAllParams(activeFile);
 
@@ -1410,7 +1399,7 @@ export default function AudioMeta() {
                       )}
                     </div>
                     {/* Mini Player */}
-                    <MiniPlayer file={activeFile} objectUrl={activeFile.objectUrl} />
+                    <MiniPlayer objectUrl={activeFile.objectUrl} />
                   </div>
                 </div>
 

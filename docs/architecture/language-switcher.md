@@ -1,9 +1,9 @@
 # Language switcher architecture
 
-The responsive language controls are rendered directly by `App.jsx` in one React application tree.
+The responsive language controls are rendered in one React application tree composed by `App.jsx`.
 
 - `src/components/LanguageSwitcher.jsx` is the only implementation of locale choices, selection, menu state, keyboard navigation, and focus restoration.
-- `App.jsx` renders the mobile variant in `#mobile-header` and the desktop variant in the desktop control group.
+- `App.jsx` renders the mobile variant in `#mobile-header`; `AppHeader.jsx` renders the desktop variant.
 - The desktop variant is omitted in the Simple workspace to preserve the shell visibility contract.
 - `src/main.jsx` mounts `App` directly. No language-switcher portal or secondary mount is used.
 

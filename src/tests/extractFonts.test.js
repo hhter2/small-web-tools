@@ -10,7 +10,20 @@ vi.mock('../../functions/_shared/safeExternalFetch.js', async (importOriginal) =
 vi.mock('../../functions/_shared/rateLimit.js', () => ({ enforceRateLimit }));
 
 const { onRequestOptions, onRequestPost } = await import('../../functions/api/extract-fonts.js');
+const { FONT_EXTRACTION_EGRESS_POLICY } = await import('../../functions/_shared/fontExtractionCapability.js');
 const ORIGIN = 'https://tools.example.com';
+
+function currentVerification() {
+  const now = Date.now();
+  return JSON.stringify({
+    ...FONT_EXTRACTION_EGRESS_POLICY,
+    outcome: 'pass',
+    evidenceSha256: 'a'.repeat(64),
+    verifiedAt: new Date(now - 60_000).toISOString(),
+    expiresAt: new Date(now + 60_000).toISOString(),
+    scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+  });
+}
 
 function responseBody(text) {
   return {
@@ -32,7 +45,10 @@ function postContext(body, options = {}) {
       headers,
       body: options.rawBody ?? JSON.stringify(body),
     }),
-    env: options.env || {},
+    env: {
+      FONT_EXTRACTION_EGRESS_VERIFICATION: currentVerification(),
+      ...(options.env || {}),
+    },
   };
 }
 

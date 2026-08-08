@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
@@ -440,7 +440,7 @@ const generateQRSVG = (text, options) => {
   let qr;
   try {
     qr = QRCode.create(text, { errorCorrectionLevel });
-  } catch (err) {
+  } catch {
     return '';
   }
 
@@ -915,7 +915,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
   };
 
   // ================= QR Value Compiler =================
-  const getQRValue = () => {
+  const getQRValue = useCallback(() => {
     switch (qrType) {
       case 'url':
         return qrUrl;
@@ -935,7 +935,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
       default:
         return qrText;
     }
-  };
+  }, [qrEmailBody, qrEmailSubject, qrEmailTo, qrPhone, qrSmsMessage, qrSmsPhone, qrText, qrType, qrUrl, qrWifiAuth, qrWifiHidden, qrWifiPassword, qrWifiSsid]);
 
   // Render QR Code inside useEffect
   useEffect(() => {
@@ -1000,7 +1000,7 @@ export default function QrBarcodeGenerator({ initialTab = 'qr' }) {
     qrTextLabel, qrTextLabelMode, qrLabelPosition, qrEmbeddedPosition,
     qrTextXOffset, qrTextYOffset, qrTextSize, qrTextColor, qrTextFont,
     qrTextWeight, qrTextStyle, qrTextBgEnabled, qrTextBgColor, qrTextBgPadding,
-    qrTextStrokeEnabled, qrTextStrokeColor, qrTextStrokeWidth
+    qrTextStrokeEnabled, qrTextStrokeColor, qrTextStrokeWidth, getQRValue
   ]);
 
   // Render Barcode inside useEffect

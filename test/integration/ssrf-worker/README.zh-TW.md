@@ -33,8 +33,10 @@ npm run test:ssrf-runtime 會將這個測試工具與受控的重新導向目標
 Cloudflare 臨時預覽帳戶。測試工具只會在短暫的驗證期間公開，並需要 256 位元的
 隨機 bearer token；該 token 絕不會被輸出或提交。若未被認領，Cloudflare 會刪除
 臨時帳戶。驗證器會涵蓋公開控制、重新導向至 loopback／metadata、解析至 loopback
-的主機名稱，以及公開／loopback DNS 回應反覆交替的情境。輸出只包含經遮蔽且不含
-秘密的證據。
+的主機名稱、同區域公開路由、混合公開／私人位址、IPv4-mapped IPv6、逾時取消，
+以及公開／loopback DNS 回應反覆交替的情境。輸出只包含經遮蔽且不含秘密的證據，
+以及綁定 compatibility date 與 fetch 實作版本的短期 gate metadata。若 metadata
+缺失、格式錯誤、不完整、版本不符或過期，正式環境的擷取功能會保持停用。
 
 若要使用永久帳戶執行，保留相同的驗證與允許清單控制，透過已驗證的路由或 Service
 Binding 呼叫，並保留回應／記錄證據。不要將測試 fixture 指向真正的私人服務。

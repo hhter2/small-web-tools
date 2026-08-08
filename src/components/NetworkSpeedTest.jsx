@@ -43,7 +43,7 @@ export const runPingTest = async (signal) => {
       });
       const elapsed = performance.now() - start;
       if (i > 0) pings.push(elapsed);
-    } catch (e) {
+    } catch {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
     }
     if (i < 3) {

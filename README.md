@@ -117,7 +117,7 @@ essentials. Tools opened there remain in the reduced shell at addresses such as
 File-focused tools process selected files in the browser whenever possible; files are not sent to this project for analysis. Some capabilities necessarily use network access:
 
 - IP Lookup queries a server-side lookup endpoint and external IP providers.
-- Website Font Extractor scans bounded public HTML and CSS through a same-origin endpoint and returns declaration metadata only; it does not preview or download discovered font files.
+- Website Font Extractor scans bounded public HTML and CSS through a same-origin endpoint and returns declaration metadata only; it does not preview or download discovered font files. Production scanning stays unavailable unless current Cloudflare-runtime egress verification metadata matches the deployed compatibility date and fetch implementation.
 - Network Speed Test measures real network traffic.
 - Currency Converter requests live rates only after consent; manual rates remain local.
 - Image and IP maps contact OpenStreetMap only after map consent; coordinates remain available without the embed.
@@ -170,11 +170,12 @@ The Cloudflare Pages production build must use Node.js 22 or 24, `npm ci` follow
 
 The checked-in response policy is at the initial HSTS stage:
 `Strict-Transport-Security: max-age=86400`. It intentionally omits
-`includeSubDomains` and `preload`. After deploying, validate the real production
-response and HTTP redirect with:
+`includeSubDomains` and `preload`. After an explicitly approved custom-domain
+deployment, follow [`docs/operations/production-hardening.md`](docs/operations/production-hardening.md)
+and validate the recorded hostname with:
 
 ```bash
-DEPLOYED_BASE_URL=https://small-web-tools.pages.dev npm run test:e2e:deployed
+PRODUCTION_HOST=your-approved-host.example npm run test:e2e:deployed
 ```
 
 Keep the one-day stage until it has been monitored and rollback/domain ownership
@@ -193,6 +194,7 @@ is the canonical architecture and route reference.
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — engineering standards and local-runtime instructions.
 - [PRIVACY.md](PRIVACY.md) — privacy policy and network-service disclosure.
+- [SECURITY.md](SECURITY.md) — supported revisions and the private vulnerability-reporting path.
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 

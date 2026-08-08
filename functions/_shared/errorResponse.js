@@ -1,4 +1,5 @@
 import { getPublicError } from '../../src/lib/publicErrors';
+import { withBaselineHeaders } from './responseHeaders.js';
 
 export function createCorrelationId() {
   return crypto.randomUUID?.()
@@ -22,10 +23,9 @@ export function errorResponse(code, status, options = {}) {
     correlationId,
   }, {
     status,
-    headers: {
+    headers: withBaselineHeaders({
       'Cache-Control': 'no-store',
-      'X-Content-Type-Options': 'nosniff',
       ...options.headers,
-    },
+    }),
   });
 }

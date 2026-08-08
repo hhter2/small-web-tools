@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -51,6 +51,7 @@ export default function RandomWheel() {
   const canvasRef = useRef(null);
   const rotationAngleRef = useRef(0);
   const animationFrameRef = useRef(null);
+  const actionsRef = useRef({ drawWheel: null, spin: null, resetItems: null });
 
   // Sync textarea edits to items state
   const handleTextareaChange = (val) => {
@@ -76,7 +77,7 @@ export default function RandomWheel() {
     setItems(newItems);
   };
 
-  const drawWheel = (angle) => {
+  const drawWheel = useCallback((angle) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -189,12 +190,12 @@ export default function RandomWheel() {
     ctx.strokeStyle = isDark ? "#6366f1" : "#4f46e5";
     ctx.lineWidth = 4;
     ctx.stroke();
-  };
+  }, [items, t]);
 
   // Redraw when items, rotationAngle or theme changes
   useEffect(() => {
     drawWheel(rotationAngle);
-  }, [i18n.language, items, rotationAngle]);
+  }, [drawWheel, i18n.language, rotationAngle]);
 
   // Cleanup animation frame only on unmount
   useEffect(() => {
@@ -209,7 +210,7 @@ export default function RandomWheel() {
   useEffect(() => {
     // Redraw on theme toggles
     const handleThemeChange = () => {
-      setTimeout(() => drawWheel(rotationAngleRef.current), 50);
+      setTimeout(() => actionsRef.current.drawWheel?.(rotationAngleRef.current), 50);
     };
 
     const toggleBtn = document.getElementById("theme-toggle");
@@ -230,9 +231,9 @@ export default function RandomWheel() {
 
       if (e.code === "Space") {
         e.preventDefault();
-        spin();
+        actionsRef.current.spin?.();
       } else if (e.key.toLowerCase() === "r") {
-        resetItems();
+        actionsRef.current.resetItems?.();
       } else if (e.key.toLowerCase() === "c") {
         setShowClearModal(true);
       } else if (e.key.toLowerCase() === "e") {
@@ -266,7 +267,7 @@ export default function RandomWheel() {
     let record;
     try {
       record = await createDrawRecord(activeItems.map((item) => item.text));
-    } catch (error) {
+    } catch {
       alert(t('tool-wheel.ui.drawFailed'));
       return;
     }
@@ -327,6 +328,8 @@ export default function RandomWheel() {
     setItems(prevItems => prevItems.map(it => ({ ...it, disabled: false })));
     setShowWinnerBanner(false);
   };
+
+  actionsRef.current = { drawWheel, spin, resetItems };
 
   const copyDrawRecord = async () => {
     if (!drawRecord) return;

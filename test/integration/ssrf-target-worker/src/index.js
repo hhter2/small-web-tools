@@ -5,7 +5,7 @@ const routes = Object.freeze({
 });
 
 export default {
-  fetch(request) {
+  async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === '/public') {
       return new Response('controlled-public-target', {
@@ -14,6 +14,10 @@ export default {
           'Cache-Control': 'no-store',
         },
       });
+    }
+    if (url.pathname === '/slow') {
+      await new Promise((resolve) => setTimeout(resolve, 7000));
+      return new Response('late-response', { headers: { 'Content-Type': 'text/plain' } });
     }
     const location = routes[url.pathname];
     if (location) {

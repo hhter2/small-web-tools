@@ -68,12 +68,14 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 主要目錄：
 
 - config/：network-services.json 網路服務政策來源，以及 ffmpeg-assets.json 固定的
-  FFmpeg 資產大小與 SHA-256。
+  FFmpeg 資產大小與 SHA-256；rateLimitPolicies.js 是正式的 route、class、binding、
+  limit 與 period 政策。
 - .github/：Dependabot 設定與 GitHub Actions CI pipeline。
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
 - src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
+- src/components/MobileDrawer.jsx：行動導覽的焦點、inert、關閉與捲動生命週期。
 - src/i18n/：地區設定解析、i18next 設定、持久化，以及成對的 en-US／zh-TW 命名空間資源。
 - functions/：共用無伺服器工具與 Cloudflare Pages API handler。
 - workers/：rate-limiter Worker。
@@ -112,6 +114,10 @@ src/App.jsx 負責應用程式 shell：
 
 Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵包屑、footer、搜尋、主題控制項
 與置中的工具工作區。
+
+src/components/MobileDrawer.jsx 負責窄螢幕抽屜邊界。關閉時會卸載抽屜；開啟時會移入並
+限制焦點、讓被遮蔽的 shell inert、鎖定 body 捲動，並支援 Escape、overlay、明確關閉
+與路由選取後關閉，最後將焦點還給開啟按鈕。
 
 `src/components/LanguageSwitcher.jsx` 由 `App.jsx` 直接渲染於行動與桌面 header。它是地區設定選項、選單狀態、鍵盤導覽與焦點復原的共用負責元件；Simple 工作區不渲染桌面控制項。
 
@@ -291,6 +297,11 @@ functions/api/** 納入覆蓋率門檻，與共用 server 與 client library 使
 
 functions/_shared/requestPolicy.js 管理 Font Extractor 的 4 KiB 請求上限與聚合工作
 限制（HTML／CSS／總位元組、樣式表數量、import 深度、face 數量、並行數與 deadline）。
+functions/_shared/fontExtractionCapability.js 會在短期 runtime 證據未符合 Cloudflare
+compatibility date、fetch 實作版本與必要情境集合時，讓正式環境擷取功能故障關閉。
+字型擷取會把 HTML `rel` 視為不分大小寫的 token 清單，並依宣告順序回傳每個
+font-face source list 中所有遠端 `url()` 候選。`local()` 與 data source 會被略過，
+但不會遮蔽後續遠端 fallback；候選會依正規化絕對 URL 與 face metadata 去重。
 vite.config.js 只為 IP lookup（/api/iplookup）提供本機 Vite 代理。測試其他 Function
 時使用 Cloudflare Pages 本機執行環境。
 
@@ -299,10 +310,17 @@ wrangler.jsonc 以 RATE_LIMITER_SERVICE 將 Pages Functions 綁定至它。完�
 另外啟動該 Worker。npm run platform:integration 會以隔離本機狀態啟動 Pages 與 Worker
 設定，證明並行請求受到設定的平台限制，也證明缺少服務時會安全失效。程序內 limiter
 只在明確的 development mode 可用；正式環境在缺少綁定時會安全失效。
+config/rateLimitPolicies.js 是 Pages helper、Worker、本機 integration 與設定驗證共同使用的
+正式 route-policy 來源。Wrangler 因平台需求保留的數值宣告會與它比對；未知、孤立、缺失
+或數值不符的 binding 都會讓 platform:check 失敗。
+Pages 端 deadline 會綁定至 service-binding 的 `Request.signal`，因此逾時會限制 caller
+工作並把取消傳遞至 Worker runtime，同時維持相同的故障關閉 503 回應。
 
 test/integration/ssrf-worker/ 與 test/integration/ssrf-target-worker/ 是針對對外抓取
 邊界的隔離 Cloudflare runtime fixture。只有預期進行臨時 Cloudflare 部署時才執行
 npm run test:ssrf-runtime；它使用未認領、會自動到期的預覽帳戶，不會輸出 token 或認領 URL。
+成功輸出包含綁定 compatibility date 與 fetch 實作版本、有效期 30 天的機器可讀 gate
+metadata；缺失、不符、不完整或過期時，正式環境擷取功能維持停用。
 測試工具的英文與繁中說明分別位於該目錄的 README.md 與 README.zh-TW.md。
 
 ### 本機完成與延後的 Cloudflare 工作

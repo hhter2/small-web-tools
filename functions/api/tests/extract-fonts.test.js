@@ -10,9 +10,25 @@ vi.mock('../../_shared/safeExternalFetch.js', async (importOriginal) => ({
 vi.mock('../../_shared/rateLimit.js', () => ({ enforceRateLimit }));
 
 const { onRequestPost } = await import('../extract-fonts.js');
+const { FONT_EXTRACTION_EGRESS_POLICY } = await import('../../_shared/fontExtractionCapability.js');
 const ORIGIN = 'https://small-web-tools.pages.dev';
 
-function postContext(body, rawBody) {
+function currentVerification() {
+  const now = Date.now();
+  return JSON.stringify({
+    schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+    runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+    outcome: 'pass',
+    compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+    implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+    evidenceSha256: 'a'.repeat(64),
+    verifiedAt: new Date(now - 60_000).toISOString(),
+    expiresAt: new Date(now + 60_000).toISOString(),
+    scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+  });
+}
+
+function postContext(body, rawBody, env = {}) {
   return {
     request: new Request(`${ORIGIN}/api/extract-fonts`, {
       method: 'POST',
@@ -23,7 +39,10 @@ function postContext(body, rawBody) {
       },
       body: rawBody ?? JSON.stringify(body),
     }),
-    env: {},
+    env: {
+      FONT_EXTRACTION_EGRESS_VERIFICATION: currentVerification(),
+      ...env,
+    },
   };
 }
 
@@ -40,6 +59,33 @@ describe('extract-fonts API handler failures', () => {
     safeExternalFetch.mockReset();
     enforceRateLimit.mockReset();
     enforceRateLimit.mockResolvedValue(null);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['malformed', '{'],
+    ['stale', JSON.stringify({
+      schemaVersion: FONT_EXTRACTION_EGRESS_POLICY.schemaVersion,
+      runtime: FONT_EXTRACTION_EGRESS_POLICY.runtime,
+      outcome: 'pass',
+      compatibilityDate: FONT_EXTRACTION_EGRESS_POLICY.compatibilityDate,
+      implementationRevision: FONT_EXTRACTION_EGRESS_POLICY.implementationRevision,
+      evidenceSha256: 'a'.repeat(64),
+      verifiedAt: '2026-01-01T00:00:00.000Z',
+      expiresAt: '2026-01-02T00:00:00.000Z',
+      scenarios: [...FONT_EXTRACTION_EGRESS_POLICY.requiredScenarios],
+    })],
+  ])('fails closed when runtime verification is %s', async (_label, metadata) => {
+    const response = await onRequestPost(postContext(
+      { url: 'https://fonts.google.com' },
+      undefined,
+      { FONT_EXTRACTION_EGRESS_VERIFICATION: metadata },
+    ));
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ ok: false, code: 'FEATURE_UNAVAILABLE' });
+    expect(enforceRateLimit).not.toHaveBeenCalled();
+    expect(safeExternalFetch).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -123,13 +169,13 @@ describe('extract-fonts API handler failures', () => {
     expect(response.status).toBe(200);
     expect(body.fonts).toEqual([
       expect.objectContaining({
-        family: 'Nested',
-        name: 'nested.woff2',
+        family: 'Redirected',
+        name: 'redirected.woff2',
         sourceHost: 'cdn.example',
       }),
       expect.objectContaining({
-        family: 'Redirected',
-        name: 'redirected.woff2',
+        family: 'Nested',
+        name: 'nested.woff2',
         sourceHost: 'cdn.example',
       }),
     ]);
@@ -138,5 +184,45 @@ describe('extract-fonts API handler failures', () => {
       'https://cdn.example/assets/nested.css',
       expect.any(Object),
     );
+  });
+
+  it('parses tokenized stylesheet links and every ordered remote font fallback', async () => {
+    safeExternalFetch
+      .mockResolvedValueOnce(fetched([
+        '<link REL="preload stylesheet" AS="style" href="/fonts/site.css">',
+        '<link rel=stylesheet href=/fonts/site.css>',
+      ].join('\n'), 'https://example.com/page'))
+      .mockResolvedValueOnce(fetched([
+        '/* @font-face { font-family: Hidden; src: url("/hidden.woff2"); } */',
+        '@font-face {',
+        '  font-family: "Fallback Face";',
+        '  src: local("Installed"),',
+        '       url(data:font/woff2;base64,AAAA) format("woff2"),',
+        '       url("./fallback.woff2") format("woff2"),',
+        '       url(./fallback.woff) format(woff),',
+        '       url("./fallback.woff2") format("woff2");',
+        '  font-weight: 400;',
+        '}',
+      ].join('\n'), 'https://cdn.example/styles/site.css'));
+
+    const response = await onRequestPost(postContext({ url: 'https://example.com/page' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(safeExternalFetch).toHaveBeenCalledTimes(2);
+    expect(body.fonts).toEqual([
+      expect.objectContaining({
+        family: 'Fallback Face',
+        name: 'fallback.woff2',
+        format: 'WOFF2',
+        sourceHost: 'cdn.example',
+      }),
+      expect.objectContaining({
+        family: 'Fallback Face',
+        name: 'fallback.woff',
+        format: 'WOFF',
+        sourceHost: 'cdn.example',
+      }),
+    ]);
   });
 });

@@ -1,5 +1,6 @@
 import { enforceRateLimit } from '../_shared/rateLimit';
 import { errorResponse } from '../_shared/errorResponse';
+import { withBaselineHeaders } from '../_shared/responseHeaders.js';
 import { parseIpInput } from '../../src/lib/ipValidation';
 import {
   countryNameFromCode,
@@ -13,10 +14,10 @@ export { normalizeProviderResponse };
 function jsonResponse(body, init = {}) {
   return Response.json(body, {
     ...init,
-    headers: {
+    headers: withBaselineHeaders({
       'Cache-Control': 'no-store',
       ...init.headers,
-    },
+    }),
   });
 }
 

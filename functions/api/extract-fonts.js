@@ -2,6 +2,7 @@ import { safeExternalFetch, validateTargetUrl } from '../_shared/safeExternalFet
 import { enforceRateLimit } from '../_shared/rateLimit';
 import { errorResponse } from '../_shared/errorResponse';
 import { evaluateFontExtractionCapability } from '../_shared/fontExtractionCapability';
+import { withBaselineHeaders } from '../_shared/responseHeaders.js';
 import {
   FONT_EXTRACTION_LIMITS,
   readLimitedJson,
@@ -11,12 +12,11 @@ import {
 function jsonResponse(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
+    headers: withBaselineHeaders({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
-      'X-Content-Type-Options': 'nosniff',
       ...extraHeaders,
-    },
+    }),
   });
 }
 
@@ -29,14 +29,14 @@ function sameOriginCorsHeaders(request) {
 
 export async function onRequestOptions(context) {
   const corsHeaders = sameOriginCorsHeaders(context.request);
-  if (!corsHeaders['Access-Control-Allow-Origin']) return new Response(null, { status: 403 });
+  if (!corsHeaders['Access-Control-Allow-Origin']) return new Response(null, { status: 403, headers: withBaselineHeaders() });
   return new Response(null, {
     status: 204,
-    headers: {
+    headers: withBaselineHeaders({
       ...corsHeaders,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
-    },
+    }),
   });
 }
 

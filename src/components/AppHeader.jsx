@@ -92,7 +92,7 @@ export default function AppHeader({
             </svg>
             <input
               type="text"
-              className="header-search-input h-8 w-full rounded border border-border bg-[var(--bg-search-sidebar)] py-0 pl-8 pr-8 font-sans text-[0.8rem] text-text-main outline-none transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
+              className="header-search-input h-8 w-full rounded border border-border bg-[var(--bg-search-sidebar)] py-0 !pl-8 !pr-8 font-sans text-[0.8rem] text-text-main outline-none transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
               placeholder={t('navigation:search.placeholder')}
               aria-label={t('navigation:search.label')}
               autoComplete="off"

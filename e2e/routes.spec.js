@@ -35,6 +35,27 @@ test('unknown path is normalized to the dashboard', async ({ page }) => {
   await expect(page.locator('main')).toBeVisible();
 });
 
+test('desktop search input reserves space for its leading icon', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await blockExternalRequests(page);
+  await page.goto('/home', { waitUntil: 'domcontentloaded' });
+
+  const searchInput = page.locator('.header-search-input');
+  await expect(searchInput).toBeVisible();
+
+  const spacing = await searchInput.evaluate((input) => {
+    const icon = input.previousElementSibling;
+    const inputBox = input.getBoundingClientRect();
+    const iconBox = icon.getBoundingClientRect();
+    return {
+      iconRight: iconBox.right - inputBox.left,
+      paddingLeft: Number.parseFloat(getComputedStyle(input).paddingLeft),
+    };
+  });
+
+  expect(spacing.paddingLeft).toBeGreaterThanOrEqual(spacing.iconRight + 4);
+});
+
 test('mobile header, breadcrumb, and tool content do not overlap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await blockExternalRequests(page);

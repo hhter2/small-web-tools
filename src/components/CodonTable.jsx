@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
-import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
 import {
   isCodonDimmed as deriveCodonDimmed,
@@ -112,14 +111,6 @@ const AA_COLORS = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: get CSS class modifier for a codon
 // ─────────────────────────────────────────────────────────────────────────────
-function codonClass(codon) {
-  const data = CODON_MAP[codon];
-  if (!data) return '';
-  if (data.type === 'start') return 'codon-start';
-  if (data.type === 'stop')  return 'codon-stop';
-  return '';
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Ripple effect hook
 // ─────────────────────────────────────────────────────────────────────────────
@@ -819,7 +810,7 @@ function InfoPanel({
                   </button>
 
                   <div className="px-2.5 pt-1 text-[0.64rem] font-bold uppercase tracking-wider text-text-muted">{t('tool-codon.ui.standardGroups')}</div>
-                  {Object.entries(AA_GROUPS).map(([key, grp]) => (
+                  {Object.keys(AA_GROUPS).map((key) => (
                     <button
                       key={key}
                       type="button"
@@ -1161,7 +1152,7 @@ export default function CodonTable() {
         setTypedCodon('');
       }
     }
-  }, [selectedCodon]);
+  }, [selectedCodon, typedCodon.length]);
 
   // Persist custom groups
   useEffect(() => {
@@ -1211,12 +1202,6 @@ export default function CodonTable() {
     } else {
       setSelectedCodon(null);
       setHighlightedAA(null);
-    }
-  };
-
-  const handleCardClick = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
     }
   };
 

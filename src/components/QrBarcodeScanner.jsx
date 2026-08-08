@@ -42,7 +42,7 @@ const playBeep = () => {
     gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.12);
-  } catch (_) {
+  } catch {
     // Audio API not available — silently skip
   }
 };
@@ -104,7 +104,7 @@ function ResultWidget({ parsed }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_) {
+    } catch {
       // Stopping an already-closed scanner is harmless.
     }
   };
@@ -401,7 +401,7 @@ export default function QrBarcodeScanner() {
       const preferredId = backCamera ? backCamera.id : devices[0].id;
       setSelectedCamera(preferredId);
       startScanning(preferredId);
-    } catch (err) {
+    } catch {
       setCameraError(t('tool-qrbarcodescan.ui.cameraDenied'));
     }
   };
@@ -425,7 +425,7 @@ export default function QrBarcodeScanner() {
       scannerMountedRef.current = true;
       setIsScanning(true);
       setCameraError(null);
-    } catch (err) {
+    } catch {
       setCameraError(t('tool-qrbarcodescan.ui.cameraStartFailed'));
     }
   };
@@ -437,7 +437,7 @@ export default function QrBarcodeScanner() {
       await html5QrcodeRef.current.stop();
       scannerMountedRef.current = false;
       setIsScanning(false);
-    } catch (_) {
+    } catch {
       setIsScanning(false);
       scannerMountedRef.current = false;
     }
@@ -490,7 +490,7 @@ export default function QrBarcodeScanner() {
       const newResult = { text: result, format: 'Unknown' };
       setLastResult(newResult);
       setHistory(h => [newResult, ...h].slice(0, 10));
-    } catch (err) {
+    } catch {
       setFileError(t('tool-qrbarcodescan.ui.notFound'));
     } finally {
       setFileScanning(false);

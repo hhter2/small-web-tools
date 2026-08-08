@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import FieldInput from './ui/FieldInput';
 import JSZip from 'jszip';
 import {
   FILE_RESOURCE_POLICIES,

@@ -75,7 +75,7 @@ export function useMediaSeparator() {
       if (target?.videoURL) revokeObjectUrl(target.videoURL);
       return prev.filter((it) => it.id !== id);
     });
-  }, []);
+  }, [revokeObjectUrl]);
 
   const clearDone = useCallback(() => {
     setItems((prev) => {
@@ -87,7 +87,7 @@ export function useMediaSeparator() {
       });
       return prev.filter((it) => it.status !== STATUS.DONE);
     });
-  }, []);
+  }, [revokeObjectUrl]);
 
   const setAudioFormat = useCallback(
     (id, value) => updateItem(id, { audioFormat: value }),
@@ -311,7 +311,7 @@ export function useMediaSeparator() {
 async function safeDelete(ffmpeg, name) {
   try {
     await ffmpeg.deleteFile(name);
-  } catch (e) {
+  } catch {
     // File not found, safe to ignore
   }
 }

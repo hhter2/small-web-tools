@@ -141,7 +141,7 @@ export const stripDirectionLabels = (text) => text
   .replace(/^\s*[53]['’]\s*-\s*/, '')
   .replace(/\s*-\s*[53]['’]\s*$/, '');
 
-const getStrandGroups = (strandBases, direction, isRna) => {
+const getStrandGroups = (strandBases, direction, _isRna) => {
   const len = strandBases.length;
   const groups = [];
   const is5to3 = (direction === '5-3');

@@ -18,6 +18,6 @@ The UI floor is intentionally incremental. New modules are added explicitly, and
 
 ## ESLint warning policy
 
-The repository-wide inherited warning budget is 67, reduced from 68 in issue #50. `npm run lint:changed` compares the current branch with `origin/develop` and runs ESLint with zero warnings allowed for added or modified JavaScript files. This prevents new work from consuming the inherited budget while existing warnings are retired incrementally.
+The repository-wide warning budget is zero. `npm run lint` checks every JavaScript source and fails on the first non-zero warning total, which also prevents correctness-adjacent `react-hooks/exhaustive-deps` and `no-unused-vars` warnings from increasing. `npm run lint:changed` independently compares the current branch with `origin/develop` and applies the same zero-warning rule to added or modified JavaScript files.
 
 CI runs both gates through `npm run verify` on Node.js 22 and Node.js 24.

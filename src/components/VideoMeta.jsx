@@ -513,7 +513,7 @@ export default function VideoMeta() {
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -526,6 +526,7 @@ export default function VideoMeta() {
 
   const [audioURLs, setAudioURLs] = useState({}); // { 'fileId-trackIndex': blobUrl }
   const [loadingURLs, setLoadingURLs] = useState({}); // { 'fileId-trackIndex': boolean }
+  const activeFile = files.find(f => f.id === selectedId) || null;
 
   const audioURLsRef = useRef({});
   useEffect(() => {
@@ -598,7 +599,7 @@ export default function VideoMeta() {
     return () => {
       cancelled = true;
     };
-  }, [selectedId]);
+  }, [activeFile, createObjectUrl, selectedId]);
 
   const downloadAudioTrack = async (file, trackIndex, trackInfo) => {
     if (extractingTrack) return;
@@ -671,8 +672,6 @@ export default function VideoMeta() {
   };
 
   const ACCEPTED = '.mp4,.mov,.m4v,.f4v,.3gp,.3g2,.avi,.mkv,.webm,.wmv,.flv,.ts,.mts,.m2ts,.mxf,.log,.txt';
-  const activeFile = files.find(f => f.id === selectedId) || null;
-
   useEffect(() => {
     return () => {
       revokeAllObjectUrls();

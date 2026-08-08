@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import ToolHeader from './ui/ToolHeader';
-import FieldInput from './ui/FieldInput';
 
 const EMPTY_PASSWORD_ANALYSIS = {
   score: 0,
@@ -154,7 +153,7 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
   }, [checkPassword]);
 
   // Generate password with debug info
-  const handleGenerate = (
+  const handleGenerate = useCallback((
     currentLength = length,
     currentCommon = includeCommonSpecial,
     currentRare = includeRareSpecial
@@ -172,26 +171,18 @@ export default function PasswordGenerator({ initialTab = 'generate' }) {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [includeCommonSpecial, includeRareSpecial, length]);
 
   // Generate on mount and when options change
   useEffect(() => {
     handleGenerate(length, includeCommonSpecial, includeRareSpecial);
-  }, [length, includeCommonSpecial, includeRareSpecial]);
+  }, [handleGenerate, length, includeCommonSpecial, includeRareSpecial]);
 
   const handleLengthSliderChange = (e) => {
     const val = parseInt(e.target.value, 10);
     if (!isNaN(val)) {
       setLength(val);
     }
-  };
-
-  const handleLengthNumberChange = (e) => {
-    let val = parseInt(e.target.value, 10);
-    if (isNaN(val)) return;
-    if (val < 8) val = 8;
-    if (val > 128) val = 128;
-    setLength(val);
   };
 
   const handleCopy = () => {

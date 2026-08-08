@@ -165,7 +165,7 @@ export default function App() {
   const categoriesLocalized = useMemo(() => categories.map((category) => ({
     ...category,
     name: t(`navigation:categories.${category.nameKey}`),
-  })), [i18n.resolvedLanguage, t]);
+  })), [t]);
   const navItems = useMemo(() => getLocalizedToolRoutes(t)
     .filter((route) => route.navigationVisible)
     .map((route) => ({
@@ -173,7 +173,7 @@ export default function App() {
       name: route.title,
       desc: route.description,
       icon: TOOL_ICONS[route.iconKey],
-    })), [i18n.resolvedLanguage, t]);
+    })), [t]);
 
   useDocumentTitle({
     activeTool,

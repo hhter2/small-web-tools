@@ -23,7 +23,7 @@
     "platform:integration": "node scripts/check-rate-limit-integration.mjs",
     "version:check": "node scripts/check-version.mjs",
     "preview": "vite preview",
-    "lint": "eslint src functions workers test scripts e2e --max-warnings 67",
+    "lint": "eslint src functions workers test scripts e2e --max-warnings 0",
     "lint:changed": "node scripts/check-changed-lint.mjs",
     "typecheck": "npm run typecheck:baseline && npm run typecheck:domain && npm run typecheck:ui",
     "typecheck:baseline": "tsc --project jsconfig.json --noEmit",

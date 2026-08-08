@@ -134,7 +134,7 @@ keep exclusions minimal and documented in `jsconfig.ui.json`.
   formulas, font names, barcode names, and keyboard notation; keep it narrow.
 
 Example: add `feature.resetNotice` to both locale files, render it with
-'t('common:feature.resetNotice', { count })`, and test both locales. Verify visible
+`t('common:feature.resetNotice', { count })`, and test both locales. Verify visible
 text, placeholders, notifications, assistive text, and page titles without changing routes.
 
 Pull requests must state the translation impact and confirm bilingual desktop/mobile review.

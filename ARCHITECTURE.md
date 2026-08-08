@@ -71,7 +71,8 @@ small-web-tools/
 ├── index.html                Vite HTML shell and React mount point
 ├── config/
 │   ├── network-services.json Network-service policy source of truth
-│   └── ffmpeg-assets.json    Pinned FFmpeg asset sizes and SHA-256 values
+│   ├── ffmpeg-assets.json    Pinned FFmpeg asset sizes and SHA-256 values
+│   └── rateLimitPolicies.js  Canonical route, class, binding, limit, and period policies
 ├── scripts/
 │   ├── check-i18n.mjs         Locale-pair structure and interpolation checks
 │   ├── check-hardcoded-ui.mjs User-facing string audit
@@ -344,6 +345,10 @@ Local and data sources are ignored without hiding later remote fallbacks; candid
 are deduplicated by normalized absolute URL and face metadata.
 
 Production rate limits are enforced by the service-bound Worker in `workers/rate-limiter/`; the root `wrangler.jsonc` binds Pages Functions to it as `RATE_LIMITER_SERVICE`. Run that Worker separately during complete local integration testing. `npm run platform:integration` starts the Pages and Worker configurations with isolated local state, proves concurrent requests hit the configured platform limit, and proves the missing-service path fails closed. The in-process limiter is available only in explicit development mode and production fails closed when the binding is absent.
+`config/rateLimitPolicies.js` is the canonical route-policy source consumed by
+Pages helpers, the Worker, local integration, and configuration validation.
+Wrangler's platform-required numeric declarations are checked against it; unknown,
+orphaned, missing, or numerically mismatched bindings fail `platform:check`.
 The Pages-side deadline is attached to the service-binding `Request.signal`, so a
 timeout bounds the caller and propagates cancellation to the Worker runtime while
 still returning the same fail-closed 503 response.

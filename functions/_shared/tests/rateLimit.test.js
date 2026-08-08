@@ -30,7 +30,7 @@ describe('rate-limit service binding', () => {
     const allowed = await enforceRateLimit(context(async (request) => {
       serviceRequest = request;
       return Response.json({ allowed: true });
-    }), { name: 'iplookup', limit: 60, serviceTimeoutMs: 50 });
+    }), { name: 'iplookup', serviceTimeoutMs: 50 });
 
     expect(allowed).toBeNull();
     if (!serviceRequest) throw new Error('Service request was not observed.');
@@ -38,7 +38,7 @@ describe('rate-limit service binding', () => {
     expect(await serviceRequest.json()).toMatchObject({ route: 'iplookup' });
 
     const limited = await enforceRateLimit(context(async () => Response.json({ allowed: false })), {
-      name: 'iplookup', limit: 60, serviceTimeoutMs: 50,
+      name: 'iplookup', serviceTimeoutMs: 50,
     });
     expect(limited.status).toBe(429);
     expect(limited.headers.get('Retry-After')).toBe('60');
@@ -52,7 +52,7 @@ describe('rate-limit service binding', () => {
         observedAbort = true;
         resolve(Response.json({ allowed: true }));
       }, { once: true });
-    })), { name: 'extract-fonts', limit: 20, serviceTimeoutMs: 20 });
+    })), { name: 'extract-fonts', serviceTimeoutMs: 20 });
 
     expect(response.status).toBe(503);
     expect(observedAbort).toBe(true);
@@ -67,7 +67,7 @@ describe('rate-limit service binding', () => {
     ['malformed response', async () => Response.json({ allowed: 'yes' }), 'rate-limiter-malformed-response'],
   ])('fails closed with a distinct diagnostic for %s', async (_label, fetchImpl, diagnostic) => {
     const response = await enforceRateLimit(context(fetchImpl), {
-      name: 'exchange-rates', limit: 60, serviceTimeoutMs: 50,
+      name: 'exchange-rates', serviceTimeoutMs: 50,
     });
 
     expect(response.status).toBe(503);
@@ -80,7 +80,7 @@ describe('rate-limit service binding', () => {
     await enforceRateLimit(context(async (request) => {
       serviceRequest = request;
       return Response.json({ allowed: true });
-    }), { name: 'iplookup', limit: 60, serviceTimeoutMs: 20 });
+    }), { name: 'iplookup', serviceTimeoutMs: 20 });
 
     if (!serviceRequest) throw new Error('Service request was not observed.');
     await new Promise((resolve) => setTimeout(resolve, 30));

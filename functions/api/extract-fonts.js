@@ -320,7 +320,7 @@ export async function onRequestPost(context) {
     });
   }
 
-  const limited = await enforceRateLimit(context, { name: 'extract-fonts', limit: 20 });
+  const limited = await enforceRateLimit(context, { name: 'extract-fonts' });
   if (limited) return limited;
 
   let parsed;

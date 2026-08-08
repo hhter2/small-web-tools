@@ -68,7 +68,8 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 主要目錄：
 
 - config/：network-services.json 網路服務政策來源，以及 ffmpeg-assets.json 固定的
-  FFmpeg 資產大小與 SHA-256。
+  FFmpeg 資產大小與 SHA-256；rateLimitPolicies.js 是正式的 route、class、binding、
+  limit 與 period 政策。
 - .github/：Dependabot 設定與 GitHub Actions CI pipeline。
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
@@ -309,6 +310,9 @@ wrangler.jsonc 以 RATE_LIMITER_SERVICE 將 Pages Functions 綁定至它。完�
 另外啟動該 Worker。npm run platform:integration 會以隔離本機狀態啟動 Pages 與 Worker
 設定，證明並行請求受到設定的平台限制，也證明缺少服務時會安全失效。程序內 limiter
 只在明確的 development mode 可用；正式環境在缺少綁定時會安全失效。
+config/rateLimitPolicies.js 是 Pages helper、Worker、本機 integration 與設定驗證共同使用的
+正式 route-policy 來源。Wrangler 因平台需求保留的數值宣告會與它比對；未知、孤立、缺失
+或數值不符的 binding 都會讓 platform:check 失敗。
 Pages 端 deadline 會綁定至 service-binding 的 `Request.signal`，因此逾時會限制 caller
 工作並把取消傳遞至 Worker runtime，同時維持相同的故障關閉 503 回應。
 

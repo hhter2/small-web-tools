@@ -99,7 +99,7 @@ function response(body, status, cacheControl) {
 
 export function createExchangeRatesHandler({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(context) {
-    const limited = await enforceRateLimit(context, { name: 'exchange-rates', limit: 60 });
+    const limited = await enforceRateLimit(context, { name: 'exchange-rates' });
     if (limited) return limited;
 
     const timestamp = now();

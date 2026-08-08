@@ -1,4 +1,5 @@
 import { errorResponse } from './errorResponse';
+import { getRateLimitPolicy } from '../../config/rateLimitPolicies.js';
 
 const developmentBuckets = new Map();
 const WINDOW_MS = 60_000;
@@ -55,6 +56,10 @@ export async function enforceRateLimit(context, options) {
   const env = context.env || {};
   const developmentMode = env.RATE_LIMIT_DEVELOPMENT_MODE === 'true';
   const secret = env.RATE_LIMIT_HMAC_SECRET;
+  const policy = getRateLimitPolicy(options.name);
+  if (!policy) {
+    return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true, 'rate-limiter-unknown-route');
+  }
   if (!secret || secret.length < 32) {
     return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true);
   }
@@ -69,7 +74,7 @@ export async function enforceRateLimit(context, options) {
 
   if (!env.RATE_LIMITER_SERVICE?.fetch) {
     if (developmentMode) {
-      const allowed = developmentLimit(options.name, clientKey, options.limit, now);
+      const allowed = developmentLimit(policy.route, clientKey, policy.limit, now);
       return allowed
         ? null
         : limiterError(429, 'RATE_LIMITED', { 'Retry-After': '60' });
@@ -92,7 +97,7 @@ export async function enforceRateLimit(context, options) {
       new Request('https://rate-limiter.internal/limit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ route: options.name, clientKey }),
+        body: JSON.stringify({ route: policy.route, clientKey }),
         signal: controller.signal,
       }),
     );

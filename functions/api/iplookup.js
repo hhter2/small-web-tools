@@ -50,7 +50,7 @@ export async function onRequestGet(context) {
     });
   }
 
-  const limited = await enforceRateLimit(context, { name: 'iplookup', limit: 60 });
+  const limited = await enforceRateLimit(context, { name: 'iplookup' });
   if (limited) return limited;
 
   try {

@@ -164,6 +164,7 @@ DEPLOYED_BASE_URL=https://small-web-tools.pages.dev npm run test:e2e:deployed
 
 - [CONTRIBUTING.zh-TW.md](CONTRIBUTING.zh-TW.md) — 工程標準與本機執行說明。
 - [PRIVACY.zh-TW.md](PRIVACY.zh-TW.md) — 隱私權政策與網路服務揭露。
+- [SECURITY.md](SECURITY.md) — 支援版本與私密漏洞通報管道。
 - [TODO.md](TODO.md) — 目前待辦事項、已完成工作與專案更新流程（僅提供英文）。
 - [ARCHITECTURE.zh-TW.md](ARCHITECTURE.zh-TW.md) — 架構、路由清單、共用 UI 慣例與開發人員指南。
 

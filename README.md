@@ -194,6 +194,7 @@ is the canonical architecture and route reference.
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — engineering standards and local-runtime instructions.
 - [PRIVACY.md](PRIVACY.md) — privacy policy and network-service disclosure.
+- [SECURITY.md](SECURITY.md) — supported revisions and the private vulnerability-reporting path.
 - [`TODO.md`](TODO.md) — active backlog, completed work, and the project update process.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture, route inventory, shared UI conventions, and developer guidance.
 

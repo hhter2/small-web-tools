@@ -239,7 +239,6 @@ Prefer the shared primitives and existing design tokens. Add global CSS only for
 | `tool-home` | Dashboard | `HomeGrid.jsx` | Dashboard |
 | `tool-wc` | Word Counter | `WordCounter.jsx` | Text |
 | `tool-casing` | Casing Switcher | `CasingSwitcher.jsx` | Text |
-| `tool-typing` | Typing Speed Test | `TypingSpeedTest.jsx` | Text |
 | `tool-slash` | Slashes Converter | `SlashesConverter.jsx` | Developer |
 | `tool-ascii` | ASCII Converter | `AsciiConverter.jsx` | Developer |
 | `tool-unicode` | Unicode Converter | `UnicodeConverter.jsx` | Developer |
@@ -320,17 +319,14 @@ filename inference, contrast selection, and highlighting helpers live under
 `ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
 
 Pure document formatting/parsing helpers live under `src/components/DocMeta/lib/`.
-QR/barcode encoding rules, typing-template/metrics transformations, and codon
-input/filter/presentation rules live in their corresponding
+QR/barcode encoding rules and codon input/filter/presentation rules live in their corresponding
 `src/components/<Tool>/lib/` directories. Focused coverage is in
-`documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`,
-`typingTemplateDomain.test.js`, `typingMetricsDomain.test.js`, and
+`documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`, and
 `codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
 time-difference coverage is in `timeDomain.test.js`, Roman numeral coverage is
 in `romanDomain.test.js`, Phred conversion coverage is in `phredDomain.test.js`,
 sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`, and URL
-percent-encoding coverage is in `urlDomain.test.js`. The explicit typing-start
-flow is covered by `typingStart.test.jsx`; the converter-mode, folder-picker,
+percent-encoding coverage is in `urlDomain.test.js`. The converter-mode, folder-picker,
 Color Sync, and image-stripping guidance regressions are covered by
 `converterClipboard.test.jsx` and `enhancementUi.test.jsx`.
 
@@ -438,11 +434,6 @@ CJK characters use a character-based reading pace (500 characters per minute),
 while non-CJK text uses a word-based pace (200 words per minute); mixed content
 combines both estimates. `Intl.Segmenter` supplies grapheme and sentence
 boundaries when available, and `Intl.NumberFormat` formats the displayed result.
-
-Typing Speed Test fixtures remain language-neutral test content. Its correctness
-and WPM metrics operate on the supplied graphemes/keystrokes rather than silently
-assuming that the active UI locale is the content language. Locale changes only
-translate the surrounding controls, metrics, status, and history presentation.
 
 Password analysis continues to use the bundled English `zxcvbn` dictionary for
 pattern detection in this beta. The UI deliberately maps the numeric score to

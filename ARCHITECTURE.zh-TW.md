@@ -193,7 +193,6 @@ public/fonts/MANIFEST.zh-TW.md。應用程式不會自動要求 Google Fonts。
 | tool-home | 儀表板 | HomeGrid.jsx | 儀表板 |
 | tool-wc | 文字計數器 | WordCounter.jsx | 文字 |
 | tool-casing | 大小寫切換器 | CasingSwitcher.jsx | 文字 |
-| tool-typing | 打字速度測試 | TypingSpeedTest.jsx | 文字 |
 | tool-slash | 斜線轉換器 | SlashesConverter.jsx | 開發 |
 | tool-ascii | ASCII 轉換器 | AsciiConverter.jsx | 開發 |
 | tool-unicode | Unicode 轉換器 | UnicodeConverter.jsx | 開發 |
@@ -272,15 +271,13 @@ mediaSeparatorEngine.js 只會在需要時下載固定的 FFmpeg 0.12.6 JavaScri
 ImgMeta.jsx、DocMeta.jsx、AudioMeta.jsx 與 VideoMeta.jsx 在瀏覽器中解析使用者選取的
 檔案。它們支援工具專用的檢查、比較、匯出或中繼資料移除流程，不會將檔案送過此應用程式。
 
-純文件格式化／解析 helper 位於 src/components/DocMeta/lib/。QR／barcode 編碼規則、
-打字範本／指標轉換，以及 codon 輸入／篩選／呈現規則位於各自的
-src/components/&lt;Tool&gt;/lib/ 目錄。聚焦覆蓋率包含 documentMetadataDomain.test.js、
-qrBarcodeDomain.test.js、typingTemplateDomain.test.js、typingMetricsDomain.test.js 與
-codonDomain.test.js；DNA/RNA 複製格式位於 dnaCopy.test.js，時間差位於 timeDomain.test.js，
-羅馬數字位於 romanDomain.test.js，Phred 轉換位於 phredDomain.test.js，消毒 SVG 解析／
-匯出大小位於 svgDomain.test.js，URL 百分比編碼位於 urlDomain.test.js。明確的開始打字
-流程由 typingStart.test.jsx 覆蓋；轉換器模式、資料夾選擇器、Color Sync 與圖片剝離
-說明回歸由 converterClipboard.test.jsx 與 enhancementUi.test.jsx 覆蓋。
+純文件格式化／解析 helper 位於 src/components/DocMeta/lib/。QR／barcode 編碼規則與
+codon 輸入／篩選／呈現規則位於各自的 src/components/&lt;Tool&gt;/lib/ 目錄。聚焦覆蓋率
+包含 documentMetadataDomain.test.js、qrBarcodeDomain.test.js 與 codonDomain.test.js；
+DNA/RNA 複製格式位於 dnaCopy.test.js，時間差位於 timeDomain.test.js，羅馬數字位於
+romanDomain.test.js，Phred 轉換位於 phredDomain.test.js，消毒 SVG 解析／匯出大小位於
+svgDomain.test.js，URL 百分比編碼位於 urlDomain.test.js。轉換器模式、資料夾選擇器、
+Color Sync 與圖片剝離說明回歸由 converterClipboard.test.jsx 與 enhancementUi.test.jsx 覆蓋。
 
 ## API 與開發中介軟體
 
@@ -375,9 +372,6 @@ Color Converter 提供高對比的 Color Sync pressed toggle。
 會檢查每次輸入：CJK 字元以每分鐘 500 字估算，非 CJK 文字以每分鐘 200 字估算；混合
 內容會合併兩種估算。環境支援時使用 `Intl.Segmenter` 判定字素與句子邊界，並以
 `Intl.NumberFormat` 格式化顯示結果。
-
-打字速度測試的範本文字是與介面語系分離的測試內容。正確率與 WPM 依實際字素／按鍵
-計算，不會把目前介面語系默認為內容語言；切換語系只翻譯控制項、指標、狀態與歷史紀錄。
 
 此 beta 的密碼分析仍使用隨附的英文 `zxcvbn` 字典進行模式偵測。介面會依數值分數映射
 為在地化的標籤、通用回饋與破解時間區間，因此介面翻譯與分析字典彼此獨立。未來可加入

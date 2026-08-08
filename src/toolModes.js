@@ -70,7 +70,6 @@ const modeDefinitions = [
     toolIds: [
       'tool-wc',
       'tool-casing',
-      'tool-typing',
       'tool-markdown',
       'tool-code-preview',
       'tool-base',

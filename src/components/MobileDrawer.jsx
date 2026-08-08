@@ -75,7 +75,7 @@ export default function MobileDrawer({
         style={style}
         onMouseDown={onClose}
       />
-      <aside
+      <div
         ref={drawerRef}
         id="mobile-navigation-drawer"
         role="dialog"
@@ -97,7 +97,7 @@ export default function MobileDrawer({
           </svg>
         </button>
         {children}
-      </aside>
+      </div>
     </>
   );
 }

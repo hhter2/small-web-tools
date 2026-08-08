@@ -51,6 +51,11 @@ describe('Pages rate-limiter client', () => {
     expect(await enforceRateLimit({ request, env }, {
       name: 'extract-fonts', limit: 1, now: () => 1_800_000_000_000,
     })).toBeNull();
+    for (let requestNumber = 2; requestNumber <= 20; requestNumber += 1) {
+      expect(await enforceRateLimit({ request, env }, {
+        name: 'extract-fonts', limit: 1, now: () => 1_800_000_000_000,
+      })).toBeNull();
+    }
     const denied = await enforceRateLimit({ request, env }, {
       name: 'extract-fonts', limit: 1, now: () => 1_800_000_000_000,
     });

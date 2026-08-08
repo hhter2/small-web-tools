@@ -15,6 +15,13 @@ const UI_BASELINE = {
   statements: 20,
 };
 
+const SHELL_BASELINE = {
+  lines: 50,
+  functions: 50,
+  branches: 40,
+  statements: 50,
+};
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -32,6 +39,8 @@ export default defineConfig({
         'src/toolRegistry.js',
         'src/toolModes.js',
         'src/components/LanguageSwitcher.jsx',
+        'src/components/{AppFooter,AppHeader,DesktopCategoryNav,MobileDrawer}.jsx',
+        'src/hooks/{useAppRouting,useDocumentTitle,useShellPersistence}.js',
         'src/components/ui/{Button,Card,FieldInput,FullscreenPreview,ToolHeader}.jsx',
       ],
       thresholds: {
@@ -45,6 +54,8 @@ export default defineConfig({
         'src/toolRegistry.js': UI_BASELINE,
         'src/toolModes.js': UI_BASELINE,
         'src/components/LanguageSwitcher.jsx': UI_BASELINE,
+        'src/components/{AppFooter,AppHeader,DesktopCategoryNav,MobileDrawer}.jsx': SHELL_BASELINE,
+        'src/hooks/**': SHELL_BASELINE,
         'src/components/ui/**': UI_BASELINE,
       },
     },

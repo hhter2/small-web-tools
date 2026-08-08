@@ -307,8 +307,9 @@ export default function App() {
     <div className={SHOW_CHANNEL_ALERT ? 'has-banner' : ''}>
       {/* Warning Banner */}
       {SHOW_CHANNEL_ALERT && (
-        <div
+        <aside
           id="channel-alert-banner"
+          aria-label={t('navigation:banner.label')}
           className="fixed top-0 left-0 right-0 h-9 bg-warning-bg border-b border-warning-border text-warning-text flex items-center justify-center gap-2 text-[0.82rem] font-semibold z-[9999] px-4 box-border"
         >
           <svg
@@ -329,7 +330,7 @@ export default function App() {
           <span className="sm:hidden">
             {t('navigation:banner.mobile', { channel: APP_CHANNEL, version: APP_VERSION })}
           </span>
-        </div>
+        </aside>
       )}
 
       {/* App layout: flex row, offset below banner */}

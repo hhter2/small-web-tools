@@ -6,453 +6,286 @@
   <a href="ARCHITECTURE.zh-TW.md">繁體中文</a>
 </p>
 
-small-web-tools 是一個使用 React 18 與 Vite 的單頁應用程式，提供以瀏覽器為基礎的
-實用工具。本文件是維護目前應用程式的技術參考。路由、共用元件、API 或相依套件
-變更時，請同步更新本文件。
+`small-web-tools` 是一個以 React 18 與 Vite 建構的單頁應用程式，提供瀏覽器型工具。本文件是維護目前應用程式的技術參考；路由、共用元件、API 或相依套件變更時，請同步更新。
+
+專案維護英文與繁體中文成對的說明文件。繁體中文對照檔使用 `.zh-TW.md` 後綴；`TODO.md` 維持英文單一版本。文件化行為或結構變更時，兩種語言版本必須同步。
 
 ## 文件角色
 
-- README.md 是給網站使用者的簡短英文手冊；README.zh-TW.md 是繁體中文版本。
-- CONTRIBUTING.md 是貢獻標準與 AI 指引的英文來源；CONTRIBUTING.zh-TW.md 是繁中對照檔。
-- PRIVACY.md 與 PRIVACY.zh-TW.md 是成對的隱私權政策與資料流揭露。
-- TODO.md 是刻意維持英文單一版本的待辦事項、已完成工作紀錄與更新流程。
-- ARCHITECTURE.md 是英文架構與維護參考；本檔案是繁體中文對照檔。
-- `src/i18n/` 是兩個支援 UI 地區設定及 `common`、`navigation`、`tools`、`errors`
-  命名空間的來源。
-
-本專案維護成對的英文與繁體中文說明文件。英文檔名搭配 `.zh-TW.md` 結尾的繁中檔案；
-修改文件描述的行為或結構時，請同步維護兩個版本。只供 AI agent 使用的
-`.agents/AGENTS.md` 與 `TODO.md` 刻意維持英文單一版本。
+- `README.md` 是提供網站使用者閱讀的精簡英文手冊；`README.zh-TW.md` 是繁體中文翻譯。
+- `CONTRIBUTING.md` 是貢獻標準與 AI 指引的英文來源；`CONTRIBUTING.zh-TW.md` 是繁體中文對照檔。
+- `TODO.md` 是維護中的英文待辦、已完成工作紀錄與更新流程。
+- `ARCHITECTURE.md` 是英文架構與維護參考；`ARCHITECTURE.zh-TW.md` 是其繁體中文對照檔。
+- `PRIVACY.md` 與 `PRIVACY.zh-TW.md` 是成對的隱私權政策與資料流揭露。
+- `src/i18n/` 是兩個支援 UI 地區設定及其 `common`、`navigation`、`tools`、`errors` namespace 的來源。
 
 ## 快速資訊
 
-| 項目 | 內容 |
+| 項目 | 值 |
 | --- | --- |
-| 套件 | small-web-tools |
-| 版本 | 最新的版本格式 Git 標籤；沒有 Git 中繼資料的封存檔使用 VITE_APP_VERSION 作為 fallback |
-| UI 框架 | React 18 |
+| 套件 | `small-web-tools` |
+| 版本 | 最新符合版本格式的 Git tag；沒有 Git metadata 的封存建置使用 `VITE_APP_VERSION` fallback |
+| UI framework | React 18 |
 | 建置工具 | Vite 6 |
 | 測試 | Vitest 4 + React Testing Library + jsdom |
-| Lint 與型別 | ESLint 9、JSDoc，以及一般與 strict checkJs 專案 |
-| 樣式 | Tailwind CSS utilities，加上 src/styles.css 的設計 token 與元件專用規則 |
-| 路由 | 應用程式狀態同步至 /home 與 /simple URL 路徑，使用 React.lazy() 分割程式碼；不使用 React Router |
-| 伺服器函式 | functions/api/ 中相容 Cloudflare Pages 的 handler，以及 functions/_shared/ 中的共用 helper |
-
-建置時，scripts/resolve-version.mjs 會選取依版本排序的最新 Git 標籤。它先檢查
-本機標籤；部署建置沒有本機 tag ref 時，再查詢儲存庫的遠端標籤。沒有 Git 中繼資料
-的建置封存檔仍可使用 VITE_VERSION_REPOSITORY 或 package.json 中的儲存庫 URL；
-VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 release 佔位版本
-0.0.0-private，這個值不會用作應用程式版本，也不會因 release 更新。CI 會取出完整
-標籤歷史，而 verify 中的 npm run version:check 會確認顯示的版本由 Git 標籤或明確的
-封存檔 fallback 提供。
-
-## 儲存庫地圖
-
-主要說明文件與根目錄設定：
-
-- README.md／README.zh-TW.md：英文與繁中使用者手冊。
-- CONTRIBUTING.md／CONTRIBUTING.zh-TW.md：工程與本機執行指南。
-- PRIVACY.md／PRIVACY.zh-TW.md：隱私權政策與資料流揭露。
-- TODO.md：英文待辦事項、已完成工作與更新流程。
-- ARCHITECTURE.md／ARCHITECTURE.zh-TW.md：英文與繁中架構參考。
-- .agents/AGENTS.md：只供 AI agent 使用的英文規則；不建立繁中版本。
-- package.json：指令、相依套件與 pipeline 命令。
-- jsconfig.json：JavaScript 的 TypeScript checkJs 設定。
-- eslint.config.js：React、hooks 與 Cloudflare Functions 的 ESLint flat config。
-- vitest.config.js：Vitest runner 設定。
-- vite.config.js：Vite 6 設定、開發代理與 Rollup manualChunks。
-- tailwind.config.js：映射至 CSS custom properties 的 Tailwind token。
-- postcss.config.js：Tailwind 與 Autoprefixer 設定。
-- index.html：Vite HTML shell 與 React mount point。
-
-主要目錄：
-
-- config/：network-services.json 網路服務政策來源，以及 ffmpeg-assets.json 固定的
-  FFmpeg 資產大小與 SHA-256；rateLimitPolicies.js 是正式的 route、class、binding、
-  limit 與 period 政策。
-- .github/：Dependabot 設定與 GitHub Actions CI pipeline。
-- public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
-- scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
-- src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
-- src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
-- src/components/MobileDrawer.jsx：行動導覽的焦點、inert、關閉與捲動生命週期。
-- src/i18n/：地區設定解析、i18next 設定、持久化，以及成對的 en-US／zh-TW 命名空間資源。
-- functions/：共用無伺服器工具與 Cloudflare Pages API handler。
-- workers/：rate-limiter Worker。
-- test/：SSRF 與其他整合測試 fixture。
-- e2e/：Playwright 瀏覽器流程。
-
-dist/ 是 npm run build 產生的目錄，刻意被忽略。
-
-## 型別檢查邊界
-
-JavaScript 遷移使用三個明確的 TypeScript checkJs 專案。`jsconfig.json` 是廣泛的
-非 strict baseline；`jsconfig.domain.json` 保留既有的狹窄領域／共用 helper 邊界；
-`jsconfig.ui.json` 是漸進式共用 UI 邊界，啟用 `strictNullChecks`，初始涵蓋
-`LanguageSwitcher.jsx` 與其 i18n 相依項。CI 中的 `npm run typecheck` 會執行三個
-專案。新增排除必須維持最少並加以記錄；擴大 UI 邊界時必須在同一變更修正所有
-新揭露的錯誤。
-
-## 應用程式架構
-
-### 入口與 shell
-
-src/main.jsx 掛載 App 並匯入 src/styles.css。
-
-src/App.jsx 負責應用程式 shell：
-
-- src/toolRegistry.js 是唯一的路由中繼資料來源。側邊欄、桌面導覽、儀表板卡片、
-  active title、footer links、靜態 layout、lazy component 與路由測試都從此登錄表衍生。
-- 登錄表 aliases 保留舊書籤；tool-officemeta 會解析為 tool-docmeta。
-- categories 定義六個呈現群組：Text、Developer、Network、Media、Bioinfo 與 Utilities。
-- activeTool 從 /home[/&lt;audience&gt;]/&lt;tool-slug&gt; 或 /simple/&lt;tool-slug&gt; 初始化，並同步回路徑。
-- toolMode 從經驗證的 /home 或 /simple 路徑初始化。工作區路徑會留在 URL 中，
-  路徑導覽則改變工具。
-- theme 與 sidebarCollapsed 儲存在 localStorage。
-- renderActiveTool() 解析目前的登錄表項目並渲染其 lazy component。privacy 路由已登錄，
-  但不列入工具目錄。
-
-Shell 提供可回應式的桌面側邊欄、行動抽屜、頂端導覽、麵包屑、footer、搜尋、主題控制項
-與置中的工具工作區。
-
-src/components/MobileDrawer.jsx 負責窄螢幕抽屜邊界。關閉時會卸載抽屜；開啟時會移入並
-限制焦點、讓被遮蔽的 shell inert、鎖定 body 捲動，並支援 Escape、overlay、明確關閉
-與路由選取後關閉，最後將焦點還給開啟按鈕。
-
-`src/components/LanguageSwitcher.jsx` 由 `App.jsx` 直接渲染於行動與桌面 header。它是地區設定選項、選單狀態、鍵盤導覽與焦點復原的共用負責元件；Simple 工作區不渲染桌面控制項。
-
-### 國際化執行階段
-
-`src/i18n/index.js` 以 `react-i18next` 初始化 `i18next`，載入
-`src/i18n/locales/en-US/` 與 `src/i18n/locales/zh-TW/` 下成對的
-`common`、`navigation`、`tools`、`errors` 命名空間。English (`en-US`) 是預設與
-fallback，繁體中文 (`zh-TW`) 是第二個支援地區設定。
-
-初始地區設定按固定順序解析：有效的 `small-web-tools.locale` 儲存值優先，其次是
-瀏覽器偏好的語言，最後使用 `en-US`。`src/components/LanguageSwitcher.jsx` 呼叫
-`changeLocale()`，更新 `document.documentElement.lang`，並只儲存正規化後的支援地區設定；
-儲存失敗不會阻止記憶體中的切換。
-
-路由 ID、URL 路徑、工具 ID、檔案副檔名、協定名稱等互通性識別碼保持穩定。
-`toolRegistry.js` 將這些識別碼與標題、描述、tooltip、搜尋中繼資料分離；英文搜尋詞
-仍會作為 fallback。`sortLocalizedTools()` 使用目前地區設定的 `Intl.Collator`，工具則
-使用 `Intl` 以地區設定格式化讀者可見的數字、日期與時間。UI 地區設定不會翻譯使用者
-內容，也不會改變內容演算法。
-
-每次 UI 字串變更都必須同步兩棵地區設定資源樹。`npm run i18n:check` 會檢查 key
-對齊、重複 key、非空翻譯與 interpolation 對齊；`npm run i18n:audit` 會掃描 JSX
-尋找未審查的使用者可見字串。重點測試位於 `src/tests/i18n.test.js`、
-`src/tests/i18nValidation.test.js`、`src/tests/i18nHardcodedUi.test.js` 與
-`src/tests/wordCounterLocale.test.js`。
-
-### Audience 與 Simple 工作區
-
-src/toolModes.js 定義完整儀表板與五個使用者群組：一般使用者、開發人員、生物資訊
-研究人員、設計師與學生。獨立的 SIMPLE_WORKSPACE 定義八個高頻工具。應用程式層級的
-篩選會一致套用到儀表板卡片、側邊欄與搜尋；Simple 側邊欄只保留必要工具，但 Simple
-搜尋可以開啟任何已登錄工具。
-
-AudienceSwitcher.jsx 為完整首頁與五個使用者群組渲染分段控制項。HomeGrid.jsx 將它
-放在介紹旁，保留完整的分類儀表板，並渲染平面的使用者群組建議。SimpleHome.jsx
-在縮減後的 shell 中提供所有工具搜尋與八個精簡捷徑。路由使用
-/home[/&lt;audience&gt;][/&lt;tool-slug&gt;] 與 /simple[/&lt;tool-slug&gt;]；舊版 /home/simple
-位址會重新導向至 /simple。重點測試位於 toolModes.test.js、homeGrid.test.jsx、
-audienceSwitcher.test.jsx 與 simpleHome.test.jsx。
-
-### 共用工具頁面契約
-
-每個路由工具頁面都使用由 Image Metadata 建立的共用視覺契約：
-
-1. 使用 variant="tool" 的 Card 作為頁面容器。
-2. 頁面識別恰好渲染一個 ToolHeader 標題。
-3. 頁面層級描述不要放進 ToolHeader；輔助文字放在需要它的功能內。
-4. 保留共用桌面卡片間距（p-6、gap-4），並讓 styles.css 的行動 .tool-card 規則
-   處理窄螢幕。
-
-src/components/ui/AutoDetectConverter.jsx 為 Slashes、ASCII、Unicode 與 URL 轉換器
-實作此契約。Slashes 與 ASCII 只顯示自動方向偵測；Unicode 與 URL 在方向可能不明確時
-保留明確的 encode/decode 控制。
-
-### 樣式與主題
-
-src/styles.css 定義 --bg-app、--bg-card、--text-main、--accent 與 --border-color
-等 light／dark CSS custom properties。tailwind.config.js 將這些 token 暴露為 Tailwind
-色彩、陰影與字型 utilities。
-
-Inter、JetBrains Mono、Plus Jakarta Sans 與 TASA Orbiter 從 public/fonts/ 提供；版本、
-子集與 OFL 授權檔記錄於 public/fonts/MANIFEST.md 與
-public/fonts/MANIFEST.zh-TW.md。應用程式不會自動要求 Google Fonts。
-
-優先使用共用 primitives 與既有設計 token。只有真正共用的行為或元件專用樣式無法以
-既有 utilities 清楚表達時，才加入全域 CSS。
-
-## 路由清單
-
-| 路由 ID | 導覽標籤 | 元件 | 分類 |
-| --- | --- | --- | --- |
-| tool-home | 儀表板 | HomeGrid.jsx | 儀表板 |
-| tool-wc | 文字計數器 | WordCounter.jsx | 文字 |
-| tool-casing | 大小寫切換器 | CasingSwitcher.jsx | 文字 |
-| tool-typing | 打字速度測試 | TypingSpeedTest.jsx | 文字 |
-| tool-slash | 斜線轉換器 | SlashesConverter.jsx | 開發 |
-| tool-ascii | ASCII 轉換器 | AsciiConverter.jsx | 開發 |
-| tool-unicode | Unicode 轉換器 | UnicodeConverter.jsx | 開發 |
-| tool-url | URL 編碼與解碼器 | UrlEncoderDecoder.jsx | 開發 |
-| tool-markdown | Markdown 預覽器 | MarkdownPreviewer.jsx | 開發 |
-| tool-mermaid | Mermaid 轉換器 | MermaidConverter.jsx | 開發 |
-| tool-code-preview | VS Code 預覽器 | CodePreviewer.jsx | 開發 |
-| tool-fontextractor | 網站字型擷取器 | WebsiteFontExtractor.jsx | 開發 |
-| tool-base | 進位轉換器 | BaseConverter.jsx | 開發 |
-| tool-folder-analyzer | 資料夾分析器 | FolderAnalyzer.jsx | 開發 |
-| tool-iplookup | IP 查詢 | IpLookup.jsx | 網路 |
-| tool-speedtest | 網路速度測試 | NetworkSpeedTest.jsx | 網路 |
-| tool-color | 色彩轉換器 | ColorConverter.jsx | 媒體 |
-| tool-imgmeta | 圖片中繼資料 | ImgMeta.jsx | 媒體 |
-| tool-docmeta | 文件中繼資料 | DocMeta.jsx | 媒體 |
-| tool-audiometa | 音訊中繼資料 | AudioMeta.jsx | 媒體 |
-| tool-videometa | 影片中繼資料 | VideoMeta.jsx | 媒體 |
-| tool-mediasplit | 媒體分割器 | MediaSeparator.jsx | 媒體 |
-| tool-svg-png | SVG 轉 PNG | SvgToPngConverter.jsx | 媒體 |
-| tool-dna | DNA/RNA 轉換器 | DnaConverter.jsx | 生物資訊 |
-| tool-codon | 密碼子表 | CodonTable.jsx | 生物資訊 |
-| tool-phred | Phred 尺度轉換器 | PhredScaleConverter.jsx | 生物資訊 |
-| tool-barcode | 條碼產生器 | QrBarcodeGenerator.jsx（barcode 分頁） | 工具 |
-| tool-currency | 貨幣轉換器 | CurrencyCounter.jsx | 工具 |
-| tool-date | 日期與時間計算器 | DateCounter.jsx | 工具 |
-| tool-roman | 羅馬數字轉換器 | RomanNumeralConverter.jsx | 工具 |
-| tool-password | 密碼產生器 | PasswordGenerator.jsx（generate 分頁） | 工具 |
-| tool-pwstrength | 密碼強度 | PasswordGenerator.jsx（check 分頁） | 工具 |
-| tool-qrcode | QR Code 產生器 | QrBarcodeGenerator.jsx（qr 分頁） | 工具 |
-| tool-qrbarcodescan | QR Code 與條碼掃描器 | QrBarcodeScanner.jsx | 工具 |
-| tool-wheel | 隨機轉盤 | RandomWheel.jsx | 工具 |
-| privacy | 隱私權與網路服務 | PrivacyPolicy.jsx | 政策（不在工具目錄） |
-
-## 元件群組
-
-### 共用 UI：src/components/ui/
-
-| 檔案 | 角色 |
-| --- | --- |
-| Card.jsx | 工具頁面與儀表板卡片的共用容器。 |
-| ToolHeader.jsx | 路由工具唯一的頁面識別元件。 |
-| Button.jsx | 共用按鈕變體與尺寸。 |
-| FieldInput.jsx | 有標籤的 input 與 textarea helper。 |
-| AutoDetectConverter.jsx | 共用雙面板自動轉換介面。 |
-| ToggleSwitch.jsx、Spinner.jsx、ResultDisplay.jsx | 可重用控制項與回饋 UI。 |
-
-ExternalMapPreview.jsx 是 IP Lookup 與 Image Metadata 共用的 OpenStreetMap 同意邊界。
-它在本機渲染座標文字，只有 osm 同意啟用時才建立 iframe，撤銷或重設後立即移除 iframe。
-
-### Markdown 預覽器
-
-MarkdownPreviewer.jsx 提供瀏覽器本機編輯器、.md／.markdown 上傳、即時預覽、格式化
-helper 與 Markdown 下載。其領域模組會將常見區塊與行內語法解析為安全的 React token；
-不會渲染 raw HTML 與外部圖片，並丟棄不安全的 URL scheme。來源行中繼資料讓可獨立捲動
-的編輯器與預覽區能雙向對齊，不會折疊 fenced-code 內容。重點解析器與互動測試位於
-markdownDomain.test.js 與 markdownPreviewer.test.jsx。
-
-### VS Code 預覽器
-
-CodePreviewer.jsx 提供單一瀏覽器本機、VS Code 風格的編輯表面，醒目顯示區與文字輸入
-位於同一視窗。它支援 26 種可選語言模式（包含 Bash／Shell）、本機檔案輸入、隨選
-外觀對話框（System、Light、Dark）、accent／背景／前景／程式碼字型控制、行號、來源
-檔案下載、剪貼簿複製，以及不執行程式或上傳伺服器的 lazy PNG 匯出。語言登錄表、檔名
-推斷、對比選擇與醒目顯示 helper 位於 CodePreviewer/lib/；重點領域與互動測試位於
-codePreviewDomain.test.js 與 codePreviewer.test.jsx。
-
-### 媒體分割器
-
-MediaSeparator.jsx 是頁面元件；useMediaSeparator.js 管理佇列狀態與動作。
-mediaSeparatorEngine.js 只會在需要時下載固定的 FFmpeg 0.12.6 JavaScript 與 WebAssembly
-資產，依 config/ffmpeg-assets.json 的位元組長度與 SHA-256 驗證後，再透過 Blob URL 載入。
-佇列項目、波形與格式選擇元件保持 UI 模組化。
-
-### 檔案中繼資料工具
-
-ImgMeta.jsx、DocMeta.jsx、AudioMeta.jsx 與 VideoMeta.jsx 在瀏覽器中解析使用者選取的
-檔案。它們支援工具專用的檢查、比較、匯出或中繼資料移除流程，不會將檔案送過此應用程式。
-
-純文件格式化／解析 helper 位於 src/components/DocMeta/lib/。QR／barcode 編碼規則、
-打字範本／指標轉換，以及 codon 輸入／篩選／呈現規則位於各自的
-src/components/&lt;Tool&gt;/lib/ 目錄。聚焦覆蓋率包含 documentMetadataDomain.test.js、
-qrBarcodeDomain.test.js、typingTemplateDomain.test.js、typingMetricsDomain.test.js 與
-codonDomain.test.js；DNA/RNA 複製格式位於 dnaCopy.test.js，時間差位於 timeDomain.test.js，
-羅馬數字位於 romanDomain.test.js，Phred 轉換位於 phredDomain.test.js，消毒 SVG 解析／
-匯出大小位於 svgDomain.test.js，URL 百分比編碼位於 urlDomain.test.js。明確的開始打字
-流程由 typingStart.test.jsx 覆蓋；轉換器模式、資料夾選擇器、Color Sync 與圖片剝離
-說明回歸由 converterClipboard.test.jsx 與 enhancementUi.test.jsx 覆蓋。
-
-## API 與開發中介軟體
-
-相容 Cloudflare Pages 的 handler 位於 functions/api/：
-
-| 端點 | 檔案 | 用途 |
-| --- | --- | --- |
-| GET /api/iplookup?ip=&lt;address&gt; | iplookup.js | 查詢備援 IP 地理位置供應商並正規化回應。 |
-| POST /api/extract-fonts | extract-fonts.js | 僅同源、受速率限制地掃描有大小上限的公開 HTML／CSS；回傳宣告中繼資料與截斷資訊，不抓取字型檔案。 |
-| GET /api/exchange-rates | exchange-rates.js | 在瀏覽器取得同意後抓取並正規化即時 USD 匯率。 |
-
-指定的 *.test.js 測試位於 functions/api/tests/。vitest.config.js 將
-functions/api/** 納入覆蓋率門檻，與共用 server 與 client library 使用相同門檻。
-
-functions/_shared/requestPolicy.js 管理 Font Extractor 的 4 KiB 請求上限與聚合工作
-限制（HTML／CSS／總位元組、樣式表數量、import 深度、face 數量、並行數與 deadline）。
-functions/_shared/fontExtractionCapability.js 會在短期 runtime 證據未符合 Cloudflare
-compatibility date、fetch 實作版本與必要情境集合時，讓正式環境擷取功能故障關閉。
-字型擷取會把 HTML `rel` 視為不分大小寫的 token 清單，並依宣告順序回傳每個
-font-face source list 中所有遠端 `url()` 候選。`local()` 與 data source 會被略過，
-但不會遮蔽後續遠端 fallback；候選會依正規化絕對 URL 與 face metadata 去重。
-vite.config.js 只為 IP lookup（/api/iplookup）提供本機 Vite 代理。測試其他 Function
-時使用 Cloudflare Pages 本機執行環境。
-
-正式環境 rate limit 由 workers/rate-limiter/ 中的 service-bound Worker 執行；根目錄
-wrangler.jsonc 以 RATE_LIMITER_SERVICE 將 Pages Functions 綁定至它。完整本機整合測試時，
-另外啟動該 Worker。npm run platform:integration 會以隔離本機狀態啟動 Pages 與 Worker
-設定，證明並行請求受到設定的平台限制，也證明缺少服務時會安全失效。程序內 limiter
-只在明確的 development mode 可用；正式環境在缺少綁定時會安全失效。
-config/rateLimitPolicies.js 是 Pages helper、Worker、本機 integration 與設定驗證共同使用的
-正式 route-policy 來源。Wrangler 因平台需求保留的數值宣告會與它比對；未知、孤立、缺失
-或數值不符的 binding 都會讓 platform:check 失敗。
-Pages 端 deadline 會綁定至 service-binding 的 `Request.signal`，因此逾時會限制 caller
-工作並把取消傳遞至 Worker runtime，同時維持相同的故障關閉 503 回應。
-
-test/integration/ssrf-worker/ 與 test/integration/ssrf-target-worker/ 是針對對外抓取
-邊界的隔離 Cloudflare runtime fixture。只有預期進行臨時 Cloudflare 部署時才執行
-npm run test:ssrf-runtime；它使用未認領、會自動到期的預覽帳戶，不會輸出 token 或認領 URL。
-成功輸出包含綁定 compatibility date 與 fetch 實作版本、有效期 30 天的機器可讀 gate
-metadata；缺失、不符、不完整或過期時，正式環境擷取功能維持停用。
-測試工具的英文與繁中說明分別位於該目錄的 README.md 與 README.zh-TW.md。
-
-### 本機完成與延後的 Cloudflare 工作
-
-C06–C16 儲存庫與本機執行環境的補救範圍已於 2026-07-26 接受為完成。正式部署、
-Cloudflare 即時 SSRF 證據與分階段 HSTS 觀察是擁有者延後的營運工作，不是完成本機
-開發的前置條件。若之後回報 Cloudflare 開發或部署錯誤，依情況使用
-npm run platform:check、npm run platform:integration 與選擇性執行的
-npm run test:ssrf-runtime 證據流程；不要因為存在這些指令就推論已獲得部署許可。
-
-Wrangler 設定檔（wrangler.jsonc、workers/rate-limiter/wrangler.jsonc 與整合 fixture
-設定）受版本控制，但本機 Wrangler 狀態與憑證不受版本控制：
-
-- .wrangler/、.wrangler-*/ 與 .tmp-*/ 是可丟棄的執行環境／記錄／狀態目錄，且已忽略。
-- .dev.vars 與 .dev.vars.* 已忽略，因為可能包含秘密；.dev.vars.example 仍受追蹤，
-  作為安全範本。
-- dist/、coverage/、.playwright-cli/、test-results/ 與 playwright-report/ 是本機產生
-  且已忽略的檔案。
-- code_reviews/ 包含被忽略的本機審查工作紀錄。它們是有日期的歷史快照，不受版本控制，
-  也不是目前狀態或正式指引。
-
-### 儲存庫衛生
-
-需要建置、測試、操作或維護的根目錄檔案與目錄都保留在版本控制中：
-
-- src/、public/、functions/、workers/、config/、scripts/、test/ 與 e2e/ 包含應用程式
-  程式碼、執行資產、政策、自動化或驗證 fixture。
-- package.json、package-lock.json、.nvmrc、index.html，以及 ESLint、JavaScript、Knip、
-  Playwright、PostCSS、Tailwind、Vite、Vitest 與 Wrangler 設定檔定義可重現的本機開發
-  與驗證。
-- .github/ 包含 CI 與相依套件維護設定；.agents/AGENTS.md 包含儲存庫範圍的開發指引。
-- README、CONTRIBUTING、ARCHITECTURE 與 PRIVACY 的英文／繁中說明檔，以及 TODO.md、
-  LICENSE，是維護中的專案文件或法律資料。
-- .dev.vars.example 是安全、非秘密的本機執行環境文件；實際 .dev.vars* 仍維持忽略。
-
-編輯器狀態、相依套件安裝、產生輸出、測試報告、本機 Cloudflare 狀態、私人環境檔案、
-外來暫存資料與審查產物只存在本機工作區，並由 .gitignore 覆蓋。
-
-Folder Analyzer 使用瀏覽器資料夾選擇器，絕不接受任意本機路徑。掃描後可以重新開啟
-重設的選擇器加入另一個資料夾，包括先前已選的路徑，不會清除目前分析。
-
-Image Metadata 不重新編碼就移除 JPEG 中繼資料。PNG、WebP 與其他瀏覽器可解碼格式會
-透過瀏覽器本機的隱私安全重新編碼移除中繼資料；在支援時保留 PNG／WebP 輸出，其他
-解碼格式則 fallback 至 PNG。Canon CR3 只提供檢查，因為瀏覽器無法安全重建其 RAW
-影像資料。
-
-Color Converter 提供高對比的 Color Sync pressed toggle。
-
-## 地區設定相關行為
-
-所選的介面語系只控制標籤與提供給讀者的格式，不會推定使用者內容的語言。字數統計器
-會檢查每次輸入：CJK 字元以每分鐘 500 字估算，非 CJK 文字以每分鐘 200 字估算；混合
-內容會合併兩種估算。環境支援時使用 `Intl.Segmenter` 判定字素與句子邊界，並以
-`Intl.NumberFormat` 格式化顯示結果。
-
-打字速度測試的範本文字是與介面語系分離的測試內容。正確率與 WPM 依實際字素／按鍵
-計算，不會把目前介面語系默認為內容語言；切換語系只翻譯控制項、指標、狀態與歷史紀錄。
-
-此 beta 的密碼分析仍使用隨附的英文 `zxcvbn` 字典進行模式偵測。介面會依數值分數映射
-為在地化的標籤、通用回饋與破解時間區間，因此介面翻譯與分析字典彼此獨立。未來可加入
-特定語言字典以改善辨識，而不需改變介面契約。編碼器、檢查碼、密碼子查詢、媒體解析與
-密碼學隨機抽選等技術演算法維持語言中立；提供給讀者的數字、日期、單位與複數訊息則使用
-平台 `Intl` API 或 i18next 插值。
-
-## 網路服務政策
-
-config/network-services.json 是外部供應商、網域、用途、觸發條件、傳送資料、同意模式、
-替代方案與政策連結的機器可讀來源。src/lib/thirdPartyServices.js、同意管理器與正式的
-/home/privacy 路由都使用這份清單。舊版 hash 位址只為向後相容的重新導向而接受。
-verify 中的 scripts/check-external-hosts.mjs 會在正式來源主機名稱未宣告時失敗。
-
-## 相依套件
-
-| 套件 | 用途 |
-| --- | --- |
-| react、react-dom | React 渲染。 |
-| @vitejs/plugin-react、vite | 開發伺服器與正式建置。 |
-| i18next、react-i18next | 同步地區設定資源、React 翻譯 hooks、fallback 與語言切換。 |
-| vitest、@vitest/coverage-v8 | 單元／整合 runner 與覆蓋率門檻。 |
-| eslint、React lint plugins | 靜態分析規則與不增加的警告預算。 |
-| wrangler | 固定的 Cloudflare Pages／Worker 設定驗證與本機整合執行環境。 |
-| tailwindcss、postcss、autoprefixer | Utility CSS 建置 pipeline。 |
-| exifreader | 圖片中繼資料解析。 |
-| jszip | 通過 archive-limit preflight 後的 Office 文件中繼資料解析與封存處理。 |
-| html5-qrcode | 相機與檔案式 QR／barcode 掃描。 |
-| qrcode、jsbarcode | QR 與 barcode 產生。 |
-| highlight.js | Code Live Preview 工具的瀏覽器本機語法醒目顯示。 |
-| html-to-image | 樣式化程式碼預覽的 lazy 瀏覽器本機 PNG 匯出。 |
-| @ffmpeg/ffmpeg | 使用完整性驗證遠端 core 資產的用戶端媒體分割。 |
-| @zxcvbn-ts/core 與 language packages | 只在密碼路由載入、具有模式辨識的密碼強度分析。 |
-| ignore | Folder Analyzer 的相容標準 .gitignore 比對。 |
-| ipaddr.js | 標準 IPv4／IPv6 解析與公開位址驗證。 |
-
-## 本機開發
-
-```bash
-npm install --global npm@10.9.2
-npm ci
-npm run dev
-npm run build
-npm run i18n:check
-npm run i18n:audit
-npm run verify
-npm run test:e2e
-npm run docs:check
-npm run preview
+| Lint 與型別 | ESLint 9、JSDoc，加上一般與 strict checkJs 專案 |
+| 樣式 | Tailwind CSS utilities 搭配 `src/styles.css` design tokens 與元件專用規則 |
+| 路由 | 應用程式內狀態同步至 `/home` 與 `/simple` URL path，搭配 `React.lazy()` code splitting；未使用 React Router |
+| 伺服器函式 | `functions/api/` 中的 Cloudflare Pages 相容 handlers，以及 `functions/_shared/` 共用 helpers |
+
+建置時，`scripts/resolve-version.mjs` 會選出依版本排序後最新的 Git tag。它先檢查本機 tags；若部署建置沒有本機 tag refs，再查詢 repository remote tags。沒有 Git metadata 的封存建置仍可使用 `VITE_VERSION_REPOSITORY` 或 `package.json` 中的 repository URL；`VITE_APP_VERSION` 是最後的明確 fallback。npm manifest 使用固定的非 release placeholder `0.0.0-private`，不會顯示為應用程式版本，也不會在 release 時更新。CI 會 checkout 完整 tag history，而 `verify` 內的 `npm run version:check` 會確認顯示版本來自 Git tag 或明確的 archive fallback。
+
+## Repository map
+
+維護中的文件配對為 README.md/README.zh-TW.md、CONTRIBUTING.md/CONTRIBUTING.zh-TW.md、ARCHITECTURE.md/ARCHITECTURE.zh-TW.md，以及 PRIVACY.md/PRIVACY.zh-TW.md。TODO.md 刻意維持英文單一版本。其他說明文件包括 public/fonts/MANIFEST.md 與其繁體中文對照檔、兩份 SSRF harness README，以及 `.agents/` 中僅英文的 AI agent 指示。
+
+```text
+small-web-tools/
+├── README.md                 英文使用者網站手冊
+├── README.zh-TW.md           繁體中文使用者網站手冊
+├── CONTRIBUTING.md           英文工程與本機執行指南
+├── CONTRIBUTING.zh-TW.md     繁體中文工程指南
+├── PRIVACY.md                英文隱私權政策與資料流揭露
+├── PRIVACY.zh-TW.md          繁體中文隱私權政策
+├── TODO.md                   待辦、已完成工作與更新流程
+├── ARCHITECTURE.md           架構與維護參考
+├── ARCHITECTURE.zh-TW.md     繁體中文架構參考
+├── package.json              scripts、dependencies 與 pipeline commands
+├── jsconfig.json             JavaScript 的 TypeScript checkJs 設定
+├── eslint.config.js          React、hooks 與 Cloudflare functions 的 ESLint flat config
+├── vitest.config.js          Vitest runner 設定
+├── vite.config.js            Vite 6、dev proxy 與 Rollup manualChunks 設定
+├── tailwind.config.js        映射 CSS custom properties 的 Tailwind tokens
+├── postcss.config.js         Tailwind 與 Autoprefixer 設定
+├── index.html                Vite HTML shell 與 React mount point
+├── config/
+│   ├── network-services.json 網路服務政策來源
+│   ├── ffmpeg-assets.json    固定 FFmpeg asset size 與 SHA-256
+│   └── rateLimitPolicies.js  正式 route、class、binding、limit 與 period 政策
+├── scripts/
+│   ├── check-i18n.mjs         locale pair 結構與 interpolation 檢查
+│   ├── check-hardcoded-ui.mjs 使用者可見字串稽核
+│   └── check-doc-consistency.mjs 文件／連結一致性檢查
+├── .github/
+│   ├── dependabot.yml        每週 dependency 更新設定
+│   └── workflows/ci.yml      GitHub Actions CI pipeline
+├── public/
+│   ├── _headers              Cloudflare Pages security response headers
+│   ├── fonts/                自託管 WOFF2 UI 字型、授權與 manifest
+│   └── favicon.svg           靜態網站 icon
+├── src/
+│   ├── main.jsx              React mount 與全域 stylesheet import
+│   ├── App.jsx               application shell composition 與 registry renderer
+│   ├── toolRouteMetadata.js  canonical routes、aliases、metadata 與 layout flags
+│   ├── toolRegistry.js       將 lazy component loaders 接到 canonical route metadata
+│   ├── toolModes.js          audience／Simple workspace profiles、filtering 與 URL helpers
+│   ├── toolIcons.jsx         依 registry icon key 呈現 route icons
+│   ├── styles.css            theme tokens、全域規則、responsive 與 component styling
+│   ├── i18n/
+│   │   ├── index.js           locale resolution、i18next setup、persistence 與 document language
+│   │   └── locales/           成對 en-US 與 zh-TW namespace JSON resources
+│   ├── lib/                  純 utility helpers（passwordStrength、resourceLimits、thirdPartyServices）
+│   ├── hooks/                routing、persistence 與 document-title shell effects
+│   ├── tests/                Vitest unit test suites 與 setup
+│   └── components/
+│       ├── ui/               共用 Card、Button、FieldInput、ToolHeader 與相關 primitives
+│       ├── HomeGrid.jsx      完整與 audience dashboard tool grid
+│       ├── SimpleHome.jsx    search-first essential-tool launcher
+│       ├── LanguageSwitcher.jsx 共用 responsive locale menu 與 focus lifecycle
+│       ├── AppHeader.jsx     desktop brand、category navigation、search、locale 與 theme controls
+│       ├── AppFooter.jsx     registry-driven footer navigation 與 project actions
+│       ├── DesktopCategoryNav.jsx 由 registry 衍生的 pointer shortcut navigation
+│       ├── MobileDrawer.jsx  mobile navigation focus、inert、dismissal 與 scroll lifecycle
+│       ├── MarkdownPreviewer/ Markdown parsing 與 validation domain logic
+│       ├── *.jsx             個別工具元件
+│       ├── useMediaSeparator.js
+│       └── mediaSeparatorEngine.js
+└── functions/
+    ├── _shared/              共用 serverless utilities（safeExternalFetch、requestPolicy）
+    └── api/
+        ├── *.js              Cloudflare Pages API handlers
+        └── tests/            專用 API handler unit tests
 ```
 
-支援 Node.js 22 與 Node.js 24。使用 package.json 的 packageManager 欄位固定的
-npm@10.9.2；CI 會安裝並驗證該精確版本。npm run verify 是基本門檻：Git 標籤版本解析、
-不增加的 ESLint 警告預算、一般與 strict checkJs、覆蓋率門檻、正式建置、套件大小、
-靜態標頭政策、外部主機清單、Cloudflare 拓撲與文件一致性。CI 另外執行相依套件檢查、
-Playwright 流程與 npm audit。
+`dist/` 由 `npm run build` 產生並刻意忽略。
 
-## 新增或修改工具
+`functions/_shared/responseHeaders.js` 是 Pages Functions 與靜態 `_headers` policy 的可執行 response baseline。`scripts/check-headers.mjs` 會拒絕 drift 並驗證 `config/csp-exceptions.json`。自訂網域檢查使用 `PRODUCTION_HOST` 與配套 production-hardening runbook。
 
-1. 在 src/components/ 下建立或更新元件。
-2. 在 src/toolRegistry.js 加入或修改唯一的登錄表項目。
-3. 遵循共用 Card 加單一 ToolHeader 的 layout 契約。
-4. 重用既有 UI primitives 與 theme tokens。
-5. 只有瀏覽器端不足時才加入 API handler；若本機開發需要該端點，在 vite.config.js
-   中同步加入。
-6. 加入或更新相符的 `en-US` 與 `zh-TW` 命名空間鍵，包括標籤、placeholder、錯誤、
-   通知與輔助文字；路由 ID 與技術識別碼保持穩定。
-7. 更新路由清單、本文件受影響的段落，以及英文架構指南的繁中對照檔。
-8. 建置專案，並在兩個支援的地區設定下，以桌面與行動寬度驗證變更後的路由。
+## Type-checking boundaries
 
-## 文件維護
+JavaScript migration 使用三個明確的 TypeScript checkJs 專案。`jsconfig.json` 是廣泛的 non-strict baseline；`jsconfig.domain.json` 保留既有狹義 domain／shared-helper boundary；`jsconfig.ui.json` 是漸進式 shared-UI boundary，對 `LanguageSwitcher`、desktop header/category/footer components、`MobileDrawer`、routing/title/persistence hooks 與其 pure route/mode dependencies 啟用 `strictNullChecks`。CI 中的 `npm run typecheck` 會執行三個專案。新增排除必須維持最少且有文件說明；擴大 UI boundary 時，必須在同一變更修正所有新暴露的錯誤。
 
-使用者行為變更時，更新 README.md 與 README.zh-TW.md 中相應的內容。實作結構變更時，
-更新 ARCHITECTURE.md 與本檔案。工程或資料流政策變更時，同步更新 CONTRIBUTING 與
-PRIVACY 的英文／繁中對照檔。地區設定變更還要同步兩棵資源樹，並執行
-`i18n:check`、`i18n:audit` 與 `docs:check`。TODO.md 維持英文單一版本；依照
-TODO.md 中的驗證與提交流程記錄工作。若工作由 AI agent 建立 GitHub Issue 或 Pull
-Request 追蹤，也要以 GitHub 紀錄作為補充，不要假設所有變更都會出現在 TODO.md。
+## Application architecture
+
+### Entry 與 shell
+
+`src/main.jsx` mount `<App />` 並 import `src/styles.css`。
+
+`src/App.jsx` 組合 application shell 與 registry renderer：
+
+- `src/toolRouteMetadata.js` 是唯一 route metadata 來源。Sidebar、desktop navigation、dashboard cards、active titles、footer links、static layouts、lazy components 與 route tests 都由此衍生；`src/toolRegistry.js` 只負責把 metadata 接到 lazy component loaders。
+- Registry alias 保留舊書籤；`tool-officemeta` 會解析成 `tool-docmeta`。
+- `categories` 定義六個呈現群組：Text、Developer、Network、Media、Bioinfo、Utilities。
+- `useAppRouting` 從 `/home[/<audience>]/<tool-slug>` 或 `/simple/<tool-slug>` 初始化 `activeTool`，並把 navigation 與 browser history 同步至 path。
+- `useAppRouting` 從經驗證的 `/home` 或 `/simple` path 初始化 `toolMode`。工具切換時 workspace path 仍保留在 URL。
+- `useShellPersistence` 負責 active-tool session state，以及 theme 與 sidebar persistence；`useDocumentTitle` 獨立負責 title 更新，不依賴 storage 是否可用。
+- `renderActiveTool()` 解析目前 registry entry 並 render lazy component。`privacy` route 有註冊，但不出現在 tool catalog。
+
+Shell 提供 responsive desktop sidebar、mobile drawer、top navigation、breadcrumbs、footer、search、theme control 與置中的 tool stage。`AppHeader`、`DesktopCategoryNav` 與 `AppFooter` 負責 desktop header/footer presentation，而 `App.jsx` 傳入由 registry 衍生的資料與 navigation callbacks。
+
+`src/components/MobileDrawer.jsx` 負責窄螢幕 drawer boundary。關閉時 drawer 會 unmount；開啟時會移動並限制焦點、讓被遮蔽 shell inert、鎖定 body scrolling，支援 Escape、overlay、explicit-close 與 route dismissal，之後把 focus 還原給 opener。
+
+`src/components/LanguageSwitcher.jsx` 由 `App.jsx` 在 mobile header render，並由 `AppHeader.jsx` 在 desktop header render。它是 locale options、menu state、keyboard navigation 與 focus restoration 的共用 owner；Simple workspace 會省略 desktop control。
+
+### Internationalization runtime
+
+`src/i18n/index.js` 以 `react-i18next` adapter 初始化 `i18next`，並使用 `src/i18n/locales/en-US/` 與 `src/i18n/locales/zh-TW/` 下四個成對 namespace：`common`、`navigation`、`tools`、`errors`。英文（`en-US`）是預設與 fallback locale；繁體中文（`zh-TW`）是第二個支援 locale。
+
+初始 locale resolution 是 deterministic：有效的已持久化 `small-web-tools.locale` 優先，其次為 browser preferred languages，最後是 English。`src/components/LanguageSwitcher.jsx` 呼叫 `changeLocale()`、更新 `document.documentElement.lang`，且只持久化 normalized supported locale。Storage failure 不會阻止 in-memory language change。
+
+Route ID、URL path、tool ID、file extension、protocol name 與其他 interoperability-sensitive identifiers 維持穩定。`toolRegistry.js` 將這些 identifier 與在地化 title、description、tooltip、search metadata 分離；英文搜尋詞仍可作為 fallback aliases。`sortLocalizedTools()` 使用目前 locale 的 `Intl.Collator`；工具使用 locale-aware `Intl` formatting 顯示數字、日期與時間。使用者內容與內容演算法不會依 UI locale 翻譯。
+
+每次 UI string 變更都必須同時更新兩棵 locale resource tree。`npm run i18n:check` 檢查 key parity、duplicate keys、non-empty values 與 interpolation parity；`npm run i18n:audit` 掃描 JSX 是否有未審查的 user-facing literals。專用 runtime/resource tests 位於 `src/tests/i18n.test.js`、`src/tests/i18nValidation.test.js`、`src/tests/i18nHardcodedUi.test.js` 與 `src/tests/wordCounterLocale.test.js`。
+
+### Audience 與 Simple workspaces
+
+`src/toolModes.js` 定義完整 dashboard 與五個 audience profiles：一般使用者、開發人員、生物資訊研究人員、設計師與學生。獨立 `SIMPLE_WORKSPACE` 定義八個高頻工具。App-level filtering 會一致套用 audience profile 到 dashboard cards、sidebar 與 search；Simple sidebar 只保留 essentials，但 Simple search 可開啟任何已註冊工具。
+
+`AudienceSwitcher.jsx` 呈現首頁的 segmented control，包含完整首頁與五個 audience profiles。`HomeGrid.jsx` 將它放在 introduction 旁，保留完整 categorized dashboard，並呈現 flat audience recommendations。`SimpleHome.jsx` 在精簡 shell 中提供 all-tool search 與八個 compact shortcuts。Routing 使用 `/home[/<audience>][/<tool-slug>]` 與 `/simple[/<tool-slug>]`；舊 `/home/simple` 位址會 redirect 到 `/simple`。專用 coverage 位於 `toolModes.test.js`、`homeGrid.test.jsx`、`audienceSwitcher.test.jsx` 與 `simpleHome.test.jsx`。
+
+### Shared tool-page contract
+
+每個 routed tool page 都遵循由 Image Metadata 建立的共用視覺 contract：
+
+1. 使用 `Card` 並設 `variant="tool"` 作為 page container。
+2. 每個頁面只 render 一個 `ToolHeader` title 作為 page identity。
+3. 不把 page-level description 放進 `ToolHeader`；helper text 應留在需要它的 feature 內。
+4. 維持共用 desktop card spacing（`p-6`、`gap-4`），並由 `styles.css` 中 mobile `.tool-card` rules 處理 compact screens。
+
+`src/components/ui/AutoDetectConverter.jsx` 為 Slashes、ASCII、Unicode 與 URL converters 實作此 contract。Slashes 與 ASCII 只暴露 automatic direction detector；Unicode 與 URL 在方向可能有歧義時保留明確 encode/decode controls。
+
+### Styling 與 theme
+
+`src/styles.css` 定義 light/dark CSS custom properties，例如 `--bg-app`、`--bg-card`、`--text-main`、`--accent` 與 `--border-color`。`tailwind.config.js` 將這些 tokens 暴露為 Tailwind color、shadow 與 font utilities。
+
+Inter、JetBrains Mono、Plus Jakarta Sans 與 TASA Orbiter 從 `public/fonts/` 提供；其版本、subset 與 OFL license files 記錄在 `public/fonts/MANIFEST.md`。應用程式不會自動請求 Google Fonts。
+
+優先使用共用 primitives 與既有 design tokens。只有真正共用的行為，或無法清楚以既有 utilities 表達的 component-specific rules，才新增 global CSS。
+
+## Route inventory
+
+| Route ID | 導覽名稱 | Component | Category |
+| --- | --- | --- | --- |
+| `tool-home` | 儀表板 | `HomeGrid.jsx` | Dashboard |
+| `tool-wc` | 文字計數器 | `WordCounter.jsx` | Text |
+| `tool-casing` | 大小寫切換器 | `CasingSwitcher.jsx` | Text |
+| `tool-slash` | 斜線轉換器 | `SlashesConverter.jsx` | Developer |
+| `tool-ascii` | ASCII 轉換器 | `AsciiConverter.jsx` | Developer |
+| `tool-unicode` | Unicode 轉換器 | `UnicodeConverter.jsx` | Developer |
+| `tool-url` | URL 編碼與解碼器 | `UrlEncoderDecoder.jsx` | Developer |
+| `tool-markdown` | Markdown 預覽器 | `MarkdownPreviewer.jsx` | Developer |
+| `tool-mermaid` | Mermaid 轉換器 | `MermaidConverter.jsx` | Developer |
+| `tool-code-preview` | VS Code 預覽器 | `CodePreviewer.jsx` | Developer |
+| `tool-fontextractor` | 網站字型擷取器 | `WebsiteFontExtractor.jsx` | Developer |
+| `tool-base` | 進位轉換器 | `BaseConverter.jsx` | Developer |
+| `tool-folder-analyzer` | 資料夾分析器 | `FolderAnalyzer.jsx` | Developer |
+| `tool-iplookup` | IP 查詢 | `IpLookup.jsx` | Network |
+| `tool-speedtest` | 網路速度測試 | `NetworkSpeedTest.jsx` | Network |
+| `tool-color` | 色彩轉換器 | `ColorConverter.jsx` | Media |
+| `tool-imgmeta` | 圖片中繼資料 | `ImgMeta.jsx` | Media |
+| `tool-docmeta` | 文件中繼資料 | `DocMeta.jsx` | Media |
+| `tool-audiometa` | 音訊中繼資料 | `AudioMeta.jsx` | Media |
+| `tool-videometa` | 影片中繼資料 | `VideoMeta.jsx` | Media |
+| `tool-mediasplit` | 媒體分割器 | `MediaSeparator.jsx` | Media |
+| `tool-svg-png` | SVG 轉 PNG | `SvgToPngConverter.jsx` | Media |
+| `tool-dna` | DNA/RNA 轉換器 | `DnaConverter.jsx` | Bioinfo |
+| `tool-codon` | 密碼子表 | `CodonTable.jsx` | Bioinfo |
+| `tool-phred` | Phred 尺度轉換器 | `PhredScaleConverter.jsx` | Bioinfo |
+| `tool-barcode` | 條碼產生器 | `QrBarcodeGenerator.jsx`（`barcode` tab） | Utilities |
+| `tool-currency` | 貨幣轉換器 | `CurrencyCounter.jsx` | Utilities |
+| `tool-date` | 日期與時間計算器 | `DateCounter.jsx` | Utilities |
+| `tool-roman` | 羅馬數字轉換器 | `RomanNumeralConverter.jsx` | Utilities |
+| `tool-password` | 密碼產生器 | `PasswordGenerator.jsx`（`generate` tab） | Utilities |
+| `tool-pwstrength` | 密碼強度 | `PasswordGenerator.jsx`（`check` tab） | Utilities |
+| `tool-qrcode` | QR Code 產生器 | `QrBarcodeGenerator.jsx`（`qr` tab） | Utilities |
+| `tool-qrbarcodescan` | QR Code 與條碼掃描器 | `QrBarcodeScanner.jsx` | Utilities |
+| `tool-wheel` | 隨機轉盤 | `RandomWheel.jsx` | Utilities |
+| `privacy` | 隱私權與網路服務 | `PrivacyPolicy.jsx` | Policy（不在 tool catalog） |
+
+## Component groups
+
+### Shared UI：`src/components/ui/`
+
+| File | 角色 |
+| --- | --- |
+| `Card.jsx` | tool pages 與 dashboard cards 的共用 card container。 |
+| `ToolHeader.jsx` | routed tools 的單一 title page identity component。 |
+| `Button.jsx` | 共用 button variants 與 sizes。 |
+| `FieldInput.jsx` | 帶 label 的 input／textarea helper。 |
+| `AutoDetectConverter.jsx` | 共用雙 panel automatic converter interface。 |
+| `ToggleSwitch.jsx`, `Spinner.jsx`, `ResultDisplay.jsx` | reusable controls 與 feedback UI。 |
+
+`ExternalMapPreview.jsx` 是 IP Lookup 與 Image Metadata 共用的 OpenStreetMap consent boundary。它會在本機 render coordinate text，只在 `osm` consent 有效時建立 iframe，並在 revoke 或 reset 後立即移除 iframe。
+
+### Markdown Previewer
+
+`MarkdownPreviewer.jsx` 提供 browser-local editor、`.md`/`.markdown` upload、live preview、formatting helpers 與 Markdown download。其 domain module 會把常見 block/inline syntax parse 為安全的 React-rendered tokens；raw HTML 與 external images 不會 render，unsafe URL schemes 會被丟棄。Source-line metadata 讓可獨立捲動的 editor 與 preview 雙向對齊，不會破壞 fenced-code content。專用 parser 與 interaction coverage 位於 `markdownDomain.test.js` 與 `markdownPreviewer.test.jsx`。
+
+### VS Code Preview
+
+`CodePreviewer.jsx` 提供一個 browser-local、VS Code 風格的 editing surface，高亮 display 與 text input 共用同一個視窗。它支援 26 種可選 language modes（含 Bash/Shell）、local file input、on-demand appearance dialog（System、Light、Dark presets）、accent/background/foreground/code font controls、line numbers、source-file download、clipboard copy 與 lazy PNG export，而且不會執行或送出 code。Language registry、filename inference、contrast selection 與 highlighting helpers 位於 `CodePreviewer/lib/`；專用 domain／interaction coverage 位於 `codePreviewDomain.test.js` 與 `codePreviewer.test.jsx`。
+
+### Media Splitter
+
+`MediaSeparator.jsx` 是 page component。`useMediaSeparator.js` 負責 queue state 與 actions。`mediaSeparatorEngine.js` 只在需要時下載固定的 FFmpeg 0.12.6 JavaScript 與 WebAssembly assets，依 `config/ffmpeg-assets.json` 驗證 byte length 與 SHA-256，再透過 Blob URLs 載入。Queue item、waveform 與 format-select components 讓 UI 保持 modular。
+
+### File metadata tools
+
+`ImgMeta.jsx`、`DocMeta.jsx`、`AudioMeta.jsx` 與 `VideoMeta.jsx` 在瀏覽器解析使用者選取檔案。它們支援各自的 inspection、comparison、export 或 metadata-removal workflows，不會把檔案送到此應用程式後端。
+
+純 document formatting/parsing helpers 位於 `src/components/DocMeta/lib/`。QR/barcode encoding rules 與 codon input/filter/presentation rules 位於各自的 `src/components/<Tool>/lib/` 目錄。專用 coverage 包含 `documentMetadataDomain.test.js`、`qrBarcodeDomain.test.js`、`codonDomain.test.js`；DNA/RNA copy formatting coverage 位於 `dnaCopy.test.js`，time-difference coverage 位於 `timeDomain.test.js`，Roman numeral coverage 位於 `romanDomain.test.js`，Phred conversion coverage 位於 `phredDomain.test.js`，sanitized SVG parsing/export-size coverage 位於 `svgDomain.test.js`，URL percent-encoding coverage 位於 `urlDomain.test.js`。Converter-mode、folder-picker、Color Sync 與 image-stripping guidance regression 由 `converterClipboard.test.jsx` 與 `enhancementUi.test.jsx` 覆蓋。
+
+## APIs 與 development middleware
+
+Cloudflare Pages 相容 handlers 位於 `functions/api/`：
+
+| Endpoint | File | 用途 |
+| --- | --- | --- |
+| `GET /api/iplookup?ip=<address>` | `iplookup.js` | 查詢 fallback IP geolocation providers 並 normalize response。 |
+| `POST /api/extract-fonts` | `extract-fonts.js` | same-site-only、rate-limited 的 bounded public HTML/CSS scan；回傳 declaration metadata 與 truncation info，不抓 font files。 |
+| `GET /api/exchange-rates` | `exchange-rates.js` | 取得 browser consent 後 fetch 並 normalize live USD-based exchange rates。 |
+
+專用 `*.test.js` suites 位於 `functions/api/tests/`。`vitest.config.js` 將 `functions/api/**` 納入 coverage gate，threshold 與 shared server/client libraries 相同。
+
+`functions/_shared/requestPolicy.js` 負責 Font Extractor 的 4 KiB request cap 與 aggregate job limits（HTML/CSS/total bytes、stylesheet count、import depth、face count、concurrency、deadline）。`functions/_shared/fontExtractionCapability.js` 會讓 production extraction fail closed，除非短效 runtime evidence 與設定的 Cloudflare compatibility date、fetch implementation revision、required scenario set 相符。`vite.config.js` 在本機 Vite development 只 mirror IP lookup（`/api/iplookup`）；測試其他 Functions 時使用 Cloudflare Pages local runtime。
+
+Font extraction 將 HTML `rel` 值視為 case-insensitive token lists，並依宣告順序回傳每個 font-face source list 中的所有 remote `url()` candidates。Local/data sources 會被忽略，但不會遮蔽後續 remote fallback；candidates 依 normalized absolute URL 與 face metadata 去重。
+
+正式環境 rate limits 由 `workers/rate-limiter/` 中 service-bound Worker 執行；root `wrangler.jsonc` 以 `RATE_LIMITER_SERVICE` 將 Pages Functions 綁定到它。完整 local integration testing 時需另外啟動該 Worker。`npm run platform:integration` 會以隔離 local state 啟動 Pages 與 Worker configs，證明 concurrent requests 會觸發設定的 platform limit，並證明缺少 service binding 時會 fail closed。In-process limiter 只可在 explicit development mode 使用；production 缺少 binding 時會 fail closed。
+
+`config/rateLimitPolicies.js` 是 Pages helpers、Worker、local integration 與 configuration validation 共用的 canonical route-policy source。Wrangler 平台要求的 numeric declarations 會與它比對；unknown、orphaned、missing 或數值不符的 bindings 都會讓 `platform:check` 失敗。Pages-side deadline 綁到 service-binding `Request.signal`，因此 timeout 不只限制 caller，也會把 cancellation 傳到 Worker runtime，同時維持同一個 fail-closed 503 response。
+
+`test/integration/ssrf-worker/` 與 `test/integration/ssrf-target-worker/` 是 outbound-fetch boundary 的隔離 Cloudflare-runtime fixtures。只有預計進行 temporary Cloudflare deployment 時才執行 `npm run test:ssrf-runtime`；它使用未被 claim、會自動過期的 preview account，不會印出 token 或 claim URL。成功輸出包含與 compatibility date、fetch implementation revision 綁定的 machine-readable 30-day gate metadata；metadata 缺失、不符、不完整或過期時，production extraction 仍保持 disabled。
+
+### Local completion 與 deferred Cloudflare operations
+
+C06–C16 repository 與 local-runtime remediation scope 於 2026-07-26 接受為完成。Production deployment、live Cloudflare SSRF evidence 與 staged HSTS observation 是由 owner 延後的 operational work，不是 local development completion 的前置條件。若日後回報 Cloudflare development 或 deployment error，視情況使用 `npm run platform:check`、`npm run platform:integration` 與 opt-in `npm run test:ssrf-runtime` evidence workflow；不要因為這些 commands 存在就推定有 deployment permission。
+
+Wrangler configuration files（`wrangler.jsonc`、`workers/rate-limiter/wrangler.jsonc` 與 integration fixture configs）納入版本控制；local Wrangler state 與 credentials 不納入：
+
+- `.wrangler/`、`.wrangler-*/`、`.tmp-*/` 是 disposable runtime/log/state directories，會被忽略。
+- `.dev.vars` 與 `.dev.vars.*` 會被忽略，因為可能含 secrets；`.dev.vars.example` 保留為安全 template。
+- `dist/`、`coverage/`、`.playwright-cli/`、`test-results/` 與 `playwright-report/` 是本機產生物並忽略。
+- `code_reviews/` 包含忽略的 local review working records。它們是有日期的歷史 snapshot，不受版本控制，也不是目前 project status 或 canonical instructions。
+
+### Repository hygiene
+
+建置、測試、操作或維護專案所需的 root files/directories 維持版本控制：
+
+- `src/`、`public/`、`functions/`、`workers/`、`config/`、`scripts/`、`test/` 與 `e2e/` 包含 application code、runtime assets、policies、automation 或 verification fixtures。
+- `package.json`、`package-lock.json`、`.nvmrc`、`index.html`，以及 ESLint、JavaScript、Knip、Playwright、PostCSS、Tailwind、Vite、Vitest、Wrangler config files 定義可重現的 local development 與 verification。
+- `.github/` 包含 CI 與 dependency-maintenance config；`.agents/AGENTS.md` 包含 repository-scoped development instructions。
+- `README.md`、`README.zh-TW.md`、`CONTRIBUTING.md`、`ARCHITECTURE.md`、`PRIVACY.md`、`TODO.md` 與 `LICENSE` 是維護中的 project documentation 或 legal material。
+- `.dev.vars.example` 是安全、不含 secret 的 local-runtime documentation；實際 `.dev.vars*` files 維持 ignored。
+
+Editor state、dependency installations、generated output、test reports、local Cloudflare state、private environment files、incoming scratch data 與 review artifacts 只屬於 local workspace，並由 `.gitignore` 排除。

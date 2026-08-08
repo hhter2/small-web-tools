@@ -48,25 +48,33 @@ jobs:
         shell: bash
         run: echo "VITE_APP_VERSION=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
 
-      - name: Verify
+      - name: Node 22 compatibility gate
+        if: matrix.node-version == '22'
+        run: npm run typecheck && npm run test:run && npm run build
+
+      - name: Full verification
+        if: matrix.node-version == '24'
         run: npm run verify
 
       - name: Pages/Worker Rate Limit Integration
-        if: matrix.node-version == '22'
+        if: matrix.node-version == '24'
         run: npm run platform:integration
 
       - name: Dependency Check
+        if: matrix.node-version == '24'
         run: npm run deps:check
 
       - name: Install Playwright Chromium
+        if: matrix.node-version == '24'
         run: npx playwright install --with-deps chromium
 
       - name: End-to-End Tests
+        if: matrix.node-version == '24'
         run: npm run test:e2e
 
       - name: Upload browser failure artifacts
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() && matrix.node-version == '24'
         with:
           name: playwright-report-node-${{ matrix.node-version }}-${{ github.sha }}
           path: |
@@ -75,11 +83,12 @@ jobs:
           retention-days: 7
 
       - name: Security Audit
+        if: matrix.node-version == '24'
         run: npm run audit
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
-        if: matrix.node-version == '22'
+        if: matrix.node-version == '24'
         with:
           name: dist-${{ github.sha }}
           path: dist/

@@ -113,7 +113,7 @@ export async function enforceRateLimit(context, options) {
       ? null
       : limiterError(429, 'RATE_LIMITED', { 'Retry-After': '60' });
   } catch (error) {
-    const diagnostic = controller.signal.aborted || error?.name === 'TimeoutError'
+    const diagnostic = controller.signal.aborted || (error instanceof Error && error.name === 'TimeoutError')
       ? 'rate-limiter-timeout'
       : 'rate-limiter-service-failure';
     return limiterError(503, 'RATE_LIMIT_UNAVAILABLE', {}, true, diagnostic);

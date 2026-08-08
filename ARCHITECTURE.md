@@ -86,7 +86,7 @@ small-web-tools/
 │   └── favicon.svg           Static site icon
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
-│   ├── App.jsx               Path synchronization, application shell, and registry renderer
+│   ├── App.jsx               Application-shell composition and registry renderer
 │   ├── toolRegistry.js       Canonical routes, aliases, metadata, lazy loaders, and layout flags
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
 │   ├── toolIcons.jsx         Route icon presentation keyed by registry icon keys
@@ -95,12 +95,16 @@ small-web-tools/
 │   │   ├── index.js           Locale resolution, i18next setup, persistence, and document language
 │   │   └── locales/           Paired en-US and zh-TW namespace JSON resources
 │   ├── lib/                  Pure utility helpers (passwordStrength, resourceLimits, thirdPartyServices)
+│   ├── hooks/                Routing, persistence, and document-title shell effects
 │   ├── tests/                Vitest unit test suites and setup
 │   └── components/
 │       ├── ui/               Shared Card, Button, FieldInput, ToolHeader, and related primitives
 │       ├── HomeGrid.jsx      Full and audience dashboard tool grid
 │       ├── SimpleHome.jsx    Search-first essential-tool launcher
 │       ├── LanguageSwitcher.jsx Shared responsive locale menu and focus lifecycle
+│       ├── AppHeader.jsx     Desktop brand, category navigation, search, locale, and theme controls
+│       ├── AppFooter.jsx     Registry-driven footer navigation and project actions
+│       ├── DesktopCategoryNav.jsx Pointer shortcut navigation derived from the registry
 │       ├── MobileDrawer.jsx  Mobile navigation focus, inert, dismissal, and scroll lifecycle
 │       ├── MarkdownPreviewer/ Markdown parsing and validation domain logic
 │       ├── *.jsx             Individual tool components
@@ -131,25 +135,25 @@ expanded UI boundary must fix every newly exposed error in the same change.
 
 `src/main.jsx` mounts `<App />` and imports `src/styles.css`.
 
-`src/App.jsx` owns the application shell:
+`src/App.jsx` composes the application shell and registry renderer:
 
 - `src/toolRegistry.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
 - `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
-- `activeTool` is initialized from `/home[/<audience>]/<tool-slug>` or `/simple/<tool-slug>` and is synchronized back to the path.
-- `toolMode` is initialized from the validated `/home` or `/simple` path. The workspace path
+- `useAppRouting` initializes `activeTool` from `/home[/<audience>]/<tool-slug>` or `/simple/<tool-slug>` and synchronizes navigation and browser history with the path.
+- `useAppRouting` initializes `toolMode` from the validated `/home` or `/simple` path. The workspace path
   remains in the URL while path navigation changes tools.
-- `theme` and `sidebarCollapsed` are persisted in `localStorage`.
+- `useShellPersistence` owns active-tool session state plus theme and sidebar persistence; `useDocumentTitle` owns title updates independently of storage availability.
 - `renderActiveTool()` resolves the active registry entry and renders its lazy component. The `privacy` route is registered but excluded from the tool catalog.
 
-The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage.
+The shell supplies a responsive desktop sidebar, mobile drawer, top navigation, breadcrumbs, footer, search, theme control, and a centered tool stage. `AppHeader`, `DesktopCategoryNav`, and `AppFooter` own the desktop header and footer presentation while `App.jsx` passes registry-derived data and navigation callbacks.
 
 `src/components/MobileDrawer.jsx` owns the narrow-screen drawer boundary. The closed
 drawer is unmounted; opening moves and traps focus, makes the obscured shell inert,
 locks body scrolling, and supports Escape, overlay, explicit-close, and route
 dismissal before restoring focus to the opener.
 
-`src/components/LanguageSwitcher.jsx` is rendered directly by `App.jsx` in the mobile and desktop headers. It is the shared owner of locale options, menu state, keyboard navigation, and focus restoration; the desktop control is omitted in the Simple workspace.
+`src/components/LanguageSwitcher.jsx` is rendered by `App.jsx` in the mobile header and by `AppHeader.jsx` in the desktop header. It is the shared owner of locale options, menu state, keyboard navigation, and focus restoration; the desktop control is omitted in the Simple workspace.
 
 ### Internationalization runtime
 

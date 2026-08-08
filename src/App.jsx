@@ -4,20 +4,21 @@ import BioinfoIcon from './components/BioinfoIcon.jsx';
 import SimpleHome from './components/SimpleHome.jsx';
 import LanguageSwitcher from './components/LanguageSwitcher.jsx';
 import MobileDrawer from './components/MobileDrawer.jsx';
+import AppHeader from './components/AppHeader.jsx';
+import AppFooter from './components/AppFooter.jsx';
 import ThirdPartyConsentModal from './components/ui/ThirdPartyConsentModal';
 import Spinner from './components/ui/Spinner';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import { PUBLIC_ROUTE_IDS, STATIC_LAYOUT_IDS, getLocalizedToolRoutes, getToolRoute, localizeToolRoute, sortLocalizedTools } from './toolRegistry.js';
+import { STATIC_LAYOUT_IDS, getLocalizedToolRoutes, getToolRoute, localizeToolRoute, sortLocalizedTools } from './toolRegistry.js';
 import { TOOL_ICONS } from './toolIcons.jsx';
 import {
-  buildModeUrl,
   filterToolsForMode,
-  getModeIdFromLocation,
-  getRouteIdFromLocation,
   getToolMode,
-  isToolPath,
   localizeToolMode,
 } from './toolModes.js';
+import { useAppRouting } from './hooks/useAppRouting.js';
+import { useDocumentTitle } from './hooks/useDocumentTitle.js';
+import { readStoredActiveTool, useShellPersistence } from './hooks/useShellPersistence.js';
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 const SHOW_CHANNEL_ALERT = typeof __SHOW_CHANNEL_ALERT__ !== 'undefined' ? __SHOW_CHANNEL_ALERT__ : false;
@@ -92,57 +93,9 @@ const categories = [
 
 const staticTools = STATIC_LAYOUT_IDS;
 
-const VALID_TOOL_IDS = new Set(PUBLIC_ROUTE_IDS);
-
-function getValidToolId(rawId) {
-  if (rawId && VALID_TOOL_IDS.has(rawId)) {
-    return rawId;
-  }
-  return 'tool-home';
-}
-
 export default function App() {
   const { t, i18n } = useTranslation(['common', 'navigation', 'tools', 'errors']);
-  const [activeTool, setActiveTool] = useState(() => {
-    try {
-      const locationRouteId = getRouteIdFromLocation(
-        window.location.pathname,
-        window.location.hash,
-      );
-      if (locationRouteId) {
-        if (VALID_TOOL_IDS.has(locationRouteId)) {
-          return locationRouteId;
-        }
-        window.history.replaceState(
-          null,
-          '',
-          buildModeUrl(
-            window.location.href,
-            getModeIdFromLocation(window.location.pathname, window.location.search),
-          ),
-        );
-        return 'tool-home';
-      }
-      if (isToolPath(window.location.pathname)) {
-        return 'tool-home';
-      }
-      const saved = sessionStorage.getItem("activeTool");
-      if (saved && VALID_TOOL_IDS.has(saved)) {
-        return saved;
-      }
-      return "tool-home";
-    } catch {
-      return "tool-home";
-    }
-  });
-
-  const [toolMode, setToolMode] = useState(() => {
-    try {
-      return getModeIdFromLocation(window.location.pathname, window.location.search);
-    } catch {
-      return 'all';
-    }
-  });
+  const { activeTool, toolMode, navigateToTool, changeMode } = useAppRouting(readStoredActiveTool);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
@@ -208,16 +161,6 @@ export default function App() {
     };
   }, []);
 
-  // Sync theme to document element and localStorage
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    try {
-      localStorage.setItem("theme", theme);
-    } catch {
-      // Storage access can be blocked by the browser; keep the current state.
-    }
-  }, [theme]);
-
   const modeProfile = localizeToolMode(getToolMode(toolMode), t);
   const categoriesLocalized = useMemo(() => categories.map((category) => ({
     ...category,
@@ -232,63 +175,13 @@ export default function App() {
       icon: TOOL_ICONS[route.iconKey],
     })), [i18n.resolvedLanguage, t]);
 
-  // Sync activeTool state, sessionStorage, and document title
-  useEffect(() => {
-    const route = getToolRoute(activeTool);
-    const localizedRoute = route ? localizeToolRoute(route, t) : null;
-    document.title = localizedRoute?.id === 'tool-home' && modeProfile.id === 'all'
-      ? t('navigation:titles.default')
-      : t('navigation:titles.tool', {
-        tool: localizedRoute?.id === 'tool-home' ? modeProfile.label : localizedRoute?.title,
-      });
-    try {
-      sessionStorage.setItem("activeTool", activeTool);
-    } catch {
-      // Storage access can be blocked; the already-computed document title remains current.
-    }
-  }, [activeTool, modeProfile.id, modeProfile.label, i18n.resolvedLanguage, t]);
-
-  // Listen for address changes to sync the active tool and audience/simple mode.
-  useEffect(() => {
-    const handleLocationChange = () => {
-      try {
-        const nextModeId = getModeIdFromLocation(
-          window.location.pathname,
-          window.location.search,
-        );
-        const locationRouteId = getRouteIdFromLocation(
-          window.location.pathname,
-          window.location.hash,
-        );
-        if (locationRouteId && !VALID_TOOL_IDS.has(locationRouteId)) {
-          window.history.replaceState(
-            null,
-            '',
-            buildModeUrl(window.location.href, nextModeId),
-          );
-          setActiveTool('tool-home');
-          setToolMode(nextModeId);
-          return;
-        }
-        const validId = getValidToolId(locationRouteId);
-        const canonicalAddress = buildModeUrl(window.location.href, nextModeId, validId);
-        if (canonicalAddress !== window.location.href) {
-          window.history.replaceState(null, '', canonicalAddress);
-        }
-        setActiveTool(validId);
-        setToolMode(nextModeId);
-      } catch {
-        setActiveTool('tool-home');
-        setToolMode('all');
-      }
-    };
-    window.addEventListener('hashchange', handleLocationChange);
-    window.addEventListener('popstate', handleLocationChange);
-    return () => {
-      window.removeEventListener('hashchange', handleLocationChange);
-      window.removeEventListener('popstate', handleLocationChange);
-    };
-  }, []);
+  useDocumentTitle({
+    activeTool,
+    modeProfile,
+    language: i18n.resolvedLanguage,
+    t,
+  });
+  useShellPersistence({ activeTool, theme, isSidebarCollapsed });
 
   // Keyboard shortcut '/' to focus search
   useEffect(() => {
@@ -308,28 +201,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Keep tool and mode navigation in one canonical, bookmarkable address.
-  useEffect(() => {
-    try {
-      sessionStorage.setItem("activeTool", activeTool);
-      const nextAddress = buildModeUrl(window.location.href, toolMode, activeTool);
-      if (nextAddress !== window.location.href) {
-        window.history.replaceState(null, '', nextAddress);
-      }
-    } catch {
-      // Storage access can be blocked by the browser; the UI remains usable.
-    }
-  }, [activeTool, toolMode]);
-
-  // Sync sidebarCollapsed to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("sidebarCollapsed", isSidebarCollapsed ? "true" : "false");
-    } catch {
-      // Storage access can be blocked by the browser; the UI remains usable.
-    }
-  }, [isSidebarCollapsed]);
-
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
@@ -339,20 +210,12 @@ export default function App() {
   };
 
   const handleNavClick = (toolId) => {
-    const nextAddress = buildModeUrl(window.location.href, toolMode, toolId);
-    if (nextAddress !== window.location.href) {
-      window.history.pushState(null, '', nextAddress);
-    }
-    setActiveTool(toolId);
+    navigateToTool(toolId);
     setMobileSidebarOpen(false);
   };
 
   const handleModeChange = (nextModeId) => {
-    const nextMode = getToolMode(nextModeId);
-    const nextAddress = buildModeUrl(window.location.href, nextMode.id);
-    window.history.pushState(null, '', nextAddress);
-    setToolMode(nextMode.id);
-    setActiveTool('tool-home');
+    changeMode(nextModeId);
     setSelectedHomeTab('all');
     setSearchQuery('');
     setMobileSidebarOpen(false);
@@ -725,211 +588,35 @@ export default function App() {
           style={mainContentHeightStyle}
         >
           {/* Desktop Top Header — hidden on mobile (max-md) */}
-          <header className="hidden min-w-0 border-b border-border bg-header px-4 py-[6px] md:flex md:items-center md:justify-between md:min-h-[48px] md:px-8 xl:px-12 backdrop-blur-[10px] z-[1000] transition-all duration-300">
-            {/* Left: Brand */}
-            <div className="flex shrink-0 items-center">
-              <button
-                type="button"
-                id="desktop-brand-logo"
-                className="flex items-center gap-[10px] cursor-pointer text-accent transition-opacity duration-200 hover:opacity-85 bg-transparent border-none p-0"
-                title={t('navigation:goHome')}
-                aria-label={t('navigation:goHome')}
-                onClick={handleAllToolsHomeClick}
-              >
-                <div className="bg-accent-gradient text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.15)] flex-shrink-0 [&_svg]:w-[18px] [&_svg]:[stroke-width:2.2]">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                </div>
-                <span className="hidden font-['TASA_Orbiter',sans-serif] text-[0.95rem] font-bold tracking-[-0.02em] text-accent xl:inline">Small Web Tools</span>
-              </button>
-            </div>
-
-            {/* Center: category navigation */}
-            <nav className={`${modeProfile.simplified ? 'hidden' : 'flex'} min-w-0 items-center gap-0 min-[1380px]:gap-2`}>
-              {categoriesLocalized.map(cat => {
-                const catItems = navItems.filter(item => item.category === cat.id);
-                if (catItems.length === 0) return null;
-                const isOpen = openDropdown === cat.id;
-                return (
-                  <div
-                    key={cat.id}
-                    className="relative"
-                    onMouseEnter={() => setOpenDropdown(cat.id)}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                  >
-                    <button
-                      aria-label={cat.name}
-                      className={`flex items-center gap-1.5 rounded border-none bg-transparent px-1.5 py-[6px] text-[0.82rem] font-medium text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-accent min-[1380px]:gap-2 min-[1380px]:px-3 ${isOpen ? 'bg-accent-light text-accent' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNavClick('tool-home');
-                        setSelectedHomeTab(cat.id);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <span className="inline-flex items-center justify-center w-4 h-4 [&_svg]:w-full [&_svg]:h-full">
-                        {cat.icon}
-                      </span>
-                      <span className="hidden font-display font-semibold min-[1380px]:inline">{cat.name}</span>
-                      <span className={`inline-flex items-center justify-center ml-0.5 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-text-muted [&_svg]:w-[10px] [&_svg]:h-[10px] ${isOpen ? 'rotate-180 text-accent' : ''}`}>
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </span>
-                    </button>
-
-                    {/* Redundant pointer convenience; every destination also exists in sidebar/search navigation. */}
-                    {isOpen && <div
-                      className="absolute top-full left-0 bg-[var(--bg-card-solid,var(--bg-card))] border border-border rounded-lg p-2 min-w-[200px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] z-[1100] flex flex-col gap-1 translate-y-1"
-                    >
-                      {cat.id === 'utilities' ? (
-                        (() => {
-                          const subGroups = {};
-                          catItems.forEach(item => {
-                            const sg = item.subGroup || 'Utilities';
-                            if (!subGroups[sg]) subGroups[sg] = [];
-                            subGroups[sg].push(item);
-                          });
-                          const sortedSubGroupNames = Object.keys(subGroups).sort();
-                          return sortedSubGroupNames.map(sgName => (
-                            <div key={sgName} className="flex flex-col gap-0.5 border-b border-border pb-1 mb-1 last:border-b-0 last:pb-0 last:mb-0">
-                              <div className="px-3 py-[2px] pt-1 text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50">
-                                {sgName}
-                              </div>
-                              {subGroups[sgName].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
-                                <button
-                                  key={item.id}
-                                  className={`flex items-center gap-[10px] w-full pl-[18px] pr-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
-                                  onClick={() => {
-                                    handleNavClick(item.id);
-                                    setOpenDropdown(null);
-                                  }}
-                                >
-                                  <span className="item-icon">{item.icon}</span>
-                                  <span className="font-medium">{item.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          ));
-                        })()
-                      ) : (
-                        catItems.map(item => (
-                          <button
-                            key={item.id}
-                            className={`flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] font-medium text-text-muted cursor-pointer transition-all duration-150 text-left font-sans whitespace-nowrap [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:bg-accent-light hover:text-accent ${activeTool === item.id ? 'bg-accent-light text-accent' : ''}`}
-                            onClick={() => {
-                              handleNavClick(item.id);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span className="item-icon">{item.icon}</span>
-                            <span className="font-medium">{item.name}</span>
-                          </button>
-                        ))
-                      )}
-                    </div>}
-                  </div>
-                );
-              })}
-            </nav>
-
-            {/* Right: Search + Language + Theme */}
-            <div className="flex shrink-0 items-center gap-2 xl:gap-4">
-              <button
-                type="button"
-                onClick={() => (
-                  modeProfile.simplified
-                    ? handleAllToolsHomeClick()
-                    : handleModeChange('simple')
-                )}
-                className="flex h-8 shrink-0 items-center rounded border border-border bg-app px-2.5 text-xs font-bold text-text-main transition hover:border-accent hover:bg-accent-light hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus xl:px-3"
-              >
-                <span>{t(modeProfile.simplified ? 'navigation:exitSimpleMode' : 'navigation:simpleMode')}</span>
-              </button>
-              {/* Header Search */}
-              <div
-                ref={searchRef}
-                className="relative hidden w-[180px] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:w-[240px] lg:block"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="relative flex items-center">
-                  <svg className="absolute left-[10px] text-text-muted pointer-events-none" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                  <input
-                    type="text"
-                    className="header-search-input w-full !h-8 !pl-8 !pr-8 !py-0 border border-border rounded bg-[var(--bg-search-sidebar)] text-text-main text-[0.8rem] outline-none font-sans transition-all duration-200 focus:border-accent focus:bg-card focus:shadow-[0_0_0_2px_var(--focus-ring)]"
-                    placeholder={t('navigation:search.placeholder')}
-                    aria-label={t('navigation:search.label')}
-                    autoComplete="off"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                  />
-                  {/* Keyboard badge */}
-                  <kbd className="absolute right-[10px] top-1/2 -translate-y-1/2 bg-[rgba(255,255,255,0.05)] border border-border text-text-muted rounded-[4px] px-[5px] py-[1px] text-[0.65rem] font-sans font-semibold pointer-events-none transition-opacity duration-150 [.header-search-input:focus~&]:opacity-0 html:not([data-theme='dark'])_&:bg-white">
-                    /
-                  </kbd>
-                </div>
-                {searchQuery.trim() !== '' && isSearchFocused && (
-                  <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-md w-[280px] max-h-[300px] overflow-y-auto shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] p-[6px] z-[1200] flex flex-col gap-0.5">
-                    {filteredSearchNavItems.length > 0 ? (
-                      filteredSearchNavItems.map(item => (
-                        <button
-                          key={item.id}
-                          className="flex items-center gap-[10px] w-full px-3 py-2 bg-transparent border-none rounded-sm text-[0.82rem] text-text-main cursor-pointer text-left font-sans transition-colors duration-150 hover:bg-accent-light hover:text-accent [&_.item-icon]:inline-flex [&_.item-icon]:items-center [&_.item-icon]:justify-center [&_.item-icon]:w-[14px] [&_.item-icon]:h-[14px] [&_.item-icon]:text-text-muted [&_.item-icon_svg]:w-full [&_.item-icon_svg]:h-full hover:[&_.item-icon]:text-accent"
-                          onClick={() => {
-                            handleNavClick(item.id);
-                            setSearchQuery('');
-                          }}
-                        >
-                          <span className="item-icon">{item.icon}</span>
-                          <span>{item.name}</span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="p-3 text-center text-[0.8rem] text-text-muted">{t('navigation:search.noResults')}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Language Selector */}
-              {!modeProfile.simplified && (
-                <LanguageSwitcher
-                  variant="desktop"
-                  onOpen={() => setOpenDropdown(null)}
-                />
-              )}
-
-              {/* Theme Toggle (Desktop Header) */}
-              <button
-                className="bg-transparent border border-border rounded-full w-8 h-8 flex items-center justify-center text-text-muted cursor-pointer transition-all duration-150 hover:border-accent hover:text-accent hover:bg-accent-light"
-                aria-label={t('navigation:toggleTheme')}
-                onClick={toggleTheme}
-              >
-                {theme === 'dark' ? (
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                  </svg>
-                )}
-              </button>
-            </div>
-          </header>
+          <AppHeader
+            activeTool={activeTool}
+            categories={categoriesLocalized}
+            isSearchFocused={isSearchFocused}
+            modeProfile={modeProfile}
+            navItems={navItems}
+            openCategory={openDropdown}
+            searchQuery={searchQuery}
+            searchRef={searchRef}
+            searchResults={filteredSearchNavItems}
+            t={t}
+            theme={theme}
+            onGoHome={handleAllToolsHomeClick}
+            onModeChange={handleModeChange}
+            onOpenCategory={setOpenDropdown}
+            onSearchChange={setSearchQuery}
+            onSearchFocus={() => setIsSearchFocused(true)}
+            onSelectCategory={(categoryId) => {
+              handleNavClick('tool-home');
+              setSelectedHomeTab(categoryId);
+              setOpenDropdown(null);
+            }}
+            onSelectTool={(toolId) => {
+              handleNavClick(toolId);
+              setOpenDropdown(null);
+              setSearchQuery('');
+            }}
+            onToggleTheme={toggleTheme}
+          />
 
           {/* Mobile Top Bar — shown only on mobile (max-md) */}
           <div
@@ -980,126 +667,23 @@ export default function App() {
           </section>
 
           {/* Footer */}
-          <footer className="mt-auto w-full bg-footer border-t border-border">
-            {/* Footer Links Grid */}
-            {activeTool === 'tool-home' && modeProfile.id === 'all' && (
-              <div className="grid grid-cols-6 max-[1200px]:grid-cols-4 max-md:grid-cols-3 max-[500px]:grid-cols-2 max-w-[1200px] mx-auto gap-x-4 gap-y-6 px-12 py-7 max-md:px-8 max-md:py-6 max-[500px]:px-4 max-[500px]:py-5">
-                {categoriesLocalized.map(cat => {
-                  const catItems = modeNavItems.filter(item => item.category === cat.id);
-                  if (catItems.length === 0) return null;
-                  return (
-                    <div key={cat.id} className="flex flex-col gap-[10px]">
-                      <button
-                        className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-text-muted mb-1 bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 hover:text-accent"
-                        onClick={() => {
-                          setActiveTool('tool-home');
-                          setSelectedHomeTab(cat.id);
-                        }}
-                      >
-                        {cat.name}
-                      </button>
-                      {cat.id === 'utilities' ? (
-                        (() => {
-                          const subGroups = {};
-                          catItems.forEach(item => {
-                            const sg = item.subGroup || 'Utilities';
-                            if (!subGroups[sg]) subGroups[sg] = [];
-                            subGroups[sg].push(item);
-                          });
-                          const sortedSubGroupNames = Object.keys(subGroups).sort();
-                          return sortedSubGroupNames.map(sgName => (
-                            <div key={sgName} className="flex flex-col gap-2 mt-2 mb-2 last:mb-0">
-                              <span className="text-[0.65rem] font-bold uppercase tracking-[0.05em] text-text-muted opacity-50 mb-0.5">{sgName}</span>
-                              {sortLocalizedTools(subGroups[sgName], i18n.resolvedLanguage).map(item => (
-                                <button
-                                  key={item.id}
-                                  className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] pl-2 hover:text-accent"
-                                  onClick={() => handleNavClick(item.id)}
-                                >
-                                  {item.name}
-                                </button>
-                              ))}
-                            </div>
-                          ));
-                        })()
-                      ) : (
-                        catItems.map(item => (
-                          <button
-                            key={item.id}
-                            className="text-[0.83rem] text-text-muted bg-transparent border-none cursor-pointer p-0 text-left font-sans transition-colors duration-150 leading-[1.5] hover:text-accent"
-                            onClick={() => handleNavClick(item.id)}
-                          >
-                            {item.name}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Footer Bottom Bar */}
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center px-12 py-2 text-[0.78rem] text-text-muted max-md:flex max-md:flex-col max-md:gap-2 max-md:text-center max-md:px-8 max-md:py-3 max-[500px]:px-4 max-[500px]:py-[10px]">
-              {/* Left spacer */}
-              <div></div>
-              {/* Center: Brand & Copyright */}
-              <div className="flex items-center justify-center max-md:flex-col max-md:gap-1">
-                <span className="font-display font-bold text-text-main">Small Web Tools</span>
-                <span className="text-text-muted mx-1 max-md:hidden">&nbsp;·&nbsp;</span>
-                <span className="text-text-muted">{t('navigation:footer.tagline')} &nbsp;© Rhosiqs · {new Date().getFullYear()} · {APP_VERSION}</span>
-              </div>
-              {/* Right: Social Links */}
-              <div className="flex gap-3 items-center ml-auto justify-end max-md:mx-auto max-md:justify-center">
-                {/* Personal Website */}
-                <a href="https://rhosiqs.com" target="_blank" rel="noopener noreferrer" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title={t('navigation:footer.website')} aria-label={t('navigation:footer.website')}>
-                  <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                </a>
-                {/* Email: copy the address and open the configured mail client */}
-                <a
-                  href="mailto:emailforvirtualmachine@gmail.com"
-                  onClick={handleEmailClick}
-                  className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title={t('navigation:footer.email')}
-                  aria-label={t('navigation:footer.email')}
-                >
-                  <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                </a>
-                {/* Consent Settings Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsConsentModalOpen(true)}
-                  className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title={t('navigation:footer.consent')}
-                  aria-label={t('navigation:footer.consent')}
-                >
-                  <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    <polyline points="9 12 11 14 15 10"></polyline>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleNavClick('privacy')}
-                  className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent"
-                  title={t('navigation:footer.privacy')}
-                  aria-label={t('tools:privacy.title')}
-                >
-                  <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </button>
-                {/* GitHub */}
-                <a href="https://github.com/hhter2/small-web-tools" target="_blank" rel="noopener noreferrer" className="bg-transparent border border-border rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-accent hover:text-accent" title="GitHub" aria-label="GitHub">
-                  <svg className="pointer-events-none" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                </a>
-              </div>
-            </div>
-          </footer>
+          <AppFooter
+            activeTool={activeTool}
+            appVersion={APP_VERSION}
+            categories={categoriesLocalized}
+            language={i18n.resolvedLanguage}
+            modeId={modeProfile.id}
+            navItems={modeNavItems}
+            t={t}
+            onEmailClick={handleEmailClick}
+            onOpenConsent={() => setIsConsentModalOpen(true)}
+            onOpenPrivacy={() => handleNavClick('privacy')}
+            onSelectCategory={(categoryId) => {
+              navigateToTool('tool-home');
+              setSelectedHomeTab(categoryId);
+            }}
+            onSelectTool={handleNavClick}
+          />
         </main>
 
         {/* Third Party Consent Manager Modal */}

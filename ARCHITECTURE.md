@@ -319,15 +319,15 @@ filename inference, contrast selection, and highlighting helpers live under
 `ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
 
 Pure document formatting/parsing helpers live under `src/components/DocMeta/lib/`.
-QR/barcode encoding rules and codon input/filter/presentation rules live in their
-corresponding `src/components/<Tool>/lib/` directories. Focused coverage is in
+QR/barcode encoding rules and codon input/filter/presentation rules live in their corresponding
+`src/components/<Tool>/lib/` directories. Focused coverage is in
 `documentMetadataDomain.test.js`, `qrBarcodeDomain.test.js`, and
 `codonDomain.test.js`; DNA/RNA copy formatting coverage is in `dnaCopy.test.js`,
 time-difference coverage is in `timeDomain.test.js`, Roman numeral coverage is
 in `romanDomain.test.js`, Phred conversion coverage is in `phredDomain.test.js`,
 sanitized SVG parsing/export-size coverage is in `svgDomain.test.js`, and URL
-percent-encoding coverage is in `urlDomain.test.js`. The converter-mode,
-folder-picker, Color Sync, and image-stripping guidance regressions are covered by
+percent-encoding coverage is in `urlDomain.test.js`. The converter-mode, folder-picker,
+Color Sync, and image-stripping guidance regressions are covered by
 `converterClipboard.test.jsx` and `enhancementUi.test.jsx`.
 
 ## APIs and development middleware
@@ -413,3 +413,108 @@ build, test, operate, or maintain the project:
 Editor state, dependency installations, generated output, test reports, local
 Cloudflare state, private environment files, incoming scratch data, and review
 artifacts belong only in the local workspace and are covered by `.gitignore`.
+
+Folder Analyzer uses the browser directory picker and never accepts an arbitrary
+local path. After a scan it can reopen a reset picker to add another folder,
+including a previously selected path, without clearing the current analysis.
+
+Image Metadata strips JPEG metadata without re-encoding. For PNG, WebP, and
+other browser-decodable formats, it removes metadata through a browser-local
+privacy-safe re-encode, preserving PNG/WebP output where supported and falling
+back to PNG for other decoded formats. Canon CR3 remains inspection-only because
+the browser cannot safely reconstruct its RAW image data.
+
+Color Converter exposes Color Sync as a high-contrast pressed toggle.
+
+## Locale-sensitive behavior
+
+The selected UI locale controls labels and reader-facing formatting, but it does
+not determine the language of user content. Word Counter inspects each input:
+CJK characters use a character-based reading pace (500 characters per minute),
+while non-CJK text uses a word-based pace (200 words per minute); mixed content
+combines both estimates. `Intl.Segmenter` supplies grapheme and sentence
+boundaries when available, and `Intl.NumberFormat` formats the displayed result.
+
+Password analysis continues to use the bundled English `zxcvbn` dictionary for
+pattern detection in this beta. The UI deliberately maps the numeric score to
+localized labels, generic feedback, and crack-time bands, so interface translation
+is independent of the analysis dictionary. A future language-specific dictionary
+can improve recognition without changing the UI contract. Technical algorithms
+such as encoders, checksums, codon lookup, media parsing, and cryptographic random
+selection remain language-neutral; reader-facing numbers, dates, units, and
+pluralized messages use platform `Intl` APIs or i18next interpolation.
+
+## Network-service policy
+
+`config/network-services.json` is the machine-readable source of truth for external providers, domains, purposes, triggers, transmitted data, consent modes, fallbacks, and policy links. `src/lib/thirdPartyServices.js`, the consent manager, and the canonical `/home/privacy` route consume this inventory. Legacy hash addresses are accepted only for backward-compatible redirects. `scripts/check-external-hosts.mjs`, included in `npm run verify`, fails when a production source hostname is not declared.
+
+## Dependencies
+
+| Package | Purpose |
+| --- | --- |
+| `react`, `react-dom` | React rendering. |
+| `@vitejs/plugin-react`, `vite` | Development server and production build. |
+| `i18next`, `react-i18next` | Synchronous locale resources, React translation hooks, fallback, and language switching. |
+| `vitest`, `@vitest/coverage-v8` | Unit/integration runner and coverage gates. |
+| `eslint`, React lint plugins | Static-analysis rules and the non-increasing warning budget. |
+| `wrangler` | Pinned Cloudflare Pages/Worker configuration validation and local integration runtime. |
+| `tailwindcss`, `postcss`, `autoprefixer` | Utility CSS build pipeline. |
+| `exifreader` | Image metadata parsing. |
+| `jszip` | Office document metadata parsing and archive handling after archive-limit preflight. |
+| `html5-qrcode` | Camera and file-based QR/barcode scanning. |
+| `qrcode`, `jsbarcode` | QR and barcode generation. |
+| `highlight.js` | Browser-local syntax highlighting for the Code Live Preview tool. |
+| `html-to-image` | Lazy browser-local PNG export of styled code previews. |
+| `@ffmpeg/ffmpeg` | Client-side media separation using integrity-verified remote core assets. |
+| `@zxcvbn-ts/core`, language packages | Pattern-aware password strength analysis loaded only on the password route. |
+| `ignore` | Standards-compatible `.gitignore` matching in Folder Analyzer. |
+| `ipaddr.js` | Canonical IPv4/IPv6 parsing and public-address validation. |
+
+## Local development
+
+```bash
+npm install --global npm@10.9.2
+npm ci
+npm run dev
+npm run build
+npm run i18n:check
+npm run i18n:audit
+npm run verify
+npm run test:e2e
+npm run docs:check
+npm run preview
+```
+
+Node.js 22 and Node.js 24 are supported. Use the `npm@10.9.2` release pinned by
+the `packageManager` field in `package.json`; CI installs and verifies that exact
+version. `npm run verify` is the baseline gate: Git-tag version resolution, a
+non-increasing ESLint warning budget,
+normal and strict checkJs, coverage thresholds, production build, bundle budgets,
+static header policy, the external-host inventory, Cloudflare topology, and
+documentation consistency. CI additionally runs dependency checks, Playwright
+journeys, and `npm audit`.
+
+## Adding or changing a tool
+
+1. Create or update the component under `src/components/`.
+2. Add or revise its single registry entry in `src/toolRegistry.js`.
+3. Follow the shared `Card` plus one `ToolHeader` layout contract.
+4. Reuse existing UI primitives and theme tokens.
+5. Add an API handler only when browser-side code is insufficient; mirror it in `vite.config.js` if local development needs the endpoint.
+6. Add or update matching `en-US` and `zh-TW` namespace keys, including labels,
+   placeholders, errors, announcements, and accessible names; keep route IDs and
+   technical identifiers stable.
+7. Update the route inventory and any affected sections of this document and its
+   Traditional Chinese companion.
+8. Build the project and verify the changed route at desktop and mobile widths in
+   both supported locales.
+
+## Documentation maintenance
+
+When user behavior changes, update the relevant entries in `README.md` and
+`README.zh-TW.md`. When implementation structure changes, update this document
+and `ARCHITECTURE.zh-TW.md`. Keep the CONTRIBUTING and PRIVACY pairs
+synchronized when engineering or data-flow policy changes. For locale changes,
+also update both resource trees and run `i18n:check`, `i18n:audit`, and
+`docs:check`. Record the work and follow the validation/commit sequence in
+`TODO.md`.

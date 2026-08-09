@@ -145,14 +145,24 @@ async function getAudioDuration(file) {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const audio = new Audio();
+    let settled = false;
+    let timeoutId;
+    const finish = (duration) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      audio.onloadedmetadata = null;
+      audio.onerror = null;
+      URL.revokeObjectURL(url);
+      resolve(duration);
+    };
     audio.preload = 'metadata';
     audio.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      resolve(isFinite(audio.duration) ? audio.duration : null);
+      finish(isFinite(audio.duration) ? audio.duration : null);
     };
-    audio.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    audio.onerror = () => finish(null);
     audio.src = url;
-    setTimeout(() => { URL.revokeObjectURL(url); resolve(null); }, 5000);
+    timeoutId = setTimeout(() => finish(null), 5000);
   });
 }
 

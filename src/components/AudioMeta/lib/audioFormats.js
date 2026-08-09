@@ -1,6 +1,20 @@
 import { latin1ToString, parseID3v2, readUint16BE, readUint16LE, readUint32BE, readUint32LE } from './id3.js';
 
+/**
+ * @typedef {Object} AudioTechnicalMetadata
+ * @property {number} [numChannels]
+ * @property {number} [sampleRate]
+ * @property {number} [bitsPerSample]
+ * @property {string | null} [bitrate]
+ * @property {string} [audioFormat]
+ * @property {number | null} [durationSec]
+ * @property {number} [timescale]
+ * @property {string} [brand]
+ */
+/** @typedef {{ technical: AudioTechnicalMetadata, tags: Record<string, string>, coverArt: string | null }} AudioFormatMetadata */
+
 function parseWav(uint8) {
+  /** @type {AudioFormatMetadata} */
   const result = { technical: {}, tags: {}, coverArt: null };
   if (uint8.length < 44) return result;
 
@@ -72,6 +86,7 @@ function parseWav(uint8) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function parseFlac(uint8) {
+  /** @type {AudioFormatMetadata} */
   const result = { technical: {}, tags: {}, coverArt: null };
   if (uint8.length < 4) return result;
   if (latin1ToString(uint8.slice(0, 4)) !== 'fLaC') return result;
@@ -158,6 +173,7 @@ function parseFlac(uint8) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function parseM4a(uint8) {
+  /** @type {AudioFormatMetadata} */
   const result = { technical: {}, tags: {}, coverArt: null };
 
   function readString(start, len) {

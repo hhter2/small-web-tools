@@ -212,7 +212,6 @@ export default function VideoMeta() {
       if (files.some(f => f.name === file.name && f.size === file.size)) { setStatus(t('tool-videometa.ui.alreadyLoaded', { name: file.name })); continue; }
       try {
         const parsed = await parseMediaFile(file);
-        parsed.file = file;
         if (parsed.type === 'video') parsed.objectUrl = createObjectUrl(file);
         newFiles.push(parsed);
       } catch (err) { console.error('Error parsing', file.name, err); setStatus(t('tool-videometa.ui.parseFailed', { name: file.name })); }

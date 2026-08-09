@@ -1,6 +1,74 @@
 import { createEphemeralId } from '../../../lib/ephemeralId';
 import { formatBytes } from '../../../lib/mediaMetadataFormatters';
 
+/**
+ * @typedef {Object} ParsedTrack
+ * @property {string | null} type
+ * @property {string | null} handlerType
+ * @property {string} handlerName
+ * @property {string | null} codec
+ * @property {string | null} codecFourCC
+ * @property {number | null} width
+ * @property {number | null} height
+ * @property {number | null} sampleRate
+ * @property {number | null} channels
+ * @property {number | null} bitsPerSample
+ * @property {number | null} timescale
+ * @property {number | null} duration
+ * @property {number | null} sampleCount
+ * @property {number | null} colorPrimaries
+ * @property {number | null} transferCharacteristics
+ * @property {number | null} matrixCoefficients
+ * @property {boolean | null} fullRange
+ * @property {string | null} colorInfo
+ * @property {number | null} timecodeFlags
+ * @property {number | null} timecodeFrameDuration
+ * @property {number | null} timecodeTimescale
+ * @property {number | null} timecodeNumFrames
+ * @property {number | null} timecodeStartFrame
+ * @property {string | null} language
+ * @property {number | null} bitDepth
+ * @property {string | null} compressorName
+ */
+
+/**
+ * @typedef {Object} ParsedMp4
+ * @property {string | null} brand
+ * @property {string[]} compatibleBrands
+ * @property {number | null} duration
+ * @property {number | null} timescale
+ * @property {number | null} creationTime
+ * @property {ParsedTrack[]} tracks
+ * @property {Record<string, string>} metadata
+ */
+
+/**
+ * @typedef {Object} ParsedMediaRecord
+ * @property {string} id
+ * @property {string} name
+ * @property {number} size
+ * @property {string} formattedSize
+ * @property {string} ext
+ * @property {string} format
+ * @property {string} type
+ * @property {ParsedTrack[]} videoTracks
+ * @property {ParsedTrack[]} audioTracks
+ * @property {ParsedTrack[]} subtitleTracks
+ * @property {ParsedTrack[]} timecodeTracks
+ * @property {ParsedTrack[]} otherTracks
+ * @property {string | null} brand
+ * @property {string[]} compatibleBrands
+ * @property {number | null} containerDuration
+ * @property {number | null} containerTimescale
+ * @property {number | null} creationTime
+ * @property {Record<string, string>} metadata
+ * @property {Record<string, string> | null} logParams
+ * @property {string | null} logRawText
+ * @property {string | null} thumbnailUrl
+ * @property {string | null} objectUrl
+ * @property {File} file
+ */
+
 function readUint32BE(buf, offset) {
   return ((buf[offset] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | buf[offset + 3]) >>> 0;
 }
@@ -109,12 +177,15 @@ export function frameCountToTimecode(frameCount, fps, isDropFrame) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function parseMP4(uint8) {
+  /** @type {ParsedMp4} */
   const result = { brand: null, compatibleBrands: [], duration: null, timescale: null, creationTime: null, tracks: [], metadata: {} };
 
   function rs(start, len) { return latin1ToString(uint8.slice(start, start + len)); }
 
   const CONTAINER_ATOMS = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'udta', 'meta', 'ilst', 'edts'];
+  /** @type {ParsedTrack | null} */
   let currentTrack = null;
+  /** @type {ParsedTrack[]} */
   const trackStack = [];
 
   function parseAtoms(start, end) {
@@ -290,6 +361,7 @@ export function parseMP4(uint8) {
 
 export function parseLogFile(text) {
   const lines = text.split(/\r?\n/);
+  /** @type {Record<string, string>} */
   const params = {};
   for (const line of lines) {
     const trimmed = line.trim();
@@ -309,12 +381,13 @@ export async function parseMediaFile(file) {
   const arrayBuffer = await file.arrayBuffer();
   const uint8 = new Uint8Array(arrayBuffer);
 
+  /** @type {ParsedMediaRecord} */
   const fr = {
     id: createEphemeralId('video'),
     name: file.name, size: file.size, formattedSize: formatBytes(file.size), ext, format: ext.toUpperCase(), type: 'video',
     videoTracks: [], audioTracks: [], subtitleTracks: [], timecodeTracks: [], otherTracks: [],
     brand: null, compatibleBrands: [], containerDuration: null, containerTimescale: null, creationTime: null, metadata: {},
-    logParams: null, logRawText: null, thumbnailUrl: null, objectUrl: null,
+    logParams: null, logRawText: null, thumbnailUrl: null, objectUrl: null, file,
   };
 
   if (['log', 'txt'].includes(ext)) {
@@ -384,7 +457,7 @@ export async function getVideoInfo(file) {
       let thumbnail = null;
       try {
         const c = document.createElement('canvas'); c.width = video.videoWidth; c.height = video.videoHeight;
-        c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+        c.getContext('2d')?.drawImage(video, 0, 0, c.width, c.height);
         thumbnail = c.toDataURL('image/jpeg', 0.7);
       } catch { /* skip */ }
       URL.revokeObjectURL(url);

@@ -513,7 +513,6 @@ export default function VideoMeta() {
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -682,7 +681,7 @@ export default function VideoMeta() {
   const processFiles = async (fileList) => {
     const resourceCheck = validateResourceAddition(files, fileList, FILE_RESOURCE_POLICIES.videoMetadata);
     if (!resourceCheck.valid) { setStatus(t('tool-videometa.ui.resourceRejected')); return; }
-    setLoading(true); setStatus(t('tool-videometa.ui.parsing'));
+    setStatus(t('tool-videometa.ui.parsing'));
     const newFiles = [];
     const supportedExts = ['mp4', 'mov', 'm4v', 'f4v', '3gp', '3g2', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'ts', 'mts', 'm2ts', 'mxf', 'log', 'txt'];
     for (const file of fileList) {
@@ -700,7 +699,6 @@ export default function VideoMeta() {
       setFiles(prev => { const updated = [...prev, ...newFiles]; setSelectedId(newFiles[0].id); setCompareSelectedIds(curr => [...curr, ...newFiles.map(f => f.id)]); return updated; });
       setStatus(t('tool-videometa.ui.loadedCount', { count: newFiles.length }));
     }
-    setLoading(false);
   };
 
   const handleDrop = (e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files) processFiles(Array.from(e.dataTransfer.files)); };

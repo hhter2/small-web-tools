@@ -659,7 +659,6 @@ export default function App() {
               )}
               <span className="text-[0.9rem] font-semibold text-text-main">{activeTitle}</span>
             </div>
-            <div className="flex items-center gap-[10px]"></div>
           </div>
 
           {/* Tool Stage */}

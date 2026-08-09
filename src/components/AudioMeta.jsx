@@ -994,7 +994,6 @@ export default function AudioMeta() {
   const [files, setFiles] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'all' | 'compare'
   const [searchQuery, setSearchQuery] = useState('');
@@ -1027,7 +1026,6 @@ export default function AudioMeta() {
       setStatus(t('tool-audiometa.ui.resourceRejected'));
       return;
     }
-    setLoading(true);
     setStatus(t('tool-audiometa.ui.parsing'));
     const newFiles = [];
     for (const file of fileList) {
@@ -1058,7 +1056,6 @@ export default function AudioMeta() {
       });
       setStatus(t('tool-audiometa.ui.loadedCount', { count: newFiles.length }));
     }
-    setLoading(false);
   };
 
   const handleDrop = (e) => {

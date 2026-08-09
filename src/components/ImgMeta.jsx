@@ -8,6 +8,7 @@ import ToolHeader from './ui/ToolHeader';
 import { FILE_RESOURCE_POLICIES, validateResourceAddition } from '../lib/resourceLimits';
 import ExternalMapPreview from './ExternalMapPreview';
 import useObjectUrlRegistry from '../hooks/useObjectUrlRegistry';
+import { createEphemeralId } from '../lib/ephemeralId.js';
 
 // Jpeg Metadata Stripping Logic
 function stripJpegMetadata(arrayBuffer, mode) {
@@ -825,7 +826,7 @@ export default function ImgMeta() {
             }
             
             resolve({
-              id: Date.now() + Math.random().toString(36).substr(2, 9),
+              id: createEphemeralId('image'),
               file: file,
               name: file.name,
               type: type,

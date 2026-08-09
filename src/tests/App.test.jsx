@@ -1,6 +1,6 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App.jsx';
 import i18n from '../i18n/index.js';
 
@@ -10,6 +10,9 @@ let container;
 let root;
 
 async function flushLazyRoute(selector) {
+  if (selector) {
+    await act(async () => vi.dynamicImportSettled());
+  }
   for (let attempt = 0; attempt < 50; attempt += 1) {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));

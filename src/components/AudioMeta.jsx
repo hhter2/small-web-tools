@@ -801,6 +801,7 @@ function getTagLabel(key) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MiniPlayer({ objectUrl }) {
+  const { t } = useTranslation('tools');
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -864,7 +865,7 @@ function MiniPlayer({ objectUrl }) {
       <button 
         className="flex items-center justify-center w-9 h-9 rounded-full bg-accent text-white border-none cursor-pointer transition-all hover:bg-accent-hover hover:scale-105 shrink-0 shadow-md" 
         onClick={togglePlay} 
-        aria-label={playing ? 'Pause' : 'Play'}
+        aria-label={t(playing ? 'tool-audiometa.ui.pause' : 'tool-audiometa.ui.play')}
       >
         {playing ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -972,20 +973,20 @@ function FormatBadge({ format }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COMPARE_FIELDS = [
-  { label: 'Format', fn: (f) => f.format },
-  { label: 'File Size', fn: (f) => f.formattedSize },
-  { label: 'Title', fn: (f) => f.tags['TIT2'] || '—' },
-  { label: 'Artist', fn: (f) => f.tags['TPE1'] || '—' },
-  { label: 'Album', fn: (f) => f.tags['TALB'] || '—' },
-  { label: 'Year', fn: (f) => f.tags['TDRC'] || '—' },
-  { label: 'Genre', fn: (f) => f.tags['TCON'] || '—' },
-  { label: 'Track', fn: (f) => f.tags['TRCK'] || '—' },
-  { label: 'Duration', fn: (f) => formatDuration(f.technical.durationSec) },
-  { label: 'Bitrate', fn: (f) => f.technical.bitrate || '—' },
-  { label: 'Sample Rate', fn: (f) => f.technical.sampleRate ? `${f.technical.sampleRate.toLocaleString()} Hz` : '—' },
-  { label: 'Channels', fn: (f) => f.technical.numChannels ? (f.technical.numChannels === 1 ? 'Mono' : f.technical.numChannels === 2 ? 'Stereo' : `${f.technical.numChannels} ch`) : '—' },
-  { label: 'Bit Depth', fn: (f) => f.technical.bitsPerSample ? `${f.technical.bitsPerSample}-bit` : '—' },
-  { label: 'Codec', fn: (f) => f.technical.audioFormat || '—' },
+  { labelKey: 'metadata-fields.format', fn: (f) => f.format },
+  { labelKey: 'metadata-fields.fileSize', fn: (f) => f.formattedSize },
+  { labelKey: 'metadata-fields.title', fn: (f) => f.tags['TIT2'] || '—' },
+  { labelKey: 'metadata-fields.artist', fn: (f) => f.tags['TPE1'] || '—' },
+  { labelKey: 'metadata-fields.album', fn: (f) => f.tags['TALB'] || '—' },
+  { labelKey: 'metadata-fields.year', fn: (f) => f.tags['TDRC'] || '—' },
+  { labelKey: 'metadata-fields.genre', fn: (f) => f.tags['TCON'] || '—' },
+  { labelKey: 'metadata-fields.track', fn: (f) => f.tags['TRCK'] || '—' },
+  { labelKey: 'metadata-fields.duration', fn: (f) => formatDuration(f.technical.durationSec) },
+  { labelKey: 'metadata-fields.bitrate', fn: (f) => f.technical.bitrate || '—' },
+  { labelKey: 'metadata-fields.sampleRate', fn: (f) => f.technical.sampleRate ? `${f.technical.sampleRate.toLocaleString()} Hz` : '—' },
+  { labelKey: 'metadata-fields.channels', fn: (f, t) => f.technical.numChannels ? (f.technical.numChannels === 1 ? t('tool-audiometa.ui.mono') : f.technical.numChannels === 2 ? t('tool-audiometa.ui.stereo') : t('tool-audiometa.ui.channelCount', { count: f.technical.numChannels })) : '—' },
+  { labelKey: 'metadata-fields.bitDepth', fn: (f) => f.technical.bitsPerSample ? `${f.technical.bitsPerSample}-bit` : '—' },
+  { labelKey: 'metadata-fields.codec', fn: (f) => f.technical.audioFormat || '—' },
 ];
 
 export default function AudioMeta() {
@@ -1160,23 +1161,23 @@ export default function AudioMeta() {
     const groups = [
       {
         key: 'technical',
-        label: 'Technical Parameters',
+        label: t('metadata-fields.technicalParameters'),
         icon: '🔧',
         rows: [
-          ['Format', file.format],
-          ['Duration', formatDuration(file.technical.durationSec)],
-          ['Bitrate', file.technical.bitrate],
-          ['Sample Rate', file.technical.sampleRate ? `${file.technical.sampleRate.toLocaleString()} Hz` : null],
-          ['Channels', file.technical.numChannels ? (file.technical.numChannels === 1 ? 'Mono (1)' : file.technical.numChannels === 2 ? 'Stereo (2)' : `${file.technical.numChannels} channels`) : null],
-          ['Bit Depth', file.technical.bitsPerSample ? `${file.technical.bitsPerSample}-bit` : null],
-          ['Codec / Encoding', file.technical.audioFormat],
-          ['File Size', file.formattedSize],
-          ['Filename', file.name],
+          [t('metadata-fields.format'), file.format],
+          [t('metadata-fields.duration'), formatDuration(file.technical.durationSec)],
+          [t('metadata-fields.bitrate'), file.technical.bitrate],
+          [t('metadata-fields.sampleRate'), file.technical.sampleRate ? `${file.technical.sampleRate.toLocaleString()} Hz` : null],
+          [t('metadata-fields.channels'), file.technical.numChannels ? `${channelLabel(file.technical.numChannels)} (${file.technical.numChannels})` : null],
+          [t('metadata-fields.bitDepth'), file.technical.bitsPerSample ? `${file.technical.bitsPerSample}-bit` : null],
+          [t('metadata-fields.codecEncoding'), file.technical.audioFormat],
+          [t('metadata-fields.fileSize'), file.formattedSize],
+          [t('metadata-fields.filename'), file.name],
         ].filter(([, v]) => v != null && v !== '' && v !== '—'),
       },
       {
         key: 'tags',
-        label: 'Metadata Tags',
+        label: t('metadata-fields.metadataTags'),
         icon: '🏷️',
         rows: Object.entries(file.tags)
           .filter(([, v]) => v && String(v).trim())
@@ -1202,9 +1203,9 @@ export default function AudioMeta() {
   // Channel display helper
   const channelLabel = (num) => {
     if (!num) return '—';
-    if (num === 1) return 'Mono';
-    if (num === 2) return 'Stereo';
-    return `${num} channels`;
+    if (num === 1) return t('tool-audiometa.ui.mono');
+    if (num === 2) return t('tool-audiometa.ui.stereo');
+    return t('tool-audiometa.ui.channelCount', { count: num });
   };
 
   return (
@@ -1409,16 +1410,16 @@ export default function AudioMeta() {
                     </h3>
                     <dl className="flex flex-col gap-2">
                       {[
-                        ['Title', activeFile.tags['TIT2']],
-                        ['Artist', activeFile.tags['TPE1']],
-                        ['Album Artist', activeFile.tags['TPE2']],
-                        ['Album', activeFile.tags['TALB']],
-                        ['Year', activeFile.tags['TDRC']],
-                        ['Genre', activeFile.tags['TCON']],
-                        ['Track #', activeFile.tags['TRCK']],
-                        ['Disc #', activeFile.tags['TPOS']],
-                        ['Composer', activeFile.tags['TCOM']],
-                        ['Comment', activeFile.tags['COMM']],
+                        [t('metadata-fields.title'), activeFile.tags['TIT2']],
+                        [t('metadata-fields.artist'), activeFile.tags['TPE1']],
+                        [t('metadata-fields.albumArtist'), activeFile.tags['TPE2']],
+                        [t('metadata-fields.album'), activeFile.tags['TALB']],
+                        [t('metadata-fields.year'), activeFile.tags['TDRC']],
+                        [t('metadata-fields.genre'), activeFile.tags['TCON']],
+                        [t('metadata-fields.track'), activeFile.tags['TRCK']],
+                        [t('metadata-fields.disc'), activeFile.tags['TPOS']],
+                        [t('metadata-fields.composer'), activeFile.tags['TCOM']],
+                        [t('metadata-fields.comment'), activeFile.tags['COMM']],
                       ].filter(([, v]) => v).map(([k, v]) => (
                         <div className="flex justify-between py-1.5 border-b border-border last:border-0" key={k}>
                           <dt className="text-xs text-text-muted font-medium">{k}</dt>
@@ -1446,14 +1447,14 @@ export default function AudioMeta() {
                     </h3>
                     <dl className="flex flex-col gap-2">
                       {[
-                        ['Format', activeFile.format],
-                        ['Duration', formatDuration(activeFile.technical.durationSec)],
-                        ['Bitrate', activeFile.technical.bitrate],
-                        ['Sample Rate', activeFile.technical.sampleRate ? `${activeFile.technical.sampleRate.toLocaleString()} Hz` : null],
-                        ['Channels', channelLabel(activeFile.technical.numChannels)],
-                        ['Bit Depth', activeFile.technical.bitsPerSample ? `${activeFile.technical.bitsPerSample}-bit` : null],
-                        ['Codec', activeFile.technical.audioFormat],
-                        ['File Size', activeFile.strippedInfo ? `${activeFile.strippedInfo.formattedSize} (stripped)` : activeFile.formattedSize],
+                        [t('metadata-fields.format'), activeFile.format],
+                        [t('metadata-fields.duration'), formatDuration(activeFile.technical.durationSec)],
+                        [t('metadata-fields.bitrate'), activeFile.technical.bitrate],
+                        [t('metadata-fields.sampleRate'), activeFile.technical.sampleRate ? `${activeFile.technical.sampleRate.toLocaleString()} Hz` : null],
+                        [t('metadata-fields.channels'), channelLabel(activeFile.technical.numChannels)],
+                        [t('metadata-fields.bitDepth'), activeFile.technical.bitsPerSample ? `${activeFile.technical.bitsPerSample}-bit` : null],
+                        [t('metadata-fields.codec'), activeFile.technical.audioFormat],
+                        [t('metadata-fields.fileSize'), activeFile.strippedInfo ? `${activeFile.strippedInfo.formattedSize} (stripped)` : activeFile.formattedSize],
                       ].filter(([, v]) => v && v !== '—').map(([k, v]) => (
                         <div className="flex justify-between py-1.5 border-b border-border last:border-0" key={k}>
                           <dt className="text-xs text-text-muted font-medium">{k}</dt>
@@ -1575,11 +1576,11 @@ export default function AudioMeta() {
                       </thead>
                       <tbody>
                         {COMPARE_FIELDS.map(field => (
-                          <tr key={field.label} className="hover:bg-hover-bg/30">
-                            <td className="p-2.5 px-4 text-xs font-medium text-text-muted border-b border-border last:border-0 w-[130px] truncate">{field.label}</td>
+                          <tr key={field.labelKey} className="hover:bg-hover-bg/30">
+                            <td className="p-2.5 px-4 text-xs font-medium text-text-muted border-b border-border last:border-0 w-[130px] truncate">{t(field.labelKey)}</td>
                             {compareFiles.map(f => (
                               <td key={f.id} className="p-2.5 px-4 text-xs text-text-main border-b border-border last:border-0 min-w-[140px] vertical-align-top">
-                                {field.fn(f)}
+                                {field.fn(f, t)}
                               </td>
                             ))}
                           </tr>

@@ -44,6 +44,10 @@ Use this sequence for each meaningful update:
 
 ## Completed
 
+### 2026-08-09
+
+- [x] `chore` Complete the v0.10.1-beta implementation runbook: remove stale code and configuration, strengthen Knip and i18n audits, centralize shell metadata and preferences, extract audio/video metadata domains with explicit Blob URL and FFmpeg lifecycles, expand strict checks and coverage, reconcile audience curation, and enable Dependabot major-version updates.
+
 ### 2026-08-03
 
 - [x] `feat 31` Complete the bilingual `en-US`/`zh-TW` refactor with persisted locale selection, localized shell and tool behavior, synchronized resources, and bilingual validation; released as `v0.8.0-beta`.

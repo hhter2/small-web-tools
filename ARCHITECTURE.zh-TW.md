@@ -88,8 +88,10 @@ dist/ 是 npm run build 產生的目錄，刻意被忽略。
 
 JavaScript 遷移使用三個明確的 TypeScript checkJs 專案。`jsconfig.json` 是廣泛的
 非 strict baseline；`jsconfig.domain.json` 保留既有的狹窄領域／共用 helper 邊界；
-`jsconfig.ui.json` 是漸進式共用 UI 邊界，啟用 `strictNullChecks`，初始涵蓋
-`LanguageSwitcher.jsx` 與其 i18n 相依項。CI 中的 `npm run typecheck` 會執行三個
+`jsconfig.ui.json` 是漸進式共用 UI 邊界，啟用 `strictNullChecks`，涵蓋
+`LanguageSwitcher.jsx`、桌面 header／分類／footer 元件、`MobileDrawer`、路由／標題／
+持久化 hooks、共用分類定義、抽離後的音訊／影片中繼資料領域，以及其純 route／mode
+相依項。CI 中的 `npm run typecheck` 會執行三個
 專案。新增排除必須維持最少並加以記錄；擴大 UI 邊界時必須在同一變更修正所有
 新揭露的錯誤。
 
@@ -101,14 +103,17 @@ src/main.jsx 掛載 App 並匯入 src/styles.css。
 
 src/App.jsx 負責應用程式 shell：
 
-- src/toolRegistry.js 是唯一的路由中繼資料來源。側邊欄、桌面導覽、儀表板卡片、
-  active title、footer links、靜態 layout、lazy component 與路由測試都從此登錄表衍生。
+- src/toolRouteMetadata.js 是唯一的路由中繼資料來源。側邊欄、桌面導覽、儀表板卡片、
+  active title、footer links、靜態 layout 與路由測試都從此衍生；src/toolRegistry.js
+  只把這些中繼資料與 lazy component loader 結合。
 - 登錄表 aliases 保留舊書籤；tool-officemeta 會解析為 tool-docmeta。
-- categories 定義六個呈現群組：Text、Developer、Network、Media、Bioinfo 與 Utilities。
+- src/categoryDefinitions.jsx 定義六個共用呈現群組與圖示：Text、Developer、Network、
+  Media、Bioinfo 與 Utilities。
 - activeTool 從 /home[/&lt;audience&gt;]/&lt;tool-slug&gt; 或 /simple/&lt;tool-slug&gt; 初始化，並同步回路徑。
 - toolMode 從經驗證的 /home 或 /simple 路徑初始化。工作區路徑會留在 URL 中，
   路徑導覽則改變工具。
-- theme 與 sidebarCollapsed 儲存在 localStorage。
+- useShellPersistence 集中管理 active-tool session state、theme 與 sidebar 持久化；
+  useDocumentTitle 在儲存空間不可用時仍獨立管理頁面標題。
 - renderActiveTool() 解析目前的登錄表項目並渲染其 lazy component。privacy 路由已登錄，
   但不列入工具目錄。
 
@@ -158,6 +163,10 @@ AudienceSwitcher.jsx 為完整首頁與五個使用者群組渲染分段控制�
 /home[/&lt;audience&gt;][/&lt;tool-slug&gt;] 與 /simple[/&lt;tool-slug&gt;]；舊版 /home/simple
 位址會重新導向至 /simple。重點測試位於 toolModes.test.js、homeGrid.test.jsx、
 audienceSwitcher.test.jsx 與 simpleHome.test.jsx。
+
+Mermaid 屬於 developer audience。其他可導覽工具都必須出現在至少一個精選工作區，
+或在 `INTENTIONAL_CURATED_EXCLUSIONS` 中保留明確理由；`toolModes.test.js` 會執行此規則。
+App shell、lazy route、持久化、工作區導覽與語言切換的整合覆蓋位於 `App.test.jsx`。
 
 ### 共用工具頁面契約
 
@@ -270,6 +279,13 @@ mediaSeparatorEngine.js 只會在需要時下載固定的 FFmpeg 0.12.6 JavaScri
 
 ImgMeta.jsx、DocMeta.jsx、AudioMeta.jsx 與 VideoMeta.jsx 在瀏覽器中解析使用者選取的
 檔案。它們支援工具專用的檢查、比較、匯出或中繼資料移除流程，不會將檔案送過此應用程式。
+
+音訊解析、格式偵測、中繼資料剝除、tag label 與 URL ownership 位於
+`src/components/AudioMeta/lib/`。MP4／MOV 解析、codec／色彩映射、timecode 轉換、
+瀏覽器 probing，以及序列化 FFmpeg 音軌抽取服務位於 `src/components/VideoMeta/lib/`。
+抽取服務負責唯一虛擬檔名、progress listener 移除、虛擬檔案刪除、取消檢查與引擎終止；
+`useObjectUrlRegistry` 則負責 preview、衍生輸出與下載 Blob URL。聚焦測試位於
+`audioMetadataDomain.test.js` 與 `videoMetadataDomain.test.js`。
 
 純文件格式化／解析 helper 位於 src/components/DocMeta/lib/。QR／barcode 編碼規則與
 codon 輸入／篩選／呈現規則位於各自的 src/components/&lt;Tool&gt;/lib/ 目錄。聚焦覆蓋率
@@ -417,6 +433,7 @@ npm run dev
 npm run build
 npm run i18n:check
 npm run i18n:audit
+npm run deadcode:check
 npm run verify
 npm run test:e2e
 npm run docs:check
@@ -428,6 +445,10 @@ npm@10.9.2；CI 會安裝並驗證該精確版本。npm run verify 是基本門�
 不增加的 ESLint 警告預算、一般與 strict checkJs、覆蓋率門檻、正式建置、套件大小、
 靜態標頭政策、外部主機清單、Cloudflare 拓撲與文件一致性。CI 另外執行相依套件檢查、
 Playwright 流程與 npm audit。
+
+覆蓋率 gate 納入 `App.jsx`、共用分類定義與抽離後的音訊／影片領域，並設定各邊界門檻。
+Knip 會以 dependency-only 與完整 dead-code 模式執行，明確列出應用程式、Functions、
+Worker、script、test、integration 與瀏覽器流程入口。
 
 ## 新增或修改工具
 

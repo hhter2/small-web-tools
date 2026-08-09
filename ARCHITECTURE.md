@@ -78,7 +78,7 @@ small-web-tools/
 │   ├── check-hardcoded-ui.mjs User-facing string audit
 │   └── check-doc-consistency.mjs Documentation/link consistency checks
 ├── .github/
-│   ├── dependabot.yml        Weekly dependency update configuration
+│   ├── dependabot.yml        Monthly dependency updates, including major versions
 │   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
 ├── public/
 │   ├── _headers              Cloudflare Pages security response headers
@@ -87,6 +87,7 @@ small-web-tools/
 ├── src/
 │   ├── main.jsx              React mount and global stylesheet import
 │   ├── App.jsx               Application-shell composition and registry renderer
+│   ├── categoryDefinitions.jsx Shared category IDs, labels, and icons
 │   ├── toolRouteMetadata.js  Canonical routes, aliases, metadata, and layout flags
 │   ├── toolRegistry.js       Lazy component loaders joined to canonical route metadata
 │   ├── toolModes.js          Audience and Simple workspace profiles, filtering, and URL helpers
@@ -132,7 +133,8 @@ The JavaScript migration uses three explicit TypeScript checkJs projects.
 the existing narrow domain/shared-helper boundary. `jsconfig.ui.json` is the
 incremental shared-UI boundary; it enables `strictNullChecks` for `LanguageSwitcher`,
 the desktop header/category/footer components, `MobileDrawer`, the routing/title/
-persistence hooks, and their pure route/mode dependencies. `npm run typecheck` executes all
+persistence hooks, shared category definitions, the extracted audio/video metadata
+domains, and their pure route/mode dependencies. `npm run typecheck` executes all
 three projects in CI. New exclusions must remain minimal and documented, and an
 expanded UI boundary must fix every newly exposed error in the same change.
 
@@ -146,7 +148,7 @@ expanded UI boundary must fix every newly exposed error in the same change.
 
 - `src/toolRouteMetadata.js` is the only route metadata source. Sidebar, desktop navigation, dashboard cards, active titles, footer links, static layouts, lazy components, and route tests derive from it; `src/toolRegistry.js` only joins that metadata to lazy component loaders.
 - Registry aliases preserve old bookmarks; `tool-officemeta` resolves to `tool-docmeta`.
-- `categories` define the six presentation groups: Text, Developer, Network, Media, Bioinfo, and Utilities.
+- `src/categoryDefinitions.jsx` defines the six presentation groups and shared icons: Text, Developer, Network, Media, Bioinfo, and Utilities.
 - `useAppRouting` initializes `activeTool` from `/home[/<audience>]/<tool-slug>` or `/simple/<tool-slug>` and synchronizes navigation and browser history with the path.
 - `useAppRouting` initializes `toolMode` from the validated `/home` or `/simple` path. The workspace path
   remains in the URL while path navigation changes tools.
@@ -208,7 +210,10 @@ provides an all-tool search and eight compact shortcuts inside the reduced shell
 Routing uses `/home[/<audience>][/<tool-slug>]` and
 `/simple[/<tool-slug>]`; legacy `/home/simple` addresses redirect to `/simple`.
 Focused coverage lives in `toolModes.test.js`, `homeGrid.test.jsx`,
-`audienceSwitcher.test.jsx`, and `simpleHome.test.jsx`.
+`audienceSwitcher.test.jsx`, `simpleHome.test.jsx`, and `App.test.jsx`. Mermaid is
+part of the developer audience. Every other navigable tool must appear in at least
+one curated workspace or have a maintained rationale in
+`INTENTIONAL_CURATED_EXCLUSIONS`; `toolModes.test.js` enforces that invariant.
 
 ### Shared tool-page contract
 
@@ -317,6 +322,15 @@ filename inference, contrast selection, and highlighting helpers live under
 ### File metadata tools
 
 `ImgMeta.jsx`, `DocMeta.jsx`, `AudioMeta.jsx`, and `VideoMeta.jsx` parse user-selected files in the browser. They support tool-specific inspection, comparison, export, or metadata-removal workflows without routing files through this application.
+
+Audio parsing, format detection, metadata stripping, tag labels, and URL ownership
+live under `src/components/AudioMeta/lib/`. MP4/MOV parsing, codec/color mappings,
+timecode conversion, browser probing, and the serialized FFmpeg audio-extraction
+service live under `src/components/VideoMeta/lib/`. The extraction service owns
+unique virtual filenames, progress-listener removal, virtual-file deletion,
+cancellation checks, and engine termination. `useObjectUrlRegistry` remains the
+component-level owner of preview, derived-output, and download Blob URLs. Focused
+coverage lives in `audioMetadataDomain.test.js` and `videoMetadataDomain.test.js`.
 
 Pure document formatting/parsing helpers live under `src/components/DocMeta/lib/`.
 QR/barcode encoding rules and codon input/filter/presentation rules live in their corresponding
@@ -479,6 +493,7 @@ npm run dev
 npm run build
 npm run i18n:check
 npm run i18n:audit
+npm run deadcode:check
 npm run verify
 npm run test:e2e
 npm run docs:check
@@ -493,6 +508,11 @@ normal and strict checkJs, coverage thresholds, production build, bundle budgets
 static header policy, the external-host inventory, Cloudflare topology, and
 documentation consistency. CI additionally runs dependency checks, Playwright
 journeys, and `npm audit`.
+
+The coverage gate includes `App.jsx`, shared category definitions, and the extracted
+audio/video domains with per-boundary thresholds. Knip runs in dependency-only and
+full dead-code modes with explicit application, Functions, Worker, script, test,
+integration, and browser-journey entry points.
 
 ## Adding or changing a tool
 

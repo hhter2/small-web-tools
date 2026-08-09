@@ -85,7 +85,8 @@ Cloudflare 整合、Playwright 瀏覽器流程與 build artifact 產生；相依
 這樣可明確覆蓋兩條受支援的 LTS 版本線，同時避免重複執行成本最高的瀏覽器與 audit
 工作。`npm run typecheck:baseline` 檢查未啟用 strict mode 的廣泛 JavaScript 圖；
 `npm run typecheck:domain` 保留既有的領域／共用 helper 邊界；
-`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界啟用 `strictNullChecks`。只有
+`npm run typecheck:ui` 則對明確列出的共用 UI 遷移邊界啟用 `strictNullChecks`，包含
+共用分類定義與抽離後的音訊／影片中繼資料領域。只有
 在同一變更中修正錯誤時才擴大該邊界，並讓 `jsconfig.ui.json` 的排除項目維持最少且
 有文件說明。
 
@@ -102,6 +103,11 @@ Cloudflare 整合、Playwright 瀏覽器流程與 build artifact 產生；相依
   可重用的請求驗證與安全抓取邏輯放在 functions/_shared/。
 - 為純函式／領域邏輯加入聚焦的單元測試，為關鍵流程加入 Playwright 覆蓋率。
   避免只依賴路由冒煙測試。
+- 明確管理 Blob URL ownership：preview、衍生輸出與下載 URL 都應透過共用 registry
+  建立並撤銷。FFmpeg service 必須使用唯一虛擬檔名，並在成功、失敗或取消時移除
+  listener 與暫存檔案。
+- 保持 Dependabot major-version 更新啟用，逐一審查 major update；不可用整個儲存庫的
+  major-version ignore 取代審查。
 
 ## 國際化
 

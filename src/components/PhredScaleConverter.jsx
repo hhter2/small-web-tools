@@ -15,7 +15,7 @@ const OFFSET_OPTIONS = [
 
 export default function PhredScaleConverter() {
   const { t } = useTranslation('tools');
-  const [offset, setOffset] = useState(FASTQ_PHRED_OFFSETS.phred33);
+  const [offset, setOffset] = useState(Number(FASTQ_PHRED_OFFSETS.phred33));
   const [input, setInput] = useState('IIIIIIII');
   const scores = useMemo(() => decodeFastqQualityString(input, offset), [input, offset]);
   const hasError = input.length > 0 && !scores;

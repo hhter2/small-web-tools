@@ -28,6 +28,15 @@ const OFFSET_OPTIONS = [
     offset: FASTQ_PHRED_OFFSETS.phred64,
   },
 ];
+const FASTQ_SCORE_RANGE_PREFIX = 'FASTQ: integer Q 0–';
+const PHRED_FORMULA = React.createElement(
+  React.Fragment,
+  null,
+  'Q = −10 × log',
+  React.createElement('sub', null, '10'),
+  '(P) · P = 10',
+  React.createElement('sup', null, '−Q/10'),
+);
 
 export default function PhredScaleConverter() {
   const { t } = useTranslation('tools');
@@ -197,7 +206,7 @@ export default function PhredScaleConverter() {
               <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.scoreError')}</p>
             )}
             {fastqEncodingUnavailable && conversionSource === 'scores' && (
-              <p className="text-xs text-text-muted">FASTQ: integer Q 0–{126 - offset}</p>
+              <p className="text-xs text-text-muted">{FASTQ_SCORE_RANGE_PREFIX}{126 - offset}</p>
             )}
           </div>
         </div>
@@ -224,14 +233,7 @@ export default function PhredScaleConverter() {
           {probabilityHasError && (
             <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.probabilityError')}</p>
           )}
-          <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-text-muted">
-            <span>
-              Q = −10 × log<sub>10</sub>(P)
-            </span>
-            <span>
-              P = 10<sup>−Q/10</sup>
-            </span>
-          </p>
+          <p className="text-sm text-text-muted">{PHRED_FORMULA}</p>
         </div>
       </section>
 
@@ -247,8 +249,8 @@ export default function PhredScaleConverter() {
             <thead className="bg-app text-left text-xs uppercase tracking-wide text-text-muted">
               <tr>
                 <th className="px-3 py-2">Q</th>
-                <th className="px-3 py-2">Phred+33</th>
-                <th className="px-3 py-2">Phred+64</th>
+                <th className="px-3 py-2">{OFFSET_OPTIONS[0].label}</th>
+                <th className="px-3 py-2">{OFFSET_OPTIONS[1].label}</th>
                 <th className="px-3 py-2">{t('tool-phred.ui.errorProbability')}</th>
               </tr>
             </thead>

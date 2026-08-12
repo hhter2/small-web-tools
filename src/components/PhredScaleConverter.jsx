@@ -29,7 +29,7 @@ export default function PhredScaleConverter() {
         <div
           className="flex w-full rounded-md border border-border bg-card p-1"
           role="tablist"
-          aria-label={t('tool-phred.ui.inputTypeAria')}
+          aria-label="FASTQ"
         >
           {OFFSET_OPTIONS.map((option) => (
             <button
@@ -52,7 +52,7 @@ export default function PhredScaleConverter() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">
-              FASTQ Q score
+              FASTQ
             </label>
             <textarea
               id="phred-fastq-input"
@@ -87,21 +87,6 @@ export default function PhredScaleConverter() {
               aria-live="polite"
               className="min-h-40 w-full resize-y rounded-lg border border-border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none"
             />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
-            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
-              ASCII offset
-            </span>
-            <strong className="mt-1 block font-mono text-lg text-accent">{offset}</strong>
-          </div>
-          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
-            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
-              Q score range
-            </span>
-            <strong className="mt-1 block font-mono text-lg text-accent">0–{126 - offset}</strong>
           </div>
         </div>
       </section>

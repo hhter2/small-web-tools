@@ -67,7 +67,8 @@ describe('Phred scale domain', () => {
     expect(phredToErrorProbability(-1)).toBeNull();
     expect(errorProbabilityToPhred(0)).toBeNull();
     expect(errorProbabilityToPhred(1.1)).toBeNull();
-    expect(formatProbability(0.000001)).toBe('1.000e-6');
+    expect(formatProbability(0.000001)).toBe('0.000001');
+    expect(formatProbability(1e-10)).toBe('0.0000000001');
     expect(formatPhredScore(20)).toBe('20');
     expect(formatPhredScore(20.25)).toBe('20.25');
   });

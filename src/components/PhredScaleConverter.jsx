@@ -30,7 +30,7 @@ const OFFSET_OPTIONS = [
 ];
 
 export default function PhredScaleConverter() {
-  const { t, i18n } = useTranslation('tools');
+  const { t } = useTranslation('tools');
 
   const [scoreInput, setScoreInput] = useState('30');
   const [probabilityInput, setProbabilityInput] = useState('0.001');
@@ -38,7 +38,7 @@ export default function PhredScaleConverter() {
   const [conversionSource, setConversionSource] = useState('scores');
   const [fastqInput, setFastqInput] = useState('?');
 
-  const metrics = useMemo(
+  const singleScoreMetrics = useMemo(
     () => calculatePhredMetrics('score', scoreInput),
     [scoreInput],
   );
@@ -51,7 +51,7 @@ export default function PhredScaleConverter() {
     [fastqInput, offset],
   );
 
-  const scoreHasError = Boolean(scoreInput.trim()) && !metrics && encodedQuality === null;
+  const scoreHasError = Boolean(scoreInput.trim()) && !singleScoreMetrics && encodedQuality === null;
   const probabilityHasError = Boolean(probabilityInput.trim())
     && !calculatePhredMetrics('probability', probabilityInput);
   const fastqHasError = fastqInput.length > 0 && !decodedScores;
@@ -181,31 +181,6 @@ export default function PhredScaleConverter() {
         </div>
 
         <p className="text-xs text-text-muted">Q = −10 × log₁₀(P) · P = 10^(−Q/10)</p>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-live="polite">
-          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
-            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
-              {t('tool-phred.ui.callAccuracy')}
-            </span>
-            <strong className="mt-1 block font-mono text-lg text-accent">
-              {metrics
-                ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 6 }).format(metrics.accuracy * 100)}%`
-                : '—'}
-            </strong>
-          </div>
-          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
-            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
-              {t('tool-phred.ui.expectedFrequency')}
-            </span>
-            <strong className="mt-1 block font-mono text-lg text-accent">
-              {metrics
-                ? t('tool-phred.ui.oneIn', {
-                  count: Math.max(1, Math.round(metrics.oneIn)).toLocaleString(i18n.language),
-                })
-                : '—'}
-            </strong>
-          </div>
-        </div>
       </section>
 
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-app/70 p-4">
@@ -262,15 +237,13 @@ export default function PhredScaleConverter() {
           <p className="text-xs text-text-muted">{t('tool-phred.ui.referenceDescription')}</p>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[760px] border-collapse text-sm">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead className="bg-app text-left text-xs uppercase tracking-wide text-text-muted">
               <tr>
                 <th className="px-3 py-2">Q</th>
                 <th className="px-3 py-2">Phred+33</th>
                 <th className="px-3 py-2">Phred+64</th>
                 <th className="px-3 py-2">{t('tool-phred.ui.errorProbability')}</th>
-                <th className="px-3 py-2">{t('tool-phred.ui.accuracy')}</th>
-                <th className="px-3 py-2">{t('tool-phred.ui.expectedErrors')}</th>
               </tr>
             </thead>
             <tbody>
@@ -291,12 +264,6 @@ export default function PhredScaleConverter() {
                     <td className="px-3 py-2 font-mono">{fastqCodeForScore(score, FASTQ_PHRED_OFFSETS.phred33)}</td>
                     <td className="px-3 py-2 font-mono">{fastqCodeForScore(score, FASTQ_PHRED_OFFSETS.phred64)}</td>
                     <td className="px-3 py-2 font-mono">{formatProbability(row.errorProbability)}</td>
-                    <td className="px-3 py-2">{(row.accuracy * 100).toFixed(Math.min(6, score / 10 + 1))}%</td>
-                    <td className="px-3 py-2">
-                      {t('tool-phred.ui.oneIn', {
-                        count: Math.max(1, Math.round(row.oneIn)).toLocaleString(i18n.language),
-                      })}
-                    </td>
                   </tr>
                 );
               })}

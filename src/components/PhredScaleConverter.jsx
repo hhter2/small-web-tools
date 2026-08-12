@@ -155,7 +155,7 @@ export default function PhredScaleConverter() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">FASTQ</label>
             <textarea
@@ -165,7 +165,7 @@ export default function PhredScaleConverter() {
               onChange={(event) => handleFastqChange(event.target.value)}
               spellCheck={false}
               aria-invalid={fastqHasError || undefined}
-              className={`min-h-40 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+              className={`h-40 min-h-40 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
                 fastqHasError
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
                   : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
@@ -176,57 +176,62 @@ export default function PhredScaleConverter() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="phred-score-input" className="text-sm font-bold text-text-main">
-                {t('tool-phred.ui.scoreTab')}
-              </label>
-              <textarea
-                id="phred-score-input"
-                rows={6}
-                value={scoreInput}
-                onChange={(event) => handleScoreChange(event.target.value)}
-                spellCheck={false}
-                aria-invalid={scoreHasError || undefined}
-                className={`min-h-40 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
-                  scoreHasError
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
-                    : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
-                }`}
-              />
-              {scoreHasError && (
-                <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.scoreError')}</p>
-              )}
-              {fastqEncodingUnavailable && conversionSource === 'scores' && (
-                <p className="text-xs text-text-muted">FASTQ: integer Q 0–{126 - offset}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="phred-probability-input" className="text-sm font-bold text-text-main">
-                {t('tool-phred.ui.errorProbability')}
-              </label>
-              <input
-                id="phred-probability-input"
-                type="number"
-                min={Number.MIN_VALUE}
-                max="1"
-                step="any"
-                value={probabilityInput}
-                onChange={(event) => handleProbabilityChange(event.target.value)}
-                aria-invalid={probabilityHasError || undefined}
-                className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
-                  probabilityHasError
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
-                    : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
-                }`}
-              />
-              {probabilityHasError && (
-                <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.probabilityError')}</p>
-              )}
-              <p className="text-xs text-text-muted">Q = −10 × log₁₀(P) · P = 10^(−Q/10)</p>
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="phred-score-input" className="text-sm font-bold text-text-main">
+              {t('tool-phred.ui.scoreTab')}
+            </label>
+            <textarea
+              id="phred-score-input"
+              rows={6}
+              value={scoreInput}
+              onChange={(event) => handleScoreChange(event.target.value)}
+              spellCheck={false}
+              aria-invalid={scoreHasError || undefined}
+              className={`h-40 min-h-40 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+                scoreHasError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+              }`}
+            />
+            {scoreHasError && (
+              <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.scoreError')}</p>
+            )}
+            {fastqEncodingUnavailable && conversionSource === 'scores' && (
+              <p className="text-xs text-text-muted">FASTQ: integer Q 0–{126 - offset}</p>
+            )}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="phred-probability-input" className="text-sm font-bold text-text-main">
+            {t('tool-phred.ui.errorProbability')}
+          </label>
+          <input
+            id="phred-probability-input"
+            type="number"
+            min={Number.MIN_VALUE}
+            max="1"
+            step="any"
+            value={probabilityInput}
+            onChange={(event) => handleProbabilityChange(event.target.value)}
+            aria-invalid={probabilityHasError || undefined}
+            className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+              probabilityHasError
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+            }`}
+          />
+          {probabilityHasError && (
+            <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.probabilityError')}</p>
+          )}
+          <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-text-muted">
+            <span>
+              Q = −10 × log<sub>10</sub>(P)
+            </span>
+            <span>
+              P = 10<sup>−Q/10</sup>
+            </span>
+          </p>
         </div>
       </section>
 

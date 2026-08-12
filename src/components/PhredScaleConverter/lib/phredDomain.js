@@ -1,3 +1,25 @@
+export const FASTQ_PHRED_OFFSETS = Object.freeze({
+  phred33: 33,
+  phred64: 64,
+});
+
+export function decodeFastqQualityString(rawValue, offset) {
+  if (typeof rawValue !== 'string' || rawValue.length === 0) return null;
+  if (offset !== FASTQ_PHRED_OFFSETS.phred33 && offset !== FASTQ_PHRED_OFFSETS.phred64) return null;
+
+  const scores = [];
+  for (let index = 0; index < rawValue.length; index += 1) {
+    const code = rawValue.charCodeAt(index);
+    if (code < offset || code > 126) return null;
+    scores.push(code - offset);
+  }
+  return scores;
+}
+
+export function formatFastqQualityScores(scores) {
+  return Array.isArray(scores) ? scores.join(' ') : '';
+}
+
 export function phredToErrorProbability(score) {
   if (!Number.isFinite(score) || score < 0 || score > 300) return null;
   return 10 ** (-score / 10);
@@ -28,8 +50,4 @@ export function formatProbability(value) {
   if (value === 0) return '0';
   if (value < 0.0001) return value.toExponential(3);
   return value.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-}
-
-export function formatPhredScore(value) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }

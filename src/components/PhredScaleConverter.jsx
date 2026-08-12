@@ -32,89 +32,97 @@ const OFFSET_OPTIONS = [
 export default function PhredScaleConverter() {
   const { t, i18n } = useTranslation('tools');
 
-  const [calculatorSource, setCalculatorSource] = useState('score');
-  const [calculatorValue, setCalculatorValue] = useState('30');
   const [scoreInput, setScoreInput] = useState('30');
   const [probabilityInput, setProbabilityInput] = useState('0.001');
-  const metrics = useMemo(
-    () => calculatePhredMetrics(calculatorSource, calculatorValue),
-    [calculatorSource, calculatorValue],
-  );
-
   const [offset, setOffset] = useState(Number(FASTQ_PHRED_OFFSETS.phred33));
-  const [fastqSource, setFastqSource] = useState('fastq');
-  const [fastqInput, setFastqInput] = useState('IIIIIIII');
-  const [scoreListInput, setScoreListInput] = useState('40 40 40 40 40 40 40 40');
+  const [conversionSource, setConversionSource] = useState('scores');
+  const [fastqInput, setFastqInput] = useState('?');
 
+  const metrics = useMemo(
+    () => calculatePhredMetrics('score', scoreInput),
+    [scoreInput],
+  );
+  const encodedQuality = useMemo(
+    () => encodeFastqQualityScores(scoreInput, offset),
+    [scoreInput, offset],
+  );
   const decodedScores = useMemo(
     () => decodeFastqQualityString(fastqInput, offset),
     [fastqInput, offset],
   );
-  const encodedQuality = useMemo(
-    () => encodeFastqQualityScores(scoreListInput, offset),
-    [scoreListInput, offset],
-  );
 
-  const scoreHasError = Boolean(scoreInput.trim())
-    && !calculatePhredMetrics('score', scoreInput);
+  const scoreHasError = Boolean(scoreInput.trim()) && !metrics && encodedQuality === null;
   const probabilityHasError = Boolean(probabilityInput.trim())
     && !calculatePhredMetrics('probability', probabilityInput);
   const fastqHasError = fastqInput.length > 0 && !decodedScores;
-  const scoreListHasError = Boolean(scoreListInput.trim()) && encodedQuality === null;
+  const fastqScoreHasError = Boolean(scoreInput.trim()) && encodedQuality === null;
+
+  const syncProbabilityFromScores = (value) => {
+    const nextMetrics = calculatePhredMetrics('score', value);
+    setProbabilityInput(nextMetrics ? formatProbability(nextMetrics.errorProbability) : '');
+  };
 
   const handleScoreChange = (value) => {
     setScoreInput(value);
-    setCalculatorSource('score');
-    setCalculatorValue(value);
-
-    const nextMetrics = calculatePhredMetrics('score', value);
-    if (nextMetrics) setProbabilityInput(formatProbability(nextMetrics.errorProbability));
-  };
-
-  const handleProbabilityChange = (value) => {
-    setProbabilityInput(value);
-    setCalculatorSource('probability');
-    setCalculatorValue(value);
-
-    const nextMetrics = calculatePhredMetrics('probability', value);
-    if (nextMetrics) setScoreInput(formatPhredScore(nextMetrics.score));
-  };
-
-  const handleFastqChange = (value) => {
-    setFastqInput(value);
-    setFastqSource('fastq');
-
-    const nextScores = decodeFastqQualityString(value, offset);
-    if (nextScores) setScoreListInput(formatFastqQualityScores(nextScores));
-  };
-
-  const handleScoreListChange = (value) => {
-    setScoreListInput(value);
-    setFastqSource('scores');
+    setConversionSource('scores');
+    syncProbabilityFromScores(value);
 
     const nextQuality = encodeFastqQualityScores(value, offset);
     if (nextQuality !== null) setFastqInput(nextQuality);
   };
 
+  const handleProbabilityChange = (value) => {
+    setProbabilityInput(value);
+
+    const nextMetrics = calculatePhredMetrics('probability', value);
+    if (!nextMetrics) return;
+
+    const nextScore = formatPhredScore(nextMetrics.score);
+    setScoreInput(nextScore);
+    setConversionSource('scores');
+
+    const nextQuality = encodeFastqQualityScores(nextScore, offset);
+    if (nextQuality !== null) setFastqInput(nextQuality);
+  };
+
+  const handleFastqChange = (value) => {
+    setFastqInput(value);
+    setConversionSource('fastq');
+
+    const nextScores = decodeFastqQualityString(value, offset);
+    if (!nextScores) return;
+
+    const nextScoreInput = formatFastqQualityScores(nextScores);
+    setScoreInput(nextScoreInput);
+    syncProbabilityFromScores(nextScoreInput);
+  };
+
   const handleOffsetChange = (nextOffset) => {
     setOffset(nextOffset);
 
-    if (fastqSource === 'fastq') {
+    if (conversionSource === 'fastq') {
       const nextScores = decodeFastqQualityString(fastqInput, nextOffset);
-      if (nextScores) setScoreListInput(formatFastqQualityScores(nextScores));
+      if (!nextScores) return;
+
+      const nextScoreInput = formatFastqQualityScores(nextScores);
+      setScoreInput(nextScoreInput);
+      syncProbabilityFromScores(nextScoreInput);
       return;
     }
 
-    const nextQuality = encodeFastqQualityScores(scoreListInput, nextOffset);
+    const nextQuality = encodeFastqQualityScores(scoreInput, nextOffset);
     if (nextQuality !== null) setFastqInput(nextQuality);
   };
 
   const useReferenceScore = (score) => {
-    const nextMetrics = calculatePhredMetrics('score', String(score));
-    setCalculatorSource('score');
-    setCalculatorValue(String(score));
-    setScoreInput(String(score));
+    const value = String(score);
+    const nextMetrics = calculatePhredMetrics('score', value);
+    setScoreInput(value);
     setProbabilityInput(formatProbability(nextMetrics.errorProbability));
+    setConversionSource('scores');
+
+    const nextQuality = encodeFastqQualityScores(value, offset);
+    if (nextQuality !== null) setFastqInput(nextQuality);
   };
 
   const selectedOffset = OFFSET_OPTIONS.find((option) => option.offset === offset);
@@ -127,18 +135,16 @@ export default function PhredScaleConverter() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="phred-score-input" className="text-sm font-bold text-text-main">
-              {t('tool-phred.ui.scoreLabel')}
+              {t('tool-phred.ui.scoreTab')}
             </label>
-            <input
+            <textarea
               id="phred-score-input"
-              type="number"
-              min="0"
-              max="300"
-              step="any"
+              rows={2}
               value={scoreInput}
               onChange={(event) => handleScoreChange(event.target.value)}
+              spellCheck={false}
               aria-invalid={scoreHasError || undefined}
-              className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-lg font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+              className={`min-h-14 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-lg font-semibold text-text-main outline-none transition-all focus:ring-2 ${
                 scoreHasError
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
                   : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
@@ -151,7 +157,7 @@ export default function PhredScaleConverter() {
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="phred-probability-input" className="text-sm font-bold text-text-main">
-              {t('tool-phred.ui.probabilityLabel')}
+              {t('tool-phred.ui.errorProbability')}
             </label>
             <input
               id="phred-probability-input"
@@ -224,48 +230,27 @@ export default function PhredScaleConverter() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">FASTQ</label>
-            <textarea
-              id="phred-fastq-input"
-              rows={6}
-              value={fastqInput}
-              onChange={(event) => handleFastqChange(event.target.value)}
-              spellCheck={false}
-              aria-invalid={fastqHasError || undefined}
-              className={`min-h-36 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
-                fastqHasError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
-                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
-              }`}
-            />
-            {fastqHasError && (
-              <p role="alert" className="text-xs text-red-500">ASCII {offset}–126</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="phred-score-list-input" className="text-sm font-bold text-text-main">
-              {t('tool-phred.ui.score')}
-            </label>
-            <textarea
-              id="phred-score-list-input"
-              rows={6}
-              value={scoreListInput}
-              onChange={(event) => handleScoreListChange(event.target.value)}
-              spellCheck={false}
-              aria-invalid={scoreListHasError || undefined}
-              className={`min-h-36 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
-                scoreListHasError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
-                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
-              }`}
-            />
-            {scoreListHasError && (
-              <p role="alert" className="text-xs text-red-500">Q 0–{126 - offset}</p>
-            )}
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">FASTQ</label>
+          <textarea
+            id="phred-fastq-input"
+            rows={5}
+            value={fastqInput}
+            onChange={(event) => handleFastqChange(event.target.value)}
+            spellCheck={false}
+            aria-invalid={fastqHasError || undefined}
+            className={`min-h-32 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+              fastqHasError
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+            }`}
+          />
+          {fastqHasError && (
+            <p role="alert" className="text-xs text-red-500">ASCII {offset}–126</p>
+          )}
+          {!fastqHasError && fastqScoreHasError && conversionSource === 'scores' && (
+            <p className="text-xs text-text-muted">FASTQ: Q 0–{126 - offset}</p>
+          )}
         </div>
       </section>
 

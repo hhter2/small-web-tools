@@ -136,7 +136,7 @@ export default function PhredScaleConverter() {
             </p>
           ) : (
             <p id="phred-formula" className="text-xs text-text-muted">
-              Q = −10 × log₁₀(P), P = 10^(−Q/10)
+              Q = −10 × log₁₀(P), and P = 10^(−Q/10).
             </p>
           )}
         </div>

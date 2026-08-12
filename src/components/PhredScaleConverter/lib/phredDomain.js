@@ -3,9 +3,13 @@ export const FASTQ_PHRED_OFFSETS = Object.freeze({
   phred64: 64,
 });
 
+function isSupportedFastqOffset(offset) {
+  return offset === FASTQ_PHRED_OFFSETS.phred33 || offset === FASTQ_PHRED_OFFSETS.phred64;
+}
+
 export function decodeFastqQualityString(rawValue, offset) {
   if (typeof rawValue !== 'string' || rawValue.length === 0) return null;
-  if (offset !== FASTQ_PHRED_OFFSETS.phred33 && offset !== FASTQ_PHRED_OFFSETS.phred64) return null;
+  if (!isSupportedFastqOffset(offset)) return null;
 
   const scores = [];
   for (let index = 0; index < rawValue.length; index += 1) {
@@ -14,6 +18,29 @@ export function decodeFastqQualityString(rawValue, offset) {
     scores.push(code - offset);
   }
   return scores;
+}
+
+export function parseFastqQualityScores(rawValue, offset) {
+  if (typeof rawValue !== 'string' || !rawValue.trim() || !isSupportedFastqOffset(offset)) return null;
+
+  const maxScore = 126 - offset;
+  const tokens = rawValue.trim().split(/[\s,]+/);
+  const scores = tokens.map((token) => Number(token));
+  if (scores.some((score) => !Number.isInteger(score) || score < 0 || score > maxScore)) return null;
+  return scores;
+}
+
+export function encodeFastqQualityScores(rawValue, offset) {
+  const scores = parseFastqQualityScores(rawValue, offset);
+  if (!scores) return null;
+  return scores.map((score) => String.fromCharCode(score + offset)).join('');
+}
+
+export function fastqCodeForScore(score, offset) {
+  if (!Number.isInteger(score) || !isSupportedFastqOffset(offset) || score < 0 || score > 126 - offset) {
+    return null;
+  }
+  return String.fromCharCode(score + offset);
 }
 
 export function formatFastqQualityScores(scores) {
@@ -47,7 +74,13 @@ export function calculatePhredMetrics(mode, rawValue) {
 }
 
 export function formatProbability(value) {
-  if (value === 0) return '0';
-  if (value < 0.0001) return value.toExponential(3);
-  return value.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+  if (!Number.isFinite(value)) return '';
+  return new Intl.NumberFormat('en-US', {
+    useGrouping: false,
+    maximumSignificantDigits: 15,
+  }).format(value);
+}
+
+export function formatPhredScore(value) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }

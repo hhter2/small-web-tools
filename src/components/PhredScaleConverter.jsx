@@ -125,7 +125,7 @@ export default function PhredScaleConverter() {
     setFastqInput(nextQuality ?? '');
   };
 
-  const useReferenceScore = (score) => {
+  const applyReferenceScore = (score) => {
     const value = String(score);
     const nextMetrics = calculatePhredMetrics('score', value);
     setScoreInput(value);
@@ -262,7 +262,7 @@ export default function PhredScaleConverter() {
                     <td className="p-0">
                       <button
                         type="button"
-                        onClick={() => useReferenceScore(score)}
+                        onClick={() => applyReferenceScore(score)}
                         className="w-full px-3 py-2 text-left font-mono font-extrabold text-accent"
                         aria-label={t('tool-phred.ui.useScoreAria', { score })}
                       >

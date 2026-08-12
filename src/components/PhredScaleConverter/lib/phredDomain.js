@@ -74,9 +74,11 @@ export function calculatePhredMetrics(mode, rawValue) {
 }
 
 export function formatProbability(value) {
-  if (value === 0) return '0';
-  if (value < 0.0001) return value.toExponential(3);
-  return value.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+  if (!Number.isFinite(value)) return '';
+  return new Intl.NumberFormat('en-US', {
+    useGrouping: false,
+    maximumSignificantDigits: 15,
+  }).format(value);
 }
 
 export function formatPhredScore(value) {

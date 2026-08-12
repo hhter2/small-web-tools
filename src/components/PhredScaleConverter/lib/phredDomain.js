@@ -51,7 +51,3 @@ export function formatProbability(value) {
   if (value < 0.0001) return value.toExponential(3);
   return value.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
-
-export function formatPhredScore(value) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-}

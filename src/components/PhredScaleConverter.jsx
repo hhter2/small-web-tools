@@ -15,227 +15,225 @@ import {
 
 const REFERENCE_SCORES = [10, 20, 30, 40];
 const OFFSET_OPTIONS = [
-  { id: 'phred33', label: 'Phred+33', offset: FASTQ_PHRED_OFFSETS.phred33 },
-  { id: 'phred64', label: 'Phred+64', offset: FASTQ_PHRED_OFFSETS.phred64 },
-];
-const OFFSET_USAGE = [
-  { offset: 'Phred+33', platforms: ['Sanger', 'Illumina 1.8+'] },
-  { offset: 'Phred+64', platforms: ['Illumina 1.3–1.7'] },
+  {
+    id: 'phred33',
+    label: 'Phred+33',
+    detail: 'Sanger · Illumina 1.8+',
+    offset: FASTQ_PHRED_OFFSETS.phred33,
+  },
+  {
+    id: 'phred64',
+    label: 'Phred+64',
+    detail: 'Illumina 1.3–1.7',
+    offset: FASTQ_PHRED_OFFSETS.phred64,
+  },
 ];
 
 export default function PhredScaleConverter() {
   const { t, i18n } = useTranslation('tools');
 
-  const [mode, setMode] = useState('score');
-  const [calculatorInput, setCalculatorInput] = useState('30');
+  const [calculatorSource, setCalculatorSource] = useState('score');
+  const [calculatorValue, setCalculatorValue] = useState('30');
+  const [scoreInput, setScoreInput] = useState('30');
+  const [probabilityInput, setProbabilityInput] = useState('0.001');
   const metrics = useMemo(
-    () => calculatePhredMetrics(mode, calculatorInput),
-    [mode, calculatorInput],
+    () => calculatePhredMetrics(calculatorSource, calculatorValue),
+    [calculatorSource, calculatorValue],
   );
-  const calculatorHasError = Boolean(calculatorInput.trim()) && !metrics;
 
   const [offset, setOffset] = useState(Number(FASTQ_PHRED_OFFSETS.phred33));
-  const [fastqDirection, setFastqDirection] = useState('decode');
+  const [fastqSource, setFastqSource] = useState('fastq');
   const [fastqInput, setFastqInput] = useState('IIIIIIII');
+  const [scoreListInput, setScoreListInput] = useState('40 40 40 40 40 40 40 40');
+
   const decodedScores = useMemo(
-    () => (fastqDirection === 'decode' ? decodeFastqQualityString(fastqInput, offset) : null),
-    [fastqDirection, fastqInput, offset],
+    () => decodeFastqQualityString(fastqInput, offset),
+    [fastqInput, offset],
   );
   const encodedQuality = useMemo(
-    () => (fastqDirection === 'encode' ? encodeFastqQualityScores(fastqInput, offset) : null),
-    [fastqDirection, fastqInput, offset],
+    () => encodeFastqQualityScores(scoreListInput, offset),
+    [scoreListInput, offset],
   );
-  const fastqOutput = fastqDirection === 'decode'
-    ? (decodedScores ? formatFastqQualityScores(decodedScores) : '')
-    : (encodedQuality ?? '');
-  const fastqHasError = fastqInput.length > 0
-    && (fastqDirection === 'decode' ? !decodedScores : encodedQuality === null);
 
-  const selectCalculatorMode = (nextMode) => {
-    if (metrics) {
-      setCalculatorInput(nextMode === 'score'
-        ? formatPhredScore(metrics.score)
-        : formatProbability(metrics.errorProbability));
-    } else {
-      setCalculatorInput('');
-    }
-    setMode(nextMode);
+  const scoreHasError = Boolean(scoreInput.trim())
+    && !calculatePhredMetrics('score', scoreInput);
+  const probabilityHasError = Boolean(probabilityInput.trim())
+    && !calculatePhredMetrics('probability', probabilityInput);
+  const fastqHasError = fastqInput.length > 0 && !decodedScores;
+  const scoreListHasError = Boolean(scoreListInput.trim()) && encodedQuality === null;
+
+  const handleScoreChange = (value) => {
+    setScoreInput(value);
+    setCalculatorSource('score');
+    setCalculatorValue(value);
+
+    const nextMetrics = calculatePhredMetrics('score', value);
+    if (nextMetrics) setProbabilityInput(formatProbability(nextMetrics.errorProbability));
   };
 
-  const selectFastqDirection = (nextDirection) => {
-    if (nextDirection === fastqDirection) return;
-    if (nextDirection === 'encode' && decodedScores) {
-      setFastqInput(formatFastqQualityScores(decodedScores));
-    } else if (nextDirection === 'decode' && encodedQuality) {
-      setFastqInput(encodedQuality);
-    } else {
-      setFastqInput('');
-    }
-    setFastqDirection(nextDirection);
+  const handleProbabilityChange = (value) => {
+    setProbabilityInput(value);
+    setCalculatorSource('probability');
+    setCalculatorValue(value);
+
+    const nextMetrics = calculatePhredMetrics('probability', value);
+    if (nextMetrics) setScoreInput(formatPhredScore(nextMetrics.score));
   };
+
+  const handleFastqChange = (value) => {
+    setFastqInput(value);
+    setFastqSource('fastq');
+
+    const nextScores = decodeFastqQualityString(value, offset);
+    if (nextScores) setScoreListInput(formatFastqQualityScores(nextScores));
+  };
+
+  const handleScoreListChange = (value) => {
+    setScoreListInput(value);
+    setFastqSource('scores');
+
+    const nextQuality = encodeFastqQualityScores(value, offset);
+    if (nextQuality !== null) setFastqInput(nextQuality);
+  };
+
+  const handleOffsetChange = (nextOffset) => {
+    setOffset(nextOffset);
+
+    if (fastqSource === 'fastq') {
+      const nextScores = decodeFastqQualityString(fastqInput, nextOffset);
+      if (nextScores) setScoreListInput(formatFastqQualityScores(nextScores));
+      return;
+    }
+
+    const nextQuality = encodeFastqQualityScores(scoreListInput, nextOffset);
+    if (nextQuality !== null) setFastqInput(nextQuality);
+  };
+
+  const useReferenceScore = (score) => {
+    const nextMetrics = calculatePhredMetrics('score', String(score));
+    setCalculatorSource('score');
+    setCalculatorValue(String(score));
+    setScoreInput(String(score));
+    setProbabilityInput(formatProbability(nextMetrics.errorProbability));
+  };
+
+  const selectedOffset = OFFSET_OPTIONS.find((option) => option.offset === offset);
 
   return (
     <Card id="tool-phred" variant="tool" size="wide" className="max-w-[980px]">
       <ToolHeader title={t('tool-phred.title')} />
 
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-app/70 p-4">
-        <div
-          className="flex w-full rounded-md border border-border bg-card p-1"
-          role="tablist"
-          aria-label={t('tool-phred.ui.inputTypeAria')}
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === 'score'}
-            onClick={() => selectCalculatorMode('score')}
-            className={`flex-1 rounded px-3 py-2 text-sm font-semibold transition-colors ${
-              mode === 'score' ? 'bg-accent text-white shadow-sm' : 'text-text-muted hover:text-text-main'
-            }`}
-          >
-            {t('tool-phred.ui.scoreTab')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === 'probability'}
-            onClick={() => selectCalculatorMode('probability')}
-            className={`flex-1 rounded px-3 py-2 text-sm font-semibold transition-colors ${
-              mode === 'probability' ? 'bg-accent text-white shadow-sm' : 'text-text-muted hover:text-text-main'
-            }`}
-          >
-            {t('tool-phred.ui.probabilityTab')}
-          </button>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="phred-score-input" className="text-sm font-bold text-text-main">
+              {t('tool-phred.ui.scoreLabel')}
+            </label>
+            <input
+              id="phred-score-input"
+              type="number"
+              min="0"
+              max="300"
+              step="any"
+              value={scoreInput}
+              onChange={(event) => handleScoreChange(event.target.value)}
+              aria-invalid={scoreHasError || undefined}
+              className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-lg font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+                scoreHasError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+              }`}
+            />
+            {scoreHasError && (
+              <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.scoreError')}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="phred-probability-input" className="text-sm font-bold text-text-main">
+              {t('tool-phred.ui.probabilityLabel')}
+            </label>
+            <input
+              id="phred-probability-input"
+              type="number"
+              min={Number.MIN_VALUE}
+              max="1"
+              step="any"
+              value={probabilityInput}
+              onChange={(event) => handleProbabilityChange(event.target.value)}
+              aria-invalid={probabilityHasError || undefined}
+              className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-lg font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+                probabilityHasError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+              }`}
+            />
+            {probabilityHasError && (
+              <p role="alert" className="text-xs text-red-500">{t('tool-phred.ui.probabilityError')}</p>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="phred-input" className="text-sm font-bold text-text-main">
-            {t(mode === 'score' ? 'tool-phred.ui.scoreLabel' : 'tool-phred.ui.probabilityLabel')}
-          </label>
-          <input
-            id="phred-input"
-            type="number"
-            min={mode === 'score' ? 0 : Number.MIN_VALUE}
-            max={mode === 'score' ? 300 : 1}
-            step="any"
-            value={calculatorInput}
-            onChange={(event) => setCalculatorInput(event.target.value)}
-            aria-invalid={calculatorHasError || undefined}
-            aria-describedby={calculatorHasError ? 'phred-error' : 'phred-formula'}
-            className={`w-full rounded-lg border bg-card px-4 py-3 font-mono text-lg font-semibold text-text-main outline-none transition-all focus:ring-2 ${
-              calculatorHasError
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
-                : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
-            }`}
-          />
-          {calculatorHasError ? (
-            <p id="phred-error" role="alert" className="text-xs text-red-500">
-              {mode === 'score'
-                ? t('tool-phred.ui.scoreError')
-                : t('tool-phred.ui.probabilityError')}
-            </p>
-          ) : (
-            <p id="phred-formula" className="text-xs text-text-muted">
-              Q = −10 × log₁₀(P), and P = 10^(−Q/10).
-            </p>
-          )}
-        </div>
+        <p className="text-xs text-text-muted">Q = −10 × log₁₀(P) · P = 10^(−Q/10)</p>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
-          {[
-            [t('tool-phred.ui.score'), metrics ? formatPhredScore(metrics.score) : '—'],
-            [t('tool-phred.ui.errorProbability'), metrics ? formatProbability(metrics.errorProbability) : '—'],
-            [
-              t('tool-phred.ui.callAccuracy'),
-              metrics
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-live="polite">
+          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
+            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
+              {t('tool-phred.ui.callAccuracy')}
+            </span>
+            <strong className="mt-1 block font-mono text-lg text-accent">
+              {metrics
                 ? `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 6 }).format(metrics.accuracy * 100)}%`
-                : '—',
-            ],
-            [
-              t('tool-phred.ui.expectedFrequency'),
-              metrics
+                : '—'}
+            </strong>
+          </div>
+          <div className="rounded-xl border border-accent/15 bg-accent-light p-3">
+            <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">
+              {t('tool-phred.ui.expectedFrequency')}
+            </span>
+            <strong className="mt-1 block font-mono text-lg text-accent">
+              {metrics
                 ? t('tool-phred.ui.oneIn', {
                   count: Math.max(1, Math.round(metrics.oneIn)).toLocaleString(i18n.language),
                 })
-                : '—',
-            ],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-accent/15 bg-accent-light p-3">
-              <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-text-muted">{label}</span>
-              <strong className="mt-1 block break-all font-mono text-lg text-accent">{value}</strong>
-            </div>
-          ))}
+                : '—'}
+            </strong>
+          </div>
         </div>
       </section>
 
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-app/70 p-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div
-            className="flex flex-1 rounded-md border border-border bg-card p-1"
-            role="tablist"
-            aria-label="FASTQ"
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="phred-offset" className="text-sm font-bold text-text-main">FASTQ</label>
+          <select
+            id="phred-offset"
+            value={offset}
+            onChange={(event) => handleOffsetChange(Number(event.target.value))}
+            className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-semibold text-text-main outline-none transition-all hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-focus"
           >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={fastqDirection === 'decode'}
-              onClick={() => selectFastqDirection('decode')}
-              className={`flex flex-1 items-center justify-center gap-1 rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                fastqDirection === 'decode'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              <span>FASTQ</span><span aria-hidden="true">→</span><span>Q</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={fastqDirection === 'encode'}
-              onClick={() => selectFastqDirection('encode')}
-              className={`flex flex-1 items-center justify-center gap-1 rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                fastqDirection === 'encode'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              <span>Q</span><span aria-hidden="true">→</span><span>FASTQ</span>
-            </button>
-          </div>
-
-          <div className="flex flex-1 rounded-md border border-border bg-card p-1" role="tablist" aria-label="ASCII">
             {OFFSET_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                role="tab"
-                aria-selected={offset === option.offset}
-                onClick={() => setOffset(option.offset)}
-                className={`flex-1 rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                  offset === option.offset
-                    ? 'bg-accent text-white shadow-sm'
-                    : 'text-text-muted hover:text-text-main'
-                }`}
-              >
-                {option.label}
-              </button>
+              <option key={option.id} value={option.offset}>
+                {option.label} — {option.detail}
+              </option>
             ))}
-          </div>
+          </select>
+          <p className="text-xs text-text-muted">
+            <span className="font-mono font-semibold">{selectedOffset?.label}</span>
+            {' · '}
+            {selectedOffset?.detail}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">
-              {fastqDirection === 'decode' ? 'FASTQ' : t('tool-phred.ui.score')}
-            </label>
+            <label htmlFor="phred-fastq-input" className="text-sm font-bold text-text-main">FASTQ</label>
             <textarea
               id="phred-fastq-input"
               rows={6}
               value={fastqInput}
-              onChange={(event) => setFastqInput(event.target.value)}
+              onChange={(event) => handleFastqChange(event.target.value)}
               spellCheck={false}
               aria-invalid={fastqHasError || undefined}
-              aria-describedby={fastqHasError ? 'phred-fastq-error' : undefined}
               className={`min-h-36 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
                 fastqHasError
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
@@ -243,24 +241,30 @@ export default function PhredScaleConverter() {
               }`}
             />
             {fastqHasError && (
-              <p id="phred-fastq-error" role="alert" className="text-xs text-red-500">
-                {fastqDirection === 'decode' ? `ASCII ${offset}–126` : `Q 0–${126 - offset}`}
-              </p>
+              <p role="alert" className="text-xs text-red-500">ASCII {offset}–126</p>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="phred-fastq-output" className="text-sm font-bold text-text-main">
-              {fastqDirection === 'decode' ? t('tool-phred.ui.score') : 'FASTQ'}
+            <label htmlFor="phred-score-list-input" className="text-sm font-bold text-text-main">
+              {t('tool-phred.ui.score')}
             </label>
             <textarea
-              id="phred-fastq-output"
+              id="phred-score-list-input"
               rows={6}
-              readOnly
-              value={fastqOutput}
-              aria-live="polite"
-              className="min-h-36 w-full resize-y rounded-lg border border-border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none"
+              value={scoreListInput}
+              onChange={(event) => handleScoreListChange(event.target.value)}
+              spellCheck={false}
+              aria-invalid={scoreListHasError || undefined}
+              className={`min-h-36 w-full resize-y rounded-lg border bg-card px-4 py-3 font-mono text-base font-semibold text-text-main outline-none transition-all focus:ring-2 ${
+                scoreListHasError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/15'
+                  : 'border-border hover:border-border-hover focus:border-accent focus:ring-focus'
+              }`}
             />
+            {scoreListHasError && (
+              <p role="alert" className="text-xs text-red-500">Q 0–{126 - offset}</p>
+            )}
           </div>
         </div>
       </section>
@@ -292,10 +296,7 @@ export default function PhredScaleConverter() {
                     <td className="p-0">
                       <button
                         type="button"
-                        onClick={() => {
-                          setMode('score');
-                          setCalculatorInput(String(score));
-                        }}
+                        onClick={() => useReferenceScore(score)}
                         className="w-full px-3 py-2 text-left font-mono font-extrabold text-accent"
                         aria-label={t('tool-phred.ui.useScoreAria', { score })}
                       >
@@ -318,21 +319,6 @@ export default function PhredScaleConverter() {
           </table>
         </div>
         <p className="text-xs text-text-muted">{t('tool-phred.ui.note')}</p>
-      </section>
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="FASTQ">
-        {OFFSET_USAGE.map((item) => (
-          <div key={item.offset} className="rounded-xl border border-border bg-app/70 p-4">
-            <strong className="font-mono text-sm text-accent">{item.offset}</strong>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {item.platforms.map((platform) => (
-                <span key={platform} className="rounded-md border border-border bg-card px-2 py-1 text-xs text-text-main">
-                  {platform}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
       </section>
     </Card>
   );

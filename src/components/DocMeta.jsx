@@ -838,8 +838,8 @@ export default function DocMeta() {
         const xmlDoc = parser.parseFromString(metaText, "application/xml");
 
         const removeTags = mode === 'private'
-          ? ["creator", "initial-creator", "creation-date", "date"]
-          : ["creator", "initial-creator", "creation-date", "date", "generator", "title", "subject", "description", "keyword"];
+          ? ["creator", "initial-creator", "creation-date", "date", "editing-duration"]
+          : ["creator", "initial-creator", "creation-date", "date", "editing-duration", "generator", "title", "subject", "description", "keyword"];
 
         const els = xmlDoc.getElementsByTagName("*");
         for (let i = els.length - 1; i >= 0; i--) {
@@ -881,6 +881,21 @@ export default function DocMeta() {
       }
       zip.file("docProps/core.xml", new XMLSerializer().serializeToString(xmlDoc));
     }
+    const appFile = zip.file("docProps/app.xml");
+    if (appFile) {
+      const appText = await appFile.async("string");
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(appText, "application/xml");
+      const elements = xmlDoc.getElementsByTagName("*");
+      for (let i = elements.length - 1; i >= 0; i--) {
+        const el = elements[i];
+        const localName = el.localName || el.tagName.split(':').pop();
+        if (localName === "TotalTime") {
+          el.textContent = "";
+        }
+      }
+      zip.file("docProps/app.xml", new XMLSerializer().serializeToString(xmlDoc));
+    }
     if (zip.file("docProps/custom.xml") && mode === 'all') {
       zip.remove("docProps/custom.xml");
     }
@@ -903,7 +918,7 @@ export default function DocMeta() {
               size: strippedBlob.size,
               formattedSize: formatBytes(strippedBlob.size),
               core: mode === 'all' ? {} : { ...f.core, creator: '', lastModifiedBy: '', created: '', modified: '' },
-              app: mode === 'all' ? {} : f.app,
+              app: mode === 'all' ? {} : { ...f.app, TotalTime: '' },
               custom: mode === 'all' ? {} : f.custom,
               sheets: f.sheets,
               thumbnail: f.thumbnail

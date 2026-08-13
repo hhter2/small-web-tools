@@ -1,0 +1,60 @@
+name: Apply DocMeta edit-time hotfix
+
+on:
+  push:
+    branches:
+      - fix/docmeta-clear-edit-time
+    paths:
+      - .github/workflows/docmeta-edit-time-hotfix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/docmeta-clear-edit-time
+
+      - name: Patch Document Metadata stripping
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/components/DocMeta.jsx')
+          text = path.read_text()
+
+          old_odf = '''        const removeTags = mode === 'private'\n          ? ["creator", "initial-creator", "creation-date", "date"]\n          : ["creator", "initial-creator", "creation-date", "date", "generator", "title", "subject", "description", "keyword"];'''
+          new_odf = '''        const removeTags = mode === 'private'\n          ? ["creator", "initial-creator", "creation-date", "date", "editing-duration"]\n          : ["creator", "initial-creator", "creation-date", "date", "editing-duration", "generator", "title", "subject", "description", "keyword"];'''
+
+          old_ooxml = '''    if (zip.file("docProps/custom.xml") && mode === 'all') {\n      zip.remove("docProps/custom.xml");\n    }\n    return await zip.generateAsync({ type: "blob" });'''
+          new_ooxml = '''    const appFile = zip.file("docProps/app.xml");\n    if (appFile) {\n      const appText = await appFile.async("string");\n      const parser = new DOMParser();\n      const xmlDoc = parser.parseFromString(appText, "application/xml");\n      const elements = xmlDoc.getElementsByTagName("*");\n      for (let i = elements.length - 1; i >= 0; i--) {\n        const el = elements[i];\n        const localName = el.localName || el.tagName.split(':').pop();\n        if (localName === "TotalTime") {\n          el.textContent = "";\n        }\n      }\n      zip.file("docProps/app.xml", new XMLSerializer().serializeToString(xmlDoc));\n    }\n    if (zip.file("docProps/custom.xml") && mode === 'all') {\n      zip.remove("docProps/custom.xml");\n    }\n    return await zip.generateAsync({ type: "blob" });'''
+
+          old_state = '''              app: mode === 'all' ? {} : f.app,'''
+          new_state = '''              app: mode === 'all' ? {} : { ...f.app, TotalTime: '' },'''
+
+          replacements = [
+              (old_odf, new_odf, 'ODF editing-duration stripping'),
+              (old_ooxml, new_ooxml, 'OOXML TotalTime stripping'),
+              (old_state, new_state, 'stripped metadata state'),
+          ]
+
+          for old, new, label in replacements:
+              if old not in text:
+                  raise SystemExit(f'Expected source block not found: {label}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text)
+
+          workflow = Path('.github/workflows/docmeta-edit-time-hotfix.yml')
+          workflow.unlink()
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/DocMeta.jsx .github/workflows/docmeta-edit-time-hotfix.yml
+          git commit -m "fix(docmeta): clear total editing time metadata"
+          git push origin HEAD:fix/docmeta-clear-edit-time

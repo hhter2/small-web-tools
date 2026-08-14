@@ -48,7 +48,9 @@ CONTRIBUTING.md/CONTRIBUTING.zh-TW.md, ARCHITECTURE.md/ARCHITECTURE.zh-TW.md,
 and PRIVACY.md/PRIVACY.zh-TW.md. TODO.md is intentionally English-only.
 Supporting explanatory documents are public/fonts/MANIFEST.md with its
 Traditional Chinese companion, the two SSRF harness READMEs, and the
-English-only AI agent instructions in .agents/.
+English-only AI agent instructions in `AGENTS.md` and `.agents/`. The engineering
+skills read their issue-tracker, triage-label, and domain-document conventions
+from `docs/agents/`.
 
 ```text
 small-web-tools/
@@ -61,6 +63,7 @@ small-web-tools/
 ├── TODO.md                   Backlog, completed work, and update process
 ├── ARCHITECTURE.md           Architecture and maintenance reference
 ├── ARCHITECTURE.zh-TW.md     Traditional Chinese architecture reference
+├── AGENTS.md                 Engineering-skill configuration and pointers
 ├── Dockerfile.dev            Node 22 image for containerized Vite development
 ├── compose.yaml              Bind-mounted Vite development service and dependency volume
 ├── .dockerignore             Docker build-context and local-secret exclusions
@@ -81,6 +84,7 @@ small-web-tools/
 │   ├── check-hardcoded-ui.mjs User-facing string audit
 │   └── check-doc-consistency.mjs Documentation/link consistency checks
 ├── docs/
+│   ├── agents/               Issue-tracker, triage-label, and domain-doc rules
 │   ├── docker-development.md Docker development workflow
 │   └── docker-development.zh-TW.md Traditional Chinese Docker workflow
 ├── .github/
@@ -408,6 +412,8 @@ are version-controlled. Local Wrangler state and credentials are not:
   `.dev.vars.example` remains tracked as the safe template.
 - `dist/`, `coverage/`, `.playwright-cli/`, `test-results/`, and
   `playwright-report/` are generated locally and ignored.
+- `.scratch/security/` contains local private security issue records and is
+  ignored; security-related work must not be published to GitHub Issues.
 - `code_reviews/` contains ignored, local review working records. They are dated
   historical snapshots, are not version-controlled, and are not current project
   status or canonical instructions.
@@ -423,8 +429,9 @@ build, test, operate, or maintain the project:
 - `package.json`, `package-lock.json`, `.nvmrc`, `index.html`, and the ESLint,
   JavaScript, Knip, Playwright, PostCSS, Tailwind, Vite, Vitest, and Wrangler
   configuration files define reproducible local development and verification.
-- `.github/` contains CI and dependency-maintenance configuration, while
-  `.agents/AGENTS.md` contains repository-scoped development instructions.
+- `.github/` contains CI and dependency-maintenance configuration;
+  `.agents/AGENTS.md` contains repository-scoped development instructions, while
+  root `AGENTS.md` points engineering skills to the rules in `docs/agents/`.
 - `README.md`, `README.zh-TW.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `PRIVACY.md`, `TODO.md`, and
   `LICENSE` are maintained project documentation or legal material.
 - `.dev.vars.example` is safe, non-secret local-runtime documentation. Actual

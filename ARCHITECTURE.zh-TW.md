@@ -55,6 +55,9 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - PRIVACY.md／PRIVACY.zh-TW.md：隱私權政策與資料流揭露。
 - TODO.md：英文待辦事項、已完成工作與更新流程。
 - ARCHITECTURE.md／ARCHITECTURE.zh-TW.md：英文與繁中架構參考。
+- Dockerfile.dev：供容器化 Vite 開發使用的 Node.js 22 image。
+- compose.yaml：使用 bind mount 的 Vite 開發服務與具名相依套件 volume。
+- .dockerignore：Docker 建置 context 與本機秘密的排除規則。
 - .agents/AGENTS.md：只供 AI agent 使用的英文規則；不建立繁中版本。
 - package.json：指令、相依套件與 pipeline 命令。
 - jsconfig.json：JavaScript 的 TypeScript checkJs 設定。
@@ -73,6 +76,7 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - .github/：Dependabot 設定與 GitHub Actions CI pipeline。
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
+- docs/：Docker 開發流程與其他成對的操作文件。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
 - src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
 - src/components/MobileDrawer.jsx：行動導覽的焦點、inert、關閉與捲動生命週期。
@@ -425,6 +429,11 @@ verify 中的 scripts/check-external-hosts.mjs 會在正式來源主機名稱未
 | ipaddr.js | 標準 IPv4／IPv6 解析與公開位址驗證。 |
 
 ## 本機開發
+
+支援下方的主機流程，以及
+[`docs/docker-development.zh-TW.md`](docs/docker-development.zh-TW.md) 中的容器化 Vite
+流程。Docker 流程使用 `Dockerfile.dev` 與 `compose.yaml`，並刻意與 `npm run dev`
+相同，只模擬 `/api/iplookup` Function。
 
 ```bash
 npm install --global npm@10.9.2

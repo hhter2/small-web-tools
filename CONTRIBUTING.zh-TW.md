@@ -26,6 +26,10 @@ CONTRIBUTING.md 是正式的工程指南。請參閱 ARCHITECTURE.zh-TW.md 了�
 
 ## 本機開發
 
+若要使用不需在主機安裝 Node.js 的容器化前端流程，請參閱雙語
+[Docker 開發環境手冊](docs/docker-development.zh-TW.md)。Docker 方法的 API 範圍與
+Vite 相同；需要所有 Pages Function 時，請使用下方的 Wrangler 流程。
+
 啟動瀏覽器應用程式：
 
 ```bash

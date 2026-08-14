@@ -61,6 +61,9 @@ small-web-tools/
 ├── TODO.md                   Backlog, completed work, and update process
 ├── ARCHITECTURE.md           Architecture and maintenance reference
 ├── ARCHITECTURE.zh-TW.md     Traditional Chinese architecture reference
+├── Dockerfile.dev            Node 22 image for containerized Vite development
+├── compose.yaml              Bind-mounted Vite development service and dependency volume
+├── .dockerignore             Docker build-context and local-secret exclusions
 ├── package.json              Scripts, dependencies, and pipeline commands
 ├── jsconfig.json             TypeScript checkJs configuration for JavaScript
 ├── eslint.config.js          ESLint flat config for React, hooks, and Cloudflare functions
@@ -77,6 +80,9 @@ small-web-tools/
 │   ├── check-i18n.mjs         Locale-pair structure and interpolation checks
 │   ├── check-hardcoded-ui.mjs User-facing string audit
 │   └── check-doc-consistency.mjs Documentation/link consistency checks
+├── docs/
+│   ├── docker-development.md Docker development workflow
+│   └── docker-development.zh-TW.md Traditional Chinese Docker workflow
 ├── .github/
 │   ├── dependabot.yml        Monthly dependency updates, including major versions
 │   └── workflows/ci.yml      GitHub Actions CI pipeline workflow
@@ -485,6 +491,11 @@ pluralized messages use platform `Intl` APIs or i18next interpolation.
 | `ipaddr.js` | Canonical IPv4/IPv6 parsing and public-address validation. |
 
 ## Local development
+
+The host workflow below and the containerized Vite workflow in
+[`docs/docker-development.md`](docs/docker-development.md) are both supported.
+The Docker workflow uses `Dockerfile.dev` and `compose.yaml`, and intentionally
+has the same `/api/iplookup`-only function mirror as `npm run dev`.
 
 ```bash
 npm install --global npm@10.9.2

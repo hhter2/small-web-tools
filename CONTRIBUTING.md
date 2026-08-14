@@ -26,6 +26,11 @@ current architecture, route inventory, API topology, and project map.
 
 ## Local development
 
+For a containerized frontend workflow that does not require Node.js on the host,
+follow the bilingual [Docker development manual](docs/docker-development.md).
+The Docker method has the same API scope as Vite; use the Wrangler workflow
+below when every Pages Function is required.
+
 Start the browser application:
 
 ```bash

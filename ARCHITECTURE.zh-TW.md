@@ -22,7 +22,7 @@ small-web-tools 是一個使用 React 18 與 Vite 的單頁應用程式，提供
 
 本專案維護成對的英文與繁體中文說明文件。英文檔名搭配 `.zh-TW.md` 結尾的繁中檔案；
 修改文件描述的行為或結構時，請同步維護兩個版本。只供 AI agent 使用的
-`.agents/AGENTS.md` 與 `TODO.md` 刻意維持英文單一版本。
+`AGENTS.md`、`.agents/AGENTS.md` 與 `TODO.md` 刻意維持英文單一版本。
 
 ## 快速資訊
 
@@ -58,6 +58,7 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - Dockerfile.dev：供容器化 Vite 開發使用的 Node.js 22 image。
 - compose.yaml：使用 bind mount 的 Vite 開發服務與具名相依套件 volume。
 - .dockerignore：Docker 建置 context 與本機秘密的排除規則。
+- AGENTS.md：工程 skills 的設定與 `docs/agents/` 指引入口；不建立繁中版本。
 - .agents/AGENTS.md：只供 AI agent 使用的英文規則；不建立繁中版本。
 - package.json：指令、相依套件與 pipeline 命令。
 - jsconfig.json：JavaScript 的 TypeScript checkJs 設定。
@@ -76,7 +77,8 @@ VITE_APP_VERSION 是最後的明確 fallback。npm manifest 使用固定的非 r
 - .github/：Dependabot 設定與 GitHub Actions CI pipeline。
 - public/：Cloudflare Pages 回應標頭、內建 WOFF2 UI 字型、授權與字型清單，以及 favicon。
 - scripts/：版本、i18n、硬編碼 UI 與文件一致性檢查腳本。
-- docs/：Docker 開發流程與其他成對的操作文件。
+- docs/：包含 `docs/agents/` 的 issue tracker、triage label 與 domain docs 規則，
+  以及 Docker 開發流程與其他成對的操作文件。
 - src/：React 應用程式、工具登錄表、樣式、共用 UI、工具元件與測試。
 - src/components/LanguageSwitcher.jsx：桌面與行動 header 共用的地區設定選單、鍵盤導覽與焦點生命週期。
 - src/components/MobileDrawer.jsx：行動導覽的焦點、inert、關閉與捲動生命週期。
@@ -356,6 +358,8 @@ Wrangler 設定檔（wrangler.jsonc、workers/rate-limiter/wrangler.jsonc 與整
   作為安全範本。
 - dist/、coverage/、.playwright-cli/、test-results/ 與 playwright-report/ 是本機產生
   且已忽略的檔案。
+- `.scratch/security/` 保存本機私人安全性 issue 紀錄並已忽略；安全性相關工作不得發布
+  到 GitHub Issues。
 - code_reviews/ 包含被忽略的本機審查工作紀錄。它們是有日期的歷史快照，不受版本控制，
   也不是目前狀態或正式指引。
 
@@ -368,7 +372,8 @@ Wrangler 設定檔（wrangler.jsonc、workers/rate-limiter/wrangler.jsonc 與整
 - package.json、package-lock.json、.nvmrc、index.html，以及 ESLint、JavaScript、Knip、
   Playwright、PostCSS、Tailwind、Vite、Vitest 與 Wrangler 設定檔定義可重現的本機開發
   與驗證。
-- .github/ 包含 CI 與相依套件維護設定；.agents/AGENTS.md 包含儲存庫範圍的開發指引。
+- .github/ 包含 CI 與相依套件維護設定；.agents/AGENTS.md 包含儲存庫範圍的開發指引，
+  根目錄 AGENTS.md 則將工程 skills 指向 `docs/agents/` 中的規則。
 - README、CONTRIBUTING、ARCHITECTURE 與 PRIVACY 的英文／繁中說明檔，以及 TODO.md、
   LICENSE，是維護中的專案文件或法律資料。
 - .dev.vars.example 是安全、非秘密的本機執行環境文件；實際 .dev.vars* 仍維持忽略。
